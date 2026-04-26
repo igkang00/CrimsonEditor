@@ -8,6 +8,13 @@ Windows용 프리웨어 텍스트 편집기. 1999~2005년에 개발되었으며,
 
 ---
 
+## TODO
+
+- [ ] **VS 2022로 이관** — `.dsp`/`.dsw` → `.vcxproj`/`.sln`. MFC MBCS 컴포넌트 별도 설치 필요.
+- [ ] **소스/헤더 파일 디렉토리 정리** — 현재 약 180개 파일이 루트에 평평하게 있음. App/Doc/View/Frame/Panels/Dialogs/Network/Util/Core 등으로 분리 예정 (이관 후 진행).
+
+---
+
 ## 빌드 환경
 
 `cedt.dsw`(워크스페이스) + `cedt.dsp`(프로젝트) — Visual Studio 6.0 / Developer Studio 시절의 포맷이다. `cedt.mak`은 nmake용 export 결과.
