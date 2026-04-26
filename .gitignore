@@ -1,0 +1,19 @@
+# Visual C++ 6.0 IDE caches
+*.ncb
+*.opt
+*.plg
+*.aps
+*.dep
+
+# Backups
+*.bak
+
+# Build output directories
+Debug/
+Release/
+
+# Modern Visual Studio
+.vs/
+
+# Windows
+Thumbs.db

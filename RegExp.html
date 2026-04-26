@@ -1,0 +1,246 @@
+<HTML>
+<HEAD>
+    <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+    <META NAME="Author" CONTENT="Tom Archer">
+    <TITLE>String - Table of Contents</TITLE>
+    <META Name="description" Content="Source code for CString extension">
+    <META Name="keywords" Content="SOURCE CODE MFC WINDOWS PROGRAMMING PROGRAMMER STRING CString EXTENSION REGULAR EXPRESSION REGEX REGEXP">
+
+    <SCRIPT LANGUAGE="JavaScript">
+<!--
+var axel = Math.random() + "";
+var ord = axel * 1000000000000000000 + "?";
+
+//This part of script alleviates a Netscape document.write bug
+<!--
+NS4 = document.layers;
+if (NS4) {
+origWidth = innerWidth;
+origHeight = innerHeight;
+}
+function reDo() {
+if (innerWidth != origWidth || innerHeight != origHeight)
+location.reload();
+}
+if (NS4) onresize = reDo;
+//-->
+</SCRIPT>
+
+</HEAD>
+
+
+
+<body>
+
+<!-- begin logo and top banner ad table -->
+
+
+<!-- begin lower outer table -->
+
+<TABLE cellpadding="0" cellspacing="0" border="0">
+<TR>
+
+
+<!-- begin content column -->
+
+<TD VALIGN="TOP" >
+
+<!--
+<table cellpadding="0" cellspacing="0">
+<tr>
+-->
+
+<!-- begin main content column -->
+
+
+<!-- closign of column, row, and table are in subfoot file -->
+
+
+<CENTER>
+<H3>
+<FONT COLOR="#AOAO99">Using Regular Expressions for Search/Replace</FONT></H3></CENTER>
+
+<CENTER>
+<H3>
+
+<HR></H3></CENTER>
+
+
+<p>Normally, when you search for a sub-string in a string, the match should be exact. So if we search for a sub-string "abc" then the string being searched should contain these exact letters in the same sequence for a match to be found. We can extend this kind of search to a case insensitive search where the sub-string "abc" will find strings like "Abc", "ABC" etc. That is, the case is ignored but the sequence of the letters should be exactly the same. Sometimes, a case insensitive search is also not enough. For example, if we want to search for numeric digit, then we basically end up searching for each digit independantly. This is where regular expressions come in to our help.
+
+<p>Regular expressions are text patterns that are used for  string  matching. Regular expressions are strings that contains a mix of plain text and special characters to indicate what kind of matching to do. Here's a very brief turorial on using regular expressions before we move on to the code for handling regular expressions.
+
+<p>Suppose, we are looking for a numeric digit then the regular expression we would search for is "[0-9]". The brackets indicate that the character being compared should match any one of the characters enclosed within the bracket. The dash (-) between 0 and 9 indicates that it is a range from 0 to 9. Therefore, this regular expression will match any character between 0 and 9, that is, any digit. If we want to search for a special character literally we must use a backslash before the special character. For example, the single character regular expression "\*" matches a single asterisk. In the table below the special characters are briefly described.
+
+<p>
+
+<TABLE BORDER CELLSPACING=1 CELLPADDING=7 WIDTH="100%">
+<TR><TD WIDTH="7%" VALIGN="TOP" BGCOLOR="#a0a0a0">
+<FONT SIZE=2><P>Character</FONT></TD>
+<TD WIDTH="93%" VALIGN="TOP" BGCOLOR="#a0a0a0">
+<FONT SIZE=2><P>Description</FONT></TD>
+</TR>
+<TR><TD WIDTH="7%" VALIGN="TOP">
+<FONT SIZE=2><P>^</FONT></TD>
+<TD WIDTH="93%" VALIGN="TOP">
+<FONT SIZE=2><P>Beginning of the string.  The expression &quot;^A&quot; will match an ‘A’ only at the beginning of the string.</FONT></TD>
+</TR>
+<TR><TD WIDTH="7%" VALIGN="TOP">
+<FONT SIZE=2><P>^</FONT></TD>
+<TD WIDTH="93%" VALIGN="TOP">
+<FONT SIZE=2><P>The caret (^) immediately following the left-bracket ([) has a different meaning. It is used to exclude the remaining characters within brackets from matching the target string. The expression &quot;[^0-9]&quot; indicates that the target character should not be a digit.</FONT></TD>
+</TR>
+<TR><TD WIDTH="7%" VALIGN="TOP">
+<FONT SIZE=2><P>$</FONT></TD>
+<TD WIDTH="93%" VALIGN="TOP">
+<FONT SIZE=2><P>The dollar sign ($) will match the end of the string. The expression &quot;abc$&quot; will match the sub-string &quot;abc&quot; only if it is at the end of the string.</FONT></TD>
+</TR>
+<TR><TD WIDTH="7%" VALIGN="TOP">
+<FONT SIZE=2><P>|</FONT></TD>
+<TD WIDTH="93%" VALIGN="TOP">
+<FONT SIZE=2><P>The alternation character (|) allows either expression on its side to match the target string. The expression &quot;a|b&quot; will match ‘a’ as well as ‘b’.</FONT></TD>
+</TR>
+<TR><TD WIDTH="7%" VALIGN="TOP">
+<FONT SIZE=2><P>.</FONT></TD>
+<TD WIDTH="93%" VALIGN="TOP">
+<FONT SIZE=2><P>The dot (.) will match any character.</FONT></TD>
+</TR>
+<TR><TD WIDTH="7%" VALIGN="TOP">
+<FONT SIZE=2><P>*</FONT></TD>
+<TD WIDTH="93%" VALIGN="TOP">
+<FONT SIZE=2><P>The asterix (*) indicates that the character to the left of the asterix in the expression should match 0 or more times.</FONT></TD>
+</TR>
+<TR><TD WIDTH="7%" VALIGN="TOP">
+<FONT SIZE=2><P>+</FONT></TD>
+<TD WIDTH="93%" VALIGN="TOP">
+<FONT SIZE=2><P>The plus (+) is similar to asterix but there should be at least one match of the character to the left of the + sign in the expression.</FONT></TD>
+</TR>
+<TR><TD WIDTH="7%" VALIGN="TOP">
+<FONT SIZE=2><P>?</FONT></TD>
+<TD WIDTH="93%" VALIGN="TOP">
+<FONT SIZE=2><P>The question mark (?) matches the character to its left 0 or 1 times.</FONT></TD>
+</TR>
+<TR><TD WIDTH="7%" VALIGN="TOP">
+<FONT SIZE=2><P>()</FONT></TD>
+<TD WIDTH="93%" VALIGN="TOP">
+<FONT SIZE=2><P>The parenthesis affects the order of pattern evaluation and also serves as a tagged expression that can be used when replacing the matched sub-string with another expression.</FONT></TD>
+</TR>
+<TR><TD WIDTH="7%" VALIGN="TOP">
+<FONT SIZE=2><P>[]</FONT></TD>
+<TD WIDTH="93%" VALIGN="TOP">
+<FONT SIZE=2><P>Brackets ([ and ]) enclosing a set of characters indicates that any of the enclosed characters may match the target character.</FONT></TD>
+</TR>
+</TABLE>
+
+<p>The parenthesis, besides affecting the evaluation order of the regular expression, also serves as tagged expression which is something like a temporary memory. This memory can then be used when we want to replace the found expression with a new expression. The replace expression can specify a & character which means that the & represents the sub-string that was found. So, if the sub-string that matched the regular expression is "abcd", then a replace expression of "xyz&xyz" will change it to "xyzabcdxyz". The replace expression can also be expressed as "xyz\0xyz". The "\0" indicates a tagged expression representing the entire sub-string that was matched. Similarly we can have other tagged expression represented by "\1", "\2" etc. Note that although the tagged expression 0 is always defined, the tagged expression 1,2 etc. are only defined if the regular expression used in the search had enough sets of parenthesis. Here are few examples.
+
+<p>
+
+<TABLE BORDER CELLSPACING=1 CELLPADDING=7 WIDTH="100%">
+<TR><TD WIDTH="25%" VALIGN="TOP" BGCOLOR="#a0a0a0">
+<FONT SIZE=2><P>String</FONT></TD>
+<TD WIDTH="25%" VALIGN="TOP" BGCOLOR="#a0a0a0">
+<FONT SIZE=2><P>Search</FONT></TD>
+<TD WIDTH="25%" VALIGN="TOP" BGCOLOR="#a0a0a0">
+<FONT SIZE=2><P>Replace</FONT></TD>
+<TD WIDTH="25%" VALIGN="TOP" BGCOLOR="#a0a0a0">
+<FONT SIZE=2><P>Result</FONT></TD>
+</TR>
+<TR><TD WIDTH="25%" VALIGN="TOP">
+<FONT SIZE=2><P>Mr.</FONT></TD>
+<TD WIDTH="25%" VALIGN="TOP">
+<FONT SIZE=2><P>(Mr)(\.)</FONT></TD>
+<TD WIDTH="25%" VALIGN="TOP">
+<FONT SIZE=2><P>\1s\2</FONT></TD>
+<TD WIDTH="25%" VALIGN="TOP">
+<FONT SIZE=2><P>Mrs.</FONT></TD>
+</TR>
+<TR><TD WIDTH="25%" VALIGN="TOP">
+<FONT SIZE=2><P>abc</FONT></TD>
+<TD WIDTH="25%" VALIGN="TOP">
+<FONT SIZE=2><P>(a)b(c)</FONT></TD>
+<TD WIDTH="25%" VALIGN="TOP">
+<FONT SIZE=2><P>&amp;-\1-\2</FONT></TD>
+<TD WIDTH="25%" VALIGN="TOP">
+<FONT SIZE=2><P>abc-a-c</FONT></TD>
+</TR>
+<TR><TD WIDTH="25%" VALIGN="TOP">
+<FONT SIZE=2><P>bcd</FONT></TD>
+<TD WIDTH="25%" VALIGN="TOP">
+<FONT SIZE=2><P>(a|b)c*d</FONT></TD>
+<TD WIDTH="25%" VALIGN="TOP">
+<FONT SIZE=2><P>&amp;-\1</FONT></TD>
+<TD WIDTH="25%" VALIGN="TOP">
+<FONT SIZE=2><P>bcd-b</FONT></TD>
+</TR>
+<TR><TD WIDTH="25%" VALIGN="TOP">
+<FONT SIZE=2><P>abcde</FONT></TD>
+<TD WIDTH="25%" VALIGN="TOP">
+<FONT SIZE=2><P>(.*)c(.*)</FONT></TD>
+<TD WIDTH="25%" VALIGN="TOP">
+<FONT SIZE=2><P>&amp;-\1-\2</FONT></TD>
+<TD WIDTH="25%" VALIGN="TOP">
+<FONT SIZE=2><P>abcde-ab-de</FONT></TD>
+</TR>
+<TR><TD WIDTH="25%" VALIGN="TOP">
+<FONT SIZE=2><P>cde</FONT></TD>
+<TD WIDTH="25%" VALIGN="TOP">
+<FONT SIZE=2><P>(ab|cd)e</FONT></TD>
+<TD WIDTH="25%" VALIGN="TOP">
+<FONT SIZE=2><P>&amp;-\1</FONT></TD>
+<TD WIDTH="25%" VALIGN="TOP">
+<FONT SIZE=2><P>cde-cd</FONT></TD>
+</TR>
+</TABLE>
+
+
+<p>The code for regular expression search is given below. This code was derived from work done by Henry Spencer. Besides adding a C++ wrapper around C code, a couple of functions were added to enable search and replace operations.
+
+
+Here's a function that will do global search and replace using regular expressions. Note that the CStringEx class described in the earlier section is being used here. The main reason for using CStringEx is that it provides the Replace() function which makes our task easier.
+
+<PRE><TT><FONT COLOR="#990000"><PRE><TT><PRE><TT><PRE><TT><PRE><TT><PRE><TT><PRE><TT><PRE><TT>
+<font color="#0000ff">int</font> RegSearchReplace( CStringEx& string, LPCTSTR sSearchExp,
+					 LPCTSTR sReplaceExp )
+{
+	<font color="#0000ff">int</font> nPos = 0;
+	<font color="#0000ff">int</font> nReplaced = 0;
+	CRegExp r;
+	LPTSTR str = (LPTSTR)(LPCTSTR)string;
+
+	r.RegComp( sSearchExp );
+	<font color="#0000ff">while</font>( (nPos = r.RegFind((LPTSTR)str)) != -1 )
+	{
+		nReplaced++;
+		TCHAR *pReplaceStr = r.GetReplaceString( sReplaceExp );
+
+		<font color="#0000ff">int</font> offset = str-(LPCTSTR)string+nPos;
+		string.Replace( offset, r.GetFindLen(),
+				pReplaceStr );
+
+		<font color="#009900">// Replace might have caused a reallocation</font>
+		str = (LPTSTR)(LPCTSTR)string + offset + _tcslen(pReplaceStr);
+		<font color="#0000ff">delete</font> pReplaceStr;
+	}
+	<font color="#0000ff">return</font> nReplaced;
+}
+</TT></PRE></TT></PRE></TT></PRE></TT></PRE></TT></PRE></TT></PRE></TT></PRE></FONT></TT></PRE>
+
+
+<P>
+
+</td>
+
+
+</tr>
+</table>
+
+<hr>
+
+</BODY>
+</HTML>
+
+
+
+
+
