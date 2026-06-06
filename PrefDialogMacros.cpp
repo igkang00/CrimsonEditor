@@ -76,7 +76,7 @@ BOOL CPreferenceDialog::SaveMacroBuffers()
 
 BOOL CPreferenceDialog::FileLoadMacroBuffers(LPCTSTR lpszPathName)
 {
-	ifstream fin(lpszPathName, ios::in | ios::nocreate | ios::binary);
+	ifstream fin(lpszPathName, ios::in | ios::binary);
 	if( ! fin.is_open() ) return FALSE;
 
 	TCHAR szBuffer[2048]; INT nLength = strlen(STRING_USERMACROVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';

@@ -24,7 +24,7 @@ BOOL CCedtApp::SaveFtpAccountInfo(LPCTSTR lpszPathName)
 
 BOOL CCedtApp::LoadFtpAccountInfo(LPCTSTR lpszPathName) 
 {
-	ifstream fin(lpszPathName, ios::in | ios::nocreate | ios::binary);
+	ifstream fin(lpszPathName, ios::in | ios::binary);
 	if( ! fin.is_open() ) return FALSE;
 
 	TCHAR szBuffer[2048]; INT nLength = strlen(STRING_FTPACCOUNTVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
@@ -58,7 +58,7 @@ BOOL CCedtApp::SaveUserCommands(LPCTSTR lpszPathName)
 
 BOOL CCedtApp::LoadUserCommands(LPCTSTR lpszPathName)
 {
-	ifstream fin(lpszPathName, ios::in | ios::nocreate | ios::binary);
+	ifstream fin(lpszPathName, ios::in | ios::binary);
 	if( ! fin.is_open() ) return FALSE;
 
 	TCHAR szBuffer[2048]; INT nLength = strlen(STRING_USERTOOLSVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
@@ -92,7 +92,7 @@ BOOL CCedtApp::SaveMacroBuffers(LPCTSTR lpszPathName)
 
 BOOL CCedtApp::LoadMacroBuffers(LPCTSTR lpszPathName)
 {
-	ifstream fin(lpszPathName, ios::in | ios::nocreate | ios::binary);
+	ifstream fin(lpszPathName, ios::in | ios::binary);
 	if( ! fin.is_open() ) return FALSE;
 
 	TCHAR szBuffer[2048]; INT nLength = strlen(STRING_USERMACROVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
@@ -291,7 +291,7 @@ BOOL CCedtApp::SetPredefinedColorScheme(INT nScheme)
 
 BOOL CCedtApp::LoadColorScheme(LPCTSTR lpszPathName)
 {
-	ifstream fin(lpszPathName, ios::in | ios::nocreate | ios::binary);
+	ifstream fin(lpszPathName, ios::in | ios::binary);
 	if( ! fin.is_open() ) return FALSE;
 
 	TCHAR szBuffer[2048]; INT nLength = strlen(STRING_COLORSETTINGSVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
@@ -500,7 +500,7 @@ BOOL CCedtApp::LoadUserConfiguration(LPCTSTR lpszPathName)
 {
 	INT i, nLength; TCHAR szBuffer[2048];
 
-	ifstream fin(lpszPathName, ios::in | ios::nocreate | ios::binary);
+	ifstream fin(lpszPathName, ios::in | ios::binary);
 	if( ! fin.is_open() ) return FALSE;
 
 	nLength = strlen(STRING_CONFIGURATIONVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';

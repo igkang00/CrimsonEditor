@@ -67,7 +67,7 @@ BOOL CFileWindow::OpenProjectWorkspace(LPCTSTR lpszPathName)
 	EnableAllProjectButtons(FALSE);
 
 	// open file to load project workspace
-	ifstream fin(lpszPathName, ios::in | ios::nocreate);
+	ifstream fin(lpszPathName, ios::in);
 
 	CMapStringToString mapAttr; TCHAR szText[4096]; 
 	fin >> szText; // get first token
@@ -149,7 +149,7 @@ BOOL CFileWindow::OpenRegularWorkspace(LPCTSTR lpszPathName)
 	if( ! InsertProjectTreeItem(TVI_ROOT, szItemText, PROJECT_ITEM_PROJECT, 0, "") ) return FALSE;
 
 	// open file to load regular workspace
-	ifstream fin(lpszPathName, ios::in | ios::nocreate);
+	ifstream fin(lpszPathName, ios::in);
 
 	CMapStringToString mapAttr; TCHAR szText[4096]; 
 	fin >> szText; // get first token

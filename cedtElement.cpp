@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include <fstream.h>
-#include <strstrea.h>
+#include "fstream_compat.h"
+#include <sstream>
 #include <ctype.h>
 #include "Encode.h"
 #include "RegExp.h"
@@ -164,7 +164,7 @@ BOOL CLangSpec::FileLoad(LPCTSTR lpszPathName)
 	TCHAR szLine[4096];
 	ResetContents(); // clear previous settings
 
-	ifstream fin(lpszPathName, ios::in | ios::nocreate);
+	ifstream fin(lpszPathName, ios::in);
 	if( ! fin.is_open() ) return FALSE;
 
 	while( fin.good() ) {
@@ -252,7 +252,7 @@ BOOL CKeywords::FileLoad(LPCTSTR lpszPathName, BOOL bCaseSensitive[])
 
 	RemoveAll(); // clear hash table first
 
-	ifstream fin(lpszPathName, ios::in | ios::nocreate);
+	ifstream fin(lpszPathName, ios::in);
 	if( ! fin.is_open() ) return FALSE;
 
 	while( fin.good() ) {
@@ -281,9 +281,9 @@ BOOL CKeywords::FileLoad(LPCTSTR lpszPathName, BOOL bCaseSensitive[])
 			if( strstr(ptr2, "NOEMBOLDEN") ) bNoEmbolden = TRUE;
 
 		} else if( ucType ) {
-			istrstream sin(szLine);
+			std::istringstream sin(szLine);
 			while( sin.good() ) {
-				sin.eatwhite(); if( ! sin.good() ) break;
+				sin >> std::ws; if( ! sin.good() ) break;
 				sin >> szWord;  if( szWord[0] == '\0' ) break;
 
 				if( bIgnoreCase ) { _strlwr(szWord); sprintf(szBuffer, "I:%s", szWord); }
@@ -337,11 +337,11 @@ BOOL CDictionary::FileLoad(LPCTSTR lpszPathName, CALLBACK_FUNCTION fcnCallback)
 {
 	TCHAR szWord[MAX_WORD_LENGTH+1]; UCHAR ucValue; UINT nCount = 0;
 
-	ifstream fin(lpszPathName, ios::in | ios::nocreate);
+	ifstream fin(lpszPathName, ios::in);
 	if( ! fin.is_open() ) return FALSE;
 
 	while( fin.good() ) {
-		fin.eatwhite(); if( fin.eof() ) break;
+		fin >> std::ws; if( fin.eof() ) break;
 		fin >> szWord; _strlwr(szWord);
 
 		if( ! Lookup( szWord, ucValue ) ) {

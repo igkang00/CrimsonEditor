@@ -51,7 +51,7 @@ BOOL CCedtDoc::SearchLinkFileWithPathName(LPCTSTR lpszPathName, CString & szLink
 
 BOOL CCedtDoc::GetContainsPartOfLinkFile(LPCTSTR lpszLinkFilePath, CString & szContains)
 {
-	ifstream fin( lpszLinkFilePath, ios::in | ios::nocreate);
+	ifstream fin( lpszLinkFilePath, ios::in);
 	if( ! fin.is_open() ) return FALSE;
 
 	TCHAR buff[1024], * ptr1, * ptr2;
@@ -75,7 +75,7 @@ BOOL CCedtDoc::ReadExtensionLinkFile(LPCTSTR lpszLinkFilePath)
 {
 	m_szLangSpecFile = m_szKeywordsFile = "";
 
-	ifstream fin( lpszLinkFilePath, ios::in | ios::nocreate);
+	ifstream fin( lpszLinkFilePath, ios::in);
 	if( ! fin.is_open() ) return FALSE;
 
 	TCHAR buff[1024], * ptr1, * ptr2;

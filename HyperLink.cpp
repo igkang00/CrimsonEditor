@@ -179,7 +179,7 @@ void CHyperLink::OnMouseMove(UINT nFlags, CPoint point)
 // lines of code and more reliable than turning on SS_NOTIFY in OnCtlColor
 // because Windows doesn't send WM_CTLCOLOR to bitmap static controls."
 // (Paul DiLascia)
-UINT CHyperLink::OnNcHitTest(CPoint /*point*/) 
+LRESULT CHyperLink::OnNcHitTest(CPoint /*point*/)
 {
 		return HTCLIENT;	
 }
@@ -384,7 +384,7 @@ void CHyperLink::AdjustWindow()
     GetWindowRect(rcWnd);
 
 	// For a child CWnd object, window rect is relative to the 
-	// upper-left corner of the parent window’s client area. 
+	// upper-left corner of the parent windowï¿½s client area. 
     CWnd* pParent = GetParent();
     if (pParent)
         pParent->ScreenToClient(rcWnd);

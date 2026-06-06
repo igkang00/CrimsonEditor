@@ -57,7 +57,7 @@ void CSortStringArray::BubbleSortInnerNoCase(INT nLeft, INT nRight)
 void CSortStringArray::QuickSortInner(INT l, INT r)
 {
 	INT i = l, j = r;
-	CString & szTest = GetAt( (l + r) / 2 );
+	const CString & szTest = GetAt( (l + r) / 2 );
 
 	do {
 		while( GetAt(i).Compare(szTest) < 0 ) i++;
@@ -72,7 +72,7 @@ void CSortStringArray::QuickSortInner(INT l, INT r)
 void CSortStringArray::QuickSortInnerNoCase(INT l, INT r)
 {
 	INT i = l, j = r;
-	CString & szTest = GetAt( (l + r) / 2 );
+	const CString & szTest = GetAt( (l + r) / 2 );
 
 	do {
 		while( GetAt(i).CompareNoCase(szTest) < 0 ) i++;

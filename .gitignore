@@ -18,6 +18,7 @@ Release-US/
 
 # Modern Visual Studio
 .vs/
+*.vcxproj.user
 
 # Windows
 Thumbs.db

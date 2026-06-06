@@ -156,7 +156,7 @@ protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnViewFileTab();
 	afx_msg void OnUpdateViewFileTab(CCmdUI* pCmdUI);
-	afx_msg void OnActivateApp(BOOL bActive, HTASK hTask);
+	afx_msg void OnActivateApp(BOOL bActive, DWORD dwThreadID);
 	afx_msg void OnClose();
 	afx_msg void OnViewDirectoryWindow();
 	afx_msg void OnUpdateViewDirectoryWindow(CCmdUI* pCmdUI);

@@ -60,7 +60,7 @@ void CCedtApp::OnFileOpenTemplate()
 void CCedtApp::OnFileOpenRemote() 
 {
 	if( ! m_bPostOpenDocument ) { // normal open remote command
-		static nFtpAccount = 0;
+		static INT nFtpAccount = 0;
 		CString szFilter = GetComposedFileFilter();
 		COpenRemoteDialog dlg(TRUE, NULL, szFilter);
 

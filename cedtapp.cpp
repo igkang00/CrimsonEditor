@@ -459,7 +459,7 @@ void CCedtApp::OnAnotherInstance()
 	CMutex mutex(FALSE, MUTEX_NAME_CMDLINE);
 	CSingleLock lock( & mutex ); lock.Lock();
 
-	ifstream fin(m_szAppDataDirectory + "\\cmdline.txt", ios::in | ios::nocreate);
+	ifstream fin(m_szAppDataDirectory + "\\cmdline.txt", ios::in);
 	while( fin.good() ) {
 		fin.getline(szBuffer, 4096);
 		if( strlen(szBuffer) ) arrCmdLine.Add(szBuffer);

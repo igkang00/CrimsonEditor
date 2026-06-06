@@ -76,7 +76,7 @@
 
 
 // HEADERS
-#include <fstream.h>
+#include "fstream_compat.h"
 #include "resource.h"
 #include "PathName.h"
 #include "RegExp.h"

@@ -17,7 +17,7 @@ BOOL CCedtView::RefreshUserCommandFilePathForMenu()
 	arrPathName.QuickSort();
 
 	INT size = arrPathName.GetSize(); if( size > 8 ) size = 8;
-	for( i = 0; i < size; i++ ) m_szUserCommandFilePath[i] = arrPathName[i];
+	for( INT i = 0; i < size; i++ ) m_szUserCommandFilePath[i] = arrPathName[i];
 
 	return TRUE;
 }
@@ -305,7 +305,7 @@ BOOL CCedtView::ExpandShellVariable(CString & szValue, LPCTSTR lpszExpand)
 		INT nExpand = strlen(lpszExpand+1);
 		if( ! nLength && nExpand ) szValue = lpszExpand + 1;
 	} else if( lpszExpand[0] == ':' ) { // substring
-		TCHAR * pFound = strchr(lpszExpand+1, ',');
+		const TCHAR * pFound = strchr(lpszExpand+1, ',');
 		INT nFirst = atoi( lpszExpand+1 ); if( nFirst > nLength ) nFirst = nLength;
 		INT nCount = pFound ? atoi( pFound+1 ) : nLength-nFirst;
 		szValue = szValue.Mid(nFirst, nCount);

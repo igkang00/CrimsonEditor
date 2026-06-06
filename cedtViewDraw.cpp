@@ -168,7 +168,7 @@ void CCedtView::DrawScreenBackgroundAndText()
 			szTerminator = rLine.m_szHereDocumentTerminator;
 
 			// drawing text
-			for(siWordCount = 0; siWordCount < rLine.m_siWordCount; siWordCount++) {
+			for(SHORT siWordCount = 0; siWordCount < rLine.m_siWordCount; siWordCount++) {
 				FORMATEDWORD & rWord = rLine.m_pWord[siWordCount];
 				nPosition = rWord.m_nPosition; nWidth = rWord.m_nWidth;
 				ucType1 = rWord.m_ucType[0];
@@ -412,7 +412,7 @@ void CCedtView::DrawPrintPageBackgroundAndText(CDC * pDC, RECT rectDraw, INT nCu
 			szTerminator = rLine.m_szHereDocumentTerminator;
 
 			// drawing text
-			for(siWordCount = 0; siWordCount < rLine.m_siWordCount; siWordCount++) {
+			for(SHORT siWordCount = 0; siWordCount < rLine.m_siWordCount; siWordCount++) {
 				FORMATEDWORD & rWord = rLine.m_pWord[siWordCount];
 				nPosition = rWord.m_nPosition; nWidth = rWord.m_nWidth;
 				ucType1 = rWord.m_ucType[0];

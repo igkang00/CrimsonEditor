@@ -247,9 +247,9 @@ void CMainFrame::OnClose()
 	CMDIFrameWnd::OnClose();
 }
 
-void CMainFrame::OnActivateApp(BOOL bActive, HTASK hTask) 
+void CMainFrame::OnActivateApp(BOOL bActive, DWORD dwThreadID)
 {
-	CMDIFrameWnd::OnActivateApp(bActive, hTask);
+	CMDIFrameWnd::OnActivateApp(bActive, dwThreadID);
 
 	// check if files modified outside
 	if( bActive && CCedtApp::m_bCheckIfFilesModifiedOutside ) PostMessage(WM_COMMAND, ID_FILE_CHECK_MODIFIED, 0L);

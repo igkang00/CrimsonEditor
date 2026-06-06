@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 #include "resource.h"
-#include <fstream.h>
+#include "fstream_compat.h"
 #include "cedtElement.h"
 #include "FtpSettingsDialog.h"
 #include "FtpAdvancedDialog.h"
