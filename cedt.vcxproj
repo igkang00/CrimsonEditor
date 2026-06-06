@@ -58,7 +58,7 @@
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>.;src\include;src\core;src\util;src\network;src\dialogs;src\dialogs\preferences;src\frame;src\panels;third_party\htmlhelp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src\include;src\core;src\util;src\network;src\dialogs;src\dialogs\preferences;src\frame;src\panels;src\app;src\doc;src\view;third_party\htmlhelp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -92,7 +92,7 @@
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>.;src\include;src\core;src\util;src\network;src\dialogs;src\dialogs\preferences;src\frame;src\panels;third_party\htmlhelp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src\include;src\core;src\util;src\network;src\dialogs;src\dialogs\preferences;src\frame;src\panels;src\app;src\doc;src\view;third_party\htmlhelp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -122,54 +122,54 @@
     </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="cedtapp.cpp" />
-    <ClCompile Include="cedtAppConf.cpp" />
-    <ClCompile Include="cedtAppDirectory.cpp" />
-    <ClCompile Include="cedtAppFile.cpp" />
-    <ClCompile Include="cedtAppFilter.cpp" />
-    <ClCompile Include="cedtAppHndr.cpp" />
-    <ClCompile Include="cedtAppProject.cpp" />
-    <ClCompile Include="cedtAppRegistry.cpp" />
-    <ClCompile Include="cedtAppSearch.cpp" />
-    <ClCompile Include="cedtAppView.cpp" />
-    <ClCompile Include="cedtDoc.cpp" />
-    <ClCompile Include="cedtDocAnal.cpp" />
-    <ClCompile Include="cedtDocDictionary.cpp" />
-    <ClCompile Include="cedtDocEdit.cpp" />
-    <ClCompile Include="cedtDocEditAdv.cpp" />
-    <ClCompile Include="cedtDocFile.cpp" />
-    <ClCompile Include="cedtDocHndr.cpp" />
-    <ClCompile Include="cedtDocMap.cpp" />
-    <ClCompile Include="cedtDocSearch.cpp" />
-    <ClCompile Include="cedtDocSyntax.cpp" />
-    <ClCompile Include="cedtDocUndo.cpp" />
-    <ClCompile Include="cedtDocView.cpp" />
+    <ClCompile Include="src\app\cedtapp.cpp" />
+    <ClCompile Include="src\app\cedtAppConf.cpp" />
+    <ClCompile Include="src\app\cedtAppDirectory.cpp" />
+    <ClCompile Include="src\app\cedtAppFile.cpp" />
+    <ClCompile Include="src\app\cedtAppFilter.cpp" />
+    <ClCompile Include="src\app\cedtAppHndr.cpp" />
+    <ClCompile Include="src\app\cedtAppProject.cpp" />
+    <ClCompile Include="src\app\cedtAppRegistry.cpp" />
+    <ClCompile Include="src\app\cedtAppSearch.cpp" />
+    <ClCompile Include="src\app\cedtAppView.cpp" />
+    <ClCompile Include="src\doc\cedtDoc.cpp" />
+    <ClCompile Include="src\doc\cedtDocAnal.cpp" />
+    <ClCompile Include="src\doc\cedtDocDictionary.cpp" />
+    <ClCompile Include="src\doc\cedtDocEdit.cpp" />
+    <ClCompile Include="src\doc\cedtDocEditAdv.cpp" />
+    <ClCompile Include="src\doc\cedtDocFile.cpp" />
+    <ClCompile Include="src\doc\cedtDocHndr.cpp" />
+    <ClCompile Include="src\doc\cedtDocMap.cpp" />
+    <ClCompile Include="src\doc\cedtDocSearch.cpp" />
+    <ClCompile Include="src\doc\cedtDocSyntax.cpp" />
+    <ClCompile Include="src\doc\cedtDocUndo.cpp" />
+    <ClCompile Include="src\doc\cedtDocView.cpp" />
     <ClCompile Include="src\core\cedtElement.cpp" />
-    <ClCompile Include="cedtView.cpp" />
-    <ClCompile Include="cedtViewAction.cpp" />
-    <ClCompile Include="cedtViewCaret.cpp" />
-    <ClCompile Include="cedtViewCommand.cpp" />
-    <ClCompile Include="cedtViewDraw.cpp" />
-    <ClCompile Include="cedtViewEdit.cpp" />
-    <ClCompile Include="cedtViewEditAdv.cpp" />
-    <ClCompile Include="cedtViewEditCompose.cpp" />
-    <ClCompile Include="cedtViewEvent.cpp" />
-    <ClCompile Include="cedtViewFont.cpp" />
-    <ClCompile Include="cedtViewFormat.cpp" />
-    <ClCompile Include="cedtViewHighlight.cpp" />
-    <ClCompile Include="cedtViewHndrEdit.cpp" />
-    <ClCompile Include="cedtViewHndrMisc.cpp" />
-    <ClCompile Include="cedtViewMacro.cpp" />
-    <ClCompile Include="cedtViewMap.cpp" />
-    <ClCompile Include="cedtViewMapAdv.cpp" />
-    <ClCompile Include="cedtViewMetric.cpp" />
-    <ClCompile Include="cedtViewMisc.cpp" />
-    <ClCompile Include="cedtViewMove.cpp" />
-    <ClCompile Include="cedtViewPrint.cpp" />
-    <ClCompile Include="cedtViewScroll.cpp" />
-    <ClCompile Include="cedtViewSearch.cpp" />
-    <ClCompile Include="cedtViewSelect.cpp" />
-    <ClCompile Include="cedtViewUndo.cpp" />
+    <ClCompile Include="src\view\cedtView.cpp" />
+    <ClCompile Include="src\view\cedtViewAction.cpp" />
+    <ClCompile Include="src\view\cedtViewCaret.cpp" />
+    <ClCompile Include="src\view\cedtViewCommand.cpp" />
+    <ClCompile Include="src\view\cedtViewDraw.cpp" />
+    <ClCompile Include="src\view\cedtViewEdit.cpp" />
+    <ClCompile Include="src\view\cedtViewEditAdv.cpp" />
+    <ClCompile Include="src\view\cedtViewEditCompose.cpp" />
+    <ClCompile Include="src\view\cedtViewEvent.cpp" />
+    <ClCompile Include="src\view\cedtViewFont.cpp" />
+    <ClCompile Include="src\view\cedtViewFormat.cpp" />
+    <ClCompile Include="src\view\cedtViewHighlight.cpp" />
+    <ClCompile Include="src\view\cedtViewHndrEdit.cpp" />
+    <ClCompile Include="src\view\cedtViewHndrMisc.cpp" />
+    <ClCompile Include="src\view\cedtViewMacro.cpp" />
+    <ClCompile Include="src\view\cedtViewMap.cpp" />
+    <ClCompile Include="src\view\cedtViewMapAdv.cpp" />
+    <ClCompile Include="src\view\cedtViewMetric.cpp" />
+    <ClCompile Include="src\view\cedtViewMisc.cpp" />
+    <ClCompile Include="src\view\cedtViewMove.cpp" />
+    <ClCompile Include="src\view\cedtViewPrint.cpp" />
+    <ClCompile Include="src\view\cedtViewScroll.cpp" />
+    <ClCompile Include="src\view\cedtViewSearch.cpp" />
+    <ClCompile Include="src\view\cedtViewSelect.cpp" />
+    <ClCompile Include="src\view\cedtViewUndo.cpp" />
     <ClCompile Include="src\frame\ChildFrm.cpp" />
     <ClCompile Include="src\panels\FileTab.cpp" />
     <ClCompile Include="src\panels\FileTabDropTarget.cpp" />
@@ -239,12 +239,12 @@
     <ClCompile Include="src\dialogs\preferences\PrefDialogVisual.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="cedtapp.h" />
+    <ClInclude Include="src\app\cedtapp.h" />
     <ClInclude Include="src\include\cedtColors.h" />
-    <ClInclude Include="cedtDoc.h" />
+    <ClInclude Include="src\doc\cedtDoc.h" />
     <ClInclude Include="src\core\cedtElement.h" />
     <ClInclude Include="src\include\cedtHeader.h" />
-    <ClInclude Include="cedtView.h" />
+    <ClInclude Include="src\view\cedtView.h" />
     <ClInclude Include="src\frame\ChildFrm.h" />
     <ClInclude Include="src\panels\FileTab.h" />
     <ClInclude Include="src\panels\FileTabDropTarget.h" />
