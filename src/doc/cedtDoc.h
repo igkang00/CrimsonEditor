@@ -102,7 +102,7 @@ public: // *** cedtDoc.cpp ***
 	CString GetRemotePathName() const { return m_szRemotePathName; }
 
 	CString GetFullRemotePathName() const;
-	LONG GetFileSize() const { return m_clsFileStatus.m_size; }
+	LONG GetFileSize() const { return static_cast<LONG>(m_clsFileStatus.m_size); }
 
 protected:
 //	BOOL OnNewDocument();
