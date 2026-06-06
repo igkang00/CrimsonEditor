@@ -49,7 +49,7 @@
     <ClCompile Include="cedtDocSyntax.cpp"><Filter>Source Files</Filter></ClCompile>
     <ClCompile Include="cedtDocUndo.cpp"><Filter>Source Files</Filter></ClCompile>
     <ClCompile Include="cedtDocView.cpp"><Filter>Source Files</Filter></ClCompile>
-    <ClCompile Include="cedtElement.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="src\core\cedtElement.cpp"><Filter>Source Files</Filter></ClCompile>
     <ClCompile Include="cedtView.cpp"><Filter>Source Files</Filter></ClCompile>
     <ClCompile Include="cedtViewAction.cpp"><Filter>Source Files</Filter></ClCompile>
     <ClCompile Include="cedtViewCaret.cpp"><Filter>Source Files</Filter></ClCompile>
@@ -90,7 +90,7 @@
     <ClCompile Include="RemoteFile.cpp"><Filter>Source Files</Filter></ClCompile>
     <ClCompile Include="SplitterWndEx.cpp"><Filter>Source Files</Filter></ClCompile>
     <ClCompile Include="StatusBarEx.cpp"><Filter>Source Files</Filter></ClCompile>
-    <ClCompile Include="StdAfx.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="src\include\StdAfx.cpp"><Filter>Source Files</Filter></ClCompile>
     <ClCompile Include="CmdLine.cpp"><Filter>Utility Files</Filter></ClCompile>
     <ClCompile Include="ColorListBox.cpp"><Filter>Utility Files</Filter></ClCompile>
     <ClCompile Include="date.cpp"><Filter>Utility Files</Filter></ClCompile>
@@ -143,10 +143,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cedtapp.h"><Filter>Header Files</Filter></ClInclude>
-    <ClInclude Include="cedtColors.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="src\include\cedtColors.h"><Filter>Header Files</Filter></ClInclude>
     <ClInclude Include="cedtDoc.h"><Filter>Header Files</Filter></ClInclude>
-    <ClInclude Include="cedtElement.h"><Filter>Header Files</Filter></ClInclude>
-    <ClInclude Include="cedtHeader.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="src\core\cedtElement.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="src\include\cedtHeader.h"><Filter>Header Files</Filter></ClInclude>
     <ClInclude Include="cedtView.h"><Filter>Header Files</Filter></ClInclude>
     <ClInclude Include="ChildFrm.h"><Filter>Header Files</Filter></ClInclude>
     <ClInclude Include="FileTab.h"><Filter>Header Files</Filter></ClInclude>
@@ -159,8 +159,9 @@
     <ClInclude Include="RemoteFile.h"><Filter>Header Files</Filter></ClInclude>
     <ClInclude Include="SplitterWndEx.h"><Filter>Header Files</Filter></ClInclude>
     <ClInclude Include="StatusBarEx.h"><Filter>Header Files</Filter></ClInclude>
-    <ClInclude Include="StdAfx.h"><Filter>Header Files</Filter></ClInclude>
-    <ClInclude Include="resource.h"><Filter>Languages</Filter></ClInclude>
+    <ClInclude Include="src\include\StdAfx.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="src\include\fstream_compat.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="src\include\resource.h"><Filter>Header Files</Filter></ClInclude>
     <ClInclude Include="CmdLine.h"><Filter>Utility Files</Filter></ClInclude>
     <ClInclude Include="ColorListBox.h"><Filter>Utility Files</Filter></ClInclude>
     <ClInclude Include="date.h"><Filter>Utility Files</Filter></ClInclude>
@@ -168,7 +169,7 @@
     <ClInclude Include="evaluate.h"><Filter>Utility Files</Filter></ClInclude>
     <ClInclude Include="FolderDialog.h"><Filter>Utility Files</Filter></ClInclude>
     <ClInclude Include="FtpClnt.h"><Filter>Utility Files</Filter></ClInclude>
-    <ClInclude Include="HtmlHelp.h"><Filter>Utility Files</Filter></ClInclude>
+    <ClInclude Include="third_party\htmlhelp\HtmlHelp.h"><Filter>Utility Files</Filter></ClInclude>
     <ClInclude Include="HyperLink.h"><Filter>Utility Files</Filter></ClInclude>
     <ClInclude Include="PathName.h"><Filter>Utility Files</Filter></ClInclude>
     <ClInclude Include="RegExp.h"><Filter>Utility Files</Filter></ClInclude>

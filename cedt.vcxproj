@@ -58,6 +58,7 @@
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>.;src\include;src\core;third_party\htmlhelp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -74,12 +75,13 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>imm32.lib;htmlhelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>third_party\htmlhelp;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <TargetMachine>MachineX86</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;_AFXDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.;src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -90,6 +92,7 @@
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>.;src\include;src\core;third_party\htmlhelp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -106,11 +109,12 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>imm32.lib;htmlhelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>third_party\htmlhelp;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;_AFXDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.;src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -140,7 +144,7 @@
     <ClCompile Include="cedtDocSyntax.cpp" />
     <ClCompile Include="cedtDocUndo.cpp" />
     <ClCompile Include="cedtDocView.cpp" />
-    <ClCompile Include="cedtElement.cpp" />
+    <ClCompile Include="src\core\cedtElement.cpp" />
     <ClCompile Include="cedtView.cpp" />
     <ClCompile Include="cedtViewAction.cpp" />
     <ClCompile Include="cedtViewCaret.cpp" />
@@ -181,7 +185,7 @@
     <ClCompile Include="RemoteFile.cpp" />
     <ClCompile Include="SplitterWndEx.cpp" />
     <ClCompile Include="StatusBarEx.cpp" />
-    <ClCompile Include="StdAfx.cpp">
+    <ClCompile Include="src\include\StdAfx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="CmdLine.cpp" />
@@ -236,10 +240,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cedtapp.h" />
-    <ClInclude Include="cedtColors.h" />
+    <ClInclude Include="src\include\cedtColors.h" />
     <ClInclude Include="cedtDoc.h" />
-    <ClInclude Include="cedtElement.h" />
-    <ClInclude Include="cedtHeader.h" />
+    <ClInclude Include="src\core\cedtElement.h" />
+    <ClInclude Include="src\include\cedtHeader.h" />
     <ClInclude Include="cedtView.h" />
     <ClInclude Include="ChildFrm.h" />
     <ClInclude Include="FileTab.h" />
@@ -252,8 +256,9 @@
     <ClInclude Include="RemoteFile.h" />
     <ClInclude Include="SplitterWndEx.h" />
     <ClInclude Include="StatusBarEx.h" />
-    <ClInclude Include="StdAfx.h" />
-    <ClInclude Include="resource.h" />
+    <ClInclude Include="src\include\StdAfx.h" />
+    <ClInclude Include="src\include\fstream_compat.h" />
+    <ClInclude Include="src\include\resource.h" />
     <ClInclude Include="CmdLine.h" />
     <ClInclude Include="ColorListBox.h" />
     <ClInclude Include="date.h" />
@@ -261,7 +266,7 @@
     <ClInclude Include="evaluate.h" />
     <ClInclude Include="FolderDialog.h" />
     <ClInclude Include="FtpClnt.h" />
-    <ClInclude Include="HtmlHelp.h" />
+    <ClInclude Include="third_party\htmlhelp\HtmlHelp.h" />
     <ClInclude Include="HyperLink.h" />
     <ClInclude Include="PathName.h" />
     <ClInclude Include="RegExp.h" />
