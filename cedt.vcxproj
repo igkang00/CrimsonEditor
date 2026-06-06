@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug-KR|Win32">
+      <Configuration>Debug-KR</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release-KR|Win32">
+      <Configuration>Release-KR</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug-US|Win32">
+      <Configuration>Debug-US</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release-US|Win32">
+      <Configuration>Release-US</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <ProjectGuid>{8B5C6D43-2E1A-4F8E-9C2B-1234567890AB}</ProjectGuid>
+    <RootNamespace>cedt</RootNamespace>
+    <Keyword>MFCProj</Keyword>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)'=='Release-KR' or '$(Configuration)'=='Release-US'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug-KR' or '$(Configuration)'=='Debug-US'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <OutDir>$(ProjectDir)$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)$(Configuration)\</IntDir>
+    <TargetName Condition="'$(Configuration)'=='Release-KR' or '$(Configuration)'=='Debug-KR'">cedt_kr</TargetName>
+    <TargetName Condition="'$(Configuration)'=='Release-US' or '$(Configuration)'=='Debug-US'">cedt_us</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release-KR' or '$(Configuration)'=='Release-US'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_AFXDLL;_MBCS;_CRT_SECURE_NO_WARNINGS;_CRT_NON_CONFORMING_SWPRINTFS;_AFX_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ConformanceMode>false</ConformanceMode>
+      <LanguageStandard>Default</LanguageStandard>
+      <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
+      <SDLCheck>false</SDLCheck>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>imm32.lib;htmlhelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <TargetMachine>MachineX86</TargetMachine>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+    </Link>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;_AFXDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Midl>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TargetEnvironment>Win32</TargetEnvironment>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug-KR' or '$(Configuration)'=='Debug-US'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_AFXDLL;_MBCS;_CRT_SECURE_NO_WARNINGS;_CRT_NON_CONFORMING_SWPRINTFS;_AFX_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ConformanceMode>false</ConformanceMode>
+      <LanguageStandard>Default</LanguageStandard>
+      <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
+      <SDLCheck>false</SDLCheck>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>imm32.lib;htmlhelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;_AFXDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Midl>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TargetEnvironment>Win32</TargetEnvironment>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="cedtapp.cpp" />
+    <ClCompile Include="cedtAppConf.cpp" />
+    <ClCompile Include="cedtAppDirectory.cpp" />
+    <ClCompile Include="cedtAppFile.cpp" />
+    <ClCompile Include="cedtAppFilter.cpp" />
+    <ClCompile Include="cedtAppHndr.cpp" />
+    <ClCompile Include="cedtAppProject.cpp" />
+    <ClCompile Include="cedtAppRegistry.cpp" />
+    <ClCompile Include="cedtAppSearch.cpp" />
+    <ClCompile Include="cedtAppView.cpp" />
+    <ClCompile Include="cedtDoc.cpp" />
+    <ClCompile Include="cedtDocAnal.cpp" />
+    <ClCompile Include="cedtDocDictionary.cpp" />
+    <ClCompile Include="cedtDocEdit.cpp" />
+    <ClCompile Include="cedtDocEditAdv.cpp" />
+    <ClCompile Include="cedtDocFile.cpp" />
+    <ClCompile Include="cedtDocHndr.cpp" />
+    <ClCompile Include="cedtDocMap.cpp" />
+    <ClCompile Include="cedtDocSearch.cpp" />
+    <ClCompile Include="cedtDocSyntax.cpp" />
+    <ClCompile Include="cedtDocUndo.cpp" />
+    <ClCompile Include="cedtDocView.cpp" />
+    <ClCompile Include="cedtElement.cpp" />
+    <ClCompile Include="cedtView.cpp" />
+    <ClCompile Include="cedtViewAction.cpp" />
+    <ClCompile Include="cedtViewCaret.cpp" />
+    <ClCompile Include="cedtViewCommand.cpp" />
+    <ClCompile Include="cedtViewDraw.cpp" />
+    <ClCompile Include="cedtViewEdit.cpp" />
+    <ClCompile Include="cedtViewEditAdv.cpp" />
+    <ClCompile Include="cedtViewEditCompose.cpp" />
+    <ClCompile Include="cedtViewEvent.cpp" />
+    <ClCompile Include="cedtViewFont.cpp" />
+    <ClCompile Include="cedtViewFormat.cpp" />
+    <ClCompile Include="cedtViewHighlight.cpp" />
+    <ClCompile Include="cedtViewHndrEdit.cpp" />
+    <ClCompile Include="cedtViewHndrMisc.cpp" />
+    <ClCompile Include="cedtViewMacro.cpp" />
+    <ClCompile Include="cedtViewMap.cpp" />
+    <ClCompile Include="cedtViewMapAdv.cpp" />
+    <ClCompile Include="cedtViewMetric.cpp" />
+    <ClCompile Include="cedtViewMisc.cpp" />
+    <ClCompile Include="cedtViewMove.cpp" />
+    <ClCompile Include="cedtViewPrint.cpp" />
+    <ClCompile Include="cedtViewScroll.cpp" />
+    <ClCompile Include="cedtViewSearch.cpp" />
+    <ClCompile Include="cedtViewSelect.cpp" />
+    <ClCompile Include="cedtViewUndo.cpp" />
+    <ClCompile Include="ChildFrm.cpp" />
+    <ClCompile Include="FileTab.cpp" />
+    <ClCompile Include="FileTabDropTarget.cpp" />
+    <ClCompile Include="FileWnd.cpp" />
+    <ClCompile Include="FileWndDirectory.cpp" />
+    <ClCompile Include="FileWndDropTarget.cpp" />
+    <ClCompile Include="FileWndProject.cpp" />
+    <ClCompile Include="FileWndRemote.cpp" />
+    <ClCompile Include="MainFrm.cpp" />
+    <ClCompile Include="MainFrmDropTarget.cpp" />
+    <ClCompile Include="MainFrmHndr.cpp" />
+    <ClCompile Include="OutputWindow.cpp" />
+    <ClCompile Include="RemoteFile.cpp" />
+    <ClCompile Include="SplitterWndEx.cpp" />
+    <ClCompile Include="StatusBarEx.cpp" />
+    <ClCompile Include="StdAfx.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="CmdLine.cpp" />
+    <ClCompile Include="ColorListBox.cpp" />
+    <ClCompile Include="date.cpp" />
+    <ClCompile Include="encode.cpp" />
+    <ClCompile Include="evaluate.cpp" />
+    <ClCompile Include="FolderDialog.cpp" />
+    <ClCompile Include="FtpClnt.cpp" />
+    <ClCompile Include="HyperLink.cpp" />
+    <ClCompile Include="PathName.cpp" />
+    <ClCompile Include="RegExp.cpp" />
+    <ClCompile Include="registry.cpp" />
+    <ClCompile Include="Separator.cpp" />
+    <ClCompile Include="SizeCBar.cpp" />
+    <ClCompile Include="SortStringArray.cpp" />
+    <ClCompile Include="Utility.cpp" />
+    <ClCompile Include="VerticalStatic.cpp" />
+    <ClCompile Include="XPTabCtrl.cpp" />
+    <ClCompile Include="AboutDialog.cpp" />
+    <ClCompile Include="AskReplaceDialog.cpp" />
+    <ClCompile Include="DocumentSummary.cpp" />
+    <ClCompile Include="DummyDialog.cpp" />
+    <ClCompile Include="FindDialog.cpp" />
+    <ClCompile Include="FindInFilesDialog.cpp" />
+    <ClCompile Include="FtpAdvancedDialog.cpp" />
+    <ClCompile Include="FtpPasswordDialog.cpp" />
+    <ClCompile Include="FtpSettingsDialog.cpp" />
+    <ClCompile Include="FtpTransferDialog.cpp" />
+    <ClCompile Include="GoToDialog.cpp" />
+    <ClCompile Include="MacroDefineDialog.cpp" />
+    <ClCompile Include="OpenRemoteDialog.cpp" />
+    <ClCompile Include="ReloadAsDialog.cpp" />
+    <ClCompile Include="ReplaceDialog.cpp" />
+    <ClCompile Include="UserInputDialog.cpp" />
+    <ClCompile Include="prefdialog.cpp" />
+    <ClCompile Include="PrefDialogAssoc.cpp" />
+    <ClCompile Include="PrefDialogBackup.cpp" />
+    <ClCompile Include="PrefDialogColors.cpp" />
+    <ClCompile Include="PrefDialogCommands.cpp" />
+    <ClCompile Include="PrefDialogDirectory.cpp" />
+    <ClCompile Include="PrefDialogFile.cpp" />
+    <ClCompile Include="PrefDialogFilters.cpp" />
+    <ClCompile Include="PrefDialogFonts.cpp" />
+    <ClCompile Include="PrefDialogGeneral.cpp" />
+    <ClCompile Include="PrefDialogMacros.cpp" />
+    <ClCompile Include="PrefDialogOutput.cpp" />
+    <ClCompile Include="PrefDialogPrint.cpp" />
+    <ClCompile Include="PrefDialogSyntax.cpp" />
+    <ClCompile Include="PrefDialogTools.cpp" />
+    <ClCompile Include="PrefDialogVisual.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="cedtapp.h" />
+    <ClInclude Include="cedtColors.h" />
+    <ClInclude Include="cedtDoc.h" />
+    <ClInclude Include="cedtElement.h" />
+    <ClInclude Include="cedtHeader.h" />
+    <ClInclude Include="cedtView.h" />
+    <ClInclude Include="ChildFrm.h" />
+    <ClInclude Include="FileTab.h" />
+    <ClInclude Include="FileTabDropTarget.h" />
+    <ClInclude Include="FileWnd.h" />
+    <ClInclude Include="FileWndDropTarget.h" />
+    <ClInclude Include="MainFrm.h" />
+    <ClInclude Include="MainFrmDropTarget.h" />
+    <ClInclude Include="OutputWindow.h" />
+    <ClInclude Include="RemoteFile.h" />
+    <ClInclude Include="SplitterWndEx.h" />
+    <ClInclude Include="StatusBarEx.h" />
+    <ClInclude Include="StdAfx.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="CmdLine.h" />
+    <ClInclude Include="ColorListBox.h" />
+    <ClInclude Include="date.h" />
+    <ClInclude Include="encode.h" />
+    <ClInclude Include="evaluate.h" />
+    <ClInclude Include="FolderDialog.h" />
+    <ClInclude Include="FtpClnt.h" />
+    <ClInclude Include="HtmlHelp.h" />
+    <ClInclude Include="HyperLink.h" />
+    <ClInclude Include="PathName.h" />
+    <ClInclude Include="RegExp.h" />
+    <ClInclude Include="registry.h" />
+    <ClInclude Include="Separator.h" />
+    <ClInclude Include="SizeCBar.h" />
+    <ClInclude Include="SortStringArray.h" />
+    <ClInclude Include="Utility.h" />
+    <ClInclude Include="VerticalStatic.h" />
+    <ClInclude Include="XPTabCtrl.h" />
+    <ClInclude Include="AboutDialog.h" />
+    <ClInclude Include="AskReplaceDialog.h" />
+    <ClInclude Include="DocumentSummary.h" />
+    <ClInclude Include="DummyDialog.h" />
+    <ClInclude Include="FindDialog.h" />
+    <ClInclude Include="FindInFilesDialog.h" />
+    <ClInclude Include="FtpAdvancedDialog.h" />
+    <ClInclude Include="FtpPasswordDialog.h" />
+    <ClInclude Include="FtpSettingsDialog.h" />
+    <ClInclude Include="FtpTransferDialog.h" />
+    <ClInclude Include="GoToDialog.h" />
+    <ClInclude Include="MacroDefineDialog.h" />
+    <ClInclude Include="OpenRemoteDialog.h" />
+    <ClInclude Include="ReloadAsDialog.h" />
+    <ClInclude Include="ReplaceDialog.h" />
+    <ClInclude Include="UserInputDialog.h" />
+    <ClInclude Include="prefdialog.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="cedt_kr.rc">
+      <ExcludedFromBuild Condition="'$(Configuration)'=='Debug-US' or '$(Configuration)'=='Release-US'">true</ExcludedFromBuild>
+      <Culture Condition="'$(Configuration)'=='Debug-KR' or '$(Configuration)'=='Release-KR'">0x0412</Culture>
+    </ResourceCompile>
+    <ResourceCompile Include="cedt_us.rc">
+      <ExcludedFromBuild Condition="'$(Configuration)'=='Debug-KR' or '$(Configuration)'=='Release-KR'">true</ExcludedFromBuild>
+      <Culture Condition="'$(Configuration)'=='Debug-US' or '$(Configuration)'=='Release-US'">0x0409</Culture>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\cedt.manifest" />
+    <None Include="res\cedt.rc2" />
+    <Image Include="res\arrowmacro.cur" />
+    <Image Include="res\cedticon.bmp" />
+    <Image Include="res\cedtlogo.bmp" />
+    <Image Include="res\cedttype.ico" />
+    <Image Include="res\fwincategory.bmp" />
+    <Image Include="res\fwintooldir.bmp" />
+    <Image Include="res\fwintoolprj.bmp" />
+    <Image Include="res\genbuttons.bmp" />
+    <Image Include="res\ibeammacro.cur" />
+    <Image Include="res\mainfrm.ico" />
+    <Image Include="res\mdifiletab.bmp" />
+    <Image Include="res\projectitem.bmp" />
+    <Image Include="res\remotehost.bmp" />
+    <Image Include="res\remoteitem.bmp" />
+    <Image Include="res\remoteopen.bmp" />
+    <Image Include="res\rightarrow.cur" />
+    <Image Include="res\Toolbar.bmp" />
+    <Image Include="res\winbuttons.bmp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

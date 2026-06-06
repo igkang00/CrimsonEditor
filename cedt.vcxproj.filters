@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4B04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4C08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Utility Files">
+      <UniqueIdentifier>{a9d9f9b1-1234-4f3b-9e2a-1a2b3c4d5e6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Dialog Files">
+      <UniqueIdentifier>{b8e8e8c2-2345-5f4c-af3b-2b3c4d5e6f7a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Languages">
+      <UniqueIdentifier>{c7d7d7d3-3456-6f5d-bf4c-3c4d5e6f7a8b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Preferences">
+      <UniqueIdentifier>{d6c6c6e4-4567-7f6e-cf5d-4d5e6f7a8b9c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="cedtapp.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtAppConf.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtAppDirectory.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtAppFile.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtAppFilter.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtAppHndr.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtAppProject.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtAppRegistry.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtAppSearch.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtAppView.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtDoc.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtDocAnal.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtDocDictionary.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtDocEdit.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtDocEditAdv.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtDocFile.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtDocHndr.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtDocMap.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtDocSearch.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtDocSyntax.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtDocUndo.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtDocView.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtElement.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtView.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtViewAction.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtViewCaret.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtViewCommand.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtViewDraw.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtViewEdit.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtViewEditAdv.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtViewEditCompose.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtViewEvent.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtViewFont.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtViewFormat.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtViewHighlight.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtViewHndrEdit.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtViewHndrMisc.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtViewMacro.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtViewMap.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtViewMapAdv.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtViewMetric.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtViewMisc.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtViewMove.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtViewPrint.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtViewScroll.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtViewSearch.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtViewSelect.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="cedtViewUndo.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="ChildFrm.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="FileTab.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="FileTabDropTarget.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="FileWnd.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="FileWndDirectory.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="FileWndDropTarget.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="FileWndProject.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="FileWndRemote.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="MainFrm.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="MainFrmDropTarget.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="MainFrmHndr.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="OutputWindow.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="RemoteFile.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="SplitterWndEx.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="StatusBarEx.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="StdAfx.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="CmdLine.cpp"><Filter>Utility Files</Filter></ClCompile>
+    <ClCompile Include="ColorListBox.cpp"><Filter>Utility Files</Filter></ClCompile>
+    <ClCompile Include="date.cpp"><Filter>Utility Files</Filter></ClCompile>
+    <ClCompile Include="encode.cpp"><Filter>Utility Files</Filter></ClCompile>
+    <ClCompile Include="evaluate.cpp"><Filter>Utility Files</Filter></ClCompile>
+    <ClCompile Include="FolderDialog.cpp"><Filter>Utility Files</Filter></ClCompile>
+    <ClCompile Include="FtpClnt.cpp"><Filter>Utility Files</Filter></ClCompile>
+    <ClCompile Include="HyperLink.cpp"><Filter>Utility Files</Filter></ClCompile>
+    <ClCompile Include="PathName.cpp"><Filter>Utility Files</Filter></ClCompile>
+    <ClCompile Include="RegExp.cpp"><Filter>Utility Files</Filter></ClCompile>
+    <ClCompile Include="registry.cpp"><Filter>Utility Files</Filter></ClCompile>
+    <ClCompile Include="Separator.cpp"><Filter>Utility Files</Filter></ClCompile>
+    <ClCompile Include="SizeCBar.cpp"><Filter>Utility Files</Filter></ClCompile>
+    <ClCompile Include="SortStringArray.cpp"><Filter>Utility Files</Filter></ClCompile>
+    <ClCompile Include="Utility.cpp"><Filter>Utility Files</Filter></ClCompile>
+    <ClCompile Include="VerticalStatic.cpp"><Filter>Utility Files</Filter></ClCompile>
+    <ClCompile Include="XPTabCtrl.cpp"><Filter>Utility Files</Filter></ClCompile>
+    <ClCompile Include="AboutDialog.cpp"><Filter>Dialog Files</Filter></ClCompile>
+    <ClCompile Include="AskReplaceDialog.cpp"><Filter>Dialog Files</Filter></ClCompile>
+    <ClCompile Include="DocumentSummary.cpp"><Filter>Dialog Files</Filter></ClCompile>
+    <ClCompile Include="DummyDialog.cpp"><Filter>Dialog Files</Filter></ClCompile>
+    <ClCompile Include="FindDialog.cpp"><Filter>Dialog Files</Filter></ClCompile>
+    <ClCompile Include="FindInFilesDialog.cpp"><Filter>Dialog Files</Filter></ClCompile>
+    <ClCompile Include="FtpAdvancedDialog.cpp"><Filter>Dialog Files</Filter></ClCompile>
+    <ClCompile Include="FtpPasswordDialog.cpp"><Filter>Dialog Files</Filter></ClCompile>
+    <ClCompile Include="FtpSettingsDialog.cpp"><Filter>Dialog Files</Filter></ClCompile>
+    <ClCompile Include="FtpTransferDialog.cpp"><Filter>Dialog Files</Filter></ClCompile>
+    <ClCompile Include="GoToDialog.cpp"><Filter>Dialog Files</Filter></ClCompile>
+    <ClCompile Include="MacroDefineDialog.cpp"><Filter>Dialog Files</Filter></ClCompile>
+    <ClCompile Include="OpenRemoteDialog.cpp"><Filter>Dialog Files</Filter></ClCompile>
+    <ClCompile Include="ReloadAsDialog.cpp"><Filter>Dialog Files</Filter></ClCompile>
+    <ClCompile Include="ReplaceDialog.cpp"><Filter>Dialog Files</Filter></ClCompile>
+    <ClCompile Include="UserInputDialog.cpp"><Filter>Dialog Files</Filter></ClCompile>
+    <ClCompile Include="prefdialog.cpp"><Filter>Preferences</Filter></ClCompile>
+    <ClCompile Include="PrefDialogAssoc.cpp"><Filter>Preferences</Filter></ClCompile>
+    <ClCompile Include="PrefDialogBackup.cpp"><Filter>Preferences</Filter></ClCompile>
+    <ClCompile Include="PrefDialogColors.cpp"><Filter>Preferences</Filter></ClCompile>
+    <ClCompile Include="PrefDialogCommands.cpp"><Filter>Preferences</Filter></ClCompile>
+    <ClCompile Include="PrefDialogDirectory.cpp"><Filter>Preferences</Filter></ClCompile>
+    <ClCompile Include="PrefDialogFile.cpp"><Filter>Preferences</Filter></ClCompile>
+    <ClCompile Include="PrefDialogFilters.cpp"><Filter>Preferences</Filter></ClCompile>
+    <ClCompile Include="PrefDialogFonts.cpp"><Filter>Preferences</Filter></ClCompile>
+    <ClCompile Include="PrefDialogGeneral.cpp"><Filter>Preferences</Filter></ClCompile>
+    <ClCompile Include="PrefDialogMacros.cpp"><Filter>Preferences</Filter></ClCompile>
+    <ClCompile Include="PrefDialogOutput.cpp"><Filter>Preferences</Filter></ClCompile>
+    <ClCompile Include="PrefDialogPrint.cpp"><Filter>Preferences</Filter></ClCompile>
+    <ClCompile Include="PrefDialogSyntax.cpp"><Filter>Preferences</Filter></ClCompile>
+    <ClCompile Include="PrefDialogTools.cpp"><Filter>Preferences</Filter></ClCompile>
+    <ClCompile Include="PrefDialogVisual.cpp"><Filter>Preferences</Filter></ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="cedtapp.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="cedtColors.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="cedtDoc.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="cedtElement.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="cedtHeader.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="cedtView.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="ChildFrm.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="FileTab.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="FileTabDropTarget.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="FileWnd.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="FileWndDropTarget.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="MainFrm.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="MainFrmDropTarget.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="OutputWindow.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="RemoteFile.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="SplitterWndEx.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="StatusBarEx.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="StdAfx.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="resource.h"><Filter>Languages</Filter></ClInclude>
+    <ClInclude Include="CmdLine.h"><Filter>Utility Files</Filter></ClInclude>
+    <ClInclude Include="ColorListBox.h"><Filter>Utility Files</Filter></ClInclude>
+    <ClInclude Include="date.h"><Filter>Utility Files</Filter></ClInclude>
+    <ClInclude Include="encode.h"><Filter>Utility Files</Filter></ClInclude>
+    <ClInclude Include="evaluate.h"><Filter>Utility Files</Filter></ClInclude>
+    <ClInclude Include="FolderDialog.h"><Filter>Utility Files</Filter></ClInclude>
+    <ClInclude Include="FtpClnt.h"><Filter>Utility Files</Filter></ClInclude>
+    <ClInclude Include="HtmlHelp.h"><Filter>Utility Files</Filter></ClInclude>
+    <ClInclude Include="HyperLink.h"><Filter>Utility Files</Filter></ClInclude>
+    <ClInclude Include="PathName.h"><Filter>Utility Files</Filter></ClInclude>
+    <ClInclude Include="RegExp.h"><Filter>Utility Files</Filter></ClInclude>
+    <ClInclude Include="registry.h"><Filter>Utility Files</Filter></ClInclude>
+    <ClInclude Include="Separator.h"><Filter>Utility Files</Filter></ClInclude>
+    <ClInclude Include="SizeCBar.h"><Filter>Utility Files</Filter></ClInclude>
+    <ClInclude Include="SortStringArray.h"><Filter>Utility Files</Filter></ClInclude>
+    <ClInclude Include="Utility.h"><Filter>Utility Files</Filter></ClInclude>
+    <ClInclude Include="VerticalStatic.h"><Filter>Utility Files</Filter></ClInclude>
+    <ClInclude Include="XPTabCtrl.h"><Filter>Utility Files</Filter></ClInclude>
+    <ClInclude Include="AboutDialog.h"><Filter>Dialog Files</Filter></ClInclude>
+    <ClInclude Include="AskReplaceDialog.h"><Filter>Dialog Files</Filter></ClInclude>
+    <ClInclude Include="DocumentSummary.h"><Filter>Dialog Files</Filter></ClInclude>
+    <ClInclude Include="DummyDialog.h"><Filter>Dialog Files</Filter></ClInclude>
+    <ClInclude Include="FindDialog.h"><Filter>Dialog Files</Filter></ClInclude>
+    <ClInclude Include="FindInFilesDialog.h"><Filter>Dialog Files</Filter></ClInclude>
+    <ClInclude Include="FtpAdvancedDialog.h"><Filter>Dialog Files</Filter></ClInclude>
+    <ClInclude Include="FtpPasswordDialog.h"><Filter>Dialog Files</Filter></ClInclude>
+    <ClInclude Include="FtpSettingsDialog.h"><Filter>Dialog Files</Filter></ClInclude>
+    <ClInclude Include="FtpTransferDialog.h"><Filter>Dialog Files</Filter></ClInclude>
+    <ClInclude Include="GoToDialog.h"><Filter>Dialog Files</Filter></ClInclude>
+    <ClInclude Include="MacroDefineDialog.h"><Filter>Dialog Files</Filter></ClInclude>
+    <ClInclude Include="OpenRemoteDialog.h"><Filter>Dialog Files</Filter></ClInclude>
+    <ClInclude Include="ReloadAsDialog.h"><Filter>Dialog Files</Filter></ClInclude>
+    <ClInclude Include="ReplaceDialog.h"><Filter>Dialog Files</Filter></ClInclude>
+    <ClInclude Include="UserInputDialog.h"><Filter>Dialog Files</Filter></ClInclude>
+    <ClInclude Include="prefdialog.h"><Filter>Preferences</Filter></ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="cedt_kr.rc"><Filter>Languages</Filter></ResourceCompile>
+    <ResourceCompile Include="cedt_us.rc"><Filter>Languages</Filter></ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\cedt.manifest"><Filter>Resource Files</Filter></None>
+    <None Include="res\cedt.rc2"><Filter>Resource Files</Filter></None>
+    <Image Include="res\arrowmacro.cur"><Filter>Resource Files</Filter></Image>
+    <Image Include="res\cedticon.bmp"><Filter>Resource Files</Filter></Image>
+    <Image Include="res\cedtlogo.bmp"><Filter>Resource Files</Filter></Image>
+    <Image Include="res\cedttype.ico"><Filter>Resource Files</Filter></Image>
+    <Image Include="res\fwincategory.bmp"><Filter>Resource Files</Filter></Image>
+    <Image Include="res\fwintooldir.bmp"><Filter>Resource Files</Filter></Image>
+    <Image Include="res\fwintoolprj.bmp"><Filter>Resource Files</Filter></Image>
+    <Image Include="res\genbuttons.bmp"><Filter>Resource Files</Filter></Image>
+    <Image Include="res\ibeammacro.cur"><Filter>Resource Files</Filter></Image>
+    <Image Include="res\mainfrm.ico"><Filter>Resource Files</Filter></Image>
+    <Image Include="res\mdifiletab.bmp"><Filter>Resource Files</Filter></Image>
+    <Image Include="res\projectitem.bmp"><Filter>Resource Files</Filter></Image>
+    <Image Include="res\remotehost.bmp"><Filter>Resource Files</Filter></Image>
+    <Image Include="res\remoteitem.bmp"><Filter>Resource Files</Filter></Image>
+    <Image Include="res\remoteopen.bmp"><Filter>Resource Files</Filter></Image>
+    <Image Include="res\rightarrow.cur"><Filter>Resource Files</Filter></Image>
+    <Image Include="res\Toolbar.bmp"><Filter>Resource Files</Filter></Image>
+    <Image Include="res\winbuttons.bmp"><Filter>Resource Files</Filter></Image>
+  </ItemGroup>
+</Project>

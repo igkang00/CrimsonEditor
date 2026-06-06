@@ -11,6 +11,10 @@
 # Build output directories
 Debug/
 Release/
+Debug-KR/
+Debug-US/
+Release-KR/
+Release-US/
 
 # Modern Visual Studio
 .vs/
