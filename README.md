@@ -194,21 +194,23 @@ The `.cpp`/`.h` files live under [src/](src/), split into domain-specific direct
 
 [prefdialog.cpp](src/dialogs/preferences/prefdialog.cpp), [prefdialog.h](src/dialogs/preferences/prefdialog.h) act as the property sheet hosting these tab pages:
 
-- [PrefDialogGeneral.cpp](src/dialogs/preferences/PrefDialogGeneral.cpp) — General
-- [PrefDialogFile.cpp](src/dialogs/preferences/PrefDialogFile.cpp) — File / Encoding
-- [PrefDialogBackup.cpp](src/dialogs/preferences/PrefDialogBackup.cpp) — Backup
-- [PrefDialogDirectory.cpp](src/dialogs/preferences/PrefDialogDirectory.cpp) — Working directory
-- [PrefDialogVisual.cpp](src/dialogs/preferences/PrefDialogVisual.cpp) — Visual effects
-- [PrefDialogColors.cpp](src/dialogs/preferences/PrefDialogColors.cpp) — Colors
-- [PrefDialogFonts.cpp](src/dialogs/preferences/PrefDialogFonts.cpp) — Fonts
-- [PrefDialogSyntax.cpp](src/dialogs/preferences/PrefDialogSyntax.cpp) — Syntax
-- [PrefDialogPrint.cpp](src/dialogs/preferences/PrefDialogPrint.cpp) — Printing
-- [PrefDialogOutput.cpp](src/dialogs/preferences/PrefDialogOutput.cpp) — Output window
-- [PrefDialogTools.cpp](src/dialogs/preferences/PrefDialogTools.cpp) — User tools
-- [PrefDialogCommands.cpp](src/dialogs/preferences/PrefDialogCommands.cpp) — Commands
-- [PrefDialogMacros.cpp](src/dialogs/preferences/PrefDialogMacros.cpp) — Macros
-- [PrefDialogFilters.cpp](src/dialogs/preferences/PrefDialogFilters.cpp) — File filters
-- [PrefDialogAssoc.cpp](src/dialogs/preferences/PrefDialogAssoc.cpp) — File associations
+| File | Role |
+| --- | --- |
+| [PrefDialogGeneral.cpp](src/dialogs/preferences/PrefDialogGeneral.cpp) | General |
+| [PrefDialogFile.cpp](src/dialogs/preferences/PrefDialogFile.cpp) | File / Encoding |
+| [PrefDialogBackup.cpp](src/dialogs/preferences/PrefDialogBackup.cpp) | Backup |
+| [PrefDialogDirectory.cpp](src/dialogs/preferences/PrefDialogDirectory.cpp) | Working directory |
+| [PrefDialogVisual.cpp](src/dialogs/preferences/PrefDialogVisual.cpp) | Visual effects |
+| [PrefDialogColors.cpp](src/dialogs/preferences/PrefDialogColors.cpp) | Colors |
+| [PrefDialogFonts.cpp](src/dialogs/preferences/PrefDialogFonts.cpp) | Fonts |
+| [PrefDialogSyntax.cpp](src/dialogs/preferences/PrefDialogSyntax.cpp) | Syntax |
+| [PrefDialogPrint.cpp](src/dialogs/preferences/PrefDialogPrint.cpp) | Printing |
+| [PrefDialogOutput.cpp](src/dialogs/preferences/PrefDialogOutput.cpp) | Output window |
+| [PrefDialogTools.cpp](src/dialogs/preferences/PrefDialogTools.cpp) | User tools |
+| [PrefDialogCommands.cpp](src/dialogs/preferences/PrefDialogCommands.cpp) | Commands |
+| [PrefDialogMacros.cpp](src/dialogs/preferences/PrefDialogMacros.cpp) | Macros |
+| [PrefDialogFilters.cpp](src/dialogs/preferences/PrefDialogFilters.cpp) | File filters |
+| [PrefDialogAssoc.cpp](src/dialogs/preferences/PrefDialogAssoc.cpp) | File associations |
 
 #### Feature Dialogs
 
@@ -224,7 +226,7 @@ The `.cpp`/`.h` files live under [src/](src/), split into domain-specific direct
 | [MacroDefineDialog.cpp](src/dialogs/MacroDefineDialog.cpp) | Macro definition |
 | [DocumentSummary.cpp](src/dialogs/DocumentSummary.cpp) | Document summary |
 | [DummyDialog.cpp](src/dialogs/DummyDialog.cpp) | Placeholder |
-| FTP-related | [FtpSettingsDialog.cpp](src/dialogs/FtpSettingsDialog.cpp), [FtpAdvancedDialog.cpp](src/dialogs/FtpAdvancedDialog.cpp), [FtpPasswordDialog.cpp](src/dialogs/FtpPasswordDialog.cpp), [FtpTransferDialog.cpp](src/dialogs/FtpTransferDialog.cpp), [OpenRemoteDialog.cpp](src/dialogs/OpenRemoteDialog.cpp) |
+| [FtpSettingsDialog.cpp](src/dialogs/FtpSettingsDialog.cpp), [FtpAdvancedDialog.cpp](src/dialogs/FtpAdvancedDialog.cpp), [FtpPasswordDialog.cpp](src/dialogs/FtpPasswordDialog.cpp), [FtpTransferDialog.cpp](src/dialogs/FtpTransferDialog.cpp), [OpenRemoteDialog.cpp](src/dialogs/OpenRemoteDialog.cpp) | FTP-related dialogs |
 
 ### 7. Network / Remote Files — [src/network/](src/network/)
 
