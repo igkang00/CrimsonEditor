@@ -58,7 +58,7 @@
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>.;src\include;src\core;third_party\htmlhelp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;src\include;src\core;src\util;src\network;third_party\htmlhelp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -92,7 +92,7 @@
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>.;src\include;src\core;third_party\htmlhelp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;src\include;src\core;src\util;src\network;third_party\htmlhelp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -182,28 +182,28 @@
     <ClCompile Include="MainFrmDropTarget.cpp" />
     <ClCompile Include="MainFrmHndr.cpp" />
     <ClCompile Include="OutputWindow.cpp" />
-    <ClCompile Include="RemoteFile.cpp" />
+    <ClCompile Include="src\network\RemoteFile.cpp" />
     <ClCompile Include="SplitterWndEx.cpp" />
     <ClCompile Include="StatusBarEx.cpp" />
     <ClCompile Include="src\include\StdAfx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="CmdLine.cpp" />
-    <ClCompile Include="ColorListBox.cpp" />
-    <ClCompile Include="date.cpp" />
-    <ClCompile Include="encode.cpp" />
-    <ClCompile Include="evaluate.cpp" />
-    <ClCompile Include="FolderDialog.cpp" />
-    <ClCompile Include="FtpClnt.cpp" />
-    <ClCompile Include="HyperLink.cpp" />
-    <ClCompile Include="PathName.cpp" />
-    <ClCompile Include="RegExp.cpp" />
-    <ClCompile Include="registry.cpp" />
-    <ClCompile Include="Separator.cpp" />
+    <ClCompile Include="src\util\CmdLine.cpp" />
+    <ClCompile Include="src\util\ColorListBox.cpp" />
+    <ClCompile Include="src\util\date.cpp" />
+    <ClCompile Include="src\util\encode.cpp" />
+    <ClCompile Include="src\util\evaluate.cpp" />
+    <ClCompile Include="src\util\FolderDialog.cpp" />
+    <ClCompile Include="src\network\FtpClnt.cpp" />
+    <ClCompile Include="src\util\HyperLink.cpp" />
+    <ClCompile Include="src\util\PathName.cpp" />
+    <ClCompile Include="src\util\RegExp.cpp" />
+    <ClCompile Include="src\util\registry.cpp" />
+    <ClCompile Include="src\util\Separator.cpp" />
     <ClCompile Include="SizeCBar.cpp" />
-    <ClCompile Include="SortStringArray.cpp" />
-    <ClCompile Include="Utility.cpp" />
-    <ClCompile Include="VerticalStatic.cpp" />
+    <ClCompile Include="src\util\SortStringArray.cpp" />
+    <ClCompile Include="src\util\Utility.cpp" />
+    <ClCompile Include="src\util\VerticalStatic.cpp" />
     <ClCompile Include="XPTabCtrl.cpp" />
     <ClCompile Include="AboutDialog.cpp" />
     <ClCompile Include="AskReplaceDialog.cpp" />
@@ -253,29 +253,29 @@
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="MainFrmDropTarget.h" />
     <ClInclude Include="OutputWindow.h" />
-    <ClInclude Include="RemoteFile.h" />
+    <ClInclude Include="src\network\RemoteFile.h" />
     <ClInclude Include="SplitterWndEx.h" />
     <ClInclude Include="StatusBarEx.h" />
     <ClInclude Include="src\include\StdAfx.h" />
     <ClInclude Include="src\include\fstream_compat.h" />
     <ClInclude Include="src\include\resource.h" />
-    <ClInclude Include="CmdLine.h" />
-    <ClInclude Include="ColorListBox.h" />
-    <ClInclude Include="date.h" />
-    <ClInclude Include="encode.h" />
-    <ClInclude Include="evaluate.h" />
-    <ClInclude Include="FolderDialog.h" />
-    <ClInclude Include="FtpClnt.h" />
+    <ClInclude Include="src\util\CmdLine.h" />
+    <ClInclude Include="src\util\ColorListBox.h" />
+    <ClInclude Include="src\util\date.h" />
+    <ClInclude Include="src\util\encode.h" />
+    <ClInclude Include="src\util\evaluate.h" />
+    <ClInclude Include="src\util\FolderDialog.h" />
+    <ClInclude Include="src\network\FtpClnt.h" />
     <ClInclude Include="third_party\htmlhelp\HtmlHelp.h" />
-    <ClInclude Include="HyperLink.h" />
-    <ClInclude Include="PathName.h" />
-    <ClInclude Include="RegExp.h" />
-    <ClInclude Include="registry.h" />
-    <ClInclude Include="Separator.h" />
+    <ClInclude Include="src\util\HyperLink.h" />
+    <ClInclude Include="src\util\PathName.h" />
+    <ClInclude Include="src\util\RegExp.h" />
+    <ClInclude Include="src\util\registry.h" />
+    <ClInclude Include="src\util\Separator.h" />
     <ClInclude Include="SizeCBar.h" />
-    <ClInclude Include="SortStringArray.h" />
-    <ClInclude Include="Utility.h" />
-    <ClInclude Include="VerticalStatic.h" />
+    <ClInclude Include="src\util\SortStringArray.h" />
+    <ClInclude Include="src\util\Utility.h" />
+    <ClInclude Include="src\util\VerticalStatic.h" />
     <ClInclude Include="XPTabCtrl.h" />
     <ClInclude Include="AboutDialog.h" />
     <ClInclude Include="AskReplaceDialog.h" />
