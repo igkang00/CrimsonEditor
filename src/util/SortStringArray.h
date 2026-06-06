@@ -1,4 +1,4 @@
-// SortStringArray.h: Schnittstelle f�r die Klasse CSortStringArray.
+﻿// SortStringArray.h: Schnittstelle für die Klasse CSortStringArray.
 //
 //////////////////////////////////////////////////////////////////////
 

@@ -1,5 +1,5 @@
-// FolderDialog.h: interface for the CFolderDialog class.
-//	$Copyright �  1998 Kenneth M. Reed, ALL RIGHTS RESERVED. $
+﻿// FolderDialog.h: interface for the CFolderDialog class.
+//	$Copyright ©  1998 Kenneth M. Reed, ALL RIGHTS RESERVED. $
 //	$Header: FolderDialog.h  Revision:1.11  Mon Apr 06 12:04:50 1998  KenReed $
 
 #ifndef _CFolderDialog_

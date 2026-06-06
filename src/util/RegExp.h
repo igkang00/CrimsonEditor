@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////
+ï»¿////////////////////////////////////////////////////////////////////////
 // RegExp.h
 //
 // This code has been derived from work by Henry Spencer.
@@ -113,7 +113,7 @@ private:
 
 	TCHAR *regparse;	// Input-scan pointer.
 	int regnpar;		// () count.
-	TCHAR *regcode;		// Code-emit pointer; ¢çdummy = don't.
+	TCHAR *regcode;		// Code-emit pointer; Â¢Ã§dummy = don't.
 	TCHAR regdummy[3];	// NOTHING, 0 next ptr
 	long regsize;		// Code size.
 

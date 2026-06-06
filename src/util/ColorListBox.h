@@ -1,4 +1,4 @@
-#if !defined(AFX_COLORLISTBOX_H__5529A6B1_584A_11D2_A41A_006097BD277B__INCLUDED_)
+ï»¿#if !defined(AFX_COLORLISTBOX_H__5529A6B1_584A_11D2_A41A_006097BD277B__INCLUDED_)
 #define AFX_COLORLISTBOX_H__5529A6B1_584A_11D2_A41A_006097BD277B__INCLUDED_
 
 #if _MSC_VER >= 1000
@@ -12,9 +12,9 @@
 //	CColorListBox class - 
 //		A CListBox-derived class with optional colored items.
 //
-//		Version: 1.0	01/10/1998 Copyright © Patrice Godard
+//		Version: 1.0	01/10/1998 Copyright Â© Patrice Godard
 //
-//		Version: 2.0	09/17/1999 Copyright © Paul M. Meidinger
+//		Version: 2.0	09/17/1999 Copyright Â© Paul M. Meidinger
 //
 //-------------------------------------------------------------------
 

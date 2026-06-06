@@ -1,4 +1,4 @@
-#include "stdafx.h";
+ï»¿#include "stdafx.h";
 #include "cedtHeader.h"
 #include "FtpClnt.h"
 #include <afxinet.h>
@@ -447,7 +447,7 @@ static BOOL CleanRemoteFileListItem(CString & szItem)
 	static BOOL bCompiled = FALSE;
 
 	// compile regular expression for Korean HP server
-	if( ! bCompiled && clsRegExp.RegComp("([0-9]+)¿ù ([0-9]+)ÀÏ [0-9]+:[0-9]+") ) bCompiled = TRUE;
+	if( ! bCompiled && clsRegExp.RegComp("([0-9]+)ì›” ([0-9]+)ì¼ [0-9]+:[0-9]+") ) bCompiled = TRUE;
 
 	INT nFound; CString szFormat, szReplace;
 	if( bCompiled && (nFound = clsRegExp.RegFind(szItem)) >= 0 ) {

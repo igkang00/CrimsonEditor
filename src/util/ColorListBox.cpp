@@ -1,13 +1,13 @@
-// ColorListBox.cpp : implementation file
+ï»¿// ColorListBox.cpp : implementation file
 
 //-------------------------------------------------------------------
 //
 //	CColorListBox class - 
 //		A CListBox-derived class with optional colored items.
 //
-//		Version: 1.0	01/10/1998 Copyright © Patrice Godard
+//		Version: 1.0	01/10/1998 Copyright Â© Patrice Godard
 //
-//		Version: 2.0	09/17/1999 Copyright © Paul M. Meidinger
+//		Version: 2.0	09/17/1999 Copyright Â© Paul M. Meidinger
 //
 //-------------------------------------------------------------------
 
@@ -221,7 +221,7 @@ int CColorListBox::InsertString(int nIndex, LPCTSTR lpszItem)
 //						insufficient space is available to store the new string.
 //
 // Parameters	:	nIndex - Specifies the zero-based index of the position
-//							to insert the string. If this parameter is –1, the string
+//							to insert the string. If this parameter is â€“1, the string
 //							is added to the end of the list.
 //						lpszItem - Points to the null-terminated string that 
 //							is to be inserted.
@@ -243,7 +243,7 @@ int CColorListBox::InsertString(int nIndex, LPCTSTR lpszItem, COLORREF rgb)
 //						insufficient space is available to store the new string.
 //
 // Parameters	:	nIndex - Specifies the zero-based index of the position
-//							to insert the string. If this parameter is –1, the string
+//							to insert the string. If this parameter is â€“1, the string
 //							is added to the end of the list.
 //						lpszItem - Points to the null-terminated string that 
 //							is to be inserted.
