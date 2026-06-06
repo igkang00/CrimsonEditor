@@ -58,7 +58,7 @@
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>.;src\include;src\core;src\util;src\network;third_party\htmlhelp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;src\include;src\core;src\util;src\network;src\dialogs;src\dialogs\preferences;third_party\htmlhelp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -92,7 +92,7 @@
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>.;src\include;src\core;src\util;src\network;third_party\htmlhelp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;src\include;src\core;src\util;src\network;src\dialogs;src\dialogs\preferences;third_party\htmlhelp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -205,38 +205,38 @@
     <ClCompile Include="src\util\Utility.cpp" />
     <ClCompile Include="src\util\VerticalStatic.cpp" />
     <ClCompile Include="XPTabCtrl.cpp" />
-    <ClCompile Include="AboutDialog.cpp" />
-    <ClCompile Include="AskReplaceDialog.cpp" />
-    <ClCompile Include="DocumentSummary.cpp" />
-    <ClCompile Include="DummyDialog.cpp" />
-    <ClCompile Include="FindDialog.cpp" />
-    <ClCompile Include="FindInFilesDialog.cpp" />
-    <ClCompile Include="FtpAdvancedDialog.cpp" />
-    <ClCompile Include="FtpPasswordDialog.cpp" />
-    <ClCompile Include="FtpSettingsDialog.cpp" />
-    <ClCompile Include="FtpTransferDialog.cpp" />
-    <ClCompile Include="GoToDialog.cpp" />
-    <ClCompile Include="MacroDefineDialog.cpp" />
-    <ClCompile Include="OpenRemoteDialog.cpp" />
-    <ClCompile Include="ReloadAsDialog.cpp" />
-    <ClCompile Include="ReplaceDialog.cpp" />
-    <ClCompile Include="UserInputDialog.cpp" />
-    <ClCompile Include="prefdialog.cpp" />
-    <ClCompile Include="PrefDialogAssoc.cpp" />
-    <ClCompile Include="PrefDialogBackup.cpp" />
-    <ClCompile Include="PrefDialogColors.cpp" />
-    <ClCompile Include="PrefDialogCommands.cpp" />
-    <ClCompile Include="PrefDialogDirectory.cpp" />
-    <ClCompile Include="PrefDialogFile.cpp" />
-    <ClCompile Include="PrefDialogFilters.cpp" />
-    <ClCompile Include="PrefDialogFonts.cpp" />
-    <ClCompile Include="PrefDialogGeneral.cpp" />
-    <ClCompile Include="PrefDialogMacros.cpp" />
-    <ClCompile Include="PrefDialogOutput.cpp" />
-    <ClCompile Include="PrefDialogPrint.cpp" />
-    <ClCompile Include="PrefDialogSyntax.cpp" />
-    <ClCompile Include="PrefDialogTools.cpp" />
-    <ClCompile Include="PrefDialogVisual.cpp" />
+    <ClCompile Include="src\dialogs\AboutDialog.cpp" />
+    <ClCompile Include="src\dialogs\AskReplaceDialog.cpp" />
+    <ClCompile Include="src\dialogs\DocumentSummary.cpp" />
+    <ClCompile Include="src\dialogs\DummyDialog.cpp" />
+    <ClCompile Include="src\dialogs\FindDialog.cpp" />
+    <ClCompile Include="src\dialogs\FindInFilesDialog.cpp" />
+    <ClCompile Include="src\dialogs\FtpAdvancedDialog.cpp" />
+    <ClCompile Include="src\dialogs\FtpPasswordDialog.cpp" />
+    <ClCompile Include="src\dialogs\FtpSettingsDialog.cpp" />
+    <ClCompile Include="src\dialogs\FtpTransferDialog.cpp" />
+    <ClCompile Include="src\dialogs\GoToDialog.cpp" />
+    <ClCompile Include="src\dialogs\MacroDefineDialog.cpp" />
+    <ClCompile Include="src\dialogs\OpenRemoteDialog.cpp" />
+    <ClCompile Include="src\dialogs\ReloadAsDialog.cpp" />
+    <ClCompile Include="src\dialogs\ReplaceDialog.cpp" />
+    <ClCompile Include="src\dialogs\UserInputDialog.cpp" />
+    <ClCompile Include="src\dialogs\preferences\prefdialog.cpp" />
+    <ClCompile Include="src\dialogs\preferences\PrefDialogAssoc.cpp" />
+    <ClCompile Include="src\dialogs\preferences\PrefDialogBackup.cpp" />
+    <ClCompile Include="src\dialogs\preferences\PrefDialogColors.cpp" />
+    <ClCompile Include="src\dialogs\preferences\PrefDialogCommands.cpp" />
+    <ClCompile Include="src\dialogs\preferences\PrefDialogDirectory.cpp" />
+    <ClCompile Include="src\dialogs\preferences\PrefDialogFile.cpp" />
+    <ClCompile Include="src\dialogs\preferences\PrefDialogFilters.cpp" />
+    <ClCompile Include="src\dialogs\preferences\PrefDialogFonts.cpp" />
+    <ClCompile Include="src\dialogs\preferences\PrefDialogGeneral.cpp" />
+    <ClCompile Include="src\dialogs\preferences\PrefDialogMacros.cpp" />
+    <ClCompile Include="src\dialogs\preferences\PrefDialogOutput.cpp" />
+    <ClCompile Include="src\dialogs\preferences\PrefDialogPrint.cpp" />
+    <ClCompile Include="src\dialogs\preferences\PrefDialogSyntax.cpp" />
+    <ClCompile Include="src\dialogs\preferences\PrefDialogTools.cpp" />
+    <ClCompile Include="src\dialogs\preferences\PrefDialogVisual.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cedtapp.h" />
@@ -277,23 +277,23 @@
     <ClInclude Include="src\util\Utility.h" />
     <ClInclude Include="src\util\VerticalStatic.h" />
     <ClInclude Include="XPTabCtrl.h" />
-    <ClInclude Include="AboutDialog.h" />
-    <ClInclude Include="AskReplaceDialog.h" />
-    <ClInclude Include="DocumentSummary.h" />
-    <ClInclude Include="DummyDialog.h" />
-    <ClInclude Include="FindDialog.h" />
-    <ClInclude Include="FindInFilesDialog.h" />
-    <ClInclude Include="FtpAdvancedDialog.h" />
-    <ClInclude Include="FtpPasswordDialog.h" />
-    <ClInclude Include="FtpSettingsDialog.h" />
-    <ClInclude Include="FtpTransferDialog.h" />
-    <ClInclude Include="GoToDialog.h" />
-    <ClInclude Include="MacroDefineDialog.h" />
-    <ClInclude Include="OpenRemoteDialog.h" />
-    <ClInclude Include="ReloadAsDialog.h" />
-    <ClInclude Include="ReplaceDialog.h" />
-    <ClInclude Include="UserInputDialog.h" />
-    <ClInclude Include="prefdialog.h" />
+    <ClInclude Include="src\dialogs\AboutDialog.h" />
+    <ClInclude Include="src\dialogs\AskReplaceDialog.h" />
+    <ClInclude Include="src\dialogs\DocumentSummary.h" />
+    <ClInclude Include="src\dialogs\DummyDialog.h" />
+    <ClInclude Include="src\dialogs\FindDialog.h" />
+    <ClInclude Include="src\dialogs\FindInFilesDialog.h" />
+    <ClInclude Include="src\dialogs\FtpAdvancedDialog.h" />
+    <ClInclude Include="src\dialogs\FtpPasswordDialog.h" />
+    <ClInclude Include="src\dialogs\FtpSettingsDialog.h" />
+    <ClInclude Include="src\dialogs\FtpTransferDialog.h" />
+    <ClInclude Include="src\dialogs\GoToDialog.h" />
+    <ClInclude Include="src\dialogs\MacroDefineDialog.h" />
+    <ClInclude Include="src\dialogs\OpenRemoteDialog.h" />
+    <ClInclude Include="src\dialogs\ReloadAsDialog.h" />
+    <ClInclude Include="src\dialogs\ReplaceDialog.h" />
+    <ClInclude Include="src\dialogs\UserInputDialog.h" />
+    <ClInclude Include="src\dialogs\preferences\prefdialog.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="cedt_kr.rc">
