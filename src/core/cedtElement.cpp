@@ -699,7 +699,7 @@ BOOL CAnalyzedText::FileLoad(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 
 BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileFormat)
 {
-	CHAR szDelim[2]; lstrcpy(szDelim, "\r\n"); INT nDelimSize = 2; // FILE_FORMAT_DOS
+	CHAR szDelim[3]; lstrcpy(szDelim, "\r\n"); INT nDelimSize = 2; // FILE_FORMAT_DOS
 	if( nFileFormat == FILE_FORMAT_UNIX ) { lstrcpy(szDelim, "\n"); nDelimSize = 1; }
 	else if( nFileFormat == FILE_FORMAT_MAC ) { lstrcpy(szDelim, "\r"); nDelimSize = 1; }
 	

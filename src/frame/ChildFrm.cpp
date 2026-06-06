@@ -106,7 +106,7 @@ void CChildFrame::OnWindowClose()
 CWnd * CChildFrame::GetNeighborPane(CWnd * pWnd)
 {
 	BOOL bChild; INT nRowIndex, nColIndex;
-	bChild = m_wndSplitter.IsChildPane(pWnd, nRowIndex, nColIndex); ASSERT( bChild );
+	bChild = m_wndSplitter.IsChildPane(pWnd, &nRowIndex, &nColIndex); ASSERT( bChild );
 
 	if( nColIndex > 0 ) return m_wndSplitter.GetPane( nRowIndex, nColIndex-1 );
 	if( nRowIndex > 0 ) return m_wndSplitter.GetPane( nRowIndex-1, nColIndex );
@@ -117,7 +117,7 @@ CWnd * CChildFrame::GetNeighborPane(CWnd * pWnd)
 void CChildFrame::SetScrollPosSyncAllPanes(CWnd * pWnd, INT nPosX, INT nPosY)
 {
 	BOOL bChild; INT i, j, nRowIndex, nColIndex, nRowCount, nColCount;
-	bChild = m_wndSplitter.IsChildPane(pWnd, nRowIndex, nColIndex); ASSERT( bChild );
+	bChild = m_wndSplitter.IsChildPane(pWnd, &nRowIndex, &nColIndex); ASSERT( bChild );
 
 	nRowCount = m_wndSplitter.GetRowCount();
 	for( i = 0; i < nRowCount; i++ ) {
@@ -135,7 +135,7 @@ void CChildFrame::SetScrollPosSyncAllPanes(CWnd * pWnd, INT nPosX, INT nPosY)
 void CChildFrame::UpdateAllPanesInTheSameRow(CWnd * pWnd)
 {
 	BOOL bChild; INT j, nRowIndex, nColIndex, nColCount;
-	bChild = m_wndSplitter.IsChildPane(pWnd, nRowIndex, nColIndex); ASSERT( bChild );
+	bChild = m_wndSplitter.IsChildPane(pWnd, &nRowIndex, &nColIndex); ASSERT( bChild );
 
 	nColCount = m_wndSplitter.GetColumnCount();
 	for( j = 0; j < nColCount; j++ ) {
@@ -147,7 +147,7 @@ void CChildFrame::UpdateAllPanesInTheSameRow(CWnd * pWnd)
 void CChildFrame::UpdateAllPanesSharingScrollBar(CWnd * pWnd)
 {
 	BOOL bChild; INT i, j, nRowIndex, nColIndex, nRowCount, nColCount;
-	bChild = m_wndSplitter.IsChildPane(pWnd, nRowIndex, nColIndex); ASSERT( bChild );
+	bChild = m_wndSplitter.IsChildPane(pWnd, &nRowIndex, &nColIndex); ASSERT( bChild );
 
 	nRowCount = m_wndSplitter.GetRowCount();
 	for( i = 0; i < nRowCount; i++ ) {
