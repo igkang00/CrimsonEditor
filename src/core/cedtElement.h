@@ -1,6 +1,8 @@
 #ifndef __CEDT_ELEMENT_H_
 #define __CEDT_ELEMENT_H_
 
+#include "fstream_compat.h"
+
 
 
 // MAXIMUM CONSTANTS

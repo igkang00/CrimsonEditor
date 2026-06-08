@@ -13,7 +13,7 @@ A freeware text editor for Windows, developed from 1999 to 2005. Features includ
 - [x] **Migrated to VS 2026** — `.dsp`/`.dsw` → `.vcxproj`/`.sln`, v145 toolset, MFC Dynamic + MBCS. The original VC6 build files are preserved on the `cedt371-original` branch.
 - [x] **Source/header directory cleanup done** — the previously flat ~180-file tree is now split into `src/{include,core,app,doc,view,frame,panels,dialogs,util,network}`. The bundled external SDK lives under `third_party/htmlhelp/`.
 - [ ] **Review Unicode build** — currently MBCS-only. The Korean input method / IME handling ([cedtViewEditCompose.cpp](src/view/cedtViewEditCompose.cpp)) and the `char`/`TCHAR` assumptions throughout the codebase need to be revisited.
-- [ ] **Extend tests to the "medium" group** — `CMemText`, `CUndoBuffer`, `CKeywords`, `CDictionary`, `CLangSpec`, `CAnalyzedString`, `SortStringArray`. These bring CString/CFile/MFC container dependencies into the test target.
+- [x] **Tests for the "medium" group** — `CSortStringArray`, `CMemText`, `CUndoBuffer`, `CKeywords`, `CDictionary`, `CLangSpec`, `CAnalyzedString`. These pull in `cedtElement`/`SortStringArray`/`Utility`/`registry` from the main app.
 - [ ] **GitHub Actions CI** — automatically build the four main configurations and run `cedt_tests` on every push.
 
 ---
@@ -79,6 +79,8 @@ Unit tests live in [tests/](tests/) as a separate `cedt_tests` project inside th
 
 ### Modules under test
 
+**Leaf utilities** (minimal MFC dependency):
+
 | Module | Test file |
 | --- | --- |
 | [src/util/RegExp.cpp](src/util/RegExp.cpp) | [tests/RegExp_test.cpp](tests/RegExp_test.cpp) |
@@ -87,7 +89,21 @@ Unit tests live in [tests/](tests/) as a separate `cedt_tests` project inside th
 | [src/util/encode.cpp](src/util/encode.cpp) | [tests/encode_test.cpp](tests/encode_test.cpp) |
 | [src/util/PathName.cpp](src/util/PathName.cpp) | [tests/PathName_test.cpp](tests/PathName_test.cpp) |
 
-These are the "leaf" utility modules with minimal MFC dependency, picked as the starting point. See the TODO above for the next group.
+**Domain containers and language spec** (`CString`/`CFile`/MFC containers):
+
+| Module | Test file |
+| --- | --- |
+| [src/util/SortStringArray.cpp](src/util/SortStringArray.cpp) | [tests/SortStringArray_test.cpp](tests/SortStringArray_test.cpp) |
+| [src/core/cedtElement.cpp](src/core/cedtElement.cpp) → `CMemText` | [tests/CMemText_test.cpp](tests/CMemText_test.cpp) |
+| [src/core/cedtElement.cpp](src/core/cedtElement.cpp) → `CUndoBuffer` | [tests/CUndoBuffer_test.cpp](tests/CUndoBuffer_test.cpp) |
+| [src/core/cedtElement.cpp](src/core/cedtElement.cpp) → `CKeywords` | [tests/CKeywords_test.cpp](tests/CKeywords_test.cpp) |
+| [src/core/cedtElement.cpp](src/core/cedtElement.cpp) → `CDictionary` | [tests/CDictionary_test.cpp](tests/CDictionary_test.cpp) |
+| [src/core/cedtElement.cpp](src/core/cedtElement.cpp) → `CLangSpec` | [tests/CLangSpec_test.cpp](tests/CLangSpec_test.cpp) |
+| [src/core/cedtElement.cpp](src/core/cedtElement.cpp) → `CAnalyzedString` | [tests/CAnalyzedString_test.cpp](tests/CAnalyzedString_test.cpp) |
+
+Current count: **60 tests across 12 suites, all green.**
+
+The remaining "hard" group is the Doc/View/Frame/Dialog layer; it needs a UI-simulation strategy and is not covered yet.
 
 ### Running locally
 

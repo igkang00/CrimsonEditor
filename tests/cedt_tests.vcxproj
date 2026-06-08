@@ -101,11 +101,22 @@
     <ClCompile Include="..\src\util\date.cpp" />
     <ClCompile Include="..\src\util\encode.cpp" />
     <ClCompile Include="..\src\util\PathName.cpp" />
+    <ClCompile Include="..\src\util\SortStringArray.cpp" />
+    <ClCompile Include="..\src\util\Utility.cpp" />
+    <ClCompile Include="..\src\util\registry.cpp" />
+    <ClCompile Include="..\src\core\cedtElement.cpp" />
     <ClCompile Include="RegExp_test.cpp" />
     <ClCompile Include="evaluate_test.cpp" />
     <ClCompile Include="date_test.cpp" />
     <ClCompile Include="encode_test.cpp" />
     <ClCompile Include="PathName_test.cpp" />
+    <ClCompile Include="SortStringArray_test.cpp" />
+    <ClCompile Include="CMemText_test.cpp" />
+    <ClCompile Include="CUndoBuffer_test.cpp" />
+    <ClCompile Include="CKeywords_test.cpp" />
+    <ClCompile Include="CDictionary_test.cpp" />
+    <ClCompile Include="CLangSpec_test.cpp" />
+    <ClCompile Include="CAnalyzedString_test.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

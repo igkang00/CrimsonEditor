@@ -14,10 +14,21 @@
     <ClCompile Include="..\src\util\date.cpp"><Filter>Sources Under Test</Filter></ClCompile>
     <ClCompile Include="..\src\util\encode.cpp"><Filter>Sources Under Test</Filter></ClCompile>
     <ClCompile Include="..\src\util\PathName.cpp"><Filter>Sources Under Test</Filter></ClCompile>
+    <ClCompile Include="..\src\util\SortStringArray.cpp"><Filter>Sources Under Test</Filter></ClCompile>
+    <ClCompile Include="..\src\util\Utility.cpp"><Filter>Sources Under Test</Filter></ClCompile>
+    <ClCompile Include="..\src\util\registry.cpp"><Filter>Sources Under Test</Filter></ClCompile>
+    <ClCompile Include="..\src\core\cedtElement.cpp"><Filter>Sources Under Test</Filter></ClCompile>
     <ClCompile Include="RegExp_test.cpp"><Filter>Tests</Filter></ClCompile>
     <ClCompile Include="evaluate_test.cpp"><Filter>Tests</Filter></ClCompile>
     <ClCompile Include="date_test.cpp"><Filter>Tests</Filter></ClCompile>
     <ClCompile Include="encode_test.cpp"><Filter>Tests</Filter></ClCompile>
     <ClCompile Include="PathName_test.cpp"><Filter>Tests</Filter></ClCompile>
+    <ClCompile Include="SortStringArray_test.cpp"><Filter>Tests</Filter></ClCompile>
+    <ClCompile Include="CMemText_test.cpp"><Filter>Tests</Filter></ClCompile>
+    <ClCompile Include="CUndoBuffer_test.cpp"><Filter>Tests</Filter></ClCompile>
+    <ClCompile Include="CKeywords_test.cpp"><Filter>Tests</Filter></ClCompile>
+    <ClCompile Include="CDictionary_test.cpp"><Filter>Tests</Filter></ClCompile>
+    <ClCompile Include="CLangSpec_test.cpp"><Filter>Tests</Filter></ClCompile>
+    <ClCompile Include="CAnalyzedString_test.cpp"><Filter>Tests</Filter></ClCompile>
   </ItemGroup>
 </Project>
