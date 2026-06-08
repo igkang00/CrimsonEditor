@@ -20,5 +20,8 @@ Release-US/
 .vs/
 *.vcxproj.user
 
+# vcpkg manifest-mode install dir
+vcpkg_installed/
+
 # Windows
 Thumbs.db

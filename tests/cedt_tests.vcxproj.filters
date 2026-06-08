@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Tests">
+      <UniqueIdentifier>{11111111-2222-3333-4444-555555555555}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sources Under Test">
+      <UniqueIdentifier>{66666666-7777-8888-9999-aaaaaaaaaaaa}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\util\RegExp.cpp"><Filter>Sources Under Test</Filter></ClCompile>
+    <ClCompile Include="..\src\util\evaluate.cpp"><Filter>Sources Under Test</Filter></ClCompile>
+    <ClCompile Include="..\src\util\date.cpp"><Filter>Sources Under Test</Filter></ClCompile>
+    <ClCompile Include="..\src\util\encode.cpp"><Filter>Sources Under Test</Filter></ClCompile>
+    <ClCompile Include="..\src\util\PathName.cpp"><Filter>Sources Under Test</Filter></ClCompile>
+    <ClCompile Include="RegExp_test.cpp"><Filter>Tests</Filter></ClCompile>
+    <ClCompile Include="evaluate_test.cpp"><Filter>Tests</Filter></ClCompile>
+    <ClCompile Include="date_test.cpp"><Filter>Tests</Filter></ClCompile>
+    <ClCompile Include="encode_test.cpp"><Filter>Tests</Filter></ClCompile>
+    <ClCompile Include="PathName_test.cpp"><Filter>Tests</Filter></ClCompile>
+  </ItemGroup>
+</Project>

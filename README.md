@@ -13,6 +13,8 @@ A freeware text editor for Windows, developed from 1999 to 2005. Features includ
 - [x] **Migrated to VS 2026** — `.dsp`/`.dsw` → `.vcxproj`/`.sln`, v145 toolset, MFC Dynamic + MBCS. The original VC6 build files are preserved on the `cedt371-original` branch.
 - [x] **Source/header directory cleanup done** — the previously flat ~180-file tree is now split into `src/{include,core,app,doc,view,frame,panels,dialogs,util,network}`. The bundled external SDK lives under `third_party/htmlhelp/`.
 - [ ] **Review Unicode build** — currently MBCS-only. The Korean input method / IME handling ([cedtViewEditCompose.cpp](src/view/cedtViewEditCompose.cpp)) and the `char`/`TCHAR` assumptions throughout the codebase need to be revisited.
+- [ ] **Extend tests to the "medium" group** — `CMemText`, `CUndoBuffer`, `CKeywords`, `CDictionary`, `CLangSpec`, `CAnalyzedString`, `SortStringArray`. These bring CString/CFile/MFC container dependencies into the test target.
+- [ ] **GitHub Actions CI** — automatically build the four main configurations and run `cedt_tests` on every push.
 
 ---
 
@@ -59,6 +61,44 @@ In Visual Studio Installer, on the **Individual components** tab, install the fo
     - MFC handler signatures updated: `OnActivateApp(BOOL, HTASK)` → `(BOOL, DWORD)`, `OnNcHitTest` return type `UINT` → `LRESULT`.
     - `CStringArray::GetAt()` results bound to `const CString&` (modern MFC returns const).
 - Source files are stored as **UTF-8 with BOM**; `cl.exe` is invoked with `/source-charset:utf-8`. The execution charset is left at the system default so string literals are still embedded in the binary as MBCS (e.g. CP949 on a Korean Windows host), preserving the MFC MBCS runtime behaviour.
+
+---
+
+## Tests
+
+Unit tests live in [tests/](tests/) as a separate `cedt_tests` project inside the same solution. Built with **Google Test** pulled in through **vcpkg manifest mode** — `tests/vcpkg.json` declares the `gtest` dependency, and vcpkg downloads/builds it on the first test build.
+
+| Item | Value |
+| --- | --- |
+| Framework | Google Test (vcpkg `gtest`) |
+| Project | [tests/cedt_tests.vcxproj](tests/cedt_tests.vcxproj) |
+| Configurations | `Debug \| Win32`, `Release \| Win32` |
+| C++ standard | C++17 (gtest requirement) |
+| MFC / charset | Dynamic + `_MBCS` (matches the main app) |
+| Subsystem | Console |
+
+### Modules under test
+
+| Module | Test file |
+| --- | --- |
+| [src/util/RegExp.cpp](src/util/RegExp.cpp) | [tests/RegExp_test.cpp](tests/RegExp_test.cpp) |
+| [src/util/evaluate.cpp](src/util/evaluate.cpp) | [tests/evaluate_test.cpp](tests/evaluate_test.cpp) |
+| [src/util/date.cpp](src/util/date.cpp) | [tests/date_test.cpp](tests/date_test.cpp) |
+| [src/util/encode.cpp](src/util/encode.cpp) | [tests/encode_test.cpp](tests/encode_test.cpp) |
+| [src/util/PathName.cpp](src/util/PathName.cpp) | [tests/PathName_test.cpp](tests/PathName_test.cpp) |
+
+These are the "leaf" utility modules with minimal MFC dependency, picked as the starting point. See the TODO above for the next group.
+
+### Running locally
+
+Prerequisite: vcpkg installed and integrated user-wide (`vcpkg integrate install`).
+
+```
+msbuild tests\cedt_tests.vcxproj /p:Configuration=Debug /p:Platform=Win32
+tests\Debug\cedt_tests.exe
+```
+
+The test project includes the source-under-test `.cpp` files directly in its `ClCompile` list (so the main `cedt.vcxproj` is untouched). New tests should follow the same `<Module>_test.cpp` naming.
 
 ---
 
@@ -289,6 +329,10 @@ CrimsonEditor/
 ├── res/                                  # Icons, bitmaps, cursors, manifest, cedt.rc2
 ├── third_party/
 │   └── htmlhelp/                         # HtmlHelp.h, HtmlHelp.lib (bundled legacy SDK)
+├── tests/                                # Google Test project (cedt_tests)
+│   ├── vcpkg.json                        #   gtest dependency declaration
+│   ├── cedt_tests.vcxproj                #   Test executable
+│   └── <Module>_test.cpp                 #   One file per module under test
 └── src/
     ├── include/                          # Global headers + PCH + compatibility shim
     │     ├── StdAfx.{h,cpp}              #   PCH
