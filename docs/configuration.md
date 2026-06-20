@@ -288,7 +288,87 @@ The first carries fonts, colors, FTP accounts, tools, and macros; the second car
 
 ---
 
-## 9. Source pointers
+## 9. Improvement candidates
+
+Issues and opportunities uncovered while writing this document. None are blockers, but they should not get lost — captured here so they can be revisited.
+
+### 9.1 High priority — bug-shaped, small change for visible improvement
+
+#### 9.1.1 Preferences → Colors page does not persist to `cedt.color`
+
+`SaveColorSettings()` at [../src/dialogs/preferences/PrefDialogColors.cpp](../src/dialogs/preferences/PrefDialogColors.cpp) line 109 only copies the edited colors into memory. The surrounding `SaveAllPrefSettings()` then calls `SaveUserConfiguration` / `SaveUserCommands` / `SaveMacroBuffers` but **not** `SaveColorScheme`. A user who picks new colors on the dialog and clicks OK sees them for the current session only — on the next launch the old `cedt.color` reloads and the change disappears.
+
+Suggested fix: add one line at the end of `SaveAllPrefSettings()`:
+
+```cpp
+CCedtApp::SaveColorScheme(CCedtApp::m_szAppDataDirectory + "\\cedt.color");
+```
+
+#### 9.1.2 First-launch users see "configuration file is corrupted"
+
+`LoadUserConfiguration` returns the same `FALSE` whether the file is missing or genuinely corrupted. The caller at [../src/app/cedtapp.cpp](../src/app/cedtapp.cpp) lines 329-335 reacts identically and shows `IDS_ERR_CORRUPT_CONFIG_FILE`. A clean first run therefore opens with a corruption warning even though nothing is wrong.
+
+Suggested fix: distinguish the two cases (return an enum, or probe with `GetFileAttributes` before opening), and only surface the dialog for genuine corruption. Missing-on-first-run should be silent or, at most, a welcoming "Initialized with defaults" message.
+
+#### 9.1.3 Cancel on the FTP dialogs still rewrites `cedt.ftp`
+
+The save calls at [../src/app/cedtAppFile.cpp](../src/app/cedtAppFile.cpp) lines 73 / 249 and [../src/app/cedtAppHndr.cpp](../src/app/cedtAppHndr.cpp) line 23 run unconditionally after `DoModal()`. There is no "discard changes" once the user has opened the dialog and edited anything in memory.
+
+Suggested fix: wrap each save call with `if (nResponse == IDOK)`. Confirm the original intent first — the unconditional save may have been deliberate.
+
+### 9.2 Medium priority — structural, moderate effort
+
+#### 9.2.1 Install-directory fallback is a folder picker
+
+When neither `HKCU` nor `HKLM` knows `InstallDir`, [../src/app/cedtapp.cpp](../src/app/cedtapp.cpp) lines 254-260 ask the user to pick a folder. Unfriendly for users who unzip the build instead of running an installer.
+
+Suggested fix: take the EXE's own directory (`AfxGetAppFileName` → `GetFileDirectory`) as the implicit default, and reach for the dialog only if that path is unusable.
+
+#### 9.2.2 No schema migration for `cedt.conf`
+
+`LoadUserConfiguration` compares the version string at the head of the file; a mismatch bails out and the loader cascades down to the InstallDir copy or to `SetDefaultConfiguration`. Every binary-layout change wipes the user's settings.
+
+Suggested fix: keep version-tagged loader branches (`LoadUserConfiguration_v1`, `_v2`, ...) and an in-memory upgrade step, so a version bump preserves what it can.
+
+#### 9.2.3 32 → 64 bit transition will break `cedt.conf`
+
+Most fields are written via raw `fread((char*)&member, sizeof(member), ...)` against types like `LONG` whose widths differ across platforms. The README's TODO item "Review Unicode build" already lives in this area — worth scheduling them together.
+
+#### 9.2.4 Disk I/O on every View-menu toggle
+
+Each toggle (`Show Spaces`, `Show Tabs`, ...) rewrites the whole `cedt.conf`. Harmless on local disks but noticeable on a network home directory.
+
+Suggested fix: keep a "dirty" flag in memory, debounce with `SetTimer` (e.g. 1 s), flush once.
+
+### 9.3 Low priority — large refactor or nice-to-have
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 9.3.1 | All configuration files are binary | Users cannot diff, edit, or version-control them. Migrating to JSON / TOML / INI is a sizeable schema-definition exercise. |
+| 9.3.2 | `SetDefaultConfiguration` is hardcoded in C++ | Changing the shipped defaults requires a recompile. An `InstallDir\defaults.conf` seed file would let packagers tune without rebuilding. |
+| 9.3.3 | AppData folder is flat | `cedt.conf` / `cedt.color` / `cedt.ftp` / `cedt.tools` / `cedt.macro` all sit at the same level. Subdirectories (`config/`, `colors/`, `scripts/`) would make manual backup cleaner, but require migration. |
+| 9.3.4 | No final flush in `ExitInstance` | If main-frame `OnClose` is bypassed (e.g. forced shutdown while modal dialogs are open) the last in-memory changes may be lost. Most settings are saved immediately so the window is narrow, but a defensive final save would close it. |
+| 9.3.5 | Registry-vs-file split is not documented as a rule | The unwritten convention "UI state in registry, user preferences in files" is mostly followed, but `BrowsingDirectory` / `WorkingDirectory` blur the line. A short guideline here would prevent drift when adding new state. |
+
+### 9.4 Separate review — security
+
+#### 9.4.1 `cedt.ftp` password storage
+
+`CFtpAccount::m_szPassword` is persisted when `m_bSavePassword` is `TRUE`. The only obfuscation primitive nearby is `map_encode` / `map_decode` in [../src/util/encode.cpp](../src/util/encode.cpp), which is scrambling rather than encryption. A dedicated audit is needed before treating `cedt.ftp` as anything more than mildly obscured plain text — moving to DPAPI (`CryptProtectData`) would close the gap.
+
+### 9.5 Recommended starting point
+
+If only one or two of these are tackled in the short term, the cheapest wins are:
+
+1. **9.1.1** — one-line fix that removes a real user-facing footgun.
+2. **9.1.2** — small refactor, removes a scary message on a clean first run.
+3. **9.1.3** — one-line fix after confirming the intent.
+
+Combined diff well under 30 lines; coverage can come from `cedt_tests` directly.
+
+---
+
+## 10. Source pointers
 
 - [src/app/cedtapp.cpp](../src/app/cedtapp.cpp) — `InitInstance` (the orchestrator).
 - [src/app/cedtAppConf.cpp](../src/app/cedtAppConf.cpp) — file-backed Save/Load and `SetDefaultConfiguration`.
