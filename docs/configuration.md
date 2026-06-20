@@ -310,11 +310,14 @@ CCedtApp::SaveColorScheme(CCedtApp::m_szAppDataDirectory + "\\cedt.color");
 
 Suggested fix: distinguish the two cases (return an enum, or probe with `GetFileAttributes` before opening), and only surface the dialog for genuine corruption. Missing-on-first-run should be silent or, at most, a welcoming "Initialized with defaults" message.
 
-#### 9.1.3 Cancel on the FTP dialogs still rewrites `cedt.ftp`
+#### 9.1.3 Cancel on the FTP dialogs ~~still rewrites `cedt.ftp`~~ — resolved as intentional
 
-The save calls at [../src/app/cedtAppFile.cpp](../src/app/cedtAppFile.cpp) lines 73 / 249 and [../src/app/cedtAppHndr.cpp](../src/app/cedtAppHndr.cpp) line 23 run unconditionally after `DoModal()`. There is no "discard changes" once the user has opened the dialog and edited anything in memory.
+**Resolution: no code change.** After a closer look the behaviour is split across two distinct dialog flows:
 
-Suggested fix: wrap each save call with `if (nResponse == IDOK)`. Confirm the original intent first — the unconditional save may have been deliberate.
+- [../src/app/cedtAppHndr.cpp](../src/app/cedtAppHndr.cpp) line 21 (`OnFileFtpSettings`, the dedicated "FTP Settings" menu): **already guarded** by `if (dlg.DoModal() == IDOK)`. Cancel here does not save.
+- [../src/app/cedtAppFile.cpp](../src/app/cedtAppFile.cpp) lines 70-74 (`OnFileOpenRemote`) and 246-250 (the FTP save path): the structure `dlg.GetFtpAccounts(...); SaveFtpAccountInfo(...); if (nResponse != IDOK) return;` is **deliberate** — the `if` is placed *after* the save call. The Open Remote dialog mixes "pick a file" with "manage FTP accounts", and the author chose to persist account-list edits even when the user changes their mind about opening the file.
+
+Treating this as intentional. If a future change ever wants to revisit the Open Remote UX (e.g. to add explicit "Apply" vs "Cancel" semantics on the account-list pane), this is the entry point.
 
 ### 9.2 Medium priority — structural, moderate effort
 

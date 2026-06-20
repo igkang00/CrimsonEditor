@@ -326,12 +326,22 @@ BOOL CCedtApp::InitInstance()
 	if( GetSystemMetrics(SM_DBCSENABLED) ) g_bDoubleByteCharacterSet = TRUE;
 
 	// load user configuration
-	if( ! LoadUserConfiguration(m_szAppDataDirectory + "\\cedt.conf") ) {
-		if( ! LoadUserConfiguration(m_szInstallDirectory + "\\cedt.conf") ) {
-			AfxMessageBox(IDS_ERR_CORRUPT_CONFIG_FILE, MB_OK | MB_ICONEXCLAMATION);
-			SetDefaultConfiguration();
+	{
+		CString szAppConf     = m_szAppDataDirectory   + "\\cedt.conf";
+		CString szInstallConf = m_szInstallDirectory   + "\\cedt.conf";
+		if( ! LoadUserConfiguration(szAppConf) ) {
+			if( ! LoadUserConfiguration(szInstallConf) ) {
+				// Distinguish "file missing" (clean first run) from
+				// "file present but failed to load" (truly corrupted).
+				BOOL bAppExisted     = (GetFileAttributes(szAppConf)     != INVALID_FILE_ATTRIBUTES);
+				BOOL bInstallExisted = (GetFileAttributes(szInstallConf) != INVALID_FILE_ATTRIBUTES);
+				if( bAppExisted || bInstallExisted ) {
+					AfxMessageBox(IDS_ERR_CORRUPT_CONFIG_FILE, MB_OK | MB_ICONEXCLAMATION);
+				}
+				SetDefaultConfiguration();
+			}
+			SaveUserConfiguration(szAppConf);
 		}
-		SaveUserConfiguration(m_szAppDataDirectory + "\\cedt.conf");
 	}
 
 	// load color settings
