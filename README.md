@@ -120,6 +120,7 @@ CCedtApp  (src/app/cedtapp.h)        ── derived from CWinApp, application en
 > Long-form notes that are too detailed for this README live under [docs/](docs/):
 > - [docs/configuration.md](docs/configuration.md) — how user settings are loaded at startup, where each piece of state is stored (registry vs `%APPDATA%`), what the fallback chain does, and what happens on a clean first run.
 > - [docs/testing.md](docs/testing.md) — test project layout, how to add a new test, and the roadmap toward integration and end-to-end coverage.
+> - [docs/refactoring-memory-safety.md](docs/refactoring-memory-safety.md) — memory-safety review of the codebase: one confirmed crash, several likely buffer issues, ownership notes for the network code, and a Rule-of-Three gap in the domain classes — with severities and a recommended fix order.
 
 ### Core Domain Classes ([src/core/cedtElement.h](src/core/cedtElement.h))
 
