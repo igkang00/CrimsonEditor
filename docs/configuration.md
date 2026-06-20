@@ -11,8 +11,9 @@ The authoritative entry point is [`CCedtApp::InitInstance()`](../src/app/cedtapp
 Excerpt of `CCedtApp::InitInstance()`, in order:
 
 ```
-1.  SetRegistryKey("Crimson Editor")                    HKCU\Software\Crimson Editor\Crimson Editor\*
-2.  Resolve InstallDirectory                            (registry, then HKLM, then ask the user)
+1.  SetRegistryKey("Crimson System")                    HKCU\Software\Crimson System\Crimson Editor\*
+    + override m_pszProfileName = "Crimson Editor"      (so KR and US builds share the same subtree)
+2.  Resolve InstallDirectory                            (HKCU, then HKLM, then derive from the EXE's own directory)
 3.  Compute AppDataDirectory = %APPDATA%\Crimson Editor (auto-created if missing)
 4.  LoadMultiInstancesFlag                              (registry)
 5.  Single-instance check                               (IPC + ghost-exit if a previous instance is alive)
@@ -35,9 +36,9 @@ Step 7 is where the bulk of user preferences come back, and it uses the file bac
 
 ## 2. Storage map
 
-### 2.1 Windows Registry — `HKCU\Software\Crimson Editor\Crimson Editor\`
+### 2.1 Windows Registry — `HKCU\Software\Crimson System\Crimson Editor\`
 
-`SetRegistryKey(STRING_COMPANYNAME)` at the top of `InitInstance` parks every subsequent `WriteProfile*` / `GetProfile*` call under this subtree.
+`SetRegistryKey(STRING_COMPANYNAME)` at the top of `InitInstance` parks every subsequent `WriteProfile*` / `GetProfile*` call under this subtree. `STRING_COMPANYNAME` resolves to the literal `"Crimson System"`. The MFC registry path is normally `Software\<RegistryKey>\<ProfileName>\`, and MFC seeds `m_pszProfileName` from `m_pszAppName` (i.e. the value loaded from `AFX_IDS_APP_TITLE` — `"크림슨에디터"` for the KR build, `"Crimson Editor"` for US). The code immediately overrides `m_pszProfileName` with the fixed English `"Crimson Editor"` so both builds share the same registry subtree, while leaving `m_pszAppName` (used by `AfxGetAppName()` in window titles and message-box captions) alone.
 
 | Subkey / Value | Purpose |
 | --- | --- |
@@ -259,7 +260,7 @@ Putting the file behaviors next to the registry behaviors:
 
 When neither the registry subtree nor any file in `%APPDATA%\Crimson Editor\` exists yet:
 
-1. **Install directory** — both registry locations are empty, so the user is shown a folder picker. **The app cannot proceed if the user cancels it.** The chosen path is then written to HKCU and never asked again.
+1. **Install directory** — both registry locations are empty, so the code derives the install directory from the running EXE's own location via `GetModuleFileName` + `GetFileDirectory`. The result is written to HKCU and never re-derived on subsequent launches. (Earlier versions popped up a folder-picker dialog at this point; this was removed so unzip-and-run setups work without prompting.)
 2. **`cedt.conf`** — both AppData and InstallDir copies are missing, so the user sees the `IDS_ERR_CORRUPT_CONFIG_FILE` message box, the hardcoded defaults (§4) are applied, and the result is written to AppData.
 3. **`cedt.color`** — both copies missing → the predefined default scheme is installed silently and persisted to AppData.
 4. **`cedt.ftp` / `cedt.tools` / `cedt.macro`** — all missing → start empty; nothing is shown to the user.
@@ -319,13 +320,24 @@ Suggested fix: distinguish the two cases (return an enum, or probe with `GetFile
 
 Treating this as intentional. If a future change ever wants to revisit the Open Remote UX (e.g. to add explicit "Apply" vs "Cancel" semantics on the account-list pane), this is the entry point.
 
+#### 9.1.4 Registry path was split between KR and US builds — fixed
+
+The MFC registry path is `Software\<RegistryKey>\<ProfileName>\`. `SetRegistryKey(STRING_COMPANYNAME)` sets the company part to `"Crimson System"`, but the profile name defaulted to `m_pszAppName` — which is loaded from `AFX_IDS_APP_TITLE`, so the KR build wrote to `HKCU\Software\Crimson System\크림슨에디터\` and the US build wrote to `HKCU\Software\Crimson System\Crimson Editor\`. A user who switched between the two builds saw their window placement / MRU / docking state reset because the two locales lived in different subtrees.
+
+The fix is two lines right after `SetRegistryKey`:
+
+```cpp
+free((void*)m_pszProfileName);
+m_pszProfileName = _tcsdup(_T("Crimson Editor"));
+```
+
+Both builds now share `HKCU\Software\Crimson System\Crimson Editor\`. `AfxGetAppName()` (= `m_pszAppName`) is untouched, so the title bar still reads `"크림슨에디터"` in the KR build. No migration: anyone who was using the KR build will see their UI-state reset once on the next launch.
+
 ### 9.2 Medium priority — structural, moderate effort
 
-#### 9.2.1 Install-directory fallback is a folder picker
+#### 9.2.1 ~~Install-directory fallback is a folder picker~~ — fixed
 
-When neither `HKCU` nor `HKLM` knows `InstallDir`, [../src/app/cedtapp.cpp](../src/app/cedtapp.cpp) lines 254-260 ask the user to pick a folder. Unfriendly for users who unzip the build instead of running an installer.
-
-Suggested fix: take the EXE's own directory (`AfxGetAppFileName` → `GetFileDirectory`) as the implicit default, and reach for the dialog only if that path is unusable.
+The fallback now derives the install directory from the running EXE's own location (`GetModuleFileName` + `GetFileDirectory`) and silently writes it to `HKCU`. The folder-picker dialog is no longer reachable, so unzip-and-run setups work with no prompting. Related: §9.1.4 below normalises the registry path so KR and US builds share the same subtree.
 
 #### 9.2.2 No schema migration for `cedt.conf`
 
@@ -359,15 +371,17 @@ Suggested fix: keep a "dirty" flag in memory, debounce with `SetTimer` (e.g. 1 s
 
 `CFtpAccount::m_szPassword` is persisted when `m_bSavePassword` is `TRUE`. The only obfuscation primitive nearby is `map_encode` / `map_decode` in [../src/util/encode.cpp](../src/util/encode.cpp), which is scrambling rather than encryption. A dedicated audit is needed before treating `cedt.ftp` as anything more than mildly obscured plain text — moving to DPAPI (`CryptProtectData`) would close the gap.
 
-### 9.5 Recommended starting point
+### 9.5 Status
 
-If only one or two of these are tackled in the short term, the cheapest wins are:
+The 9.1 items above and 9.2.1 have all been applied:
 
-1. **9.1.1** — one-line fix that removes a real user-facing footgun.
-2. **9.1.2** — small refactor, removes a scary message on a clean first run.
-3. **9.1.3** — one-line fix after confirming the intent.
+- 9.1.1 — Preferences > Colors now persists to `cedt.color`.
+- 9.1.2 — first-launch "configuration corrupted" warning gone.
+- 9.1.3 — investigated and accepted as intentional behaviour; no code change.
+- 9.1.4 — KR and US builds now share one registry subtree.
+- 9.2.1 — install directory is inferred from the EXE path; no more folder picker.
 
-Combined diff well under 30 lines; coverage can come from `cedt_tests` directly.
+The remaining 9.2 and 9.3 items are still open. The security item 9.4.1 (`cedt.ftp` password obfuscation) needs a dedicated audit before any action is decided.
 
 ---
 

@@ -242,6 +242,13 @@ BOOL CCedtApp::InitInstance()
 	// Change the registry key under which our settings are stored.
 	SetRegistryKey(STRING_COMPANYNAME);
 
+	// Keep AfxGetAppName() (title bar, MessageBox captions, ...) at the
+	// localized app title, but normalise the registry profile name to a
+	// fixed English string so KR and US builds share the same HKCU subtree:
+	//   HKCU\Software\Crimson System\Crimson Editor\*
+	free((void*)m_pszProfileName);
+	m_pszProfileName = _tcsdup(_T("Crimson Editor"));
+
 	// get current working directory
 	TCHAR szTemp[MAX_PATH]; GetCurrentDirectory(MAX_PATH, szTemp);
 	m_szLoadingDirectory = ChopDirectory(szTemp);
@@ -251,12 +258,11 @@ BOOL CCedtApp::InitInstance()
 	m_szInstallDirectory = GetProfileString(REGKEY_INSTALL_DIRECTORY, "", NULL);
 	if( ! m_szInstallDirectory.GetLength() ) {
 		if( ! GetRegKeyValue(HKEY_LOCAL_MACHINE, REGPATH_INSTALL_DIRECTORY, "InstallDir", m_szInstallDirectory) ) {
-			CString szText; szText.LoadString( IDS_CHOOSE_INSTALL_DIR );
-			CString szDirectory = m_szLoadingDirectory;
-
-			CFolderDialog dlg(szText, szDirectory, NULL, NULL);
-			if( dlg.DoModal() != IDOK ) return FALSE;
-			m_szInstallDirectory = dlg.GetPathName();
+			// No registry hint on either side - infer from the running EXE's directory.
+			// This makes installer-less unzip-and-run setups work without prompting the user.
+			TCHAR szExePath[MAX_PATH];
+			GetModuleFileName(NULL, szExePath, MAX_PATH);
+			m_szInstallDirectory = GetFileDirectory(szExePath);
 		}
 		WriteProfileString(REGKEY_INSTALL_DIRECTORY, "", m_szInstallDirectory);
 	}
