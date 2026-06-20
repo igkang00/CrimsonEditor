@@ -64,6 +64,18 @@ In Visual Studio Installer, on the **Individual components** tab, install the fo
     - `CStringArray::GetAt()` results bound to `const CString&` (modern MFC returns const).
 - Source files are stored as **UTF-8 with BOM**; `cl.exe` is invoked with `/source-charset:utf-8`. The execution charset is left at the system default so string literals are still embedded in the binary as MBCS (e.g. CP949 on a Korean Windows host), preserving the MFC MBCS runtime behaviour.
 
+### For installer authors
+
+At startup the app resolves its install directory in this order:
+
+1. `HKCU\Software\Crimson System\Crimson Editor\Install Directory` (per-user, written back on first run)
+2. `HKLM\Software\Crimson System\Crimson Editor` value `InstallDir` (machine-wide, intended for installers)
+3. The directory of the running EXE itself (automatic fallback so unzip-and-run setups work without any setup)
+
+Step 3 means the app boots without help, but **installers are recommended to write step 2 explicitly**. Doing so gives every user on the machine a consistent path, makes uninstallers / updaters able to locate the install without guessing, and avoids surprises if a user later runs the EXE from a different directory (e.g. a USB stick) before the per-user HKCU value is set.
+
+See [docs/configuration.md](docs/configuration.md) for the full picture of how settings — including this install-directory lookup — are loaded and saved.
+
 ---
 
 ## Tests
