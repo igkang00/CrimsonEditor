@@ -165,7 +165,7 @@ BOOL CPreferenceDialog::AssociateExtension(LPCTSTR lpszExtension)
 
 	// register default icon
 	CString szRegPath1 = szNewProgID + "\\DefaultIcon";
-	CString szDefaultIcon = CCedtApp::m_szInstallDirectory + "\\cedttype.ico";
+	CString szDefaultIcon = CCedtApp::m_szInstallDirectory + "\\cedt.ico";
 	if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath1, "", szDefaultIcon) ) return FALSE;
 
 	// register shell/open/command
