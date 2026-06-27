@@ -30,26 +30,30 @@ static INT lenSDB, lenSDE, lenHLB, lenHLE, lenR1B, lenR1E, lenR2B, lenR2E;
 static BOOL bKEY, bDIC, bDBC, bQUO, bCOM, bRNG, bPRE, bVAR;
 
 
-static void _WordFound(SHORT windex, UCHAR ucType, UCHAR ucInfo, SHORT siIndex, SHORT siLength)
+// Callers pass pointer-arithmetic results (ptrdiff_t / INT_PTR on x64)
+// for siIndex/siLength. The per-line analyzer caps line length at
+// MAX_STRING_LENGTH (32767) so the values fit in a SHORT — the narrowing
+// happens explicitly here at the boundary, not implicitly at every call site.
+static void _WordFound(SHORT windex, UCHAR ucType, UCHAR ucInfo, INT_PTR siIndex, INT_PTR siLength)
 {
 	_words[windex].m_ucType[0] = ucType;
 	_words[windex].m_ucType[1] = ucType;
 	_words[windex].m_ucType[2] = ucType;
 	_words[windex].m_ucInfo = ucInfo;
-	_words[windex].m_siIndex = siIndex;
-	_words[windex].m_siLength = siLength;
+	_words[windex].m_siIndex = (SHORT)siIndex;
+	_words[windex].m_siLength = (SHORT)siLength;
 
 //	TRACE2("Word Found: %d, %d\n", windex, siLength);
 }
 
-static void _WordFoundExtended(SHORT windex, UCHAR ucType[], UCHAR ucInfo, SHORT siIndex, SHORT siLength)
+static void _WordFoundExtended(SHORT windex, UCHAR ucType[], UCHAR ucInfo, INT_PTR siIndex, INT_PTR siLength)
 {
 	_words[windex].m_ucType[0] = ucType[0];
 	_words[windex].m_ucType[1] = ucType[1];
 	_words[windex].m_ucType[2] = ucType[2];
 	_words[windex].m_ucInfo = ucInfo;
-	_words[windex].m_siIndex = siIndex;
-	_words[windex].m_siLength = siLength;
+	_words[windex].m_siIndex = (SHORT)siIndex;
+	_words[windex].m_siLength = (SHORT)siLength;
 
 //	TRACE2("Word Found: %d, %d\n", windex, siLength);
 }
@@ -463,14 +467,14 @@ void CCedtDoc::AnalyzeText(INT nIndex, INT nCount)
 	rngLC1 = m_clsLangSpec.m_ucLineComment1Range;			rngLC2 = m_clsLangSpec.m_ucLineComment2Range;
 	rngBC1 = m_clsLangSpec.m_ucBlockComment1Range;			rngBC2 = m_clsLangSpec.m_ucBlockComment2Range;
 
-	lenHEX = strlen(HEX);		lenHRD = strlen(HRD);
-	lenLF1 = strlen(LF1);		lenLF2 = strlen(LF2);		lenLC1 = strlen(LC1);		lenLC2 = strlen(LC2);
-	lenC1B = strlen(C1B);		lenC1E = strlen(C1E);		lenC2B = strlen(C2B);		lenC2E = strlen(C2E);
-	lenSDB = strlen(SDB);		lenSDE = strlen(SDE);		lenHLB = strlen(HLB);		lenHLE = strlen(HLE);
-	lenR1B = strlen(R1B);		lenR1E = strlen(R1E);		lenR2B = strlen(R2B);		lenR2E = strlen(R2E);
+	lenHEX = (INT)strlen(HEX);		lenHRD = (INT)strlen(HRD);
+	lenLF1 = (INT)strlen(LF1);		lenLF2 = (INT)strlen(LF2);		lenLC1 = (INT)strlen(LC1);		lenLC2 = (INT)strlen(LC2);
+	lenC1B = (INT)strlen(C1B);		lenC1E = (INT)strlen(C1E);		lenC2B = (INT)strlen(C2B);		lenC2E = (INT)strlen(C2E);
+	lenSDB = (INT)strlen(SDB);		lenSDE = (INT)strlen(SDE);		lenHLB = (INT)strlen(HLB);		lenHLE = (INT)strlen(HLE);
+	lenR1B = (INT)strlen(R1B);		lenR1E = (INT)strlen(R1E);		lenR2B = (INT)strlen(R2B);		lenR2E = (INT)strlen(R2E);
 
 	// global language options
-	bKEY = m_clsKeywords.GetCount();
+	bKEY = (BOOL)m_clsKeywords.GetCount();
 	bDIC = m_bDictionaryLoaded;
 	bDBC = g_bDoubleByteCharacterSet;
 	bQUO = MQU || QU1 || QU2 || QU3;

@@ -171,8 +171,8 @@ public: // *** cedtDocHndr.cpp ***
 
 
 public: // *** cedtDocMap.cpp ***
-	INT GetLineCount() { return m_clsAnalyzedText.GetCount(); }
-	INT GetLastIdxY() { return m_clsAnalyzedText.GetCount()-1; }
+	INT GetLineCount() { return (INT)m_clsAnalyzedText.GetCount(); }
+	INT GetLastIdxY() { return (INT)m_clsAnalyzedText.GetCount() - 1; }
 	INT GetWordCount();
 	INT GetByteCount();
 
@@ -252,8 +252,8 @@ protected:
 
 
 public: // *** cedtDocUndo.cpp ***
-	INT  GetUndoBufferCount() { return m_clsUndoBuffer.GetCount(); }
-	INT  GetRedoBufferCount() { return m_clsRedoBuffer.GetCount(); }
+	INT  GetUndoBufferCount() { return (INT)m_clsUndoBuffer.GetCount(); }
+	INT  GetRedoBufferCount() { return (INT)m_clsRedoBuffer.GetCount(); }
 
 	void EmptyUndoBuffer() { m_clsUndoBuffer.EmptyBuffer(); }
 	void EmptyRedoBuffer() { m_clsRedoBuffer.EmptyBuffer(); }

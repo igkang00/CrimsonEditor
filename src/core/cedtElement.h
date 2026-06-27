@@ -485,7 +485,7 @@ public:
 	CMacroBuffer();
 	virtual ~CMacroBuffer() {}
 
-	INT GetBufferCount() { return m_lstAction.GetCount(); }
+	INT GetBufferCount() { return (INT)m_lstAction.GetCount(); }
 	CString GetHotKeyText();
 
 	BOOL StreamSave(ofstream & fout);
