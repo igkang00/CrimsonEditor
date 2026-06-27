@@ -284,6 +284,7 @@ BOOL CKeywords::FileLoad(LPCTSTR lpszPathName, BOOL bCaseSensitive[])
 			std::istringstream sin(szLine);
 			while( sin.good() ) {
 				sin >> std::ws; if( ! sin.good() ) break;
+				sin.width(sizeof(szWord) / sizeof(TCHAR));   // bound the read to the buffer size
 				sin >> szWord;  if( szWord[0] == '\0' ) break;
 
 				if( bIgnoreCase ) { _strlwr(szWord); sprintf(szBuffer, "I:%s", szWord); }
@@ -342,6 +343,7 @@ BOOL CDictionary::FileLoad(LPCTSTR lpszPathName, CALLBACK_FUNCTION fcnCallback)
 
 	while( fin.good() ) {
 		fin >> std::ws; if( fin.eof() ) break;
+		fin.width(sizeof(szWord) / sizeof(TCHAR));   // bound the read to the buffer size
 		fin >> szWord; _strlwr(szWord);
 
 		if( ! Lookup( szWord, ucValue ) ) {

@@ -204,13 +204,14 @@ Applied:
 - **M7** — `CAnalyzedString` / `CFormatedString` copy constructors `= delete`d.
 - **L3** — sized buffers triaged: one safe-as-written, two fixed (FileTab.cpp:137, FileWndProject.cpp:726-728).
 - **§5** — `MAX_STRING_SIZE` renamed to `MAX_STRING_LENGTH` (matches existing convention) and `MAX_LINE_BUFFER_SIZE = MAX_STRING_LENGTH + 1` added for one-line buffers; literal-sweep deferred.
+- **M8 (new)** — unbounded `operator>>(char *)` reads from project / keyword / dictionary files. 20 sites total: 2 in `cedtElement.cpp` (CKeywords / CDictionary `FileLoad`) and 18 in `FileWndProject.cpp` (project / workspace parsing). All now use `stream.width(N)` before the `>>` so a hostile or corrupted file cannot overflow the target buffer.
+- **M9 (new)** — `lstrcpy` audit. Six remaining call sites verified individually: three are safe-by-construction (delimiter literal of length ≤ 2; `LF_FACESIZE` face name; pre-sized `DROPFILES` alloc — the last got an explanatory comment so the next reader doesn't second-guess it); the `CHyperLink::GetRegKey` site was rewritten to take a caller-supplied `cchRetdata` and use `lstrcpyn` so future callers cannot mismatch sizes.
 
 Still open:
 
 - **L1** — `RemoteFile.cpp` raw `delete` pattern, candidate for `unique_ptr` + custom deleter. Larger refactor, not urgent.
 - **L2** — function-scope `static` buffers; safe under current single-threaded UI assumption.
 - **L4** — POD-struct `memcpy` sites; one-pass sanity check welcome but no smoking gun.
-- **Follow-up from L3** — `CKeywords::FileLoad` does `sin >> szWord` without a width — a long word in a keyword file would overrun. Outside the strcpy/sprintf family but worth a follow-up.
 
 ---
 

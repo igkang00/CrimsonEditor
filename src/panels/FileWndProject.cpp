@@ -2,6 +2,13 @@
 #include "cedtHeader.h"
 
 
+// Size of the per-token text buffer used by every project / workspace
+// reader in this file. Anchored once so the matching `is.width(...)` /
+// `fin.width(...)` calls below cannot drift out of sync with the
+// `TCHAR szText[...]` declarations they protect.
+static const int kProjectTokenBufSize = 4096;
+
+
 BOOL CFileWindow::InitProjectWorkspace()
 {
 	if( ! RemoveAllProjectItems() ) return FALSE;
@@ -69,8 +76,8 @@ BOOL CFileWindow::OpenProjectWorkspace(LPCTSTR lpszPathName)
 	// open file to load project workspace
 	ifstream fin(lpszPathName, ios::in);
 
-	CMapStringToString mapAttr; TCHAR szText[4096]; 
-	fin >> szText; // get first token
+	CMapStringToString mapAttr; TCHAR szText[kProjectTokenBufSize];
+	fin.width(kProjectTokenBufSize); fin >> szText; // get first token
 
 	// load project
 	if( ! _stricmp(szText, "<project") ) {
@@ -81,12 +88,12 @@ BOOL CFileWindow::OpenProjectWorkspace(LPCTSTR lpszPathName)
 		if( ! bLookup ) { AfxMessageBox(IDS_ERR_WRONG_PRJ_FILE); fin.close(); return FALSE; }
 
 		HTREEITEM hItem = InsertProjectTreeItem(TVI_ROOT, GetFileName(lpszPathName), PROJECT_ITEM_PROJECT, 0, lpszPathName);
-		fin >> szText; // get next token
+		fin.width(kProjectTokenBufSize); fin >> szText; // get next token
 
 		while( _stricmp(szText, "</project>") ) {
 			if( ! LoadProjectItem(fin, szText, hItem) ) { fin.close(); return FALSE; }
 		}
-		fin >> szText; // get next token
+		fin.width(kProjectTokenBufSize); fin >> szText; // get next token
 
 		// expand and select root item
 		if( ! m_treProjectTree.Expand( hItem, TVE_EXPAND ) ) TRUE; // there could be only one root item;
@@ -103,12 +110,12 @@ BOOL CFileWindow::OpenProjectWorkspace(LPCTSTR lpszPathName)
 		if( ! bLookup ) { AfxMessageBox(IDS_ERR_WRONG_PRJ_FILE); fin.close(); return FALSE; }
 
 		CCedtApp * pApp = (CCedtApp *)AfxGetApp();
-		fin >> szText; // get next token
+		fin.width(kProjectTokenBufSize); fin >> szText; // get next token
 
 		while( _stricmp(szText, "</workspace>") ) {
 			if( ! LoadWorkspaceItem(fin, szText, pApp) ) { fin.close(); return FALSE; }
 		}
-		fin >> szText; // get next token
+		fin.width(kProjectTokenBufSize); fin >> szText; // get next token
 
 	} else { AfxMessageBox(IDS_ERR_WRONG_PRJ_FILE); fin.close(); return FALSE; }
 
@@ -151,8 +158,8 @@ BOOL CFileWindow::OpenRegularWorkspace(LPCTSTR lpszPathName)
 	// open file to load regular workspace
 	ifstream fin(lpszPathName, ios::in);
 
-	CMapStringToString mapAttr; TCHAR szText[4096]; 
-	fin >> szText; // get first token
+	CMapStringToString mapAttr; TCHAR szText[kProjectTokenBufSize];
+	fin.width(kProjectTokenBufSize); fin >> szText; // get first token
 
 	// load workspace
 	if( ! _stricmp(szText, "<workspace") ) {
@@ -163,12 +170,12 @@ BOOL CFileWindow::OpenRegularWorkspace(LPCTSTR lpszPathName)
 		if( ! bLookup ) { AfxMessageBox(IDS_ERR_WRONG_PRJ_FILE); fin.close(); return FALSE; }
 
 		CCedtApp * pApp = (CCedtApp *)AfxGetApp();
-		fin >> szText; // get next token
+		fin.width(kProjectTokenBufSize); fin >> szText; // get next token
 
 		while( _stricmp(szText, "</workspace>") ) {
 			if( ! LoadWorkspaceItem(fin, szText, pApp) ) { fin.close(); return FALSE; }
 		}
-		fin >> szText; // get next token
+		fin.width(kProjectTokenBufSize); fin >> szText; // get next token
 	} else { AfxMessageBox(IDS_ERR_WRONG_PRJ_FILE); fin.close(); return FALSE; }
 
 	EnableAllProjectButtons(FALSE);
@@ -368,12 +375,12 @@ BOOL CFileWindow::LoadProjectItem(istream & is, TCHAR szText[], HTREEITEM hParen
 		if( ! bLookup ) { szExpanded = "no"; }
 
 		HTREEITEM hItem = InsertProjectTreeItem(hParent, szName, PROJECT_ITEM_CATEGORY, 0, "");
-		is >> szText; // get next token
+		is.width(kProjectTokenBufSize); is >> szText; // get next token
 
 		while( _stricmp(szText, "</category>") ) {
 			if( ! LoadProjectItem(is, szText, hItem) ) return FALSE;
 		}
-		is >> szText; // get next token
+		is.width(kProjectTokenBufSize); is >> szText; // get next token
 
 		// expand category item if it is checked
 		if( ! szExpanded.Compare("yes") ) m_treProjectTree.Expand( hItem, TVE_EXPAND );
@@ -387,7 +394,7 @@ BOOL CFileWindow::LoadProjectItem(istream & is, TCHAR szText[], HTREEITEM hParen
 		if( ! bLookup ) { AfxMessageBox(IDS_ERR_WRONG_PRJ_FILE); return FALSE; }
 
 		HTREEITEM hItem = InsertProjectTreeItem(hParent, GetFileName(szPath), PROJECT_ITEM_LOCAL_FILE, 0, szPath);
-		is >> szText; // get next token
+		is.width(kProjectTokenBufSize); is >> szText; // get next token
 
 	} else if( ! _stricmp(szText, "<remotefile") ) {
 		is.getline(szText, 4096, '>'); // get attributes
@@ -401,11 +408,11 @@ BOOL CFileWindow::LoadProjectItem(istream & is, TCHAR szText[], HTREEITEM hParen
 		if( ! bLookup ) { AfxMessageBox(IDS_ERR_WRONG_PRJ_FILE); return FALSE; }
 
 		HTREEITEM hItem = InsertProjectTreeItem(hParent, GetFileName(szPath), PROJECT_ITEM_REMOTE_FILE, atoi(szAccount), szPath);
-		is >> szText; // get next token
+		is.width(kProjectTokenBufSize); is >> szText; // get next token
 
 	} else { // not recognized item
 		is.getline(szText, 4096, '>'); // skip attributes
-		is >> szText; // get next token
+		is.width(kProjectTokenBufSize); is >> szText; // get next token
 	}
 
 	return TRUE;
@@ -496,7 +503,7 @@ BOOL CFileWindow::LoadWorkspaceItem(istream & is, TCHAR szText[], CWinApp * pApp
 		}
 
 		pCedtApp->SpawnRemoteDocumentFile(atoi(szAccount), szPath, atoi(szLineNum), pwndpl);
-		is >> szText; // get next token
+		is.width(kProjectTokenBufSize); is >> szText; // get next token
 
 	} else if( ! _stricmp(szText, "<localfile") ) {
 		is.getline(szText, 4096, '>'); // get attributes
@@ -530,11 +537,11 @@ BOOL CFileWindow::LoadWorkspaceItem(istream & is, TCHAR szText[], CWinApp * pApp
 		}
 
 		pCedtApp->SpawnDocumentFile(szPath, atoi(szLineNum), pwndpl);
-		is >> szText; // get next token
+		is.width(kProjectTokenBufSize); is >> szText; // get next token
 
 	} else { // not recognized item
 		is.getline(szText, 4096, '>'); // skip attributes
-		is >> szText; // get next token
+		is.width(kProjectTokenBufSize); is >> szText; // get next token
 	}
 
 	return TRUE;

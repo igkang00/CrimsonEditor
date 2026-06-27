@@ -768,6 +768,10 @@ void CFileWindow::OnBegindragDirectoryTree(NMHDR* pNMHDR, LRESULT* pResult)
 
 	pDrop->pFiles = sizeof(DROPFILES);
 	TCHAR * pName = (TCHAR *)(LPBYTE(pDrop) + sizeof(DROPFILES));
+	// `size` above is sizeof(DROPFILES) + szPathName.GetLength() + 2, so this
+	// lstrcpy writes exactly szPathName.GetLength()+1 chars into a region of
+	// szPathName.GetLength()+2 chars. The trailing extra byte (already zeroed
+	// by GMEM_ZEROINIT) is the second NUL CF_HDROP expects.
 	lstrcpy( pName, szPathName );
 	::GlobalUnlock(hMemory);
 

@@ -463,7 +463,7 @@ void CHyperLink::SetDefaultCursor()
 	}
 }
 
-LONG CHyperLink::GetRegKey(HKEY key, LPCTSTR subkey, LPTSTR retdata)
+LONG CHyperLink::GetRegKey(HKEY key, LPCTSTR subkey, LPTSTR retdata, int cchRetdata)
 {
     HKEY hkey;
     LONG retval = RegOpenKeyEx(key, subkey, 0, KEY_QUERY_VALUE, &hkey);
@@ -472,7 +472,7 @@ LONG CHyperLink::GetRegKey(HKEY key, LPCTSTR subkey, LPTSTR retdata)
         long datasize = MAX_PATH;
 		TCHAR data[MAX_PATH];
 		RegQueryValue(hkey, NULL, data, &datasize);
-		lstrcpy(retdata,data);
+		lstrcpyn(retdata, data, cchRetdata);   // bound by caller-supplied size
 		RegCloseKey(hkey);
     }
 
@@ -519,10 +519,10 @@ HINSTANCE CHyperLink::GotoURL(LPCTSTR url, int showcmd)
     // If it failed, get the .htm regkey and lookup the program
     if ((UINT)result <= HINSTANCE_ERROR) {		
 		
-        if (GetRegKey(HKEY_CLASSES_ROOT, _T(".htm"), key) == ERROR_SUCCESS) {
+        if (GetRegKey(HKEY_CLASSES_ROOT, _T(".htm"), key, sizeof(key) / sizeof(TCHAR)) == ERROR_SUCCESS) {
             lstrcat(key, _T("\\shell\\open\\command"));
 
-            if (GetRegKey(HKEY_CLASSES_ROOT,key,key) == ERROR_SUCCESS) {
+            if (GetRegKey(HKEY_CLASSES_ROOT, key, key, sizeof(key) / sizeof(TCHAR)) == ERROR_SUCCESS) {
                 TCHAR *pos;
                 pos = _tcsstr(key, _T("\"%1\""));
                 if (pos == NULL) {                     // No quotes found

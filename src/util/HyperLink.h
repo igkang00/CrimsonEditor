@@ -88,7 +88,7 @@ public:
 // Implementation
 protected:
 	static void SetDefaultCursor();
-	static LONG GetRegKey(HKEY key, LPCTSTR subkey, LPTSTR retdata);
+	static LONG GetRegKey(HKEY key, LPCTSTR subkey, LPTSTR retdata, int cchRetdata);
 	static void ReportError(int nError);	
 	static HINSTANCE GotoURL(LPCTSTR url, int showcmd);
 
