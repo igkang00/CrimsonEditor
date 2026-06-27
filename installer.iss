@@ -77,10 +77,14 @@ WizardStyle=modern
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 
-; Per-machine by default (admin), but allow the user to choose
-; per-user from the standard "Choose installation type" dialog.
+; Admin-only install. We need HKLM write access (for the
+; InstallDir registry value that cedt + ShellExt read at runtime)
+; and HKCR write access (for regsvr32 to register ShellExt.dll's
+; context menu handler) — both of which require elevation. The
+; per-user override was tried briefly but only ends up failing
+; at the HKLM/regsvr32 steps, so disallow it outright and let
+; Inno Setup raise the UAC prompt up front.
 PrivilegesRequired=admin
-PrivilegesRequiredOverridesAllowed=commandline dialog
 
 ChangesAssociations=no
 
