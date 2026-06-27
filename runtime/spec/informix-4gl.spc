@@ -1,0 +1,14 @@
+# Informix-4GL SPECIFICATION FILE
+# FOR CRIMSON EDITOR v3.x
+#
+# FIRST EDITED BY Craig H. Rettig (http://www.BitBucketHeaven.com/) 17 Sep 2003
+
+$CASESENSITIVE=NO
+$DELIMITERS=~`!@#$%^&*()-+=|\{}[]:;"',.<>/?
+$KEYWORDPREFIX=#
+$ESCAPECHAR=\
+$QUOTATIONMARK1="
+$LINECOMMENT=#
+$PAIRS1=()
+$PAIRS2=[]
+$PAIRS3={}

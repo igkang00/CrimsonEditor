@@ -9,3 +9,16 @@ cedt_kr.rc -text
 *.ico    binary
 *.bmp    binary
 *.cur    binary
+
+# Runtime assets shipped with the installer.
+*.dic    binary
+*.gif    binary
+*.dll    binary
+*.exe    binary
+
+# spec / link / template files are CP949 (Korean comments / strings).
+# Treat as non-text so the Korean bytes survive a round-trip through
+# any editor that would otherwise re-save them as UTF-8.
+runtime/spec/*.spc      -text
+runtime/spec/*.key      -text
+runtime/link/extension.*  -text

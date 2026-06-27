@@ -1,0 +1,274 @@
+<html>
+<head>
+<link rel="StyleSheet" href="style.css" type="text/css">
+<title>Crimson Editor &ndash; Help Topics &ndash; Release Notes</title>
+<meta http-equiv="Cache-Control" content="no-cache">
+<meta http-equiv="Pragma" content="no-cache">
+</head>
+<body bgcolor="#FFFFFF">
+
+<table width="560" cellspacing="0" cellpadding="0" border="0">
+<tr><td class="body">
+<h1 class="title">Crimson Editor &ndash; <a href="index.html">Help Topics</a> &ndash; Release Notes</h1>
+
+<hr size=1 noshade>
+
+<div class="body">
+
+
+
+<b>Version 3.70 Release</b> (Sep. 22, 2004) <i>unicode encoding, splitter window</i>
+
+<ul>
+ <li>bug fixed: DEL key deletes directory item when project item is selected.
+ <li>bug fixed: ftp file transfer error when the file size is multiple of 512 bytes.
+ <li>bug fixed: search & replace the beginning of line crashes Crimson Editor.
+ <li>bug fixed: find with 'Match whole word' considers a '_' as not part of a word.
+ <li>bug fixed: comment color when typing the word 'remove' in ASP document.
+ <li>bug fixed: screen resolution problem using dual monitor.
+ <li>bug fixed: backup file creation failed in UNC path.
+ <li>bug fixed: abnormal caret movement after print preview.
+ <li>bug fixed: search next selected text in column mode.
+ <li>bug fixed: open last working remote file without saving password.
+ <li>bug fixed: CWD now follows 'File Open' dialog.
+ <li>bug fixed: problem typing Se-Bul-Sik Korean characters.
+ <li>bug fixed: loses project workspace when user cancel program termination.
+ <li>bug fixed: sharing violation when try to open a file already in use.
+ <li>bug fixed: abnormal command line execution 'C:\some path>cedt \autoexec.bat'.
+ <li><b>Drag and Drop</b> text editing.
+ <li>Reduced memory footprint. (50%) - but still uses lots of memory
+ <li>Supports <b>Unicode</b> and <b>UTF-8</b> encoding.
+ <li>Increased maximum number of characters in a single line. (4096->32768)
+ <li><b>Splitter Window, New Window.</b>
+ <li>Drive list in directory window refreshes on drop down.
+ <li>Saves project workspace whenever there is a change in project tree.
+ <li>Saves folding status of project categories.
+ <li>[Shell Execute] right click menu for files listed in a project.
+ <li>Project category names are editable now.
+ <li>User Tool path and argument recognize shell variables. (variable expansion)
+ <li>Predefined column mode font when screen font is not a fixed size font.
+ <li>Saves workspace windows placement.
+ <li>Follows symbolic links in Open Remote dialog.
+ <li>Increased the number of ftp server accounts. (10->16)
+ <li>Added [Replace All] in 'Replace This Occurrence' box. (Yes/No/All/Once/Stop)
+ <li>F3, Shift+F3 skips current search occurrence during Search and Replace.
+ <li>Search wraps at end of file. (optional)
+ <li>Cedt-type document icon changed.
+ <li>Third quotation mark definition in language specification.
+ <li>Accurate variable detection logic. ("$VARIABLEENCLOSEDBY={}")
+ <li>Variable highlight in constant string. (in PHP, Perl, Shell, ...)
+ <li>Added short-cuts in all popup menu items.
+ <li>Hot keys changed. - Scroll Screen Center (F5), Top (Shift+F5)
+ <li>Hot keys changed. - Close Window (Ctrl+W), Select Word (Ctrl+D)
+ <li>Hot keys changed. - Lower Case (Ctrl+L), Invert Case (Ctrl+Shift+L)
+ <li>New hot keys. - Next Pane (F6), Prev Pane (Shift+F6)
+</ul>
+
+<p>
+      
+<b>Version 3.60 Release</b> (Feb. 09, 2004) - <i>project management</i>
+<ul>
+ <li>bug fixed: error in upgrading shell extension dll during installation
+ <li>bug fixed: crash when print preview without a printer
+ <li>bug fixed: wrong line numbers on the printout
+ <li>bug fixed: weird operation with escape character + TAB character
+ <li>bug fixed: save hidden, system files with empty contents
+ <li>support <b>project management</b>
+ <li>second instance does not reload last working files
+ <li>last working files include remote files
+ <li>scroll screen to position caret to top or center (F5, F6)
+ <li>reserves caret position when reload a file
+ <li>save user defined color schemes
+ <li>save &amp; load different sets of User Tools
+ <li>handles European accented characters
+ <li>enhanced safety and <b>strict error checking on FTP work</b>
+ <li>faster screen drawing dealing with big text files
+ <li>Home key goes to first position (optional)
+ <li>backup remote files in local disk drive
+ <li>checks existence of user tool executables
+ <li>input box for output window to send user inputs
+ <li>remembers search directory in Find in Files and Open Project
+</ul>
+
+<b>Version 3.51 Release</b> (Jun. 11, 2003) - <i>bug fix update</i>
+<ul>
+ <li>bug fixed: 'Save As Remote' dialog box
+ <li>bug fixed: 'Allow multiple instances' option in preferences dialog box
+</ul>
+
+<b>Version 3.50 Release</b> (Jun. 03, 2003) - <i>column mode editing</i>
+<ul>
+ <li>bug fixed: 'Add Crimson Editor to right mouse button of Window Explorer'
+ <li>bug fixed: document switching Ctrl+PgUp &amp; Ctrl+PgDn
+ <li><b>column mode editing</b> (mode change: Alt+C)
+ <li>FTP transfer progress can be canceled by user
+ <li>multiple file types in 'Find in Files'
+ <li><b>use spaces in place of tab</b> option in Preferences
+ <li>upgraded help topics
+ <li>search functions can be used in macro recording
+ <li>enhanced caret movement hot keys (Alt+Home, Alt+End)
+</ul>
+
+<b>Version 3.45 R2</b> (Aug. 26, 2002) - <i>upgraded search & replace</i>
+<ul>
+ <li>bug fixed: file modification indicator when undo or redo is executed
+ <li>bug fixed: 'Save All' saves only changed files
+ <li>bug fixed: save before exit for remote files
+ <li>bug fixed: bug related to read only files
+ <li>bug fixed: macro recording (selection, convert case)
+ <li>bug fixed: tabs to spaces, spaces to tabs
+ <li><b>regular expression</b> in search & replace
+ <li>look in sub-folders in 'Find in Files'
+ <li>replace in all open files
+ <li>select text with <b>shift+click</b>
+ <li>reload last working files on startup
+ <li>remember last explored directory
+ <li><b>syntax highlighting types</b>
+ <li>different color assignment in active line
+ <li>highlight pairs when caret is in right of the bracket
+ <li>range highlight (in ASP, PHP, JSP files)
+ <li>manage <b>file type association</b>
+ <li>enriched English dictionary (around 100000 words included)
+ <li>date functions in calculator
+ <li>file operations in directory window
+ <li>sync directory window to the current file
+ <li>using <b>NSIS install shield</b> (by courtesy of  <a href="http://www.nullsoft.com" target=_blank>Nullsoft</a>)
+</ul>
+
+<b>Version 3.40</b> (Dec. 25, 2001) - <i>enhanced features</i>
+<ul>
+ <li>bug fixed: variable highlighting problem in PHP, Perl, Bash
+ <li>bug fixed: printing spaces (space width mismatch)
+ <li>delete word (Ctrl+Del), delete prev word (Ctrl+Back)
+ <li>delete to end of line (Ctrl+Shift+Del)
+ <li><b>capture output</b> (send input to running process + kill current running process)
+ <li>color selection dialog box changed
+ <li>copy current line when nothing is selected
+ <li>color information is saved in different file from the configuration file
+ <li><b>backup</b> files (with options)
+ <li><b>right mouse button</b> in Window Explorer (complete implementation)
+ <li>built-in <b>calculator</b> (Evaluate Line)
+</ul>
+
+<b>Version 3.32</b> (Oct. 31, 2001) - <i>emergent patch</i>
+<ul>
+ <li>bug fixed: <b>critical problem</b> related to Windows resource
+ <li>option to convert tabs to spaces before saving
+ <li>option to remove trailing white spaces before saving
+ <li>option to show tab characters & line break
+ <li>highlight variables that begin with special characters (bash, perl, php)
+ <li>highlight hexa-decimal numbers begin with special character
+ <li>it may support Japanese IME (I believe)
+</ul>
+
+<b>Version 3.31</b> (Oct. 25, 2001) - <i>a lot of changes</i>
+<ul>
+ <li>bug fixed: Alt+Tab while composing double byte
+ <li>bug fixed: unordinary 'File not File' message box
+ <li>bug fixed: delete at the end of line while 'Word Wrap' turned on
+ <li>bug fixed: dos command line parameter including '.' and '..'
+ <li>support <b>overwrite mode</b>
+ <li>hot key assignment for 'User Tools' and 'Macros'
+ <li><b>'Close on exit'</b> option in 'User Tools' (launch.exe)
+ <li>support WinHelp (.hlp) and HtmlHelp (.chm) files in 'User Tools'
+ <li>'Output Window' and <b>'Find in Files'</b> (Ctrl+Shift+F)
+ <li><b>custom FTP client</b> ('Save password' option, support more FTP servers)
+ <li>'Open Template' (Alt+O)
+ <li>'Directory Window' menu and toolbar
+ <li>and <b>a lot of small changes</b>...
+</ul>
+
+<b>Version 3.25</b> (Aug. 30, 2001) - <i>bug fixed and small changes</i>
+<ul>
+ <li>divide by zero bug fixed (more strict user configuration file check)
+ <li>reload on remote file bug fixed
+ <li>complex syntax highlighting (check keyword effect range)
+ <li>dos command to run Crimson Editor "cedt.exe *.c"
+ <li>command line option "cedt.exe /L:33 test.h"
+ <li>half page scrolling shortcut (Alt+Page Up, Alt+Page Down)
+ <li>move caret to paragraph begin or paragraph end shortcut (Alt+Home, Alt+End)
+ <li>'Add Crimson Editor to right mouse button' option
+ <li>'Print syntax highlight' option
+ <li>'Create new document on startup' option
+ <li>'Save remote files in Unix format' option
+</ul>
+
+<b>Version 3.21</b> (Jun. 26, 2001) - <i>emergent patch</i>
+ <li>upgrade bug fixed
+
+
+<b>Version 3.20</b> (Jun. 25, 2001) - <i>lots of small changes</i>
+<ul>
+ <li>home-made <i>GetLongPathName()</i> function
+ <li>editable file types (Tools &gt; Preferences &gt; Files &gt; Filters) 
+ <li>default language specification
+ <li>local help pages are included in distribution zip file
+ <li>recovery from corrupt configuration file (cedt.cfg)
+ <li>encoded FTP password in Open Remote
+ <li>use long file name in User Tools (JAVA source compile)
+ <li>second line comment delimiter can be specified for each programming language
+ <li>effective range for keywords can be limited (HTML, ASP, PHP, JSP)
+</ul>
+
+<b>Version 3.10</b> (May. 7, 2001) - <i>appended missing functions</i>
+<ul>
+ <li>'Working Directory' in Tools &gt; Preference &gt; Files
+ <li>'Save files in Unix format' option in Tools &gt; Preference &gt; Files
+ <li>new edit commands (Edit &gt; Change Case)
+ <li>new search commands (Search &gt; Advanced)
+ <li>new toolbar buttons (Open Remote, Directory Window)
+ <li>menu items in Tools menu and Macros menu are rearranged 
+ <li>menu items in Window menu changed (Last Visited, Next Window, Prev Window)
+</ul>
+
+<b>Version 3.02</b> (Apr. 26, 2001) - <i>fixed some bugs</i>
+<ul>
+ <li>line number bug fixed.
+ <li>use lesser window resources. (became faster than before)
+</ul>
+
+<b>Version 3.00</b> (Apr. 20, 2001) - <i>major update, all subroutines were checked and revised</i>
+<ul>
+ <li>'Directory Window' attached to the left side of Mainframe
+ <li>added 'Open Remote' function
+ <li>added 'Pairs Matching' feature
+ <li>'Copy & Paste' bug fixed
+ <li>updated user interface
+</ul>
+
+<b>Version 2.30</b> (Aug. 5, 1999) - <i>improved user interface</i>
+<ul>
+ <li>do not use DDE to initialize (faster start up)
+ <li>wheel mouse support.
+ <li>'Whole Word Only' option in Find & Replace
+ <li>added context menu on file selection tab
+ <li>reserve caret position scrolling up & down.
+ <li>revised text selection routine
+</ul>
+
+<b>Version 2.21</b> (Jul. 12, 1999) - <i>fixed several bugs, and added some features</i>
+<ul>
+ <li>'Save As' bug fixed
+ <li>added new menu item in Help menu
+</ul>
+
+
+
+<table width=560 cellspacing=0 cellpadding=0 border=0>
+  <tr>
+    <td><hr size=1 noshade></td>
+  </tr>
+  <tr>
+    <td align=center class="body">
+		Copyright &copy; 1999-2006 by <a href="mailto:crimsonware@yahoo.com">Ingyu Kang</a>,
+		Copyright &copy; 2006-2007 by <a href="http://www.emeraldeditor.com">Emerald Editor Community</a>.
+		All rights reserved.
+    </td>
+  </tr>
+</table><p>
+
+</td>
+</tr>
+</table>
+</body>
+</html>

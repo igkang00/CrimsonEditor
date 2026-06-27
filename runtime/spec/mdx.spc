@@ -1,0 +1,15 @@
+# MDX syntax file written by Marco Linders.
+# Version 0.4 (030630)
+
+$CASESENSITIVE=NO
+$DELIMITERS=<>/="'%:(),[]{};
+$KEYWORDPREFIX=/\*:=+-*/!<>|
+$QUOTATIONMARK1="
+$QUOTATIONMARK2='
+$LINECOMMENT=#
+$LINECOMMENT2=--
+$BLOCKCOMMENTON=/*
+$BLOCKCOMMENTOFF=*/
+$PAIRS1=()
+$PAIRS2=[]
+$PAIRS3={}

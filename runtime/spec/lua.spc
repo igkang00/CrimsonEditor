@@ -1,0 +1,18 @@
+# LUA LANGUAGE SPECIFICATION FILE FOR CRIMSON EDITOR
+# FIRST EDITED BY Walter Souto R. Junior (wsouto@bayweb.com.br) 05.11.2002
+# UPDATE to Lua 5.0 by Matteo De Simone (matteo.desimone@libero.it) Jun, 16 2003
+
+$CASESENSITIVE=YES
+$DELIMITERS=(){}[]<>+-*/%="'~!@#&$^&|\?:;,.
+$VARIABLEPREFIX=%
+$ESCAPECHAR=\
+$QUOTATIONMARK1="
+$QUOTATIONMARK2='
+$LINECOMMENT=--
+$SHADOWON=[[
+$SHADOWOFF=]]
+#$BLOCKCOMMENTON=--[[
+#$BLOCKCOMMENTOFF=]]
+$PAIRS1=()
+$PAIRS2=[]
+$PAIRS3={}
