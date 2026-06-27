@@ -1,7 +1,7 @@
 
 [CRIMSON EDITOR]
 
-  Crimson Editor 3.80 — originally developed 1999-2005 by Ingyu Kang,
+  Crimson Editor 3.81 — originally developed 1999-2005 by Ingyu Kang,
   modernized in 2026 for current Windows on Visual Studio 2026 (v145).
 
   Crimson Editor is a professional source editor for Windows.
