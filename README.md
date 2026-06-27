@@ -2,7 +2,7 @@
 
 A freeware text editor for Windows, developed from 1999 to 2005. Features include syntax highlighting, a multi-document interface (MDI), a project workspace, integrated FTP, and more.
 
-- **Version**: 3.71 (Korean)
+- **Version**: 3.80 (Korean)
 - **Copyright**: © 1999–2005 Ingyu Kang
 - **Build environment**: Visual Studio 2026 (v145 toolset), MFC (shared DLL), Win32 / x86, MBCS
 

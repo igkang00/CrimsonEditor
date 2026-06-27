@@ -17,7 +17,7 @@ TEST(EncodeTest, HexDecode_ReversesEncode)
 
 TEST(EncodeTest, HexEncode_RoundTrip)
 {
-    const char * original = "Crimson Editor 3.71";
+    const char * original = "Crimson Editor 3.80";
     const char * encoded = hex_encode(original);
     EXPECT_STRNE("", encoded);
     EXPECT_STREQ(original, hex_decode(encoded));
