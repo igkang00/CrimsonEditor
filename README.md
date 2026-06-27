@@ -4,7 +4,7 @@ A freeware text editor for Windows, developed from 1999 to 2005. Features includ
 
 - **Version**: 3.80 (Korean)
 - **Copyright**: © 1999–2026 Ingyu Kang
-- **Build environment**: Visual Studio 2026 (v145 toolset), MFC (shared DLL), Win32 / x86, MBCS
+- **Build environment**: Visual Studio 2026 (v145 toolset), MFC (shared DLL), x64, MBCS
 
 ---
 
@@ -28,11 +28,11 @@ A freeware text editor for Windows, developed from 1999 to 2005. Features includ
 | --- | --- |
 | IDE | Visual Studio 2026 (18.x) |
 | Toolset | `v145` |
-| Target | Win32 (x86) Application |
+| Target | x64 Application |
 | MFC | Dynamic (`_AFXDLL` shared DLL) |
 | Character set | `_MBCS` (multi-byte) |
-| External libraries | `imm32.lib`, `htmlhelp.lib` |
-| Bundled headers | `HtmlHelp.h`, `HtmlHelp.lib` ([third_party/htmlhelp/](third_party/htmlhelp/)) |
+| External libraries | `imm32.lib`, `htmlhelp.lib` (from the Windows SDK) |
+| Bundled headers | `HtmlHelp.h` ([third_party/htmlhelp/](third_party/htmlhelp/) — the matching x64 `HtmlHelp.Lib` is picked up from the Windows SDK) |
 | Precompiled header | [src/include/StdAfx.h](src/include/StdAfx.h) / [src/include/StdAfx.cpp](src/include/StdAfx.cpp) |
 
 ### Build Configurations
@@ -41,12 +41,12 @@ Debug/Release × KR/US are split into four configurations. Each configuration co
 
 | Configuration | Artifact |
 | --- | --- |
-| `Debug-KR \| Win32`   | `build\Debug-KR\cedt_kr.exe` |
-| `Release-KR \| Win32` | `build\Release-KR\cedt_kr.exe` |
-| `Debug-US \| Win32`   | `build\Debug-US\cedt_us.exe` |
-| `Release-US \| Win32` | `build\Release-US\cedt_us.exe` |
+| `Debug-KR \| x64`   | `build\x64\Debug-KR\cedt_kr.exe` |
+| `Release-KR \| x64` | `build\x64\Release-KR\cedt_kr.exe` |
+| `Debug-US \| x64`   | `build\x64\Debug-US\cedt_us.exe` |
+| `Release-US \| x64` | `build\x64\Release-US\cedt_us.exe` |
 
-All build artifacts (object files, PCH, EXE) go under `<ProjectDir>\build\<Configuration>\` — each `.vcxproj` writes inside its own project directory. So the main project lands in `build\` at the repo root and `cedt_tests` lands in `tests\build\` (e.g. `tests\build\Debug\cedt_tests.exe`). Both `build/` trees are gitignored.
+All build artifacts (object files, PCH, EXE) go under `<ProjectDir>\build\<Platform>\<Configuration>\` — each `.vcxproj` writes inside its own project directory. So the main project lands in `build\x64\` at the repo root and `cedt_tests` lands in `tests\build\x64\` (e.g. `tests\build\x64\Debug\cedt_tests.exe`). Both `build/` trees are gitignored.
 
 ### Build Setup
 
@@ -56,7 +56,7 @@ In Visual Studio Installer, on the **Individual components** tab, install the fo
 
 ### Notes
 
-- The bundled [HtmlHelp.lib](third_party/htmlhelp/HtmlHelp.lib) is an old SDK library that does not support `/SAFESEH`. The Release configurations set `ImageHasSafeExceptionHandlers=false`.
+- x64 uses the Windows SDK's `HtmlHelp.Lib` (resolved automatically from the SDK lib path) — the 1999-vintage 32-bit `third_party\htmlhelp\HtmlHelp.lib` is only kept around for reference now.
 - Compatibility shims and fixes applied while migrating from VC6 to a modern toolset:
     - `<fstream.h>` / `<strstrea.h>` are absorbed by the [fstream_compat.h](src/include/fstream_compat.h) shim (using-declarations to expose `ofstream` and friends in the global namespace).
     - `ios::nocreate` removed (non-standard — a modern `ifstream` already fails to open if the file is missing).
@@ -89,9 +89,9 @@ The installer (Inno Setup 6) is produced by [build_installer.ps1](build_installe
 
 The script does four things, in order:
 
-1. Builds `cedt` (Release-KR, Release-US, Win32) via MSBuild.
-2. Builds the two helper binaries: `tools\launch\launch.vcxproj` (Win32 Release) and `tools\shellext\shellext.vcxproj` (x64 Release).
-3. Downloads `dist\redist\vc_redist.x86.exe` from `aka.ms/vs/17/release/vc_redist.x86.exe` if it isn't already cached.
+1. Builds `cedt` (Release-KR, Release-US, x64) via MSBuild.
+2. Builds the two helper binaries: `tools\launch\launch.vcxproj` (x64 Release) and `tools\shellext\shellext.vcxproj` (x64 Release).
+3. Downloads `dist\redist\vc_redist.x64.exe` from `aka.ms/vs/17/release/vc_redist.x64.exe` if it isn't already cached.
 4. Invokes ISCC on [installer.iss](installer.iss).
 
 Output: `dist\cedt-380-setup.exe`. The whole `dist\` tree is `.gitignore`d (binaries + downloaded redist + setup output). `-SkipBuild` and `-SkipRedist` switches skip the matching steps for quick iteration on `installer.iss` alone.
@@ -111,8 +111,8 @@ Current coverage: **60 tests across 12 suites, all green** — the algorithm mod
 Quick run:
 
 ```
-msbuild tests\cedt_tests.vcxproj /p:Configuration=Debug /p:Platform=Win32
-tests\build\Debug\cedt_tests.exe
+msbuild tests\cedt_tests.vcxproj /p:Configuration=Debug /p:Platform=x64
+tests\build\x64\Debug\cedt_tests.exe
 ```
 
 See [docs/testing.md](docs/testing.md) for the per-module test list, project settings (toolset, charset, subsystem), how to add a new test, and the planned roadmap for the integration (L2) and end-to-end (L3) layers — including the rationale for extracting `cedt_core` as a **static library** (not a DLL) as the L2 prerequisite.

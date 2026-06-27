@@ -20,10 +20,10 @@
 ;   we run the installer in 64-bit mode via
 ;   ArchitecturesInstallIn64BitMode.
 ;
-; - cedt is a 32-bit MFC dynamic-link build, so the Visual C++ x86
-;   runtime is required. The redist is bundled and run quietly during
-;   install. ShellExt and launch use static CRT, so they need nothing
-;   extra.
+; - cedt is a 64-bit MFC dynamic-link build (Phase 6 migration), so
+;   the Visual C++ x64 runtime is required. The redist is bundled and
+;   run quietly during install. ShellExt and launch use static CRT,
+;   so they need nothing extra.
 ;
 ; - User settings live entirely under HKCU, so the default uninstall
 ;   leaves the user's preferences/MRU/window state intact. A future
@@ -71,10 +71,10 @@ Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
 
-; cedt is 32-bit, ShellExt is 64-bit — run in 64-bit mode on x64
-; machines so HKLM writes hit the native (not WOW6432Node) view and
-; {sys} resolves to System32 (so regsvr32 can load the x64 DLL).
-ArchitecturesAllowed=x86 x64compatible
+; All native binaries (cedt, ShellExt, launch) are 64-bit — run in
+; 64-bit mode so HKLM writes hit the native (not WOW6432Node) view
+; and {sys} resolves to System32 (so regsvr32 can load the x64 DLL).
+ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 
 ; Per-machine by default (admin), but allow the user to choose
@@ -108,12 +108,12 @@ Name: "shellcontextmenu"; Description: "Add 'Edit with Crimson Editor' to Explor
 
 [Files]
 ; Application executables — one of the two ships, based on Types/Components.
-Source: "build\Release-KR\{#MyAppExeKr}";              DestDir: "{app}"; Components: exe_kr; Flags: ignoreversion
-Source: "build\Release-US\{#MyAppExeUs}";              DestDir: "{app}"; Components: exe_us; Flags: ignoreversion
+Source: "build\x64\Release-KR\{#MyAppExeKr}";          DestDir: "{app}"; Components: exe_kr; Flags: ignoreversion
+Source: "build\x64\Release-US\{#MyAppExeUs}";          DestDir: "{app}"; Components: exe_us; Flags: ignoreversion
 
 ; Helper binaries — always installed.
-Source: "tools\launch\build\Release\launch.exe";        DestDir: "{app}"; Flags: ignoreversion
-Source: "tools\shellext\build\Release\ShellExt.dll";    DestDir: "{app}"; Flags: ignoreversion 64bit
+Source: "tools\launch\build\x64\Release\launch.exe";    DestDir: "{app}"; Flags: ignoreversion
+Source: "tools\shellext\build\x64\Release\ShellExt.dll"; DestDir: "{app}"; Flags: ignoreversion 64bit
 
 ; Runtime assets — always installed, the support files cedt looks up
 ; under <InstallDir> at runtime (dictionaries, syntax specs, color
@@ -130,10 +130,10 @@ Source: "runtime\spec\*";                               DestDir: "{app}\spec";  
 Source: "runtime\template\*";                           DestDir: "{app}\template"; Flags: ignoreversion
 Source: "runtime\tools\*";                              DestDir: "{app}\tools";    Flags: ignoreversion
 
-; Visual C++ x86 runtime redistributable — copied to {tmp}, run from
+; Visual C++ x64 runtime redistributable — copied to {tmp}, run from
 ; [Run], deleted afterwards. build_installer.ps1 downloads this into
 ; dist\redist\ before invoking ISCC.
-Source: "dist\redist\vc_redist.x86.exe";                DestDir: "{tmp}"; Flags: deleteafterinstall
+Source: "dist\redist\vc_redist.x64.exe";                DestDir: "{tmp}"; Flags: deleteafterinstall
 
 
 [Icons]
@@ -155,8 +155,8 @@ Root: HKLM; Subkey: "Software\Crimson System\Crimson Editor"; ValueType: string;
 
 
 [Run]
-; 1) VC++ x86 runtime first. cedt is /MD (dynamic CRT) and needs it.
-Filename: "{tmp}\vc_redist.x86.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Installing Visual C++ x86 runtime..."; Flags: waituntilterminated
+; 1) VC++ x64 runtime first. cedt is /MD (dynamic CRT) and needs it.
+Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Installing Visual C++ x64 runtime..."; Flags: waituntilterminated
 
 ; 2) Register the shell extension (only if the user opted into the
 ;    "Edit with Crimson Editor" menu item). regsvr32 in System32 is

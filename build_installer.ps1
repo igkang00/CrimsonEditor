@@ -4,11 +4,11 @@
     Build the Crimson Editor installer end-to-end.
 
 .DESCRIPTION
-    Runs every step needed to produce dist\crimson-editor-<ver>-setup.exe:
+    Runs every step needed to produce dist\cedt-<ver>-setup.exe:
 
-      1. Build cedt Release-KR + Release-US (Win32) via MSBuild.
-      2. Build tools\launch (Win32 Release) and tools\shellext (x64 Release).
-      3. Make sure dist\redist\vc_redist.x86.exe is present (download if not).
+      1. Build cedt Release-KR + Release-US (x64) via MSBuild.
+      2. Build tools\launch (x64 Release) and tools\shellext (x64 Release).
+      3. Make sure dist\redist\vc_redist.x64.exe is present (download if not).
       4. Invoke ISCC on installer.iss.
 
     The script tries hard to fail loudly and early — if any prerequisite
@@ -74,15 +74,15 @@ function Invoke-MSBuild {
 
 function Ensure-Redist {
     $dir  = Join-Path $root 'dist\redist'
-    $file = Join-Path $dir  'vc_redist.x86.exe'
+    $file = Join-Path $dir  'vc_redist.x64.exe'
     if (Test-Path $file) {
-        Write-Host "[3/4] vc_redist.x86.exe already present ($(((Get-Item $file).Length / 1MB).ToString('F1')) MB)" -ForegroundColor Cyan
+        Write-Host "[3/4] vc_redist.x64.exe already present ($(((Get-Item $file).Length / 1MB).ToString('F1')) MB)" -ForegroundColor Cyan
         return
     }
-    Write-Host "[3/4] Downloading vc_redist.x86.exe..." -ForegroundColor Cyan
+    Write-Host "[3/4] Downloading vc_redist.x64.exe..." -ForegroundColor Cyan
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
-    # Microsoft's permanent redirect URL for the current x86 redist.
-    $url = 'https://aka.ms/vs/17/release/vc_redist.x86.exe'
+    # Microsoft's permanent redirect URL for the current x64 redist.
+    $url = 'https://aka.ms/vs/17/release/vc_redist.x64.exe'
     Invoke-WebRequest -Uri $url -OutFile $file -UseBasicParsing
     Write-Host "      Saved to $file ($(((Get-Item $file).Length / 1MB).ToString('F1')) MB)" -ForegroundColor DarkGray
 }
@@ -97,12 +97,12 @@ Write-Host "ISCC    : $iscc"    -ForegroundColor DarkGray
 Write-Host ""
 
 if (-not $SkipBuild) {
-    Write-Host "[1/4] Building cedt (Release-KR, Release-US)..." -ForegroundColor Cyan
-    Invoke-MSBuild $msbuild 'cedt.sln' 'Release-KR' 'Win32'
-    Invoke-MSBuild $msbuild 'cedt.sln' 'Release-US' 'Win32'
+    Write-Host "[1/4] Building cedt (Release-KR, Release-US — x64)..." -ForegroundColor Cyan
+    Invoke-MSBuild $msbuild 'cedt.sln' 'Release-KR' 'x64'
+    Invoke-MSBuild $msbuild 'cedt.sln' 'Release-US' 'x64'
 
-    Write-Host "[2/4] Building helper tools (launch.exe, ShellExt.dll)..." -ForegroundColor Cyan
-    Invoke-MSBuild $msbuild 'tools\launch\launch.vcxproj'     'Release' 'Win32'
+    Write-Host "[2/4] Building helper tools (launch.exe, ShellExt.dll — x64)..." -ForegroundColor Cyan
+    Invoke-MSBuild $msbuild 'tools\launch\launch.vcxproj'     'Release' 'x64'
     Invoke-MSBuild $msbuild 'tools\shellext\shellext.vcxproj' 'Release' 'x64'
 } else {
     Write-Host "[1-2/4] -SkipBuild: assuming build\ and tools\*\build\ are up to date." -ForegroundColor Yellow
@@ -111,9 +111,9 @@ if (-not $SkipBuild) {
 if (-not $SkipRedist) {
     Ensure-Redist
 } else {
-    Write-Host "[3/4] -SkipRedist: not checking dist\redist\vc_redist.x86.exe" -ForegroundColor Yellow
-    if (-not (Test-Path (Join-Path $root 'dist\redist\vc_redist.x86.exe'))) {
-        throw "dist\redist\vc_redist.x86.exe is missing — installer.iss [Files] section will fail. Re-run without -SkipRedist."
+    Write-Host "[3/4] -SkipRedist: not checking dist\redist\vc_redist.x64.exe" -ForegroundColor Yellow
+    if (-not (Test-Path (Join-Path $root 'dist\redist\vc_redist.x64.exe'))) {
+        throw "dist\redist\vc_redist.x64.exe is missing — installer.iss [Files] section will fail. Re-run without -SkipRedist."
     }
 }
 

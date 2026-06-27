@@ -6,7 +6,7 @@ Unit tests for Crimson Editor live in [../tests/](../tests/) as a separate `cedt
 | --- | --- |
 | Framework | Google Test (vcpkg `gtest`) |
 | Project | [../tests/cedt_tests.vcxproj](../tests/cedt_tests.vcxproj) |
-| Configurations | `Debug \| Win32`, `Release \| Win32` |
+| Configurations | `Debug \| x64`, `Release \| x64` |
 | C++ standard | C++17 (gtest requirement) |
 | MFC / charset | Dynamic + `_MBCS` (matches the main app) |
 | Subsystem | Console |
@@ -49,8 +49,8 @@ The remaining "hard" group is the Doc / View / Frame / Dialog layer; it needs a 
 Prerequisite: vcpkg installed and integrated user-wide (`vcpkg integrate install`).
 
 ```
-msbuild tests\cedt_tests.vcxproj /p:Configuration=Debug /p:Platform=Win32
-tests\Debug\cedt_tests.exe
+msbuild tests\cedt_tests.vcxproj /p:Configuration=Debug /p:Platform=x64
+tests\build\x64\Debug\cedt_tests.exe
 ```
 
 (Both commands assume the repository root as the working directory.)
