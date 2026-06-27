@@ -35,10 +35,16 @@ BOOL ParseFileFilter(CStringArray & arrDescription, CStringArray & arrExtension,
 
 BOOL MatchFileFilter(LPCTSTR lpszPath, LPCTSTR lpszFilter)
 {
-	TCHAR szFilter[256]; strcpy( szFilter, lpszFilter );
-	if( szFilter[strlen(szFilter)-1] != ';' ) strcat( szFilter, ";" );
+	// Allocate on the heap to fit any filter length plus the trailing ";\0".
+	// The previous 256-byte stack buffer would overrun on long user-defined
+	// filters (no upper bound exists on the filter input).
+	INT nFilterLen = lstrlen(lpszFilter);
+	TCHAR * szFilter = new TCHAR[nFilterLen + 2];
+	strcpy( szFilter, lpszFilter );
+	if( nFilterLen == 0 || szFilter[nFilterLen - 1] != ';' ) strcat( szFilter, ";" );
 
 	TCHAR * pFilter = szFilter; INT nLen = strlen(szFilter);
+	BOOL bMatch = FALSE;
 
 	for(INT i = 0; i < nLen; i++) {
 		if( szFilter[i] == ';' ) {
@@ -46,15 +52,16 @@ BOOL MatchFileFilter(LPCTSTR lpszPath, LPCTSTR lpszFilter)
 			INT nFilter = strlen( pFilter );
 			INT nPath = strlen( lpszPath );
 
-			if( ! strcmp(pFilter, "*.*") ) return TRUE;
+			if( ! strcmp(pFilter, "*.*") ) { bMatch = TRUE; break; }
 			if( ! strncmp(pFilter, "*.", 2) && (nPath >= nFilter-1)
-				&& ! stricmp(pFilter+1, lpszPath+nPath-(nFilter-1)) ) return TRUE;
+				&& ! stricmp(pFilter+1, lpszPath+nPath-(nFilter-1)) ) { bMatch = TRUE; break; }
 
 			pFilter += strlen(pFilter) + 1;
 		}
 	}
 
-	return FALSE;
+	delete [] szFilter;
+	return bMatch;
 }
 
 BOOL VerifyPathName(LPCTSTR lpszPath)

@@ -323,6 +323,13 @@ public:
 
 	virtual ~CAnalyzedString() { delete [] m_pWord; }
 
+	// Owns m_pWord; the compiler-generated copy constructor would shallow-copy
+	// it and double-free on destruction. The codebase never copies by value
+	// (CAnalyzedText is CList<CAnalyzedString, LPCTSTR>, so AddTail constructs
+	// from LPCTSTR), so deleting the copy constructor outright is safe and
+	// turns any future accidental by-value use into a compile error.
+	CAnalyzedString(const CAnalyzedString &) = delete;
+
 	CAnalyzedString & operator=(const CAnalyzedString & stringSrc);
 };
 
@@ -347,7 +354,11 @@ public:
 public:
 	CFormatedString() { m_pString = NULL; m_pWord = NULL; m_siWordCount = m_siSplitIndex = 0; m_bLineBreak = FALSE; m_usLineInfo = m_usLineFlag = 0x00; }
 	virtual ~CFormatedString() { delete [] m_pWord; }
-	
+
+	// Same Rule-of-Three reasoning as CAnalyzedString: owns m_pWord, so the
+	// compiler-generated copy constructor would shallow-copy and double-free.
+	CFormatedString(const CFormatedString &) = delete;
+
 	CFormatedString & operator=(const CFormatedString & stringSrc);
 	operator LPCTSTR() const { return m_pString; }
 	TCHAR operator[](INT nIndex) const { return m_pString[nIndex]; }

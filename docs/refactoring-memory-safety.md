@@ -50,7 +50,7 @@ There is no `MAX_LINE_LENGTH` macro. The number **2048 appears as a magic number
 
 ### 🔴 High — confirmed bug
 
-#### H1. `ActionEvaluateLine` stack overflow on long lines
+#### H1. ~~`ActionEvaluateLine` stack overflow on long lines~~ — fixed
 
 [src/view/cedtViewAction.cpp:16](../src/view/cedtViewAction.cpp#L16)
 
@@ -76,9 +76,11 @@ TCHAR * pExpr = EVAL::Evaluate(
 
 (`EVAL::Evaluate` already takes a `TCHAR *`; the const_cast matches the existing signature without copying.) If a defensive copy is preferred, allocate `new TCHAR[rString.GetLength()+1]` and delete after use.
 
+**Applied.** The 2048-byte buffer and the `strcpy` were removed; the evaluator is now called on the line directly. No more stack overrun regardless of line length.
+
 ### 🟠 Medium — likely bug, fix scope to be decided
 
-#### M1. `PathName.cpp:38-39` — 256-byte filter buffer
+#### M1. ~~`PathName.cpp:38-39` — 256-byte filter buffer~~ — fixed
 
 [src/util/PathName.cpp:38](../src/util/PathName.cpp#L38)
 
@@ -88,6 +90,8 @@ if( szFilter[strlen(szFilter)-1] != ';' ) strcat( szFilter, ";" );
 ```
 
 256 is small. User-defined file-filter strings can exceed it (e.g. a multi-language project with dozens of extension globs). The companion at line 7 is `szFilter[4096]` which is also a guess but much safer. Fix: switch to `CString` so no fixed bound is needed; or at least bump to 4096 and use `strncpy`.
+
+**Applied.** Replaced the fixed-size stack buffer with a heap allocation sized to `lstrlen(lpszFilter) + 2`. The function now handles any filter length and cleans up via `delete[]` on the single exit. The same pattern would apply to `PathName.cpp:7-8` if needed in the future, but that buffer is 4096 bytes which is unlikely to overrun in practice.
 
 #### M2. `cedtAppProject.cpp` — MAX_PATH unguarded copy of `CString`
 
@@ -119,22 +123,13 @@ if( ! strlen( szInitialDirectory ) ) strcpy( szInitialDirectory, szCurrentDirect
 
 Two problems: no length guard on the strcpy, and `static` means there's a single shared instance — fine in the current single-threaded MFC main loop, but a footgun if anything ever drives this off the main thread.
 
-#### M6. `FtpClnt.cpp` — `delete` without `NULL` assignment in fail handlers
+#### M6. ~~`FtpClnt.cpp` — `delete` without `NULL` assignment in fail handlers~~ — reanalysed, not a real bug
 
-[src/network/FtpClnt.cpp:502-508](../src/network/FtpClnt.cpp#L502), `:578-584`. The `Open*` functions allocate four MFC objects into member pointers (`m_pControl*`, `m_pData*`); on construction failure they clean up with:
+The lines I initially flagged as "fail handlers" (`FtpClnt.cpp:502-508` and `:578-584`) are actually the bodies of `CloseControlChannel` and `CloseDataChannel`, and they **already follow the `delete x; x = NULL;` pattern**. `CloseServer` does the same. The destructor (lines 29-42) deletes without nulling, but that is harmless because the object is about to be destroyed — no further access reaches those pointers.
 
-```cpp
-if( m_pControlReadArchive ) delete m_pControlReadArchive;
-if( m_pControlWriteArchive ) delete m_pControlWriteArchive;
-if( m_pControlSocketFile ) delete m_pControlSocketFile;
-if( m_pControlSocket ) delete m_pControlSocket;
-```
+A truly defensive `delete x; x = NULL;` in the destructor would be valid style, but it does not change observable behaviour. Treating this as resolved with no code change. The earlier write-up came from misreading the function boundary.
 
-After the deletes, the **member pointers are dangling (not `NULL`)**. The destructor (lines 31-41) then deletes them again the next time the `CFtpClient` is torn down → **double-free**. Whether this surfaces depends on whether the `CFtpClient` instance is reused after a failed `Open` or destroyed immediately.
-
-Fix: set each pointer to `NULL` right after `delete`, or use the standard pattern `delete x; x = NULL;` in both the destructor and the fail handlers (the `if (x)` check then becomes meaningful instead of a coincidence).
-
-#### M7. `CAnalyzedString` / `CFormatedString` — Rule of Three violation
+#### M7. ~~`CAnalyzedString` / `CFormatedString` — Rule of Three violation~~ — fixed
 
 [src/core/cedtElement.h](../src/core/cedtElement.h) lines 305-352. Both classes own a raw array via `m_pWord` (`ANALYZEDWORD*` / `FORMATEDWORD*`), with:
 
@@ -150,6 +145,8 @@ Today this is mostly latent because:
 …but it is a footgun: a future change that takes `CAnalyzedString` by value, or pushes it into a generic container, immediately corrupts memory.
 
 Fix: define the copy constructor explicitly. Either delete it (`= delete`) to make any by-value use a compile error, or implement a proper deep copy. Same for `CFormatedString`.
+
+**Applied.** Added `CAnalyzedString(const CAnalyzedString &) = delete;` and `CFormatedString(const CFormatedString &) = delete;` in `cedtElement.h`. The full project (all four configurations) + `cedt_tests` still build, which is also a compile-time proof that the codebase nowhere copies these objects by value today. Any future accidental by-value use becomes a compile error rather than a memory corruption.
 
 ### 🟡 Low — structural / nice-to-have
 
@@ -175,22 +172,20 @@ These appeared on the broad sweep but need a quick local context check before as
 
 ---
 
-## 4. Recommended starting point
+## 4. Status
 
-Cheapest wins are the same pattern as the configuration work: one clear bug + a few small-scope tightenings.
+The first round (H1, M1, M6 review, M7) has been applied:
 
-| Order | Item | Why first | Effort |
-| --- | --- | --- | --- |
-| 1 | **H1** — `ActionEvaluateLine` | Confirmed crash for ordinary user files. One-line fix. | 1 line |
-| 2 | **M1** — `PathName.cpp:38-39` | Smallest buffer (256), most likely to be hit | ~3 lines (switch to CString) |
-| 3 | **M6** — `FtpClnt.cpp` `delete` without `NULL` | Possible double-free, mechanical fix | `delete x; x = NULL;` 9 sites |
-| 4 | **M7** — Rule of Three on `CAnalyzedString` / `CFormatedString` | Prevents a future class of crash; small declaration change | `= delete` 2 lines |
+- **H1** — `ActionEvaluateLine` no longer copies into a 2048-byte stack buffer.
+- **M1** — `MatchFileFilter` switched to a heap buffer sized to the input length.
+- **M6** — reanalysed and resolved with no code change (the original write-up misread the function boundary).
+- **M7** — `CAnalyzedString` / `CFormatedString` copy constructors explicitly `= delete`d.
 
-Combined diff: well under 50 lines. Manual verification is feasible with the existing build + a quick eval-on-a-long-line repro for H1.
+What's still open:
 
-The M2 / M3 / M4 / M5 group is larger (path/cmdline buffers in 15+ spots) and tends to look the same — bulk fix in one pass once the pattern (`CString` + bounded write) is agreed upon.
-
-L1 / L2 / L3 / L4 are flagged for awareness; tackle when other refactors bring you into the area.
+- **M2 / M3 / M4 / M5** — the path / cmdline / static-buffer family (15+ spots in `cedtAppProject.cpp`, `cedtViewCommand.cpp`, `FileWndDirectory.cpp`, `cedtViewHndrEdit.cpp`). Same pattern in every site, so worth a one-shot pass with an agreed convention (e.g. `CString` end-to-end, or bounded copy with explicit length check).
+- **L1 / L2 / L3 / L4** — structural / awareness items. Tackle when nearby refactors bring you into the area.
+- **§5 magic-number 2048** — introduce a `MAX_LINE_LENGTH = MAX_STRING_SIZE` macro and adopt it where the buffer is actually meant to hold a whole line. Independent low-risk grooming.
 
 ---
 
