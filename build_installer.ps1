@@ -121,7 +121,7 @@ Write-Host "[4/4] Compiling installer.iss with ISCC..." -ForegroundColor Cyan
 & $iscc installer.iss
 if ($LASTEXITCODE -ne 0) { throw "ISCC failed (exit $LASTEXITCODE)" }
 
-$setup = Get-ChildItem -Path (Join-Path $root 'dist') -Filter 'crimson-editor-*-setup.exe' -File |
+$setup = Get-ChildItem -Path (Join-Path $root 'dist') -Filter 'cedt-*-setup.exe' -File |
          Sort-Object LastWriteTime -Descending | Select-Object -First 1
 if ($setup) {
     $sizeMB = ($setup.Length / 1MB).ToString('F1')

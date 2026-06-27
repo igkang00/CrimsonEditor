@@ -56,7 +56,11 @@ DisableProgramGroupPage=yes
 AllowNoIcons=yes
 
 OutputDir=dist
-OutputBaseFilename=crimson-editor-{#MyAppVersion}-setup
+; cedt-380-setup.exe — matches the cedt.exe/cedt.dic/cedt.ico file
+; naming used inside the install folder. {#StringChange ...} strips
+; the dot so we get "380" rather than "3.80" (shorter on disk,
+; URL-friendly when uploaded as a release artifact).
+OutputBaseFilename=cedt-{#StringChange(MyAppVersion, ".", "")}-setup
 SetupIconFile=runtime\cedt.ico
 UninstallDisplayIcon={app}\cedt.ico
 

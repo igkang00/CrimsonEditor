@@ -94,7 +94,7 @@ The script does four things, in order:
 3. Downloads `dist\redist\vc_redist.x86.exe` from `aka.ms/vs/17/release/vc_redist.x86.exe` if it isn't already cached.
 4. Invokes ISCC on [installer.iss](installer.iss).
 
-Output: `dist\crimson-editor-3.80-setup.exe`. The whole `dist\` tree is `.gitignore`d (binaries + downloaded redist + setup output). `-SkipBuild` and `-SkipRedist` switches skip the matching steps for quick iteration on `installer.iss` alone.
+Output: `dist\cedt-380-setup.exe`. The whole `dist\` tree is `.gitignore`d (binaries + downloaded redist + setup output). `-SkipBuild` and `-SkipRedist` switches skip the matching steps for quick iteration on `installer.iss` alone.
 
 Inno Setup must be installed first; the script auto-discovers `ISCC.exe` at `C:\Program Files (x86)\Inno Setup 6\ISCC.exe`. Get it from <https://jrsoftware.org/isdl.php>.
 
