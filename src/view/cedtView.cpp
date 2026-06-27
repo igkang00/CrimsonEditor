@@ -487,7 +487,7 @@ void CCedtView::Reinitialize()
 
 void CCedtView::UpdateScrollBars()
 {
-	INT nLineCount = m_clsFormatedScreenText.GetCount();
+	INT nLineCount = (INT)m_clsFormatedScreenText.GetCount();
 	if( ! nLineCount ) return;
 
 	RECT rect; GetClientRect( & rect );
@@ -792,7 +792,7 @@ void CCedtView::OnScreenFontChange()
 
 void CCedtView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) 
 {
-	INT nLineCount = m_clsFormatedScreenText.GetCount();
+	INT nLineCount = (INT)m_clsFormatedScreenText.GetCount();
 	if( ! nLineCount ) return; // this view is not ready...
 
 	RECT rect; GetClientRect( & rect );
@@ -819,7 +819,7 @@ void CCedtView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 
 void CCedtView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) 
 {
-	INT nLineCount = m_clsFormatedScreenText.GetCount();
+	INT nLineCount = (INT)m_clsFormatedScreenText.GetCount();
 	if( ! nLineCount ) return; // this view is not ready
 
 	RECT rect; GetClientRect( & rect );
@@ -840,7 +840,7 @@ void CCedtView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 
 BOOL CCedtView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) 
 {
-	INT nLineCount = m_clsFormatedScreenText.GetCount();
+	INT nLineCount = (INT)m_clsFormatedScreenText.GetCount();
 	if( ! nLineCount ) return TRUE; // this view is not ready
 
 	INT nLineHeight = GetLineHeight();
@@ -1299,7 +1299,7 @@ BOOL CCedtView::PreTranslateMessage(MSG* pMsg)
 		switch( pMsg->wParam ) {
 		case VK_LEFT:	case VK_RIGHT:	case VK_UP:		case VK_DOWN:
 		case VK_HOME:	case VK_END:	case VK_PRIOR:	case VK_NEXT:
-			nChar = pMsg->wParam; nFlags = GetKeyState();
+			nChar = (UINT)pMsg->wParam; nFlags = GetKeyState();
 			if( (nFlags & KEYSTATE_CONTROL) && m_bSelected && (nChar == VK_UP || nChar == VK_DOWN) ) nFlags |= KEYSTATE_SHIFT;
 			OnMoveKeyDown( nChar, nFlags ); 
 			break; // do not return
@@ -1313,16 +1313,16 @@ BOOL CCedtView::PreTranslateMessage(MSG* pMsg)
 		}
 
 		if( g_bDoubleByteCharacterSet && cLeadByte ) {
-			szByte[0] = cLeadByte; szByte[1] = pMsg->wParam; szByte[2] = '\0'; cLeadByte = 0x00;
+			szByte[0] = cLeadByte; szByte[1] = (TCHAR)pMsg->wParam; szByte[2] = '\0'; cLeadByte = 0x00;
 			TRACE1("DBCHAR: [%s]\n", szByte); OnDBCharKeyDown( szByte[0], szByte[1] );
-		} else if( g_bDoubleByteCharacterSet && IsDBCSLeadByte( pMsg->wParam ) ) {
-			cLeadByte = pMsg->wParam;
+		} else if( g_bDoubleByteCharacterSet && IsDBCSLeadByte( (BYTE)pMsg->wParam ) ) {
+			cLeadByte = (TCHAR)pMsg->wParam;
 		} else if( pMsg->wParam == 0x0D ) {
 			OnEditReturn();
 		} else if( pMsg->wParam == 0x1B ) {
 			OnEditEscape();
 		} else {
-			OnCharKeyDown( pMsg->wParam );
+			OnCharKeyDown( (UINT)pMsg->wParam );
 		}
 
 		break;

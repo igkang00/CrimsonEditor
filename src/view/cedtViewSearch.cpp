@@ -10,7 +10,7 @@ BOOL CCedtView::ActionForwardFindString(LPCTSTR lpszFindString, UINT nOptions, C
 	else PositionToIndex(m_nCaretPosX, m_nCaretPosY, nIdxX, nIdxY);
 
 	BOOL bFound = ForwardFindString(nIdxX, nIdxY, lpszFindString, nOptions, clsRegExp, pSearchWrap);
-	INT nLength = SEARCH_REG_EXP(nOptions) ? clsRegExp.GetFoundLength() : strlen(lpszFindString);
+	INT nLength = SEARCH_REG_EXP(nOptions) ? clsRegExp.GetFoundLength() : (INT)strlen(lpszFindString);
 
 	if( bFound ) {
 		SetCaretPosY( GetPosYFromIdxY( nIdxX, nIdxY ) );
@@ -33,7 +33,7 @@ BOOL CCedtView::ActionReverseFindString(LPCTSTR lpszFindString, UINT nOptions, C
 	else PositionToIndex(m_nCaretPosX, m_nCaretPosY, nIdxX, nIdxY);
 
 	BOOL bFound = ReverseFindString(nIdxX, nIdxY, lpszFindString, nOptions, clsRegExp, pSearchWrap);
-	INT nLength = SEARCH_REG_EXP(nOptions) ? clsRegExp.GetFoundLength() : strlen(lpszFindString);
+	INT nLength = SEARCH_REG_EXP(nOptions) ? clsRegExp.GetFoundLength() : (INT)strlen(lpszFindString);
 
 	if( bFound ) {
 		SetCaretPosY( GetPosYFromIdxY( nIdxX, nIdxY ) );
@@ -223,8 +223,8 @@ INT CCedtView::ReplaceAllInSelection(INT & nBegX, INT & nBegY, INT & nEndX, INT 
 			clsRegExp.GetReplaceString( szExpression, szReplaceString );
 		}
 
-		INT nLen = SEARCH_REG_EXP(nOptions) ? clsRegExp.GetFoundLength() : strlen(lpszFindString);
-		INT nLe2 = strlen(szReplaceString);
+		INT nLen = SEARCH_REG_EXP(nOptions) ? clsRegExp.GetFoundLength() : (INT)strlen(lpszFindString);
+		INT nLe2 = (INT)strlen(szReplaceString);
 
 		if( ! IsStringInSelection(nIdxX, nIdxY, nLen, nBegX, nBegY, nEndX, nEndY) ) break;
 
@@ -256,8 +256,8 @@ INT CCedtView::ReplaceAllInFile(LPCTSTR lpszFindString, LPCTSTR lpszReplaceStrin
 			clsRegExp.GetReplaceString( szExpression, szReplaceString );
 		}
 
-		INT nLen = SEARCH_REG_EXP(nOptions) ? clsRegExp.GetFoundLength() : strlen(lpszFindString);
-		INT nLe2 = strlen(szReplaceString);
+		INT nLen = SEARCH_REG_EXP(nOptions) ? clsRegExp.GetFoundLength() : (INT)strlen(lpszFindString);
+		INT nLe2 = (INT)strlen(szReplaceString);
 
 		if( nLen ) DeleteString(nIdxX, nIdxY, nLen);
 		if( nLe2 ) InsertString(nIdxX, nIdxY, szReplaceString);
@@ -286,7 +286,7 @@ INT CCedtView::ReplaceThisOccurrence(INT & nBegX, INT & nBegY, INT & nEndX, INT 
 	else DeleteString(nBegX, nBegY, nEndX-nBegX);
 
 	InsertString(nBegX, nBegY, szReplaceString);
-	nEndY = nBegY; nEndX = nBegX + strlen(szReplaceString);
+	nEndY = nBegY; nEndX = nBegX + (INT)strlen(szReplaceString);
 
 	return 1;
 }

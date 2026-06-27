@@ -79,7 +79,7 @@ BOOL CCedtDoc::ReverseFindString(INT & nIdxX, INT & nIdxY, LPCTSTR lpszFindStrin
 	if( ! CCedtView::m_bSearchWrapAtEndOfFile ) return FALSE;
 
 	if( pSearchWrap ) * pSearchWrap = TRUE;
-	nLine = m_clsAnalyzedText.GetCount()-1; pos = m_clsAnalyzedText.GetTailPosition();
+	nLine = (INT)m_clsAnalyzedText.GetCount() - 1; pos = m_clsAnalyzedText.GetTailPosition();
 
 	while( pos ) {
 		CAnalyzedString & rLine = m_clsAnalyzedText.GetPrev(pos);
@@ -134,7 +134,7 @@ BOOL CCedtDoc::FindPrevBookmark(INT & nIdxY)
 		else nLine--;
 	}
 
-	nLine = m_clsAnalyzedText.GetCount()-1; pos = m_clsAnalyzedText.GetTailPosition();
+	nLine = (INT)m_clsAnalyzedText.GetCount() - 1; pos = m_clsAnalyzedText.GetTailPosition();
 
 	while( pos ) {
 		CAnalyzedString & rLine = m_clsAnalyzedText.GetPrev(pos);
@@ -179,9 +179,9 @@ BOOL CCedtDoc::ForwardFindEndingPair(INT & nIdxX, INT & nIdxY)
 	SHORT i, siWordCount, siBegin; INT j, nLine = nIdxY;
 
 	LPCTSTR PAIRS[3]; INT nPairs[3]; INT nDepth[3];
-	PAIRS[0] = m_clsLangSpec.m_szPairs1; nPairs[0] = strlen(PAIRS[0]); nDepth[0] = 0;
-	PAIRS[1] = m_clsLangSpec.m_szPairs2; nPairs[1] = strlen(PAIRS[1]); nDepth[1] = 0;
-	PAIRS[2] = m_clsLangSpec.m_szPairs3; nPairs[2] = strlen(PAIRS[2]); nDepth[2] = 0;
+	PAIRS[0] = m_clsLangSpec.m_szPairs1; nPairs[0] = (INT)strlen(PAIRS[0]); nDepth[0] = 0;
+	PAIRS[1] = m_clsLangSpec.m_szPairs2; nPairs[1] = (INT)strlen(PAIRS[1]); nDepth[1] = 0;
+	PAIRS[2] = m_clsLangSpec.m_szPairs3; nPairs[2] = (INT)strlen(PAIRS[2]); nDepth[2] = 0;
 
 	while( pos ) {
 		CAnalyzedString & rLine = m_clsAnalyzedText.GetNext(pos);
@@ -227,9 +227,9 @@ BOOL CCedtDoc::ReverseFindBeginningPair(INT & nIdxX, INT & nIdxY)
 	SHORT i, siWordCount, siBegin; INT j, nLine = nIdxY;
 
 	LPCTSTR PAIRS[3]; INT nPairs[3]; INT nDepth[3];
-	PAIRS[0] = m_clsLangSpec.m_szPairs1; nPairs[0] = strlen(PAIRS[0]); nDepth[0] = 0;
-	PAIRS[1] = m_clsLangSpec.m_szPairs2; nPairs[1] = strlen(PAIRS[1]); nDepth[1] = 0;
-	PAIRS[2] = m_clsLangSpec.m_szPairs3; nPairs[2] = strlen(PAIRS[2]); nDepth[2] = 0;
+	PAIRS[0] = m_clsLangSpec.m_szPairs1; nPairs[0] = (INT)strlen(PAIRS[0]); nDepth[0] = 0;
+	PAIRS[1] = m_clsLangSpec.m_szPairs2; nPairs[1] = (INT)strlen(PAIRS[1]); nDepth[1] = 0;
+	PAIRS[2] = m_clsLangSpec.m_szPairs3; nPairs[2] = (INT)strlen(PAIRS[2]); nDepth[2] = 0;
 
 	while( pos ) {
 		CAnalyzedString & rLine = m_clsAnalyzedText.GetPrev(pos);

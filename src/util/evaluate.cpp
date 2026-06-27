@@ -303,7 +303,7 @@ TCHAR * EVAL::EvalConstant(TCHAR * pExpr, double * pValue, INT * pError)
 	TCHAR * pEnd = pExpr;
 	while( isdigit(* pEnd) || * pEnd == '.' ) pEnd++;
 
-	TCHAR szNum[2048]; INT nLen = pEnd - pExpr;
+	TCHAR szNum[2048]; INT nLen = (INT)(pEnd - pExpr);
 	if( nLen > 0 ) { strncpy( szNum, pExpr, nLen ); szNum[nLen] = '\0'; }
 	else { * pError = EVAL_ERROR_WRONG_SYNTAX; return pExpr; }
 
@@ -339,7 +339,7 @@ TCHAR * EVAL::EvalVariable(TCHAR * pExpr, double * pValue, INT * pError)
 	TCHAR * pEnd = pExpr;
 	while( isalnum(* pEnd) ) pEnd++;
 
-	TCHAR szVar[2048]; INT nLen = pEnd - pExpr;
+	TCHAR szVar[2048]; INT nLen = (INT)(pEnd - pExpr);
 	if( nLen > 0 ) { strncpy( szVar, pExpr, nLen ); szVar[nLen] = '\0'; strlwr(szVar); }
 	else { * pError = EVAL_ERROR_WRONG_SYNTAX; return pExpr; }
 
@@ -357,7 +357,7 @@ TCHAR * EVAL::EvalFunction(TCHAR * pExpr, double * pValue, INT * pError)
 	TCHAR * pEnd = pExpr;
 	while( isalnum(* pEnd) ) pEnd++;
 
-	TCHAR szFun[2048]; INT nLen = pEnd - pExpr;
+	TCHAR szFun[2048]; INT nLen = (INT)(pEnd - pExpr);
 	if( nLen > 0 ) { strncpy( szFun, pExpr, nLen ); szFun[nLen] = '\0'; strlwr(szFun); }
 	else { * pError = EVAL_ERROR_WRONG_SYNTAX; return pExpr; }
 

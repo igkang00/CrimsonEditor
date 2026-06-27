@@ -1,4 +1,4 @@
-﻿#include "stdafx.h";
+﻿#include "stdafx.h"
 #include "cedtHeader.h"
 #include "FtpClnt.h"
 #include <afxinet.h>
@@ -42,7 +42,7 @@ BOOL DownloadRemoteFileWinInet(CFtpAccount & rFtpAccount, LPCTSTR lpszRemoteFile
 	BOOL bFound = find.FindFile(lpszRemoteFile);
 	if( bFound ) {
 		find.FindNextFile();
-		dwSize = find.GetLength();
+		dwSize = (DWORD)find.GetLength();
 	} else {
 		AfxMessageBox(IDS_ERR_FTP_FIND_REMOTE, MB_OK | MB_ICONSTOP);
 		pFtpConnection->Close(); delete pFtpConnection;
@@ -200,7 +200,7 @@ BOOL UploadLocalFileWinInet(CFtpAccount & rFtpAccount, LPCTSTR lpszLocalFile, LP
 
 	DWORD dwSize = 0; CFileStatus clsStatus; 
 	if( CFile::GetStatus(lpszLocalFile, clsStatus) ) {
-		dwSize = clsStatus.m_size;
+		dwSize = (DWORD)clsStatus.m_size;
 	} else {
 		AfxMessageBox(IDS_ERR_FTP_FIND_LOCAL, MB_OK | MB_ICONSTOP);
 		pFtpConnection->Close(); delete pFtpConnection;
@@ -274,7 +274,7 @@ BOOL UploadLocalFileFtpClnt(CFtpAccount & rFtpAccount, LPCTSTR lpszLocalFile, LP
 
 	DWORD dwSize = 0; CFileStatus clsStatus; 
 	if( CFile::GetStatus(lpszLocalFile, clsStatus) ) {
-		dwSize = clsStatus.m_size;
+		dwSize = (DWORD)clsStatus.m_size;
 	} else {
 		AfxMessageBox(IDS_ERR_FTP_FIND_LOCAL, MB_OK | MB_ICONSTOP);
 		client.LogOff(); client.Close(); return FALSE;
@@ -362,7 +362,7 @@ BOOL GetRemoteFileListWinInet(CSortStringArray & arrFileInfo, CFtpAccount & rFtp
 		CString szFileInfo;
 
 		CString szName = find.GetFileName();
-		DWORD dwSize = find.GetLength();
+		DWORD dwSize = (DWORD)find.GetLength();
 		TRACE2("RemoteFileList: %s (%d)\n", szName, dwSize);
 
 		if( ! find.IsDirectory() && find.IsNormal() && MatchFileFilter(szName, lpszFilter) ) { szFileInfo.Format("F/%s/%d", szName, dwSize); arrFileInfo.Add(szFileInfo); }
@@ -404,7 +404,7 @@ BOOL GetRemoteFileListFtpClnt(CSortStringArray & arrFileInfo, CFtpAccount & rFtp
 	CStringArray arrList;
 	client.ListDirectory(arrList, NULL, rFtpAccount.m_bPassiveMode);
 
-	INT nSize = arrList.GetSize();
+	INT nSize = (INT)arrList.GetSize();
 	CString szMode, szTime, szName; DWORD dwSize;
 
 	arrFileInfo.RemoveAll();
@@ -473,7 +473,7 @@ static BOOL ParseRemoteFileListItem(CString & szMode, DWORD & dwSize, CString & 
 	// extract file mode
 	while( * FWD && ! isspace(* FWD) ) FWD++;
 	if( FWD == BEG ) return FALSE;
-	szMode = CString(BEG, FWD-BEG); 
+	szMode = CString(BEG, (int)(FWD-BEG));
 
 	// skip spaces
 	while( * FWD && isspace(* FWD) ) FWD++;
@@ -515,12 +515,12 @@ static BOOL ParseRemoteFileListItem(CString & szMode, DWORD & dwSize, CString & 
 	while( * FWD && ( (* FWD == ' ') || (* FWD == '.') ) ) FWD++;
 	while( * FWD &&   (* FWD != ' ') && (* FWD != '.')   ) FWD++;
 	if( FWD == BEG ) return FALSE;
-	szTime = CString(BEG, FWD-BEG); 
+	szTime = CString(BEG, (int)(FWD-BEG));
 
 /*	// extract file creation time
 	while( * FWD && ! isspace(* FWD) ) FWD++;
 	if( FWD == BEG ) return FALSE;
-	szTime = CString(BEG, FWD-BEG); */
+	szTime = CString(BEG, (int)(FWD-BEG));*/
 
 	// skip spaces
 	while( * FWD && isspace(* FWD) ) FWD++;

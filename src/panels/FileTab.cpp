@@ -125,7 +125,7 @@ BOOL CMDIFileTab::OnNeedtextFileTab(UINT id, NMHDR * pNMHDR, LRESULT * pResult)
 	if( pTTT->uFlags & TTF_IDISHWND ) return FALSE;
 
 	CTabCtrl * pTabCtrl = (CTabCtrl *)GetDlgItem(IDC_FILE_TAB); ASSERT( pTabCtrl );
-    UINT nTab = pNMHDR->idFrom;
+    UINT nTab = (UINT)pNMHDR->idFrom;
 
 	TCITEM item; item.mask = TCIF_PARAM;
 	pTabCtrl->GetItem(nTab, & item);
@@ -172,7 +172,7 @@ BOOL CMDIFileTab::PreTranslateMessage(MSG* pMsg)
 		pTabCtrl->GetWindowRect( & rect ); ScreenToClient( & rect );
 
 		point.x = LOWORD(pMsg->lParam); point.y = HIWORD(pMsg->lParam);
-		if( rect.PtInRect( point ) ) OnLButtonDownTabCtrl( pMsg->wParam, point );
+		if( rect.PtInRect( point ) ) OnLButtonDownTabCtrl( (UINT)pMsg->wParam, point );
 		break;
 
 	case WM_LBUTTONDBLCLK:
@@ -180,7 +180,7 @@ BOOL CMDIFileTab::PreTranslateMessage(MSG* pMsg)
 		pTabCtrl->GetWindowRect( & rect ); ScreenToClient( & rect );
 
 		point.x = LOWORD(pMsg->lParam); point.y = HIWORD(pMsg->lParam);
-		if( rect.PtInRect( point ) ) OnLButtonDblClkTabCtrl( pMsg->wParam, point );
+		if( rect.PtInRect( point ) ) OnLButtonDblClkTabCtrl( (UINT)pMsg->wParam, point );
 		break;
 
 	case WM_MBUTTONDOWN:
@@ -188,7 +188,7 @@ BOOL CMDIFileTab::PreTranslateMessage(MSG* pMsg)
 		pTabCtrl->GetWindowRect( & rect ); ScreenToClient( & rect );
 
 		point.x = LOWORD(pMsg->lParam); point.y = HIWORD(pMsg->lParam);
-		if( rect.PtInRect( point ) ) OnMButtonDownTabCtrl( pMsg->wParam, point );
+		if( rect.PtInRect( point ) ) OnMButtonDownTabCtrl( (UINT)pMsg->wParam, point );
 		break;
 
 	case WM_MBUTTONUP:
@@ -196,7 +196,7 @@ BOOL CMDIFileTab::PreTranslateMessage(MSG* pMsg)
 		pTabCtrl->GetWindowRect( & rect ); ScreenToClient( & rect );
 
 		point.x = LOWORD(pMsg->lParam); point.y = HIWORD(pMsg->lParam);
-		if( rect.PtInRect( point ) ) OnMButtonUpTabCtrl( pMsg->wParam, point );
+		if( rect.PtInRect( point ) ) OnMButtonUpTabCtrl( (UINT)pMsg->wParam, point );
 		break;
 
 	case WM_BEGINDRAG_TAB_CTRL:
@@ -204,7 +204,7 @@ BOOL CMDIFileTab::PreTranslateMessage(MSG* pMsg)
 		pTabCtrl->GetWindowRect( & rect ); ScreenToClient( & rect );
 
 		point.x = LOWORD(pMsg->lParam); point.y = HIWORD(pMsg->lParam);
-		if( rect.PtInRect( point ) ) OnBegindragTabCtrl( pMsg->wParam, point );
+		if( rect.PtInRect( point ) ) OnBegindragTabCtrl( (UINT)pMsg->wParam, point );
 		break;
 	}
 	

@@ -108,7 +108,7 @@ const char * hex_encode(const char * dat)
     static char buf[2 * ENCODE_BUFFER_SIZE];
     int i, j, len;
 
-    len = strlen(dat);
+    len = (int)strlen(dat);
     for(i = j = 0; i < len && j < 2 * ENCODE_BUFFER_SIZE; i++, j += 2) {
         sprintf(buf+j, "%X", (unsigned char)(dat[i]));
     }
@@ -123,7 +123,7 @@ const char * hex_decode(const char * dat)
     static char buf[ENCODE_BUFFER_SIZE], tmp[3];
     int i, j, len;
 
-    len = strlen(dat); tmp[2] = '\0';
+    len = (int)strlen(dat); tmp[2] = '\0';
     for(i = j = 0; i < len && j < ENCODE_BUFFER_SIZE; i += 2, j++) {
         tmp[0] = dat[i]; tmp[1] = dat[i+1];
         buf[j] = (int)strtol(tmp, (char **)NULL, 16);

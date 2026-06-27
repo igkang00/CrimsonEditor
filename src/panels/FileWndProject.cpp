@@ -387,7 +387,7 @@ BOOL CFileWindow::LoadProjectItem(istream & is, TCHAR szText[], HTREEITEM hParen
 
 	} else if( ! _stricmp(szText, "<localfile") ) {
 		is.getline(szText, 4096, '>'); // get attributes
-		INT nLen = strlen(szText); if( szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
+		INT nLen = (INT)strlen(szText); if( szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
 		if( ! ParseItemAttribute( szText, mapAttr ) ) return FALSE;
 
 		CString szPath; BOOL bLookup = mapAttr.Lookup("path", szPath);
@@ -398,7 +398,7 @@ BOOL CFileWindow::LoadProjectItem(istream & is, TCHAR szText[], HTREEITEM hParen
 
 	} else if( ! _stricmp(szText, "<remotefile") ) {
 		is.getline(szText, 4096, '>'); // get attributes
-		INT nLen = strlen(szText); if( szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
+		INT nLen = (INT)strlen(szText); if( szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
 		if( ! ParseItemAttribute( szText, mapAttr ) ) return FALSE;
 
 		CString szAccount; BOOL bLookup = mapAttr.Lookup("account", szAccount);
@@ -470,7 +470,7 @@ BOOL CFileWindow::LoadWorkspaceItem(istream & is, TCHAR szText[], CWinApp * pApp
 
 	if( ! _stricmp(szText, "<remotefile") ) {
 		is.getline(szText, 4096, '>'); // get attributes
-		INT nLen = strlen(szText); if( szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
+		INT nLen = (INT)strlen(szText); if( szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
 		if( ! ParseItemAttribute( szText, mapAttr ) ) return FALSE;
 
 		CString szAccount; BOOL bLookup = mapAttr.Lookup("account", szAccount);
@@ -507,7 +507,7 @@ BOOL CFileWindow::LoadWorkspaceItem(istream & is, TCHAR szText[], CWinApp * pApp
 
 	} else if( ! _stricmp(szText, "<localfile") ) {
 		is.getline(szText, 4096, '>'); // get attributes
-		INT nLen = strlen(szText); if( szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
+		INT nLen = (INT)strlen(szText); if( szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
 		if( ! ParseItemAttribute( szText, mapAttr ) ) return FALSE;
 
 		CString szPath; BOOL bLookup = mapAttr.Lookup("path", szPath);
@@ -557,7 +557,7 @@ BOOL CFileWindow::ParseItemAttribute(LPCTSTR lpszText, CMapStringToString & mapA
 
 	while( * pEnd ) {
 		pBeg = pEnd; while( * pEnd && ! isspace(* pEnd) && * pEnd != '=' ) pEnd++;
-		szAttrName = CString(pBeg, pEnd-pBeg);
+		szAttrName = CString(pBeg, (int)(pEnd-pBeg));
 
 		while( * pEnd && isspace(* pEnd) ) pEnd++;
 
@@ -570,7 +570,7 @@ BOOL CFileWindow::ParseItemAttribute(LPCTSTR lpszText, CMapStringToString & mapA
 		else { AfxMessageBox(IDS_ERR_PARSE_PRJ_ATTR); return FALSE; }
 
 		pBeg = pEnd; while( * pEnd && * pEnd != '"' ) pEnd++;
-		szAttrValue = CString(pBeg, pEnd-pBeg);
+		szAttrValue = CString(pBeg, (int)(pEnd-pBeg));
 
 		if( * pEnd == '"' ) { pEnd++; } 
 		else { AfxMessageBox(IDS_ERR_PARSE_PRJ_ATTR); return FALSE; }

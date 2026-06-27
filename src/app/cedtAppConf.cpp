@@ -11,7 +11,7 @@ BOOL CCedtApp::SaveFtpAccountInfo(LPCTSTR lpszPathName)
 	ofstream fout(lpszPathName, ios::out | ios::binary);
 	if( ! fout.is_open() ) return FALSE;
 
-	INT nLength = strlen(STRING_FTPACCOUNTVER);
+	INT nLength = (INT)strlen(STRING_FTPACCOUNTVER);
 	fout.write((const char *)STRING_FTPACCOUNTVER, nLength);
 
 	for(INT i = 0; i < MAX_FTP_ACCOUNT; i++) {
@@ -27,7 +27,7 @@ BOOL CCedtApp::LoadFtpAccountInfo(LPCTSTR lpszPathName)
 	ifstream fin(lpszPathName, ios::in | ios::binary);
 	if( ! fin.is_open() ) return FALSE;
 
-	TCHAR szBuffer[2048]; INT nLength = strlen(STRING_FTPACCOUNTVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
+	TCHAR szBuffer[2048]; INT nLength = (INT)strlen(STRING_FTPACCOUNTVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
 	if( strcmp(szBuffer, STRING_FTPACCOUNTVER) ) { fin.close(); return FALSE; }
 
 	for(INT i = 0; i < MAX_FTP_ACCOUNT; i++) {
@@ -45,7 +45,7 @@ BOOL CCedtApp::SaveUserCommands(LPCTSTR lpszPathName)
 	ofstream fout(lpszPathName, ios::out | ios::binary);
 	if( ! fout.is_open() ) return FALSE;
 
-	INT nLength = strlen(STRING_USERTOOLSVER);
+	INT nLength = (INT)strlen(STRING_USERTOOLSVER);
 	fout.write((const char *)STRING_USERTOOLSVER, nLength);
 
 	for(INT i = 0; i < 11; i++) {
@@ -61,7 +61,7 @@ BOOL CCedtApp::LoadUserCommands(LPCTSTR lpszPathName)
 	ifstream fin(lpszPathName, ios::in | ios::binary);
 	if( ! fin.is_open() ) return FALSE;
 
-	TCHAR szBuffer[2048]; INT nLength = strlen(STRING_USERTOOLSVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
+	TCHAR szBuffer[2048]; INT nLength = (INT)strlen(STRING_USERTOOLSVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
 	if( strcmp(szBuffer, STRING_USERTOOLSVER) ) { fin.close(); return FALSE; }
 
 	for(INT i = 0; i < 11; i++) {
@@ -79,7 +79,7 @@ BOOL CCedtApp::SaveMacroBuffers(LPCTSTR lpszPathName)
 	ofstream fout(lpszPathName, ios::out | ios::binary);
 	if( ! fout.is_open() ) return FALSE;
 
-	INT nLength = strlen(STRING_USERMACROVER);
+	INT nLength = (INT)strlen(STRING_USERMACROVER);
 	fout.write((const char *)STRING_USERMACROVER, nLength);
 
 	for(INT i = 0; i < 11; i++) {
@@ -95,7 +95,7 @@ BOOL CCedtApp::LoadMacroBuffers(LPCTSTR lpszPathName)
 	ifstream fin(lpszPathName, ios::in | ios::binary);
 	if( ! fin.is_open() ) return FALSE;
 
-	TCHAR szBuffer[2048]; INT nLength = strlen(STRING_USERMACROVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
+	TCHAR szBuffer[2048]; INT nLength = (INT)strlen(STRING_USERMACROVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
 	if( strcmp(szBuffer, STRING_USERMACROVER) ) { fin.close(); return FALSE; }
 
 	for(INT i = 0; i < 11; i++) {
@@ -294,7 +294,7 @@ BOOL CCedtApp::LoadColorScheme(LPCTSTR lpszPathName)
 	ifstream fin(lpszPathName, ios::in | ios::binary);
 	if( ! fin.is_open() ) return FALSE;
 
-	TCHAR szBuffer[2048]; INT nLength = strlen(STRING_COLORSETTINGSVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
+	TCHAR szBuffer[2048]; INT nLength = (INT)strlen(STRING_COLORSETTINGSVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
 	if( strcmp(szBuffer, STRING_COLORSETTINGSVER) ) { fin.close(); return FALSE; }
 
 	fin.read((char *)CCedtView::m_crBkgrColor, sizeof(CCedtView::m_crBkgrColor));
@@ -315,7 +315,7 @@ BOOL CCedtApp::SaveColorScheme(LPCTSTR lpszPathName)
 	ofstream fout(lpszPathName, ios::out | ios::binary);
 	if( ! fout.is_open() ) return FALSE;
 
-	INT nLength = strlen(STRING_COLORSETTINGSVER);
+	INT nLength = (INT)strlen(STRING_COLORSETTINGSVER);
 	fout.write((const char *)STRING_COLORSETTINGSVER, nLength);
 
 	fout.write((const char *)CCedtView::m_crBkgrColor, sizeof(CCedtView::m_crBkgrColor));
@@ -503,7 +503,7 @@ BOOL CCedtApp::LoadUserConfiguration(LPCTSTR lpszPathName)
 	ifstream fin(lpszPathName, ios::in | ios::binary);
 	if( ! fin.is_open() ) return FALSE;
 
-	nLength = strlen(STRING_CONFIGURATIONVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
+	nLength = (INT)strlen(STRING_CONFIGURATIONVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
 	if( strcmp(szBuffer, STRING_CONFIGURATIONVER) ) { fin.close(); return FALSE; }
 
 	fin.read((char *)CCedtView::m_lfScreen, sizeof(CCedtView::m_lfScreen));
@@ -705,7 +705,7 @@ BOOL CCedtApp::SaveUserConfiguration(LPCTSTR lpszPathName)
 	ofstream fout(lpszPathName, ios::out | ios::binary);
 	if( ! fout.is_open() ) return FALSE;
 
-	nLength = strlen(STRING_CONFIGURATIONVER);
+	nLength = (INT)strlen(STRING_CONFIGURATIONVER);
 	fout.write((const char *)STRING_CONFIGURATIONVER, nLength);
 
 	fout.write((const char *)CCedtView::m_lfScreen, sizeof(CCedtView::m_lfScreen));

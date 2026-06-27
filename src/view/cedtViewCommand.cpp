@@ -16,7 +16,7 @@ BOOL CCedtView::RefreshUserCommandFilePathForMenu()
 	BOOL bFound = FindAllFilePath(arrPathName, szPathName);
 	arrPathName.QuickSort();
 
-	INT size = arrPathName.GetSize(); if( size > 8 ) size = 8;
+	INT size = (INT)arrPathName.GetSize(); if( size > 8 ) size = 8;
 	for( INT i = 0; i < size; i++ ) m_szUserCommandFilePath[i] = arrPathName[i];
 
 	return TRUE;
@@ -270,8 +270,8 @@ BOOL CCedtView::ReplaceShellVariables(CString & szArgu, CMapStringToString & cls
 			pChar++;
 		}
 
-		CString szVar0 = CString(pSave, pChar-pSave);
-		CString szVar1 = bEnclosed ? CString(pSave+2, pChar-pSave-3) : CString(pSave+1, pChar-pSave-1);
+		CString szVar0 = CString(pSave, (int)(pChar-pSave));
+		CString szVar1 = bEnclosed ? CString(pSave+2, (int)(pChar-pSave-3)) : CString(pSave+1, (int)(pChar-pSave-1));
 		TRACE1("- Variable Found: '%s'\n", szVar0);
 
 		CString szVar2 = szVar1, szExpn, szValu; INT nFound = -1;
@@ -302,7 +302,7 @@ BOOL CCedtView::ExpandShellVariable(CString & szValue, LPCTSTR lpszExpand)
 	INT nLength = szValue.GetLength();
 
 	if( lpszExpand[0] == '=' ) { // assignment
-		INT nExpand = strlen(lpszExpand+1);
+		INT nExpand = (INT)strlen(lpszExpand+1);
 		if( ! nLength && nExpand ) szValue = lpszExpand + 1;
 	} else if( lpszExpand[0] == ':' ) { // substring
 		const TCHAR * pFound = strchr(lpszExpand+1, ',');
@@ -310,11 +310,11 @@ BOOL CCedtView::ExpandShellVariable(CString & szValue, LPCTSTR lpszExpand)
 		INT nCount = pFound ? atoi( pFound+1 ) : nLength-nFirst;
 		szValue = szValue.Mid(nFirst, nCount);
 	} else if( lpszExpand[0] == '#' ) { // beginning match delete
-		INT nExpand = strlen(lpszExpand+1);
+		INT nExpand = (INT)strlen(lpszExpand+1);
 		if( nExpand && szValue.Find(lpszExpand+1) == 0 )
 			szValue = szValue.Mid(nExpand);
 	} else if( lpszExpand[0] == '%' ) { // trailing match delete
-		INT nExpand = strlen(lpszExpand+1);
+		INT nExpand = (INT)strlen(lpszExpand+1);
 		if( nExpand && szValue.Find(lpszExpand+1) == nLength-nExpand )
 			szValue = szValue.Left(nLength-nExpand);
 	}
@@ -457,7 +457,7 @@ void CCedtView::OnTimerCaptureOutput()
 			strcpy( szReadBuffer + dwSave, szWriteBuffer ); dwSave += dwWrite + 1;
 		}
 
-		INT nArraySize = m_arrChildInputString.GetSize();
+		INT nArraySize = (INT)m_arrChildInputString.GetSize();
 		m_arrChildInputString.RemoveAt( nArraySize - 1 );
 	}
 

@@ -67,7 +67,7 @@ BOOL CFileWindow::InitLocalDriveList(LPCTSTR lpszInitialDriveName)
 	//	nDrive = m_cmbLocalDrive.FindString(-1, lpszInitialDriveName);
 	//	if( nDrive != CB_ERR ) m_cmbLocalDrive.SetCurSel(nDrive);
 
-		INT nCount = m_arrLocalDrive.GetSize();
+		INT nCount = (INT)m_arrLocalDrive.GetSize();
 		INT nDrive = CB_ERR;
 
 		for( INT i = 0; i < nCount; i++ ) {
@@ -113,7 +113,7 @@ BOOL CFileWindow::GetBrowsingDirectory(CString & szDirectory)
 BOOL CFileWindow::SetBrowsingDirectory(LPCTSTR lpszDirectory)
 {
 	CString szDriveName( lpszDirectory, 2 );
-	INT nCount = m_arrLocalDrive.GetSize();
+	INT nCount = (INT)m_arrLocalDrive.GetSize();
 	for( INT i = nCount-1; i >= 0; i-- ) { // search in reverse order
 		CString & szLocalDrive = m_arrLocalDrive[i];
 		if( ! strnicmp(szLocalDrive, lpszDirectory, szLocalDrive.GetLength()) ) { szDriveName = szLocalDrive; break; }
@@ -318,7 +318,7 @@ BOOL CFileWindow::SelectLocalDriveList(LPCTSTR lpszDriveName)
 //	m_cmbLocalDrive.SetCurSel(nDrive);
 //	return TRUE;
 
-	INT nCount = m_arrLocalDrive.GetSize();
+	INT nCount = (INT)m_arrLocalDrive.GetSize();
 	INT nDrive = CB_ERR;
 
 	for( INT i = 0; i < nCount; i++ ) {
@@ -424,7 +424,7 @@ BOOL CFileWindow::ExpandDirectoryTreePath(LPCTSTR lpszPathName)
 	if( strnicmp(szPathName, szRoot, szRoot.GetLength()) ) return FALSE;
 	TCHAR * pText = szPathName + szRoot.GetLength() + 1;
 
-	INT nLen = strlen(szPathName);
+	INT nLen = (INT)strlen(szPathName);
 	for(INT i = szRoot.GetLength() + 1; i < nLen; i++) {
 		if( szPathName[i] == '\\' ) {
 			szPathName[i] = '\0';
@@ -539,14 +539,14 @@ HTREEITEM CFileWindow::InsertDirectoryTreeChildren(HTREEITEM hParent, LPCTSTR lp
 		else if( find.IsDirectory() && ! find.IsDots() && ! find.IsHidden() ) arrDirectories.Add( szFilePath );
 	}
 
-	arrDirectories.Sort(); nSize = arrDirectories.GetSize();
+	arrDirectories.Sort(); nSize = (INT)arrDirectories.GetSize();
 	for(i = 0; i < nSize; i++) {
 		szPath = arrDirectories.GetAt(i);
 		HTREEITEM hItem = InsertDirectoryTreeItem(hParent, szPath);
 		if( DirectoryHasChildren(szPath) ) m_treDirectoryTree.InsertItem("NULL", hItem);
 	}
 
-	arrFiles.Sort(); nSize = arrFiles.GetSize();
+	arrFiles.Sort(); nSize = (INT)arrFiles.GetSize();
 	for(i = 0; i < nSize; i++) {
 		szPath = arrFiles.GetAt(i);
 		HTREEITEM hItem = InsertDirectoryTreeItem(hParent, szPath);
@@ -558,7 +558,7 @@ HTREEITEM CFileWindow::InsertDirectoryTreeChildren(HTREEITEM hParent, LPCTSTR lp
 
 HTREEITEM CFileWindow::InsertDirectoryTreeRoot(LPCTSTR lpszPath)
 {
-	TCHAR szTemp[MAX_PATH]; lstrcpyn(szTemp, lpszPath, MAX_PATH - 1); INT nLen = strlen(szTemp);  // leave 1 byte for trailing '\\'
+	TCHAR szTemp[MAX_PATH]; lstrcpyn(szTemp, lpszPath, MAX_PATH - 1); INT nLen = (INT)strlen(szTemp);  // leave 1 byte for trailing '\\'
 	if( nLen > 0 && szTemp[nLen-1] != '\\' ) { szTemp[nLen] = '\\'; nLen++; szTemp[nLen] = '\0'; }
 
 	SHFILEINFO shFinfo; // INT iIcon, iIconSel;
@@ -570,7 +570,7 @@ HTREEITEM CFileWindow::InsertDirectoryTreeRoot(LPCTSTR lpszPath)
 
 HTREEITEM CFileWindow::InsertDirectoryTreeItem(HTREEITEM hParent, LPCTSTR lpszPath)
 {
-	TCHAR szTemp[MAX_PATH]; lstrcpyn(szTemp, lpszPath, MAX_PATH - 1); INT nLen = strlen(szTemp);  // leave 1 byte for trailing '\\'
+	TCHAR szTemp[MAX_PATH]; lstrcpyn(szTemp, lpszPath, MAX_PATH - 1); INT nLen = (INT)strlen(szTemp);  // leave 1 byte for trailing '\\'
 	if( nLen > 0 && szTemp[nLen-1] != '\\' ) { szTemp[nLen] = '\\'; nLen++; szTemp[nLen] = '\0'; }
 
 	SHFILEINFO shFinfo; // INT iIcon, iIconSel;

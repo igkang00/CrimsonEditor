@@ -106,7 +106,7 @@ void CCedtDoc::ReleaseCommentBlock(INT nBegX, INT nBegY, INT nEndX, INT nEndY)
 void CCedtDoc::ConvertTabsToSpacesDocument()
 {
 	POSITION pos = m_clsAnalyzedText.GetHeadPosition();
-	INT nCount = m_clsAnalyzedText.GetCount();
+	INT nCount = (INT)m_clsAnalyzedText.GetCount();
 	for(INT nIdxY = 0; nIdxY < nCount; nIdxY++) {
 		CAnalyzedString & rLine = m_clsAnalyzedText.GetNext(pos);
 		FastConvertTabsToSpaces(rLine, nIdxY);
@@ -116,7 +116,7 @@ void CCedtDoc::ConvertTabsToSpacesDocument()
 void CCedtDoc::ConvertSpacesToTabsDocument()
 {
 	POSITION pos = m_clsAnalyzedText.GetHeadPosition();
-	INT nCount = m_clsAnalyzedText.GetCount();
+	INT nCount = (INT)m_clsAnalyzedText.GetCount();
 	for(INT nIdxY = 0; nIdxY < nCount; nIdxY++) {
 		CAnalyzedString & rLine = m_clsAnalyzedText.GetNext(pos);
 		FastConvertSpacesToTabs(rLine, nIdxY);
@@ -126,7 +126,7 @@ void CCedtDoc::ConvertSpacesToTabsDocument()
 void CCedtDoc::LeadingSpacesToTabsDocument()
 {
 	POSITION pos = m_clsAnalyzedText.GetHeadPosition();
-	INT nCount = m_clsAnalyzedText.GetCount();
+	INT nCount = (INT)m_clsAnalyzedText.GetCount();
 	for(INT nIdxY = 0; nIdxY < nCount; nIdxY++) {
 		CAnalyzedString & rLine = m_clsAnalyzedText.GetNext(pos);
 		FastLeadingSpacesToTabs(rLine, nIdxY);
@@ -136,7 +136,7 @@ void CCedtDoc::LeadingSpacesToTabsDocument()
 void CCedtDoc::DeleteTrailingSpacesDocument()
 {
 	POSITION pos = m_clsAnalyzedText.GetHeadPosition();
-	INT nCount = m_clsAnalyzedText.GetCount();
+	INT nCount = (INT)m_clsAnalyzedText.GetCount();
 	for(INT nIdxY = 0; nIdxY < nCount; nIdxY++) {
 		CAnalyzedString & rLine = m_clsAnalyzedText.GetNext(pos);
 		FastDeleteTrailingSpaces(rLine, nIdxY);
@@ -182,7 +182,7 @@ INT CCedtDoc::FastUnindentLine(CAnalyzedString & rLine, INT nIdxY, INT nTabSize,
 INT CCedtDoc::FastMakeCommentLine(CAnalyzedString & rLine, INT nIdxY)
 {
 	LPCTSTR LCS = m_clsLangSpec.m_szLineComment1;
-	INT  lenLCS = strlen(LCS); if( ! lenLCS ) return 0;
+	INT  lenLCS = (INT)strlen(LCS); if( ! lenLCS ) return 0;
 
 	if( rLine.GetLength() ) {
 		CString szString = LCS; szString += " ";
@@ -193,7 +193,7 @@ INT CCedtDoc::FastMakeCommentLine(CAnalyzedString & rLine, INT nIdxY)
 INT CCedtDoc::FastReleaseCommentLine(CAnalyzedString & rLine, INT nIdxY)
 {
 	LPCTSTR LCS = m_clsLangSpec.m_szLineComment1; 
-	INT  lenLCS = strlen(LCS); if( ! lenLCS ) return 0;
+	INT  lenLCS = (INT)strlen(LCS); if( ! lenLCS ) return 0;
 
 	if( rLine.GetLength() ) {
 		CString szString = LCS; szString += " ";
