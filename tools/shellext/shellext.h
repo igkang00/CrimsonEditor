@@ -29,6 +29,9 @@ extern "C" const GUID CLSID_CrimsonShellExt;
 #define SHELLEXT_PROGID         L"Crimson Editor"
 #define SHELLEXT_DESCRIPTION    L"Crimson Editor Shell Extension"
 
+// Resource ID for the menu icon embedded in shellext.rc.
+#define IDI_CRIMSON             101
+
 // DLL-wide reference counters consulted by DllCanUnloadNow().
 extern HINSTANCE g_hInstDll;
 extern LONG      g_cRefDll;

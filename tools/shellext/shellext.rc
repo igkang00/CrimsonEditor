@@ -1,0 +1,8 @@
+// shellext.rc — embed the cedt application icon so the shell context
+// menu item can show "Edit with Crimson Editor" with its brand icon.
+// We reference res/mainfrm.ico directly out of the main app tree so
+// the icon stays in sync with cedt itself.
+
+#include "shellext.h"
+
+IDI_CRIMSON   ICON   DISCARDABLE   "..\\..\\res\\mainfrm.ico"

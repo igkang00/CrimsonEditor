@@ -11,6 +11,10 @@ HINSTANCE g_hInstDll = NULL;
 LONG      g_cRefDll  = 0;
 LONG      g_cLockDll = 0;
 
+// Cached menu-item bitmap, lazily built on first QueryContextMenu and
+// freed on DLL detach. Defined in contextmenu.cpp.
+extern HBITMAP g_hMenuBitmap;
+
 // Forward decl from classfactory.cpp.
 class CClassFactory;
 extern "C" HRESULT CreateCrimsonClassFactory(REFIID riid, void** ppv);
@@ -20,6 +24,11 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD dwReason, LPVOID)
 	if (dwReason == DLL_PROCESS_ATTACH) {
 		g_hInstDll = hInst;
 		DisableThreadLibraryCalls(hInst);
+	} else if (dwReason == DLL_PROCESS_DETACH) {
+		if (g_hMenuBitmap) {
+			DeleteObject(g_hMenuBitmap);
+			g_hMenuBitmap = NULL;
+		}
 	}
 	return TRUE;
 }

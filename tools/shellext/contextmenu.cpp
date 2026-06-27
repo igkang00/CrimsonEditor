@@ -24,6 +24,61 @@
 #include <string>
 #include <new>          // std::nothrow
 
+// Shared with dllmain.cpp — lazy-loaded on first QueryContextMenu,
+// freed in DLL_PROCESS_DETACH.
+HBITMAP g_hMenuBitmap = NULL;
+
+// Render the embedded IDI_CRIMSON icon into a 32-bit top-down DIB so
+// it shows up correctly (with alpha) in Explorer's context menu.
+// Uses the small-icon metric so it visually matches the system menu
+// font on whatever DPI the user is at.
+static HBITMAP CreateMenuBitmap()
+{
+	const int cx = GetSystemMetrics(SM_CXSMICON);
+	const int cy = GetSystemMetrics(SM_CYSMICON);
+
+	HICON hIcon = (HICON)LoadImageW(g_hInstDll, MAKEINTRESOURCEW(IDI_CRIMSON),
+	                                IMAGE_ICON, cx, cy, LR_DEFAULTCOLOR);
+	if (!hIcon) return NULL;
+
+	HDC hdcScreen = GetDC(NULL);
+	HDC hdcMem    = CreateCompatibleDC(hdcScreen);
+
+	BITMAPINFO bi = { 0 };
+	bi.bmiHeader.biSize        = sizeof(bi.bmiHeader);
+	bi.bmiHeader.biWidth       = cx;
+	bi.bmiHeader.biHeight      = -cy;   // top-down
+	bi.bmiHeader.biPlanes      = 1;
+	bi.bmiHeader.biBitCount    = 32;
+	bi.bmiHeader.biCompression = BI_RGB;
+
+	void* pBits = NULL;
+	HBITMAP hBmp = CreateDIBSection(hdcScreen, &bi, DIB_RGB_COLORS, &pBits, NULL, 0);
+	if (hBmp) {
+		HGDIOBJ hOld = SelectObject(hdcMem, hBmp);
+		DrawIconEx(hdcMem, 0, 0, hIcon, cx, cy, 0, NULL, DI_NORMAL);
+		SelectObject(hdcMem, hOld);
+	}
+
+	DeleteDC(hdcMem);
+	ReleaseDC(NULL, hdcScreen);
+	DestroyIcon(hIcon);
+	return hBmp;
+}
+
+static HBITMAP GetCachedMenuBitmap()
+{
+	// One-shot lazy init. Once we've decided whether the icon load
+	// succeeded or failed, we don't retry; both outcomes are sticky
+	// for the life of the DLL. The InterlockedCompareExchange makes
+	// the "first to set the flag" race resolve to a single load.
+	static volatile LONG s_loaded = 0;
+	if (InterlockedCompareExchange(&s_loaded, 1, 0) == 0) {
+		g_hMenuBitmap = CreateMenuBitmap();
+	}
+	return g_hMenuBitmap;
+}
+
 class CCrimsonContextMenu : public IShellExtInit, public IContextMenu
 {
 public:
@@ -90,12 +145,23 @@ public:
 
 		LANGID lang = GetUserDefaultUILanguage();
 		LPCWSTR pszLabel = (PRIMARYLANGID(lang) == LANG_KOREAN)
-			? L"크림슨에디터로 편집(&C)"
-			: L"Edit with &Crimson Editor";
+			? L"크림슨에디터로 편집(&C)..."
+			: L"Edit with &Crimson Editor...";
 
 		if (!InsertMenuW(hMenu, idxMenu, MF_BYPOSITION | MF_STRING,
 		                 idCmdFirst, pszLabel)) {
 			return HRESULT_FROM_WIN32(GetLastError());
+		}
+
+		// Attach the cedt application icon to the menu item. Best-
+		// effort — if bitmap creation failed for any reason (low
+		// memory, theme quirk, ...) we just show the text-only item.
+		HBITMAP hBmp = GetCachedMenuBitmap();
+		if (hBmp) {
+			MENUITEMINFOW mii = { sizeof(mii) };
+			mii.fMask    = MIIM_BITMAP;
+			mii.hbmpItem = hBmp;
+			SetMenuItemInfoW(hMenu, idxMenu, TRUE, &mii);
 		}
 
 		// Tell Explorer we used one command ID (idCmdFirst + 0).
