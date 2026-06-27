@@ -1267,7 +1267,7 @@ BOOL CCedtView::OnDrop(COleDataObject* pDataObject, DROPEFFECT dropEffect, CPoin
 	}
 }
 
-void CCedtView::OnTimer(UINT nIDEvent) 
+void CCedtView::OnTimer(UINT_PTR nIDEvent)
 {
 	switch( nIDEvent ) {
 	case ID_TIMER_AUTO_SCROLL:

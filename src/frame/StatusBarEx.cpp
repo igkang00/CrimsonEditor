@@ -140,7 +140,7 @@ void CStatusBarEx::SetSplashMessage(LPCTSTR lpszMessage, UINT nElapse)
 	Invalidate();
 }
 
-void CStatusBarEx::OnTimer(UINT nIDEvent) 
+void CStatusBarEx::OnTimer(UINT_PTR nIDEvent)
 {
 	switch( nIDEvent ) {
 	case ID_TIMER_SPLASH_MESSAGE:

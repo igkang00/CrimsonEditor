@@ -315,9 +315,9 @@ public:
 
 // Implementation
 public:
-	INT DoModal() { return CDialog::DoModal(); }
-	INT DoModal(INT nCategory) { m_nActiveCategory = nCategory; return CDialog::DoModal(); }
-	INT DoModal(INT nCategory, INT nFontsPannel) { m_nActiveCategory = nCategory; m_nActiveFontsPannel = nFontsPannel; return CDialog::DoModal(); }
+	INT_PTR DoModal() { return CDialog::DoModal(); }
+	INT_PTR DoModal(INT nCategory) { m_nActiveCategory = nCategory; return CDialog::DoModal(); }
+	INT_PTR DoModal(INT nCategory, INT nFontsPannel) { m_nActiveCategory = nCategory; m_nActiveFontsPannel = nFontsPannel; return CDialog::DoModal(); }
 
 protected:
 	CImageList m_lstButtonImage;

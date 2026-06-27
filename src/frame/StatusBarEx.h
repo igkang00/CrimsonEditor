@@ -58,7 +58,7 @@ public:
 	// Generated message map functions
 protected:
 	//{{AFX_MSG(CStatusBarEx)
-	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnPaint();
 	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
 	//}}AFX_MSG
