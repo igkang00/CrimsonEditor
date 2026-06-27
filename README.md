@@ -32,7 +32,7 @@ A freeware text editor for Windows, developed from 1999 to 2005. Features includ
 | MFC | Dynamic (`_AFXDLL` shared DLL) |
 | Character set | `_MBCS` (multi-byte) |
 | External libraries | `imm32.lib`, `htmlhelp.lib` (from the Windows SDK) |
-| Bundled headers | `HtmlHelp.h` ([third_party/htmlhelp/](third_party/htmlhelp/) — the matching x64 `HtmlHelp.Lib` is picked up from the Windows SDK) |
+| Bundled headers | `HtmlHelp.h` ([third_party/htmlhelp/](third_party/htmlhelp/) — header only; the `HtmlHelp.Lib` itself is taken from the Windows SDK) |
 | Precompiled header | [src/include/StdAfx.h](src/include/StdAfx.h) / [src/include/StdAfx.cpp](src/include/StdAfx.cpp) |
 
 ### Build Configurations
@@ -56,7 +56,7 @@ In Visual Studio Installer, on the **Individual components** tab, install the fo
 
 ### Notes
 
-- x64 uses the Windows SDK's `HtmlHelp.Lib` (resolved automatically from the SDK lib path) — the 1999-vintage 32-bit `third_party\htmlhelp\HtmlHelp.lib` is only kept around for reference now.
+- The link-time `HtmlHelp.Lib` comes from the Windows SDK (resolved automatically from the SDK lib path); only the API header `HtmlHelp.h` is still bundled under [third_party/htmlhelp/](third_party/htmlhelp/) because some older SDKs ship it in a sub-folder.
 - Compatibility shims and fixes applied while migrating from VC6 to a modern toolset:
     - `<fstream.h>` / `<strstrea.h>` are absorbed by the [fstream_compat.h](src/include/fstream_compat.h) shim (using-declarations to expose `ofstream` and friends in the global namespace).
     - `ios::nocreate` removed (non-standard — a modern `ifstream` already fails to open if the file is missing).
@@ -337,7 +337,7 @@ The `.cpp`/`.h` files live under [src/](src/), split into domain-specific direct
 | [cedt_kr.rc](cedt_kr.rc) | Korean resources |
 | [cedt_us.rc](cedt_us.rc) | English resources |
 | [res/](res/) | Icons, bitmaps, cursors, manifest, `cedt.rc2` |
-| [third_party/htmlhelp/](third_party/htmlhelp/) | Bundled HTML Help SDK (`HtmlHelp.h`, `HtmlHelp.lib`) |
+| [third_party/htmlhelp/](third_party/htmlhelp/) | Bundled HTML Help SDK header (`HtmlHelp.h` only) |
 
 ---
 
@@ -351,7 +351,7 @@ CrimsonEditor/
 ├── res/                                  # Icons, bitmaps, cursors, manifest, cedt.rc2
 ├── docs/                                 # Long-form design / behavior notes
 ├── third_party/
-│   └── htmlhelp/                         # HtmlHelp.h, HtmlHelp.lib (bundled legacy SDK)
+│   └── htmlhelp/                         # HtmlHelp.h (header only; Lib comes from Windows SDK)
 ├── tests/                                # Google Test project (cedt_tests)
 │   ├── vcpkg.json                        #   gtest dependency declaration
 │   ├── cedt_tests.vcxproj                #   Test executable
