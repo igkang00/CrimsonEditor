@@ -10,6 +10,12 @@
 #define MAX_WORD_LENGTH					255
 #define MAX_WORDS_COUNT					32767
 
+// Alias for buffers that are meant to hold a whole text line. Use this name
+// (not a bare 2048 / 32767) wherever the buffer's purpose is "a single line".
+// Anchored to MAX_STRING_SIZE — the limit the analyzer in cedtDocAnal.cpp
+// enforces on lines (LI_HAVEOVERFLOW above that length).
+#define MAX_LINE_LENGTH					MAX_STRING_SIZE
+
 
 // RANGE TYPE (KEYWORD RANGE)
 #define RT_GLOBAL						0x00

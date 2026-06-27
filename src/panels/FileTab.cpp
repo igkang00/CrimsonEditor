@@ -134,7 +134,7 @@ BOOL CMDIFileTab::OnNeedtextFileTab(UINT id, NMHDR * pNMHDR, LRESULT * pResult)
 	static TCHAR szText[MAX_PATH]; pChild->GetWindowText(szText, MAX_PATH);
 
 	CCedtDoc * pDoc = (CCedtDoc *)pChild->GetActiveDocument();
-	if( ! strlen(szText) ) strcpy(szText, pDoc->GetTitle());
+	if( ! strlen(szText) ) lstrcpyn(szText, pDoc->GetTitle(), MAX_PATH);
 
 	pTTT->lpszText = szText;
 	pTTT->hinst = NULL;

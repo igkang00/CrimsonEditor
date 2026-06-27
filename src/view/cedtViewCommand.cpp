@@ -153,7 +153,7 @@ BOOL CCedtView::AskUserSelectFilePath(LPCTSTR lpszPathName, CString & szSelectPa
 	CFileDialog dlg(TRUE, NULL, lpszPathName, dwFlags, szFilter);
 
 	TCHAR szCurrentDirectory[MAX_PATH]; GetCurrentDirectory( MAX_PATH, szCurrentDirectory );
-	TCHAR szInitialDirectory[MAX_PATH]; strcpy( szInitialDirectory, GetFileDirectory(lpszPathName) );
+	TCHAR szInitialDirectory[MAX_PATH]; lstrcpyn( szInitialDirectory, GetFileDirectory(lpszPathName), MAX_PATH );
 
 	CString szTitle; szTitle.LoadString(IDS_DLG_SELECT_FILE);
 	dlg.m_ofn.lpstrTitle = szTitle; dlg.m_ofn.lpstrInitialDir = szInitialDirectory;
@@ -354,13 +354,15 @@ BOOL CCedtView::ExecuteHtmlHelp(LPCTSTR lpszCommand, LPCTSTR lpszArgument)
 BOOL CCedtView::ExecuteExecutable(LPCTSTR lpszCommand, LPCTSTR lpszArgument, LPCTSTR lpszDirectory, BOOL bCloseOnExit, BOOL bCaptureOutput)
 {
 	TCHAR szCommandLine[2048];
+	const size_t kCmdLineMax = sizeof(szCommandLine) / sizeof(TCHAR);
 	if( ! bCaptureOutput && ! bCloseOnExit ) {
 		CString szLauncher = CCedtApp::m_szInstallDirectory + "\\launch.exe";
 		CString szShortPath = GetShortPathName( lpszCommand );
-		sprintf(szCommandLine, "\"%s\" %s %s", szLauncher, szShortPath, lpszArgument);
+		_snprintf(szCommandLine, kCmdLineMax - 1, "\"%s\" %s %s", (LPCTSTR)szLauncher, (LPCTSTR)szShortPath, lpszArgument);
 	} else {
-		sprintf(szCommandLine, "\"%s\" %s", lpszCommand, lpszArgument);
+		_snprintf(szCommandLine, kCmdLineMax - 1, "\"%s\" %s", lpszCommand, lpszArgument);
 	}
+	szCommandLine[kCmdLineMax - 1] = '\0';   // _snprintf does not null-terminate on overflow
 
 	HANDLE hChildStdinWr, hChildStdinRd;
 	HANDLE hChildStdoutWr, hChildStdoutRd;
@@ -437,18 +439,23 @@ void CCedtView::OnTimerCaptureOutput()
 	BOOL bResult; DWORD dwExitCode = 0;
 	bResult = GetExitCodeProcess( m_hChildProcess, & dwExitCode );
 
+	const DWORD kWriteBufMax = sizeof(szWriteBuffer) / sizeof(TCHAR);
+	const DWORD kReadBufMax  = sizeof(szReadBuffer)  / sizeof(TCHAR);
 	while( dwExitCode == STILL_ACTIVE && m_arrChildInputString.GetSize() ) {
 		CString & szChildInputString = m_arrChildInputString.ElementAt(0);
 		DWORD dwWritten, dwWrite = szChildInputString.GetLength();
+		if( dwWrite > kWriteBufMax - 2 ) dwWrite = kWriteBufMax - 2;   // leave room for '\n' + '\0'
 
-		strcpy( szWriteBuffer, szChildInputString );
+		lstrcpyn( szWriteBuffer, szChildInputString, dwWrite + 1 );    // lstrcpyn writes (count-1) chars + null
 		szWriteBuffer[dwWrite] = '\n'; szWriteBuffer[dwWrite+1] = '\0';
 
 		bResult = WriteFile( m_hChildStdinWrDup, szWriteBuffer, dwWrite+1, & dwWritten, NULL );
 	//	bResult = FlushFileBuffers( m_hChildStdinWrDup ); -- flush will hang the child process
 
 		// copy input string to output buffer for local echo effect
-		if( COutputWindow::m_bLocalEcho ) { strcpy( szReadBuffer + dwSave, szWriteBuffer ); dwSave += dwWrite + 1; }
+		if( COutputWindow::m_bLocalEcho && dwSave + dwWrite + 1 < kReadBufMax ) {
+			strcpy( szReadBuffer + dwSave, szWriteBuffer ); dwSave += dwWrite + 1;
+		}
 
 		INT nArraySize = m_arrChildInputString.GetSize();
 		m_arrChildInputString.RemoveAt( nArraySize - 1 );

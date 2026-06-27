@@ -513,7 +513,7 @@ void CCedtView::OnEditInsertFile()
 	GetCurrentDirectory( MAX_PATH, szCurrentDirectory );
 
 	static TCHAR szInitialDirectory[MAX_PATH] = "";
-	if( ! strlen( szInitialDirectory ) ) strcpy( szInitialDirectory, szCurrentDirectory );
+	if( ! strlen( szInitialDirectory ) ) lstrcpyn( szInitialDirectory, szCurrentDirectory, MAX_PATH );
 
 	CString szTitle; szTitle.LoadString(IDS_DLG_INSERT_FILE); 
 	dlg.m_ofn.lpstrTitle = szTitle; dlg.m_ofn.lpstrInitialDir = szInitialDirectory;

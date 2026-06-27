@@ -13,8 +13,8 @@ void CCedtApp::OnProjectNew()
 	TCHAR szCurrentDirectory[MAX_PATH];
 	GetCurrentDirectory( MAX_PATH, szCurrentDirectory );
 
-	TCHAR szInitialDirectory[MAX_PATH]; strcpy( szInitialDirectory, m_szProjectInitialDirectory );
-	if( ! strlen( szInitialDirectory ) ) strcpy( szInitialDirectory, szCurrentDirectory );
+	TCHAR szInitialDirectory[MAX_PATH]; lstrcpyn( szInitialDirectory, m_szProjectInitialDirectory, MAX_PATH );
+	if( ! strlen( szInitialDirectory ) ) lstrcpyn( szInitialDirectory, szCurrentDirectory, MAX_PATH );
 
 	CString szTitle; szTitle.LoadString(IDS_DLG_NEW_PROJECT);
 	dlg.m_ofn.lpstrTitle = szTitle; dlg.m_ofn.lpstrInitialDir = szInitialDirectory;
@@ -53,8 +53,8 @@ void CCedtApp::OnProjectOpen()
 	TCHAR szCurrentDirectory[MAX_PATH];
 	GetCurrentDirectory( MAX_PATH, szCurrentDirectory );
 
-	TCHAR szInitialDirectory[MAX_PATH]; strcpy( szInitialDirectory, m_szProjectInitialDirectory );
-	if( ! strlen( szInitialDirectory ) ) strcpy( szInitialDirectory, szCurrentDirectory );
+	TCHAR szInitialDirectory[MAX_PATH]; lstrcpyn( szInitialDirectory, m_szProjectInitialDirectory, MAX_PATH );
+	if( ! strlen( szInitialDirectory ) ) lstrcpyn( szInitialDirectory, szCurrentDirectory, MAX_PATH );
 
 	CString szTitle; szTitle.LoadString(IDS_DLG_OPEN_PROJECT);
 	dlg.m_ofn.lpstrTitle = szTitle; dlg.m_ofn.lpstrInitialDir = szInitialDirectory;

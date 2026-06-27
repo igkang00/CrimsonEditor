@@ -723,9 +723,9 @@ HTREEITEM CFileWindow::InsertProjectTreeItem(HTREEITEM hParent, LPCTSTR lpszText
 	HTREEITEM hItem = m_treProjectTree.InsertItem( lpszText, nType, nType, hParent );
 
 	LPPROJECTITEMINFO lpInfo = new PROJECTITEMINFO;
-	lpInfo->hItem = hItem;		strcpy(lpInfo->szText, lpszText);
+	lpInfo->hItem = hItem;		lstrcpyn(lpInfo->szText,     lpszText,     MAX_PATH);
 	lpInfo->nItemType = nType;	lpInfo->nFtpAccount = nAccount;
-	strcpy(lpInfo->szPathName, lpszPathName);
+	lstrcpyn(lpInfo->szPathName, lpszPathName, MAX_PATH);
 
 	BOOL bReturn = m_treProjectTree.SetItemData( hItem, (DWORD)lpInfo );
 

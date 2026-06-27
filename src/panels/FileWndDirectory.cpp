@@ -415,7 +415,7 @@ BOOL CFileWindow::RemakeDirectoryTreeRoot(LPCTSTR lpszDriveName)
 
 BOOL CFileWindow::ExpandDirectoryTreePath(LPCTSTR lpszPathName)
 {
-	TCHAR szPathName[MAX_PATH]; strcpy( szPathName, lpszPathName );
+	TCHAR szPathName[MAX_PATH]; lstrcpyn( szPathName, lpszPathName, MAX_PATH - 1 );  // leave 1 byte for trailing '\\'
 	if( szPathName[strlen(szPathName)-1] != '\\' ) strcat( szPathName, "\\" );
 
 	HTREEITEM hItem = m_treDirectoryTree.GetRootItem();
@@ -558,8 +558,8 @@ HTREEITEM CFileWindow::InsertDirectoryTreeChildren(HTREEITEM hParent, LPCTSTR lp
 
 HTREEITEM CFileWindow::InsertDirectoryTreeRoot(LPCTSTR lpszPath)
 {
-	TCHAR szTemp[MAX_PATH]; strcpy(szTemp, lpszPath); INT nLen = strlen(lpszPath);
-	if( szTemp[nLen-1] != '\\' ) { szTemp[nLen] = '\\'; nLen++; szTemp[nLen] = '\0'; }
+	TCHAR szTemp[MAX_PATH]; lstrcpyn(szTemp, lpszPath, MAX_PATH - 1); INT nLen = strlen(szTemp);  // leave 1 byte for trailing '\\'
+	if( nLen > 0 && szTemp[nLen-1] != '\\' ) { szTemp[nLen] = '\\'; nLen++; szTemp[nLen] = '\0'; }
 
 	SHFILEINFO shFinfo; // INT iIcon, iIconSel;
 	if( ! SHGetFileInfo(szTemp, 0, &shFinfo, sizeof(shFinfo), SHGFI_DISPLAYNAME | SHGFI_SYSICONINDEX) ) return NULL;
@@ -570,8 +570,8 @@ HTREEITEM CFileWindow::InsertDirectoryTreeRoot(LPCTSTR lpszPath)
 
 HTREEITEM CFileWindow::InsertDirectoryTreeItem(HTREEITEM hParent, LPCTSTR lpszPath)
 {
-	TCHAR szTemp[MAX_PATH]; strcpy(szTemp, lpszPath); INT nLen = strlen(lpszPath);
-	if( szTemp[nLen-1] != '\\' ) { szTemp[nLen] = '\\'; nLen++; szTemp[nLen] = '\0'; }
+	TCHAR szTemp[MAX_PATH]; lstrcpyn(szTemp, lpszPath, MAX_PATH - 1); INT nLen = strlen(szTemp);  // leave 1 byte for trailing '\\'
+	if( nLen > 0 && szTemp[nLen-1] != '\\' ) { szTemp[nLen] = '\\'; nLen++; szTemp[nLen] = '\0'; }
 
 	SHFILEINFO shFinfo; // INT iIcon, iIconSel;
 	if( ! SHGetFileInfo(szTemp, 0, &shFinfo, sizeof(shFinfo), SHGFI_SYSICONINDEX) ) return NULL;
@@ -981,8 +981,10 @@ BOOL CFileWindow::ShowPropDirectoryItem(LPCTSTR lpszPathName)
 
 BOOL CFileWindow::MoveToDirectoryItem(LPCTSTR lpszPathName, LPCTSTR lpszDestination)
 {
-	TCHAR szFrom[MAX_PATH]; memset(szFrom, 0x00, sizeof(szFrom)); strcpy(szFrom, lpszPathName);
-	TCHAR szDest[MAX_PATH]; memset(szDest, 0x00, sizeof(szDest)); strcpy(szDest, lpszDestination);
+	// SHFileOperation requires a double-null-terminated buffer, which memset(0)
+	// pre-arranges; lstrcpyn keeps the actual copy bounded.
+	TCHAR szFrom[MAX_PATH]; memset(szFrom, 0x00, sizeof(szFrom)); lstrcpyn(szFrom, lpszPathName,    MAX_PATH);
+	TCHAR szDest[MAX_PATH]; memset(szDest, 0x00, sizeof(szDest)); lstrcpyn(szDest, lpszDestination, MAX_PATH);
 	CWnd * pWnd = AfxGetMainWnd();
 
 	SHFILEOPSTRUCT fo; memset( & fo, 0x00, sizeof(SHFILEOPSTRUCT) );
@@ -996,8 +998,8 @@ BOOL CFileWindow::MoveToDirectoryItem(LPCTSTR lpszPathName, LPCTSTR lpszDestinat
 
 BOOL CFileWindow::CopyToDirectoryItem(LPCTSTR lpszPathName, LPCTSTR lpszDestination)
 {
-	TCHAR szFrom[MAX_PATH]; memset(szFrom, 0x00, sizeof(szFrom)); strcpy(szFrom, lpszPathName);
-	TCHAR szDest[MAX_PATH]; memset(szDest, 0x00, sizeof(szDest)); strcpy(szDest, lpszDestination);
+	TCHAR szFrom[MAX_PATH]; memset(szFrom, 0x00, sizeof(szFrom)); lstrcpyn(szFrom, lpszPathName,    MAX_PATH);
+	TCHAR szDest[MAX_PATH]; memset(szDest, 0x00, sizeof(szDest)); lstrcpyn(szDest, lpszDestination, MAX_PATH);
 	CWnd * pWnd = AfxGetMainWnd();
 
 	SHFILEOPSTRUCT fo; memset( & fo, 0x00, sizeof(SHFILEOPSTRUCT) );
@@ -1011,7 +1013,7 @@ BOOL CFileWindow::CopyToDirectoryItem(LPCTSTR lpszPathName, LPCTSTR lpszDestinat
 
 BOOL CFileWindow::DeleteDirectoryItem(LPCTSTR lpszPathName)
 {
-	TCHAR szFrom[MAX_PATH]; memset(szFrom, 0x00, sizeof(szFrom)); strcpy(szFrom, lpszPathName);
+	TCHAR szFrom[MAX_PATH]; memset(szFrom, 0x00, sizeof(szFrom)); lstrcpyn(szFrom, lpszPathName, MAX_PATH);
 	CWnd * pWnd = AfxGetMainWnd();
 
 	SHFILEOPSTRUCT fo; memset( & fo, 0x00, sizeof(SHFILEOPSTRUCT) );
@@ -1024,8 +1026,8 @@ BOOL CFileWindow::DeleteDirectoryItem(LPCTSTR lpszPathName)
 
 BOOL CFileWindow::RenameDirectoryItem(LPCTSTR lpszPathName, LPCTSTR lpszNewName)
 {
-	TCHAR szFrom[MAX_PATH]; memset(szFrom, 0x00, sizeof(szFrom)); strcpy(szFrom, lpszPathName);
-	TCHAR szDest[MAX_PATH]; memset(szDest, 0x00, sizeof(szDest)); strcpy(szDest, GetFileDirectory(szFrom) + "\\" + lpszNewName);
+	TCHAR szFrom[MAX_PATH]; memset(szFrom, 0x00, sizeof(szFrom)); lstrcpyn(szFrom, lpszPathName, MAX_PATH);
+	TCHAR szDest[MAX_PATH]; memset(szDest, 0x00, sizeof(szDest)); lstrcpyn(szDest, GetFileDirectory(szFrom) + "\\" + lpszNewName, MAX_PATH);
 	CWnd * pWnd = AfxGetMainWnd();
 
 	SHFILEOPSTRUCT fo; memset( & fo, 0x00, sizeof(SHFILEOPSTRUCT) );

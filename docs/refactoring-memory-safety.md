@@ -93,7 +93,7 @@ if( szFilter[strlen(szFilter)-1] != ';' ) strcat( szFilter, ";" );
 
 **Applied.** Replaced the fixed-size stack buffer with a heap allocation sized to `lstrlen(lpszFilter) + 2`. The function now handles any filter length and cleans up via `delete[]` on the single exit. The same pattern would apply to `PathName.cpp:7-8` if needed in the future, but that buffer is 4096 bytes which is unlikely to overrun in practice.
 
-#### M2. `cedtAppProject.cpp` — MAX_PATH unguarded copy of `CString`
+#### M2. ~~`cedtAppProject.cpp` — MAX_PATH unguarded copy of `CString`~~ — fixed
 
 [src/app/cedtAppProject.cpp:16](../src/app/cedtAppProject.cpp#L16) and `:56`
 
@@ -104,17 +104,28 @@ if( ! strlen( szInitialDirectory ) ) strcpy( szInitialDirectory, szCurrentDirect
 
 Both sources are `CString` values whose length is not checked. Windows extended paths (`\\?\…`) can be much longer than `MAX_PATH` (260). Fix: keep them as `CString` throughout, or use `strncpy` with `MAX_PATH - 1` and explicit null termination.
 
-#### M3. `cedtViewCommand.cpp` — external-process command line
+**Applied.** Switched both call sites to `lstrcpyn(dst, src, MAX_PATH)`. Truncation rather than overrun on absurdly long paths — acceptable here because the value goes into the initial-directory hint of a file dialog, where a truncated path just falls back to a different starting folder rather than corrupting state.
+
+#### M3. ~~`cedtViewCommand.cpp` — external-process command line~~ — fixed
 
 Five sites, [src/view/cedtViewCommand.cpp:156](../src/view/cedtViewCommand.cpp#L156), `:360`, `:362`, `:444`, `:451`. `szCommandLine[2048]` and read/write buffers for child-process I/O. The command line gets built from `lpszCommand + " " + lpszArgument` with `sprintf`; the user can configure arbitrarily long tool arguments.
 
 Fix: build the command line in a `CString` and pass its `LPCTSTR` to `CreateProcess`.
 
-#### M4. `FileWndDirectory.cpp` — MAX_PATH unguarded across file ops
+**Applied.**
+- `:156` — `lstrcpyn` for the initial-directory copy (same pattern as M2).
+- `:360`, `:362` — `sprintf` replaced with `_snprintf(buf, kCmdLineMax - 1, ...)` plus an explicit null-terminator at the end (MSVC `_snprintf` does not null-terminate on overflow).
+- `:444-451` — child-process write/read 4 KB buffers. Length capped to `kWriteBufMax - 2` before `lstrcpyn` (leaving room for the `'\n' '\0'` postfix), and the local-echo copy on `:451` only runs when `dwSave + dwWrite + 1 < kReadBufMax`. Truncation can now occur on multi-KB single-line input to a child process — acceptable; the alternative was a guaranteed overrun.
+
+#### M4. ~~`FileWndDirectory.cpp` — MAX_PATH unguarded across file ops~~ — fixed
 
 About 7 sites between [src/panels/FileWndDirectory.cpp:418](../src/panels/FileWndDirectory.cpp#L418) and `:1028` — every shell-like file op (copy, move, rename, delete) builds a `szFrom[MAX_PATH]` / `szDest[MAX_PATH]` with `strcpy`. Same root cause as M2.
 
-#### M5. `cedtViewHndrEdit.cpp:516` — function-scope `static` MAX_PATH buffer
+**Applied.** Two sub-patterns:
+- `:418`, `:561`, `:573` — copies that are followed by an appended `'\\'`. Used `lstrcpyn(..., MAX_PATH - 1)` to leave one byte of head-room for the append, and added a `nLen > 0` guard on the in-place `'\\'` write.
+- `:984`–`:1028` — `SHFileOperation` buffers that are deliberately pre-zeroed with `memset` to satisfy the API's double-null-terminated requirement. Switched the copy to `lstrcpyn(..., MAX_PATH)`; the `memset` is still doing the double-null work.
+
+#### M5. ~~`cedtViewHndrEdit.cpp:516` — function-scope `static` MAX_PATH buffer~~ — fixed
 
 ```cpp
 static TCHAR szInitialDirectory[MAX_PATH] = "";
@@ -122,6 +133,8 @@ if( ! strlen( szInitialDirectory ) ) strcpy( szInitialDirectory, szCurrentDirect
 ```
 
 Two problems: no length guard on the strcpy, and `static` means there's a single shared instance — fine in the current single-threaded MFC main loop, but a footgun if anything ever drives this off the main thread.
+
+**Applied.** Length problem fixed with `lstrcpyn(szInitialDirectory, szCurrentDirectory, MAX_PATH)`. The `static`-storage / thread-safety concern is left untouched (the function is only ever reached from the main UI thread); it remains noted under L2.
 
 #### M6. ~~`FtpClnt.cpp` — `delete` without `NULL` assignment in fail handlers~~ — reanalysed, not a real bug
 
@@ -158,13 +171,15 @@ Fix: define the copy constructor explicitly. Either delete it (`= delete`) to ma
 
 Two occurrences (`cedtElement.cpp` `CDictionary::LookupTable`, `cedtView.cpp`). Safe under the current single-threaded UI assumption, but should be flagged any time multithreading enters this code (e.g. background syntax analysis).
 
-#### L3. Sizes to double-check (currently unrated)
+#### L3. ~~Sizes to double-check (currently unrated)~~ — checked
 
-These appeared on the broad sweep but need a quick local context check before assigning severity:
+Checked one by one:
 
-- [cedtElement.cpp:289-323](../src/core/cedtElement.cpp#L289) — `sprintf(szBuffer, "I:%s"/"C:%s", szWord)`. `szBuffer` size and the relation to `szWord` length need verification.
-- [FileWndProject.cpp:726-728](../src/panels/FileWndProject.cpp#L726) — `strcpy(lpInfo->szText, lpszText)` / `strcpy(lpInfo->szPathName, lpszPathName)`. Size of the `PROJECTITEMINFO` struct members vs caller-supplied data.
-- [FileTab.cpp:137](../src/panels/FileTab.cpp#L137) — `strcpy(szText, pDoc->GetTitle())`. ListView callback buffer, size depends on caller.
+- [cedtElement.cpp:289-323](../src/core/cedtElement.cpp#L289) — `sprintf(szBuffer, "I:%s"/"C:%s", szWord)`. `szBuffer` is declared `[MAX_WORD_LENGTH+3]` (= 258) and the caller asserts `siLength > MAX_WORD_LENGTH` then returns FALSE. The 2-byte prefix `"I:"`/`"C:"` + 255 + null fits exactly. **Safe as written.** A separate concern is the `sin >> szWord` operator>> in `CKeywords::FileLoad` which does not bound the read; that's a different bug class (operator>>) and is captured below.
+- [FileWndProject.cpp:726-728](../src/panels/FileWndProject.cpp#L726) — `PROJECTITEMINFO::szText` / `szPathName` are both `TCHAR[MAX_PATH]`, same pattern as M2/M4. **Fixed alongside M4** with `lstrcpyn(..., MAX_PATH)`.
+- [FileTab.cpp:137](../src/panels/FileTab.cpp#L137) — destination `szText[MAX_PATH]`, source `pDoc->GetTitle()` (a `CString`, unbounded). **Fixed** with `lstrcpyn(szText, pDoc->GetTitle(), MAX_PATH)`.
+
+New finding surfaced during L3: `CKeywords::FileLoad` uses `sin >> szWord` without an `setw` width — a long word in a keyword file would overrun. Worth a follow-up but lives outside the strcpy/sprintf family this review focused on.
 
 #### L4. `memcpy` of POD structs
 
@@ -174,18 +189,27 @@ These appeared on the broad sweep but need a quick local context check before as
 
 ## 4. Status
 
-The first round (H1, M1, M6 review, M7) has been applied:
+All H/M items and L3 are applied. The cross-cutting §5 macro is partially applied (the macro is defined; old literal usages were left in place for the reasons noted in §5).
+
+Applied:
 
 - **H1** — `ActionEvaluateLine` no longer copies into a 2048-byte stack buffer.
 - **M1** — `MatchFileFilter` switched to a heap buffer sized to the input length.
-- **M6** — reanalysed and resolved with no code change (the original write-up misread the function boundary).
-- **M7** — `CAnalyzedString` / `CFormatedString` copy constructors explicitly `= delete`d.
+- **M2** — `cedtAppProject.cpp` initial-directory copies use `lstrcpyn(MAX_PATH)`.
+- **M3** — `cedtViewCommand.cpp` external-process cmdline uses `_snprintf` + explicit null-terminate; child-process I/O buffers length-capped.
+- **M4** — `FileWndDirectory.cpp` all 7 file-op buffers use bounded copies (one variant for paths followed by `'\\'`, another for `SHFileOperation` double-null buffers).
+- **M5** — `cedtViewHndrEdit.cpp` insert-file initial-directory uses `lstrcpyn`.
+- **M6** — reanalysed and resolved with no code change.
+- **M7** — `CAnalyzedString` / `CFormatedString` copy constructors `= delete`d.
+- **L3** — sized buffers triaged: one safe-as-written, two fixed (FileTab.cpp:137, FileWndProject.cpp:726-728).
+- **§5** — `MAX_LINE_LENGTH` macro added; literal-sweep deferred.
 
-What's still open:
+Still open:
 
-- **M2 / M3 / M4 / M5** — the path / cmdline / static-buffer family (15+ spots in `cedtAppProject.cpp`, `cedtViewCommand.cpp`, `FileWndDirectory.cpp`, `cedtViewHndrEdit.cpp`). Same pattern in every site, so worth a one-shot pass with an agreed convention (e.g. `CString` end-to-end, or bounded copy with explicit length check).
-- **L1 / L2 / L3 / L4** — structural / awareness items. Tackle when nearby refactors bring you into the area.
-- **§5 magic-number 2048** — introduce a `MAX_LINE_LENGTH = MAX_STRING_SIZE` macro and adopt it where the buffer is actually meant to hold a whole line. Independent low-risk grooming.
+- **L1** — `RemoteFile.cpp` raw `delete` pattern, candidate for `unique_ptr` + custom deleter. Larger refactor, not urgent.
+- **L2** — function-scope `static` buffers; safe under current single-threaded UI assumption.
+- **L4** — POD-struct `memcpy` sites; one-pass sanity check welcome but no smoking gun.
+- **Follow-up from L3** — `CKeywords::FileLoad` does `sin >> szWord` without a width — a long word in a keyword file would overrun. Outside the strcpy/sprintf family but worth a follow-up.
 
 ---
 
@@ -205,6 +229,8 @@ Suggested grooming (low priority, but easy to introduce alongside the fixes abov
 - Leave the genuinely short-string usages as their own named constants (`MAX_VERSION_HEADER`, `MAX_EVAL_TOKEN`, etc.) — or `CString` where appropriate.
 
 Even partial application makes the next "is this buffer big enough?" question answerable from the macro alone.
+
+**Partially applied.** Added `#define MAX_LINE_LENGTH MAX_STRING_SIZE` to [src/core/cedtElement.h](../src/core/cedtElement.h) so future "holds-a-whole-line" buffers have a named constant to reach for. Existing `2048` / `32767` literal usages were left untouched — most are short-string buffers (config headers, evaluator tokens) that are not line buffers and would actually become misleading if renamed. A follow-up sweep can adopt the new name in any new code or any place a "whole-line" buffer is genuinely needed.
 
 ---
 
