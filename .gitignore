@@ -8,8 +8,9 @@
 # Backups
 *.bak
 
-# Build output (cedt.vcxproj + cedt_tests.vcxproj OutDir/IntDir)
-build/
+# Build output — each .vcxproj writes to its own $(ProjectDir)build/<Configuration>/
+# (so the main project lands at /build/ and tests/cedt_tests.vcxproj at /tests/build/)
+**/build/
 
 # Modern Visual Studio
 .vs/
