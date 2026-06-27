@@ -92,7 +92,7 @@ INT CCedtApp::FindInFilesInFolder(LPCTSTR lpszFindString, LPCTSTR lpszFileType, 
 {
 	CFileFind find; BOOL bFound; INT nFound = 0;
 
-	CString szFolder = lpszFolder; INT nLen = strlen(lpszFolder);
+	CString szFolder = lpszFolder; INT nLen = (INT)strlen(lpszFolder);
 	if( szFolder[nLen-1] != '\\' ) szFolder += "\\";
 
 	bFound = find.FindFile(szFolder + "*.*");

@@ -137,7 +137,7 @@ void CFindInFilesDialog::OnDestroy()
 	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, "RegularExpression", m_bRegularExpression );
 	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, "LookInSubfolders", m_bLookInSubfolders );
 
-	INT nCount = m_lstFindString.GetCount();
+	INT nCount = (INT)m_lstFindString.GetCount();
 	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, "FindStringCount", nCount );
 
 	POSITION pos = m_lstFindString.GetHeadPosition();
@@ -150,7 +150,7 @@ void CFindInFilesDialog::OnDestroy()
 	// save last used file type
 	pApp->WriteProfileString( REGKEY_SEARCH_DIALOG, "FIF_FileType", m_szFileType );
 
-	INT nCoun3 = m_lstFolder.GetCount();
+	INT nCoun3 = (INT)m_lstFolder.GetCount();
 	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, "FIF_FolderCount", nCoun3 );
 
 	POSITION po3 = m_lstFolder.GetHeadPosition();
@@ -276,7 +276,7 @@ BOOL CFindInFilesDialog::InitFileTypeList(LPCTSTR lpszComposedFilter)
 	ParseFileFilter(arrFilterDescription, arrFilterExtensions, lpszComposedFilter);
 
 	m_lstFileType.RemoveAll();
-	INT nCount = arrFilterExtensions.GetSize();
+	INT nCount = (INT)arrFilterExtensions.GetSize();
 
 	for( INT i = 0; i < nCount; i++ ) {
 		m_lstFileType.AddTail( arrFilterExtensions[i] );

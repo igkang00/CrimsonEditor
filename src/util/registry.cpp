@@ -26,7 +26,7 @@ BOOL SetRegKeyValue(HKEY hRoot, LPCTSTR lpszRegPath, LPCTSTR lpszValName, LPCTST
 	DWORD dwType, dwDisposition; TCHAR szBuf[MAX_PATH]; HKEY hKey;
 	dwType = REG_SZ; szBuf[0] = '\0';
 	if( RegCreateKeyEx(hRoot, lpszRegPath, 0, szBuf, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, & hKey, & dwDisposition) != ERROR_SUCCESS ) return FALSE;
-	if( RegSetValueEx(hKey, lpszValName, 0, dwType, (const BYTE *)lpszValue, strlen(lpszValue)+1) != ERROR_SUCCESS ) return FALSE;
+	if( RegSetValueEx(hKey, lpszValName, 0, dwType, (const BYTE *)lpszValue, (DWORD)(strlen(lpszValue)+1)) != ERROR_SUCCESS ) return FALSE;
 	if( RegCloseKey(hKey) != ERROR_SUCCESS ) return FALSE;
 	return TRUE;
 }

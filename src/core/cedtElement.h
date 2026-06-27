@@ -287,7 +287,7 @@ public:
 	void ResetContents() { RemoveAll(); }
 	BOOL FileLoad(LPCTSTR lpszPathName, BOOL bCaseSensitive[]);
 
-	BOOL LookupTable(UCHAR ucType[], UCHAR & ucRange, LPCTSTR lpszWord, SHORT siLength);
+	BOOL LookupTable(UCHAR ucType[], UCHAR & ucRange, LPCTSTR lpszWord, INT_PTR siLength);
 };
 
 
@@ -301,7 +301,7 @@ public:
 	void ResetContents() { RemoveAll(); }
 	BOOL FileLoad(LPCTSTR lpszPathName, CALLBACK_FUNCTION fcnCallback = NULL);
 
-	BOOL LookupTable(LPCTSTR lpszWord, SHORT siLength);
+	BOOL LookupTable(LPCTSTR lpszWord, INT_PTR siLength);
 	BOOL AddWord(LPCTSTR lpszWord);
 };
 

@@ -307,10 +307,11 @@ BOOL CKeywords::FileLoad(LPCTSTR lpszPathName, BOOL bCaseSensitive[])
 	return TRUE;
 }
 
-BOOL CKeywords::LookupTable(UCHAR ucType[], UCHAR & ucRange, LPCTSTR lpszWord, SHORT siLength)
+BOOL CKeywords::LookupTable(UCHAR ucType[], UCHAR & ucRange, LPCTSTR lpszWord, INT_PTR siLengthPtr)
 {
 	static TCHAR szWord[MAX_WORD_LENGTH+1], szBuffer[MAX_WORD_LENGTH+3];
-	if( siLength > MAX_WORD_LENGTH ) return FALSE;
+	if( siLengthPtr > MAX_WORD_LENGTH ) return FALSE;
+	SHORT siLength = (SHORT)siLengthPtr;
 
 	BOOL bFoundC, bFoundI; DWORD dwValue; 
 	UCHAR ucTypeC[4], ucTypeI[4];
@@ -359,10 +360,11 @@ BOOL CDictionary::FileLoad(LPCTSTR lpszPathName, CALLBACK_FUNCTION fcnCallback)
 	return TRUE;
 }
 
-BOOL CDictionary::LookupTable(LPCTSTR lpszWord, SHORT siLength)
+BOOL CDictionary::LookupTable(LPCTSTR lpszWord, INT_PTR siLengthPtr)
 {
 	static TCHAR szBuffer[MAX_WORD_LENGTH+1];
-	if( siLength > MAX_WORD_LENGTH ) return FALSE;
+	if( siLengthPtr > MAX_WORD_LENGTH ) return FALSE;
+	SHORT siLength = (SHORT)siLengthPtr;
 
 	strncpy(szBuffer, lpszWord, siLength); szBuffer[siLength] = '\0';
 	_strlwr(szBuffer);

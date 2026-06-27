@@ -166,7 +166,7 @@ void CCedtView::ActionInsertString(LPCTSTR lpszString)
 	CFormatedString & rLine = GetLineFromPosY( m_nCaretPosY );
 	INT nIdxX = GetIdxXFromPosX( rLine, m_nCaretPosX, ! m_bColumnMode );
 
-	INT nSize = strlen( lpszString );
+	INT nSize = (INT)strlen( lpszString );
 
 	CAnalyzedString & rString = GetLineFromIdxY( nIdxY );
 	INT nLstX = GetLastIdxX( rString );

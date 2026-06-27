@@ -43,7 +43,7 @@ void CCedtView::ActionCompositionCompose(LPCTSTR lpszString)
 		RestoreCurrentCompositionString( nIdxY );
 	}
 
-	INT nSize = strlen( lpszString );
+	INT nSize = (INT)strlen( lpszString );
 	INT nAncX = nIdxX + nSize;
 
 	CAnalyzedString & rString = GetLineFromIdxY( nIdxY );
@@ -95,7 +95,7 @@ void CCedtView::ActionCompositionResult(LPCTSTR lpszString)
 		EmptySavedCompositionString();
 	}
 
-	INT nSize = strlen( lpszString );
+	INT nSize = (INT)strlen( lpszString );
 
 	CAnalyzedString & rString = GetLineFromIdxY( nIdxY );
 	INT nLstX = GetLastIdxX( rString );

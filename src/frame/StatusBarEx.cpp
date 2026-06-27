@@ -251,7 +251,7 @@ void CStatusBarEx::DrawPaneBorder(CDC * pDC, CRect rect)
 
 void CStatusBarEx::DrawPaneText(CDC * pDC, CRect rect, LPCTSTR lpszPaneText, COLORREF crTextColor, BOOL bAlignCenter)
 {
-	INT nLength = strlen(lpszPaneText);
+	INT nLength = (INT)strlen(lpszPaneText);
 	CSize size = pDC->GetTextExtent(lpszPaneText, nLength);
 
 	INT nPosX = rect.left + (rect.Width() - size.cx) / 2;

@@ -197,9 +197,9 @@ INT CCedtDoc::FastReleaseCommentLine(CAnalyzedString & rLine, INT nIdxY)
 
 	if( rLine.GetLength() ) {
 		CString szString = LCS; szString += " ";
-		if( ! strnicmp(rLine, szString, lenLCS+1) ) {
+		if( ! _strnicmp(rLine, szString, lenLCS+1) ) {
 			FastDeleteString(rLine, 0, nIdxY, lenLCS+1); return lenLCS+1;
-		} else if( ! strnicmp(rLine, LCS, lenLCS) ) {
+		} else if( ! _strnicmp(rLine, LCS, lenLCS) ) {
 			FastDeleteString(rLine, 0, nIdxY, lenLCS); return lenLCS;
 		} else return 0;
 	} else return 0;

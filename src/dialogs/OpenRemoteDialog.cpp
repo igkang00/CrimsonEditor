@@ -111,7 +111,7 @@ void COpenRemoteDialog::InitFileFilters()
 	m_cmbFileType.ResetContent();
 	ParseFileFilter(m_arrFilterDescription, m_arrFilterExtensions, m_szFileFilter);
 
-	INT nSize = m_arrFilterDescription.GetSize();
+	INT nSize = (INT)m_arrFilterDescription.GetSize();
 	for( INT i = 0; i < nSize; i++ ) m_cmbFileType.InsertString( i, m_arrFilterDescription.GetAt(i) );
 
 	m_cmbFileType.SetCurSel( nFilter );
@@ -185,7 +185,7 @@ BOOL COpenRemoteDialog::RefreshFileList()
 		m_btnParentDirectory.EnableWindow( FALSE );
 	}
 
-	arrFileInfo.Sort(TRUE); nSize = arrFileInfo.GetSize();
+	arrFileInfo.Sort(TRUE); nSize = (INT)arrFileInfo.GetSize();
 	for( i = 0; i < nSize; i++ ) {
 		CString szFileInfo = arrFileInfo[i];
 		INT nFound = szFileInfo.Find('/', 2);

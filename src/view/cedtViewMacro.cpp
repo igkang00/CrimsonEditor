@@ -14,7 +14,7 @@ BOOL CCedtView::RefreshMacroBufferFilePathForMenu()
 	BOOL bFound = FindAllFilePath(arrPathName, szPathName);
 	arrPathName.QuickSort();
 
-	INT size = arrPathName.GetSize(); if( size > 8 ) size = 8;
+	INT size = (INT)arrPathName.GetSize(); if( size > 8 ) size = 8;
 	for( INT i = 0; i < size; i++ ) m_szMacroBufferFilePath[i] = arrPathName[i];
 
 	return TRUE;

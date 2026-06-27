@@ -67,7 +67,7 @@ void CCedtApp::OnFileOpenRemote()
 		dlg.SetFtpAccounts( MAX_FTP_ACCOUNT, m_clsFtpAccounts );
 		dlg.SetCurrentFtpAccount( nFtpAccount );
 		dlg.SetCurrentFilterIndex( GetFilterIndexDialog() );
-		INT nResponse = dlg.DoModal();
+		INT nResponse = (INT)dlg.DoModal();
 
 		dlg.GetFtpAccounts( MAX_FTP_ACCOUNT, m_clsFtpAccounts );
 		SaveFtpAccountInfo(m_szAppDataDirectory + "\\cedt.ftp");
@@ -243,7 +243,7 @@ BOOL CCedtApp::PromptSaveRemoteFileName(INT & nFtpAccount, CString & szPathName)
 	dlg.SetFtpAccounts( MAX_FTP_ACCOUNT, m_clsFtpAccounts );
 	dlg.SetCurrentFtpAccount( nFtpAccount );
 	dlg.SetCurrentFilterIndex( GetFilterIndexDialog() );
-	INT nResponse = dlg.DoModal();
+	INT nResponse = (INT)dlg.DoModal();
 
 	dlg.GetFtpAccounts( MAX_FTP_ACCOUNT, m_clsFtpAccounts );
 	SaveFtpAccountInfo(m_szAppDataDirectory + "\\cedt.ftp");

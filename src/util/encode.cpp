@@ -78,7 +78,7 @@ static char _decode_table[] = {
 const char * map_encode(const char * dat)
 {
     static char buf[ENCODE_BUFFER_SIZE];
-    register char * cp = & buf[0];
+    char * cp = & buf[0];
 
     if (dat != (const char *) 0)
         while (* dat && cp < & buf[ENCODE_BUFFER_SIZE-1])
@@ -92,7 +92,7 @@ const char * map_encode(const char * dat)
 const char * map_decode(const char * dat)
 {
     static char buf[ENCODE_BUFFER_SIZE];
-    register char * cp = & buf[0];
+    char * cp = & buf[0];
 
     if (dat != (const char *) 0)
         while (* dat && cp < & buf[ENCODE_BUFFER_SIZE-1])

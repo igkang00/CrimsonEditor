@@ -72,7 +72,7 @@ void CCedtDoc::InsertBlock(INT nBegX, INT nBegY, INT & nEndX, INT & nEndY, CMemT
 	CAnalyzedString & rLineEnd = m_clsAnalyzedText.GetAt(pos);
 	rLineEnd += szSplit;
 
-	nEndY = nBegY + rBlock.GetCount() - 1;
+	nEndY = nBegY + (INT)rBlock.GetCount() - 1;
 	nEndX = rLineEnd.GetLength() - szSplit.GetLength();
 
 	RecordInsertBlock(nBegX, nBegY, nEndX, nEndY);
@@ -153,7 +153,7 @@ void CCedtDoc::FastDeleteChar(CAnalyzedString & rLine, INT nIdxX, INT nIdxY)
 
 void CCedtDoc::FastInsertString(CAnalyzedString & rLine, INT nIdxX, INT nIdxY, LPCTSTR lpszString)
 {
-	INT nLength = strlen(lpszString);
+	INT nLength = (INT)strlen(lpszString);
 	rLine.Insert(nIdxX, lpszString);
 
 	RecordInsertString(nIdxX, nIdxY, nLength);

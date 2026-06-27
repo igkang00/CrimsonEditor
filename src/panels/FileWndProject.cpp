@@ -897,7 +897,7 @@ void CFileWindow::OnBegindragProjectTree(NMHDR* pNMHDR, LRESULT* pResult)
 	CopyMemory( pInfo, lpInfo, size );
 	::GlobalUnlock(hMemory);
 
-	FORMATETC etc = { g_uClipbrdFormatProjectItem, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+	FORMATETC etc = { (CLIPFORMAT)g_uClipbrdFormatProjectItem, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
 	m_oleDataSource.CacheGlobalData( g_uClipbrdFormatProjectItem, hMemory, & etc );
 
 	DROPEFFECT eff = m_oleDataSource.DoDragDrop(DROPEFFECT_COPY | DROPEFFECT_MOVE);

@@ -234,7 +234,7 @@ void CCedtApp::OnViewColorSchemeSaved()
 	GetCurrentDirectory( MAX_PATH, szCurrentDirectory );
 
 	dlg.m_ofn.lpstrTitle = szTitle; dlg.m_ofn.lpstrInitialDir = szInitialDirectory;
-	INT nResult = dlg.DoModal();
+	INT nResult = (INT)dlg.DoModal();
 
 	SetCurrentDirectory( szCurrentDirectory );
 	if( nResult != IDOK ) return;

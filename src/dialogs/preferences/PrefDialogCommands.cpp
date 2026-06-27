@@ -94,7 +94,7 @@ BOOL CPreferenceDialog::FileLoadUserCommands(LPCTSTR lpszPathName)
 	ifstream fin(lpszPathName, ios::in | ios::binary);
 	if( ! fin.is_open() ) return FALSE;
 
-	TCHAR szBuffer[2048]; INT nLength = strlen(STRING_USERTOOLSVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
+	TCHAR szBuffer[2048]; INT nLength = (INT)strlen(STRING_USERTOOLSVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
 	if( strcmp(szBuffer, STRING_USERTOOLSVER) ) { fin.close(); return FALSE; }
 
 	for(INT i = 0; i < 11; i++) {
@@ -110,7 +110,7 @@ BOOL CPreferenceDialog::FileSaveUserCommands(LPCTSTR lpszPathName)
 	ofstream fout(lpszPathName, ios::out | ios::binary);
 	if( ! fout.is_open() ) return FALSE;
 
-	INT nLength = strlen(STRING_USERTOOLSVER);
+	INT nLength = (INT)strlen(STRING_USERTOOLSVER);
 	fout.write((const char *)STRING_USERTOOLSVER, nLength);
 
 	for( INT i = 0; i < 11; i++ ) {

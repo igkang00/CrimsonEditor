@@ -328,11 +328,8 @@ BOOL CCedtApp::InitInstance()
 	// Initialize common control library for XP Look
 	InitCommonControls();
 
-#ifdef _AFXDLL
-	Enable3dControls();			// Call this when using MFC in a shared DLL
-#else
-	Enable3dControlsStatic();	// Call this when linking to MFC statically
-#endif
+	// Enable3dControls() / Enable3dControlsStatic() are no-ops on
+	// modern Windows; they were removed from MFC long ago.
 
 
 	// register custom clipboard format

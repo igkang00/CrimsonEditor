@@ -54,7 +54,7 @@ BOOL MatchFileFilter(LPCTSTR lpszPath, LPCTSTR lpszFilter)
 
 			if( ! strcmp(pFilter, "*.*") ) { bMatch = TRUE; break; }
 			if( ! strncmp(pFilter, "*.", 2) && (nPath >= nFilter-1)
-				&& ! stricmp(pFilter+1, lpszPath+nPath-(nFilter-1)) ) { bMatch = TRUE; break; }
+				&& ! _stricmp(pFilter+1, lpszPath+nPath-(nFilter-1)) ) { bMatch = TRUE; break; }
 
 			pFilter += (INT)strlen(pFilter) + 1;
 		}

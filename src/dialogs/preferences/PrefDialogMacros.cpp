@@ -79,7 +79,7 @@ BOOL CPreferenceDialog::FileLoadMacroBuffers(LPCTSTR lpszPathName)
 	ifstream fin(lpszPathName, ios::in | ios::binary);
 	if( ! fin.is_open() ) return FALSE;
 
-	TCHAR szBuffer[2048]; INT nLength = strlen(STRING_USERMACROVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
+	TCHAR szBuffer[2048]; INT nLength = (INT)strlen(STRING_USERMACROVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
 	if( strcmp(szBuffer, STRING_USERMACROVER) ) { fin.close(); return FALSE; }
 
 	for(INT i = 0; i < 11; i++) {
@@ -95,7 +95,7 @@ BOOL CPreferenceDialog::FileSaveMacroBuffers(LPCTSTR lpszPathName)
 	ofstream fout(lpszPathName, ios::out | ios::binary);
 	if( ! fout.is_open() ) return FALSE;
 
-	INT nLength = strlen(STRING_USERMACROVER);
+	INT nLength = (INT)strlen(STRING_USERMACROVER);
 	fout.write((const char *)STRING_USERMACROVER, nLength);
 
 	for( INT i = 0; i < 11; i++ ) {

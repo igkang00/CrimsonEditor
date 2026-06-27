@@ -808,7 +808,7 @@ void CMainFrame::ActivatePrevChildFrame()
 
 void CMainFrame::ActivateChildFrameInZOrder(INT nIndex)
 {
-	INT nCount = m_lstChildFrame.GetCount();
+	INT nCount = (INT)m_lstChildFrame.GetCount();
 	if( nCount == 0 ) return;
 
 	nIndex = nIndex % nCount;

@@ -118,7 +118,7 @@ void CFindDialog::OnDestroy()
 	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, "MatchCase", m_bMatchCase );
 	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, "RegularExpression", m_bRegularExpression );
 
-	INT nCount = m_lstFindString.GetCount();
+	INT nCount = (INT)m_lstFindString.GetCount();
 	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, "FindStringCount", nCount );
 
 	POSITION pos = m_lstFindString.GetHeadPosition();

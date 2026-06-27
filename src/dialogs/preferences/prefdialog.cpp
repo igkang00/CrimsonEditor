@@ -542,7 +542,7 @@ void CPreferenceDialog::OnOK()
 void CPreferenceDialog::OnSelchangedCategories(NMHDR* pNMHDR, LRESULT* pResult) 
 {
 	NM_TREEVIEW * pNMTreeView = (NM_TREEVIEW *)pNMHDR;
-	m_nActiveCategory = pNMTreeView->itemNew.lParam;
+	m_nActiveCategory = (INT)pNMTreeView->itemNew.lParam;
 
 	ShowAllPrefPages();
 	if( m_nActiveCategory == PREF_CATEGORY_ASSOC ) LoadAssocSettings();

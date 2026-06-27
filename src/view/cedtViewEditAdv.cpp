@@ -168,7 +168,7 @@ void CCedtView::ActionPasteLineSelection(CMemText & rBlock)
 	if( rBlock.GetCount() == 1 ) {
 		LPCTSTR lpszString = rBlock.GetTail();
 		InsertString(nBegX, nBegY, lpszString);
-		nEndX = nBegX + strlen(lpszString);
+		nEndX = nBegX + (INT)strlen(lpszString);
 	} else if( rBlock.GetCount() > 1 ) InsertLineSelection(nBegX, nBegY, nEndX, nEndY, rBlock);
 
 	SetCaretPosY( GetPosYFromIdxY( nEndX, nEndY ) );
@@ -457,7 +457,7 @@ void CCedtView::InsertColumnSelection(INT nBegX, INT nBegY, INT & nEndX, INT & n
 	INT nLastPosY = GetLastPosY();
 
 	rBlock.MakeEqualLength();
-	INT nCount = rBlock.GetCount(), nMaxLen = rBlock.GetMaxLength();
+	INT nCount = (INT)rBlock.GetCount(), nMaxLen = rBlock.GetMaxLength();
 
 	nEndX = nBegX + nMaxLen * nAveCharWidth;
 	nEndY = nBegY + (nCount - 1) * nLineHeight;

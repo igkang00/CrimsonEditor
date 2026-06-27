@@ -201,7 +201,7 @@ void CCedtDoc::OnDocumentSummary()
 
 	dlg.m_szEncodingType = ENCODING_TYPE_DESCRIPTION_SHORT[m_nEncodingType];
 	dlg.m_szFileFormat = FILE_FORMAT_DESCRIPTION_SHORT[m_nFileFormat];
-	dlg.m_nFileSize = m_clsFileStatus.m_size;
+	dlg.m_nFileSize = (long)m_clsFileStatus.m_size;
 
 	dlg.m_nLineCount = GetLineCount();
 	dlg.m_nWordCount = GetWordCount();

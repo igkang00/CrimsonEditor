@@ -287,7 +287,7 @@ BOOL CCedtView::ReplaceShellVariables(CString & szArgu, CMapStringToString & cls
 		if( szExpn.GetLength() ) ExpandShellVariable( szValu, szExpn );
 		TRACE2("- Value Expanded: '%s' -> '%s'\n", szVar1, szValu);
 
-		szArgu = szArgu.Left(pSave-pArgu) + szValu + szArgu.Mid(pChar-pArgu);
+		szArgu = szArgu.Left((int)(pSave-pArgu)) + szValu + szArgu.Mid((int)(pChar-pArgu));
 		pChar  = pArgu  = (TCHAR *)(LPCTSTR)szArgu;
 
 		while( * pChar && * pChar != '$' ) pChar++;

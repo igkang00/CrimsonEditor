@@ -11,7 +11,7 @@ BOOL CCedtDoc::LoadDictionary()
 	CString szUserDicPath = CCedtApp::m_szInstallDirectory + "\\user.dic";
 
 	CFile file(szCedtDicPath, CFile::modeRead); CWaitCursor wait;
-	nTotalSize = file.GetLength(); file.Close();
+	nTotalSize = (UINT)file.GetLength(); file.Close();
 
 	CMainFrame * pMainFrame = (CMainFrame *)AfxGetMainWnd();
 	pMainFrame->BeginProgress("Loading Dictionary...");

@@ -16,7 +16,7 @@ static char THIS_FILE[]=__FILE__;
 //////////////////////////////////////////////////////////////////////
 void CSortStringArray::BubbleSort(BOOL bCase)
 {
-	INT nBound = GetUpperBound();
+	INT nBound = (INT)GetUpperBound();
 	if( nBound <= 0 ) return;
 
 	if( bCase ) BubbleSortInner(0, nBound);
@@ -25,7 +25,7 @@ void CSortStringArray::BubbleSort(BOOL bCase)
 
 void CSortStringArray::QuickSort(BOOL bCase)
 {
-	INT nBound = GetUpperBound();
+	INT nBound = (INT)GetUpperBound();
 	if( nBound <= 0 ) return;
 
 	if( bCase ) QuickSortInner(0, nBound);

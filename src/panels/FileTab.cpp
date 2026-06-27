@@ -315,7 +315,7 @@ void CMDIFileTab::OnBegindragTabCtrl(UINT nFlags, CPoint point)
 	CopyMemory( pItem, & item, size );
 	::GlobalUnlock(hMemory);
 
-	FORMATETC etc = { g_uClipbrdFormatFileTabItem, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+	FORMATETC etc = { (CLIPFORMAT)g_uClipbrdFormatFileTabItem, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
 	m_oleDataSource.CacheGlobalData( g_uClipbrdFormatFileTabItem, hMemory, & etc );
 
 	DROPEFFECT eff = m_oleDataSource.DoDragDrop(DROPEFFECT_COPY | DROPEFFECT_MOVE | DROPEFFECT_SCROLL);

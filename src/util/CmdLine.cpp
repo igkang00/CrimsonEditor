@@ -26,7 +26,7 @@ BOOL CCmdLine::HasSwitch(LPCTSTR lpszSwitch, CString & szOption)
 
 INT CCmdLine::GetArgumentCount()
 {
-	return m_arrArguments.GetSize();
+	return (INT)m_arrArguments.GetSize();
 }
 
 CString CCmdLine::GetArgument(INT nIndex)
@@ -36,7 +36,7 @@ CString CCmdLine::GetArgument(INT nIndex)
 
 CString CCmdLine::GetFullArgument()
 {
-	INT nSize = m_arrArguments.GetSize(); if( nSize < 1 ) return "";
+	INT nSize = (INT)m_arrArguments.GetSize(); if( nSize < 1 ) return "";
 	CString szFullArgument = m_arrArguments[0];
 	for(INT i = 1; i < nSize; i++)
 		szFullArgument += CString(" ") + m_arrArguments[i];
@@ -107,7 +107,7 @@ void CCmdLine::FreeParam(INT argc, TCHAR ** argv)
 BOOL CCmdLine::IsSwitch(LPCTSTR lpszParam)
 {
 	if( lpszParam == NULL ) return FALSE;
-	INT nLen = strlen(lpszParam); if( nLen < 2 ) return FALSE;
+	INT nLen = (INT)strlen(lpszParam); if( nLen < 2 ) return FALSE;
 	if( lpszParam[0] == '/' || lpszParam[0] == '-' ) return isalpha(lpszParam[1]);
 	else return FALSE;
 }

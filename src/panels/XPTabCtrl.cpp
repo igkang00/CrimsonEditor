@@ -102,7 +102,6 @@ void CXPTabCtrl::OnPaint()
 	if(!nTab) return;								// no tab pages added
 
 	// 2nd paint the inactive tabs
-	CRect ;
 	TCHITTESTINFO hti;	hti.flags=0;
 	::GetCursorPos(&hti.pt); ScreenToClient(&hti.pt);
 	int ixHot=HitTest(&hti);
@@ -394,7 +393,10 @@ DWORD GetWinVersion()
 	if(!c_dwWinVers)
 	{	OSVERSIONINFO osvi;	ZeroMemory(&osvi, sizeof(OSVERSIONINFO));	// Initialize the OSVERSIONINFO structure.
 		osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+#pragma warning(push)
+#pragma warning(disable:4996) // GetVersionEx is deprecated but still works
 		GetVersionEx(&osvi);
+#pragma warning(pop)
 		c_dwWinVers=PACKVERSION(osvi.dwMajorVersion,osvi.dwMinorVersion);
 	}
 	return c_dwWinVers;

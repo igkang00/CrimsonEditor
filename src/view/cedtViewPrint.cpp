@@ -46,7 +46,7 @@ void CCedtView::OnBeginPrinting(CDC* pDC, CPrintInfo* pInfo)
 		m_nFormatedPrintTextStartIdxY = 0;
 	}
 
-	INT nLineCount = m_clsFormatedPrintText.GetCount();
+	INT nLineCount = (INT)m_clsFormatedPrintText.GetCount();
 
 	pInfo->SetMinPage(1);
 	pInfo->SetMaxPage( (nLineCount / nLinesPerPage) + 1 );

@@ -12,7 +12,7 @@ INT CCedtView::GetLastIdxY()
 INT CCedtView::GetLastPosY()
 {
 	INT nLineHeight = GetLineHeight();
-	return nLineHeight * (m_clsFormatedScreenText.GetCount()-1);
+	return nLineHeight * (INT)(m_clsFormatedScreenText.GetCount()-1);
 }
 
 INT CCedtView::GetFirstIdxX(CAnalyzedString & rLine)

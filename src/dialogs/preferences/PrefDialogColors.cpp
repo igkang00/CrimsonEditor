@@ -321,7 +321,7 @@ BOOL CPreferenceDialog::LoadColorScheme(LPCTSTR lpszPathName)
 	ifstream fin(lpszPathName, ios::in | ios::binary);
 	if( ! fin.is_open() ) return FALSE;
 
-	TCHAR szBuffer[2048]; INT nLength = strlen(STRING_COLORSETTINGSVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
+	TCHAR szBuffer[2048]; INT nLength = (INT)strlen(STRING_COLORSETTINGSVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
 	if( strcmp(szBuffer, STRING_COLORSETTINGSVER) ) { fin.close(); return FALSE; }
 
 	fin.read((char *)m_crBkgrColor, sizeof(m_crBkgrColor));
@@ -340,7 +340,7 @@ BOOL CPreferenceDialog::SaveColorScheme(LPCTSTR lpszPathName)
 	ofstream fout(lpszPathName, ios::out | ios::binary);
 	if( ! fout.is_open() ) return FALSE;
 
-	INT nLength = strlen(STRING_COLORSETTINGSVER);
+	INT nLength = (INT)strlen(STRING_COLORSETTINGSVER);
 	fout.write((const char *)STRING_COLORSETTINGSVER, nLength);
 
 	fout.write((const char *)m_crBkgrColor, sizeof(m_crBkgrColor));
@@ -597,7 +597,7 @@ void CPreferenceDialog::OnLoadColorScheme()
 		GetCurrentDirectory( MAX_PATH, szCurrentDirectory );
 
 		dlg.m_ofn.lpstrTitle = szTitle; dlg.m_ofn.lpstrInitialDir = szInitialDirectory;
-		INT nResult = dlg.DoModal();
+		INT nResult = (INT)dlg.DoModal();
 
 		SetCurrentDirectory( szCurrentDirectory );
 		if( nResult != IDOK ) return;
@@ -622,7 +622,7 @@ void CPreferenceDialog::OnSaveColorScheme()
 	GetCurrentDirectory( MAX_PATH, szCurrentDirectory );
 
 	dlg.m_ofn.lpstrTitle = szTitle; dlg.m_ofn.lpstrInitialDir = szInitialDirectory;
-	INT nResult = dlg.DoModal();
+	INT nResult = (INT)dlg.DoModal();
 
 	SetCurrentDirectory( szCurrentDirectory );
 	if( nResult != IDOK ) return;

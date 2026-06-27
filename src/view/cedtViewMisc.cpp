@@ -44,7 +44,7 @@ BOOL CCedtView::GetOleDataObjectData(COleDataObject * pDataObject, CMemText & rB
 BOOL CCedtView::GetGlobalMemoryText(HGLOBAL hMemory, CMemText & rBlock)
 {
 	if( ! hMemory ) return FALSE;
-	INT size = ::GlobalSize(hMemory);
+	INT size = (INT)::GlobalSize(hMemory);
 	void * pMemory = ::GlobalLock(hMemory);
 	rBlock.MemoryLoad((char *)pMemory, size);
 	::GlobalUnlock(hMemory);

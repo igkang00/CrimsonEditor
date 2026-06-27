@@ -84,7 +84,7 @@ int CFolderDialog::DoModal()
 	ITEMIDLIST* piid = NULL;
 
 	// call the shell function
-	piid = ::SHBrowseForFolder(&m_bi);
+	piid = (ITEMIDLIST *)::SHBrowseForFolder((BROWSEINFO *)&m_bi);
 
 	// process the result
 	if (piid && ::SHGetPathFromIDList(piid, m_szPath))

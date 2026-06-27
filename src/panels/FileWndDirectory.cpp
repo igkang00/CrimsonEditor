@@ -88,7 +88,7 @@ BOOL CFileWindow::InitFileFilterList(LPCTSTR lpszComposedFilter, INT nInitialFil
 	m_cmbFileFilter.ResetContent(); if( nInitialFilter < 0 ) nInitialFilter = 0; 
 	ParseFileFilter(m_arrFilterDescription, m_arrFilterExtensions, lpszComposedFilter);
 
-	INT nSize = m_arrFilterDescription.GetSize();
+	INT nSize = (INT)m_arrFilterDescription.GetSize();
 	for(INT i = 0; i < nSize; i++) m_cmbFileFilter.InsertString( i, m_arrFilterDescription.GetAt(i) );
 
 	m_cmbFileFilter.SetCurSel(nInitialFilter);
@@ -116,7 +116,7 @@ BOOL CFileWindow::SetBrowsingDirectory(LPCTSTR lpszDirectory)
 	INT nCount = (INT)m_arrLocalDrive.GetSize();
 	for( INT i = nCount-1; i >= 0; i-- ) { // search in reverse order
 		CString & szLocalDrive = m_arrLocalDrive[i];
-		if( ! strnicmp(szLocalDrive, lpszDirectory, szLocalDrive.GetLength()) ) { szDriveName = szLocalDrive; break; }
+		if( ! _strnicmp(szLocalDrive, lpszDirectory, szLocalDrive.GetLength()) ) { szDriveName = szLocalDrive; break; }
 	}
 	BOOL bRemake = szDriveName.CompareNoCase( m_szPrevDriveName );
 
@@ -421,7 +421,7 @@ BOOL CFileWindow::ExpandDirectoryTreePath(LPCTSTR lpszPathName)
 	HTREEITEM hItem = m_treDirectoryTree.GetRootItem();
 	CString szRoot = GetActiveLocalDriveName();
 
-	if( strnicmp(szPathName, szRoot, szRoot.GetLength()) ) return FALSE;
+	if( _strnicmp(szPathName, szRoot, szRoot.GetLength()) ) return FALSE;
 	TCHAR * pText = szPathName + szRoot.GetLength() + 1;
 
 	INT nLen = (INT)strlen(szPathName);
