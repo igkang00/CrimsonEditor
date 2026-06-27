@@ -24,8 +24,8 @@
     runs where the file is staged some other way.
 
 .EXAMPLE
-    .\build_installer.ps1
-    .\build_installer.ps1 -SkipBuild
+    .\scripts\build_installer.ps1
+    .\scripts\build_installer.ps1 -SkipBuild
 #>
 
 param(
@@ -34,7 +34,10 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$root = Split-Path -Parent $MyInvocation.MyCommand.Path
+# This script lives in <repo>/scripts/, but every path inside it (cedt.sln,
+# installer.iss, dist\, runtime\, ...) is repo-root-relative. So resolve
+# $root one level up from the script's own directory.
+$root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 Set-Location $root
 
 function Find-MSBuild {

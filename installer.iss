@@ -1,7 +1,7 @@
 ; Crimson Editor — Inno Setup installer script
 ;
 ; Build:   ISCC installer.iss
-; Or use:  .\build_installer.ps1   (builds prerequisites + redist + ISCC)
+; Or use:  .\scripts\build_installer.ps1   (builds prerequisites + redist + ISCC)
 ;
 ; Design decisions, in case a future reader wonders:
 ;

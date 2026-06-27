@@ -81,10 +81,10 @@ See [docs/configuration.md](docs/configuration.md) for the full picture of how s
 
 ### Installer build
 
-The installer (Inno Setup 6) is produced by [build_installer.ps1](build_installer.ps1) at the repo root:
+The installer (Inno Setup 6) is produced by [scripts/build_installer.ps1](scripts/build_installer.ps1):
 
 ```powershell
-.\build_installer.ps1
+.\scripts\build_installer.ps1
 ```
 
 The script does four things, in order:
