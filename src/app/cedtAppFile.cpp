@@ -378,7 +378,7 @@ CDocument * CCedtApp::OpenDocumentFile(LPCTSTR lpszPathName, INT nLineNum, WINDO
 		pView->SetFocus();
 
 		if( pDoc->HaveAnyOverflowLine() ) {
-			CString szMessage; szMessage.Format(IDS_MSG_HAVE_LINE_OVERFLOW, MAX_STRING_SIZE);
+			CString szMessage; szMessage.Format(IDS_MSG_HAVE_LINE_OVERFLOW, MAX_STRING_LENGTH);
 			AfxMessageBox( szMessage, MB_OK | MB_ICONINFORMATION );
 		}
 	}
@@ -448,7 +448,7 @@ CDocument * CCedtApp::OpenRemoteDocumentFile(INT nAccount, LPCTSTR lpszPathName,
 		pView->SetFocus();
 
 		if( pDoc->HaveAnyOverflowLine() ) {
-			CString szMessage; szMessage.Format(IDS_MSG_HAVE_LINE_OVERFLOW, MAX_STRING_SIZE);
+			CString szMessage; szMessage.Format(IDS_MSG_HAVE_LINE_OVERFLOW, MAX_STRING_LENGTH);
 			AfxMessageBox(szMessage, MB_OK | MB_ICONINFORMATION );
 		}
 	}

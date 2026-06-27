@@ -6,15 +6,18 @@
 
 
 // MAXIMUM CONSTANTS
-#define MAX_STRING_SIZE					32767
+// Naming convention: LENGTH = number of characters (NUL not included),
+// BUFFER_SIZE = number of TCHAR slots in the array (NUL included).
+#define MAX_STRING_LENGTH				32767
 #define MAX_WORD_LENGTH					255
 #define MAX_WORDS_COUNT					32767
 
-// Alias for buffers that are meant to hold a whole text line. Use this name
-// (not a bare 2048 / 32767) wherever the buffer's purpose is "a single line".
-// Anchored to MAX_STRING_SIZE — the limit the analyzer in cedtDocAnal.cpp
-// enforces on lines (LI_HAVEOVERFLOW above that length).
-#define MAX_LINE_LENGTH					MAX_STRING_SIZE
+// Buffer size large enough to hold one full text line plus its trailing NUL.
+// Anchored to MAX_STRING_LENGTH — the limit the analyzer in cedtDocAnal.cpp
+// enforces on lines (LI_HAVEOVERFLOW above that length). Use this name
+// (not a bare 2048 / 32767 / 32768) wherever the buffer's purpose is
+// "holds a single line".
+#define MAX_LINE_BUFFER_SIZE			(MAX_STRING_LENGTH + 1)
 
 
 // RANGE TYPE (KEYWORD RANGE)

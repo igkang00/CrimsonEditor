@@ -213,7 +213,7 @@ BOOL CCedtDoc::ReloadDocumentFile(LPCTSTR lpszPathName, INT nLineNum, INT nEncod
 	if( nLineNum ) GoToLineNumber( nLineNum );
 
 	if( HaveAnyOverflowLine() ) {
-		CString szMessage; szMessage.Format(IDS_MSG_HAVE_LINE_OVERFLOW, MAX_STRING_SIZE);
+		CString szMessage; szMessage.Format(IDS_MSG_HAVE_LINE_OVERFLOW, MAX_STRING_LENGTH);
 		AfxMessageBox(szMessage, MB_OK | MB_ICONINFORMATION);
 	}
 
@@ -254,7 +254,7 @@ BOOL CCedtDoc::ReloadRemoteDocumentFile(INT nAccount, LPCTSTR lpszPathName, INT 
 	if( nLineNum ) GoToLineNumber( nLineNum );
 
 	if( HaveAnyOverflowLine() ) {
-		CString szMessage; szMessage.Format(IDS_MSG_HAVE_LINE_OVERFLOW, MAX_STRING_SIZE);
+		CString szMessage; szMessage.Format(IDS_MSG_HAVE_LINE_OVERFLOW, MAX_STRING_LENGTH);
 		AfxMessageBox(szMessage, MB_OK | MB_ICONINFORMATION);
 	}
 

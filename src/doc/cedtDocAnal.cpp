@@ -89,7 +89,7 @@ static void _FinishLine(SHORT wcount, BOOL bOverflow, CAnalyzedString & rLine)
 #define _JUMP_ADDR(addr)		{            state = (addr); }
 
 #define _CHCK_DBCS(ptr)			( bDBC && IsDBCSLeadByte(* ptr) )
-#define _CHCK_SIZE(ptr, len)	( ptr - str < MAX_STRING_SIZE - (len) )
+#define _CHCK_SIZE(ptr, len)	( ptr - str < MAX_STRING_LENGTH - (len) )
 
 static void _AnalyzeLine(CAnalyzedString & rLine) 
 {
@@ -106,7 +106,7 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 				// end of line
 				_WordFound(wcount++, WT_RETURN, RT_GLOBAL, beg-str, fwd-beg);
 				is_finished =  1;
-			} else if( fwd - str >= MAX_STRING_SIZE-1 ) {
+			} else if( fwd - str >= MAX_STRING_LENGTH-1 ) {
 				// line overflow
 				_WordFound(wcount++, WT_RETURN, RT_GLOBAL, beg-str, fwd-beg);
 				is_finished = -1;

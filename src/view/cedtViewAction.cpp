@@ -14,7 +14,7 @@ void CCedtView::ActionEvaluateLine()
 	INT nIdxX, nIdxY; PositionToIndex( m_nCaretPosX, m_nCaretPosY, nIdxX, nIdxY );
 	CAnalyzedString & rString = GetLineFromIdxY( nIdxY );
 	// Pass the line straight to the evaluator instead of copying it into a
-	// fixed-size stack buffer. Lines up to MAX_STRING_SIZE (32767) are valid
+	// fixed-size stack buffer. Lines up to MAX_STRING_LENGTH (32767) are valid
 	// in this editor, so a 2048-byte buffer would overrun on long lines.
 	TCHAR * pFormula = const_cast<TCHAR *>((LPCTSTR)rString);
 

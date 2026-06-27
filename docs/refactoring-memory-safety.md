@@ -38,11 +38,12 @@ This matters for evaluating buffer-size assumptions.
 
 | Limit | Macro | Value | Where enforced |
 | --- | --- | --- | --- |
-| Max line length (chars) | `MAX_STRING_SIZE` | **32767** | [cedtDocAnal.cpp:109](../src/doc/cedtDocAnal.cpp#L109) sets `LI_HAVEOVERFLOW` on the analyzed line |
+| Max line length (chars) | `MAX_STRING_LENGTH` | **32767** | [cedtDocAnal.cpp:109](../src/doc/cedtDocAnal.cpp#L109) sets `LI_HAVEOVERFLOW` on the analyzed line |
+| Line buffer size (chars incl. NUL) | `MAX_LINE_BUFFER_SIZE` | 32768 | derived as `MAX_STRING_LENGTH + 1` |
 | Max word length (chars) | `MAX_WORD_LENGTH` | 255 | `CDictionary::AddWord` etc. |
 | Max words per line | `MAX_WORDS_COUNT` | 32767 | analysis loop |
 
-There is no `MAX_LINE_LENGTH` macro. The number **2048 appears as a magic number in dozens of places** for unrelated short-string buffers (config-file version headers, evaluator tokens, dialog buffers, etc.). A subset of these are buffers that need to hold a whole *line* — and those silently assume "a line fits in 2048" which is wrong. See §6 below for the structural side of this.
+Originally there was no `MAX_LINE_BUFFER_SIZE` (or even a clearly named "buffer for one line") macro. The number **2048 appears as a magic number in dozens of places** for unrelated short-string buffers (config-file version headers, evaluator tokens, dialog buffers, etc.). A subset of these are buffers that need to hold a whole *line* — and those silently assume "a line fits in 2048" which is wrong. See §6 below for the structural side of this and what was added.
 
 ---
 
@@ -202,7 +203,7 @@ Applied:
 - **M6** — reanalysed and resolved with no code change.
 - **M7** — `CAnalyzedString` / `CFormatedString` copy constructors `= delete`d.
 - **L3** — sized buffers triaged: one safe-as-written, two fixed (FileTab.cpp:137, FileWndProject.cpp:726-728).
-- **§5** — `MAX_LINE_LENGTH` macro added; literal-sweep deferred.
+- **§5** — `MAX_STRING_SIZE` renamed to `MAX_STRING_LENGTH` (matches existing convention) and `MAX_LINE_BUFFER_SIZE = MAX_STRING_LENGTH + 1` added for one-line buffers; literal-sweep deferred.
 
 Still open:
 
@@ -219,18 +220,23 @@ Separate from the bug list, the recurring `2048` is itself a maintenance hazard:
 
 - No `MAX_LINE_LENGTH` (or any well-named constant) anchors the value.
 - Some uses are intentional short-buffer sizes (config-file version headers — known to be short).
-- Some uses are "should be enough for one line" assumptions — which contradict the actual `MAX_STRING_SIZE = 32767` line limit.
+- Some uses are "should be enough for one line" assumptions — which contradict the actual `MAX_STRING_LENGTH = 32767` line limit.
 - A reader can't tell the two apart without reading the surrounding code.
 
 Suggested grooming (low priority, but easy to introduce alongside the fixes above):
 
-- Add `MAX_LINE_LENGTH = MAX_STRING_SIZE` to [src/core/cedtElement.h](../src/core/cedtElement.h).
+- Add `MAX_LINE_BUFFER_SIZE = MAX_STRING_LENGTH + 1` to [src/core/cedtElement.h](../src/core/cedtElement.h).
 - Replace the "holds-a-whole-line" usages with the named constant.
 - Leave the genuinely short-string usages as their own named constants (`MAX_VERSION_HEADER`, `MAX_EVAL_TOKEN`, etc.) — or `CString` where appropriate.
 
 Even partial application makes the next "is this buffer big enough?" question answerable from the macro alone.
 
-**Partially applied.** Added `#define MAX_LINE_LENGTH MAX_STRING_SIZE` to [src/core/cedtElement.h](../src/core/cedtElement.h) so future "holds-a-whole-line" buffers have a named constant to reach for. Existing `2048` / `32767` literal usages were left untouched — most are short-string buffers (config headers, evaluator tokens) that are not line buffers and would actually become misleading if renamed. A follow-up sweep can adopt the new name in any new code or any place a "whole-line" buffer is genuinely needed.
+**Partially applied.** Two changes in [src/core/cedtElement.h](../src/core/cedtElement.h):
+
+1. Renamed `MAX_STRING_SIZE` (32767) → **`MAX_STRING_LENGTH`** so the project's "LENGTH = number of characters, SIZE = number of slots" convention (already used by `MAX_WORD_LENGTH` / `MAX_WORDS_COUNT`) becomes consistent. All 11 in-tree call sites were updated.
+2. Added **`MAX_LINE_BUFFER_SIZE` = `MAX_STRING_LENGTH + 1`** so a buffer that needs to hold one full line plus its trailing NUL has a named, correct-by-construction size. The existing `TCHAR szLine[MAX_STRING_SIZE+1]` in `cedtElement.cpp` (which was already doing the `+1` by hand) was switched to use the new macro.
+
+Existing `2048` / `32767` literal usages elsewhere were left untouched — most are short-string buffers (config headers, evaluator tokens) that are not line buffers and would become misleading if renamed. A follow-up sweep can adopt the new name in any new code or any place a "whole-line" buffer is genuinely needed.
 
 ---
 
@@ -243,4 +249,4 @@ Even partial application makes the next "is this buffer big enough?" question an
 - [src/network/RemoteFile.cpp](../src/network/RemoteFile.cpp) — L1
 - [src/core/cedtElement.h](../src/core/cedtElement.h) — M7 target + §5 macro suggestion
 - [src/core/cedtElement.cpp](../src/core/cedtElement.cpp), [src/panels/FileWndProject.cpp](../src/panels/FileWndProject.cpp), [src/panels/FileTab.cpp](../src/panels/FileTab.cpp) — L3 to-verify list
-- [src/doc/cedtDocAnal.cpp](../src/doc/cedtDocAnal.cpp) — the analyzer that enforces `MAX_STRING_SIZE`
+- [src/doc/cedtDocAnal.cpp](../src/doc/cedtDocAnal.cpp) — the analyzer that enforces `MAX_STRING_LENGTH`

@@ -247,7 +247,7 @@ BOOL CLangSpec::FileLoad(LPCTSTR lpszPathName)
 // CKeywords
 BOOL CKeywords::FileLoad(LPCTSTR lpszPathName, BOOL bCaseSensitive[])
 {
-	TCHAR szLine[MAX_STRING_SIZE+1], szWord[MAX_WORD_LENGTH+1], szBuffer[MAX_WORD_LENGTH+3];
+	TCHAR szLine[MAX_LINE_BUFFER_SIZE], szWord[MAX_WORD_LENGTH+1], szBuffer[MAX_WORD_LENGTH+3];
 	UCHAR ucType = 0x00, ucRange = RT_GLOBAL; BOOL bIgnoreCase, bNoEmbolden; UCHAR ucTypes[4]; DWORD dwValue;
 
 	RemoveAll(); // clear hash table first
@@ -256,7 +256,7 @@ BOOL CKeywords::FileLoad(LPCTSTR lpszPathName, BOOL bCaseSensitive[])
 	if( ! fin.is_open() ) return FALSE;
 
 	while( fin.good() ) {
-		fin.getline(szLine, MAX_STRING_SIZE);
+		fin.getline(szLine, MAX_LINE_BUFFER_SIZE);
 		if( szLine[0] == '#' ) continue;
 
 		if( ! _strnicmp(szLine, "[-COMMENT", 9) ) {

@@ -135,8 +135,8 @@ INT CCedtApp::FindInFilesInFile(LPCTSTR lpszFindString, LPCTSTR lpszFilePath, UI
 			//	szMessage.Format(IDS_OUT_SEARCH_SKIP_BINARY, lpszFilePath);
 			//	pFrame->AddStringToOutputWindow( szMessage, RGB(128, 0, 0) ); // do not display message
 				break;
-			} else if( szString.GetLength() >= MAX_STRING_SIZE ) {
-				szMessage.Format(IDS_OUT_SEARCH_LINE_EXCEED, MAX_STRING_SIZE, lpszFilePath, nIdxY+1);
+			} else if( szString.GetLength() >= MAX_STRING_LENGTH ) {
+				szMessage.Format(IDS_OUT_SEARCH_LINE_EXCEED, MAX_STRING_LENGTH, lpszFilePath, nIdxY+1);
 				pFrame->AddStringToOutputWindow( szMessage, RGB(128, 0, 0) );
 			} else {
 				if( ! SEARCH_REG_EXP(nOptions) ) nIdxX = ::ForwardFindString(szString, lpszFindString, 0, SEARCH_WHOLE_WORD(nOptions), SEARCH_MATCH_CASE(nOptions));
