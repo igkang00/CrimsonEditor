@@ -13,7 +13,7 @@ Excerpt of `CCedtApp::InitInstance()`, in order:
 ```
 1.  SetRegistryKey("Crimson System")                    HKCU\Software\Crimson System\Crimson Editor\*
     + override m_pszProfileName = "Crimson Editor"      (so KR and US builds share the same subtree)
-2.  Resolve InstallDirectory                            (HKCU, then HKLM, then derive from the EXE's own directory)
+2.  Resolve InstallDirectory                            (HKLM only; falls back to the EXE's own directory)
 3.  Compute AppDataDirectory = %APPDATA%\Crimson Editor (auto-created if missing)
 4.  LoadMultiInstancesFlag                              (registry)
 5.  Single-instance check                               (IPC + ghost-exit if a previous instance is alive)
@@ -42,7 +42,6 @@ Step 7 is where the bulk of user preferences come back, and it uses the file bac
 
 | Subkey / Value | Purpose |
 | --- | --- |
-| `REGKEY_INSTALL_DIRECTORY` | The install path (where docs, syntax files, etc. live). Falls back to `HKLM` then to a folder picker. |
 | `REGKEY_ALLOW_MULTI_INSTANCES` | Whether more than one process is allowed at once. |
 | `REGKEY_BROWSING_DIRECTORY` | Path shown in the left-side Directory panel. |
 | `REGKEY_WORKING_DIRECTORY` | Process current working directory at startup. |
@@ -52,6 +51,8 @@ Step 7 is where the bulk of user preferences come back, and it uses the file bac
 | MFC standard MRU | Written by `LoadStdProfileSettings(8)`; Recent Files menu. |
 
 Code for the registry helpers: [src/app/cedtAppRegistry.cpp](../src/app/cedtAppRegistry.cpp).
+
+> **InstallDir lives in HKLM, not HKCU.** It is a machine property (where Crimson is installed on this box), so the installer writes it once to `HKLM\Software\Crimson System\Crimson Editor` value `InstallDir`. The running app reads it from there and falls back to the EXE's own directory when HKLM is empty (installer-less / portable use). It is intentionally not cached in HKCU — see §6 and §7 for the rationale.
 
 ### 2.2 File system — `%APPDATA%\Crimson Editor\`
 
@@ -212,7 +213,6 @@ The save is unconditional after `DoModal()`, so even cancelling the dialog still
 
 | Value | Saved when |
 | --- | --- |
-| `REGKEY_INSTALL_DIRECTORY` | First startup, after the user picks a folder |
 | `REGKEY_ALLOW_MULTI_INSTANCES` | Preferences dialog OK |
 | `REGKEY_BROWSING_DIRECTORY` / `REGKEY_WORKING_DIRECTORY` | Main frame close ([MainFrm.cpp](../src/frame/MainFrm.cpp) lines 232-235) |
 | `REGKEY_LAST_WORKSPACE` | Main frame close, **first instance only** ([MainFrm.cpp](../src/frame/MainFrm.cpp) lines 237-239) |
@@ -244,8 +244,8 @@ The save is unconditional after `DoModal()`, so even cancelling the dialog still
 
 Putting the file behaviors next to the registry behaviors:
 
-1. Establish the registry root under `HKCU\Software\Crimson Editor\Crimson Editor`.
-2. Figure out where Crimson Editor is installed, asking the user via a folder picker if neither HKCU nor HKLM knows.
+1. Establish the registry root under `HKCU\Software\Crimson System\Crimson Editor` for all per-user state.
+2. Figure out where Crimson Editor is installed by reading `HKLM\Software\Crimson System\Crimson Editor` value `InstallDir`, falling back to the EXE's own directory if HKLM is empty (portable / unzip-and-run case).
 3. Compute `%APPDATA%\Crimson Editor\` and create the folder if needed.
 4. Read the multi-instance flag from the registry.
 5. If another instance is already running and multi-instance is disabled, forward the command line to that instance and exit silently.
@@ -260,7 +260,7 @@ Putting the file behaviors next to the registry behaviors:
 
 When neither the registry subtree nor any file in `%APPDATA%\Crimson Editor\` exists yet:
 
-1. **Install directory** — both registry locations are empty, so the code derives the install directory from the running EXE's own location via `GetModuleFileName` + `GetFileDirectory`. The result is written to HKCU and never re-derived on subsequent launches. (Earlier versions popped up a folder-picker dialog at this point; this was removed so unzip-and-run setups work without prompting.)
+1. **Install directory** — HKLM is empty (no installer was run, or this is a fresh portable copy), so the code derives the install directory from the running EXE's own location via `GetModuleFileName` + `GetFileDirectory`. This derivation runs **every launch** rather than being cached anywhere, so moving the EXE to another folder or to a different drive letter (USB stick) is followed automatically with no stale-pointer risk. (Earlier versions popped up a folder-picker dialog at this point; that was removed so unzip-and-run setups work without prompting.)
 2. **`cedt.conf`** — both AppData and InstallDir copies are missing, so the user sees the `IDS_ERR_CORRUPT_CONFIG_FILE` message box, the hardcoded defaults (§4) are applied, and the result is written to AppData.
 3. **`cedt.color`** — both copies missing → the predefined default scheme is installed silently and persisted to AppData.
 4. **`cedt.ftp` / `cedt.tools` / `cedt.macro`** — all missing → start empty; nothing is shown to the user.
@@ -281,11 +281,11 @@ To move a user's setup to another machine, copy two things:
 | Source | Destination |
 | --- | --- |
 | `%APPDATA%\Crimson Editor\` (the whole folder) | Same path on the target |
-| `HKEY_CURRENT_USER\Software\Crimson Editor\Crimson Editor` | Same subkey on the target |
+| `HKEY_CURRENT_USER\Software\Crimson System\Crimson Editor` | Same subkey on the target |
 
 The first carries fonts, colors, FTP accounts, tools, and macros; the second carries window/dock layout, MRU, last workspace, and other UI state.
 
-`InstallDirectory` will be re-resolved on the target machine (the registry-backed pointer can be different per host), so you do not need to copy it across.
+`InstallDir` is **not** part of the migration. It lives in HKLM on the target host and is set by that host's installer — the install path on the new machine may legitimately differ from the source machine.
 
 ---
 

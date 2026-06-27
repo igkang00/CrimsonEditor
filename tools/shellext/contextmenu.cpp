@@ -148,29 +148,37 @@ public:
 private:
 	~CCrimsonContextMenu() { InterlockedDecrement(&g_cRefDll); }
 
-	// Locate the cedt EXE the installer placed under InstallDir.
-	// Returns TRUE and writes the full path into pszOut on success.
+	// Locate the cedt EXE the installer recorded in HKLM.
+	//
+	// InstallDir is, semantically, a machine property — "where is
+	// Crimson Editor installed on THIS box" — so it lives in HKLM
+	// only. cedt itself reads the same single source of truth
+	// (src/app/cedtapp.cpp), so ShellExt and cedt always agree.
+	//
+	// The WOW6432Node mirror is tried as a fallback because the
+	// legacy 32-bit ShellExt.dll from 3.70 caused the OS to redirect
+	// its registry writes there, and we want a clean upgrade from
+	// that install state to succeed.
+	//
+	// Returns TRUE and writes the full EXE path into pszOut on success.
 	static BOOL ResolveCedtExe(LPWSTR pszOut, DWORD cchMax)
 	{
-		WCHAR szDir[MAX_PATH];
+		WCHAR szDir[MAX_PATH] = { 0 };
 		DWORD cb = sizeof(szDir);
 
-		// The installer writes InstallDir to HKLM\Software\Crimson
-		// System\Crimson Editor. Inno Setup writes it as a 64-bit
-		// view; the legacy 32-bit cedt would have ended up under
-		// Wow6432Node\... — try both so a fresh install OR a leftover
-		// 3.70 registration both work.
-		if (!ReadInstallDir(HKEY_LOCAL_MACHINE, 0, szDir, &cb) &&
-		    !ReadInstallDir(HKEY_LOCAL_MACHINE, KEY_WOW64_32KEY, szDir, &cb) &&
-		    !ReadInstallDir(HKEY_CURRENT_USER, 0, szDir, &cb)) {
-			return FALSE;
+		if (!ReadInstallDirHKLM(0, szDir, &cb)) {
+			cb = sizeof(szDir);
+			if (!ReadInstallDirHKLM(KEY_WOW64_32KEY, szDir, &cb)) {
+				return FALSE;
+			}
 		}
 
 		// Trim trailing backslash if any.
 		size_t n = wcslen(szDir);
 		while (n > 0 && (szDir[n-1] == L'\\' || szDir[n-1] == L'/')) szDir[--n] = 0;
 
-		// Prefer cedt_kr.exe; fall back to cedt_us.exe.
+		// Prefer cedt_kr.exe; fall back to cedt_us.exe; fall back to
+		// the legacy cedt.exe name in case a 3.70 install is reused.
 		const wchar_t* names[] = { L"cedt_kr.exe", L"cedt_us.exe", L"cedt.exe" };
 		for (size_t i = 0; i < sizeof(names) / sizeof(names[0]); ++i) {
 			swprintf_s(pszOut, cchMax, L"%s\\%s", szDir, names[i]);
@@ -180,10 +188,12 @@ private:
 		return FALSE;
 	}
 
-	static BOOL ReadInstallDir(HKEY hRoot, REGSAM samExtra, LPWSTR pszOut, DWORD* pcb)
+	// HKLM\Software\Crimson System\Crimson Editor  "InstallDir" = REG_SZ
+	static BOOL ReadInstallDirHKLM(REGSAM samExtra, LPWSTR pszOut, DWORD* pcb)
 	{
 		HKEY hKey;
-		if (RegOpenKeyExW(hRoot, L"Software\\Crimson System\\Crimson Editor",
+		if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+		                  L"Software\\Crimson System\\Crimson Editor",
 		                  0, KEY_QUERY_VALUE | samExtra, &hKey) != ERROR_SUCCESS) {
 			return FALSE;
 		}

@@ -30,7 +30,6 @@
 #define CLIPBRD_FORMAT_PROJECT_ITEM			"CrimsonEditor.ProjectItem"
 #define CLIPBRD_FORMAT_FILETAB_ITEM			"CrimsonEditor.FileTabItem"
 
-#define REGKEY_INSTALL_DIRECTORY			"Install Directory"
 #define REGKEY_ALLOW_MULTI_INSTANCES		"Allow Multi-Instances"
 #define REGKEY_BROWSING_DIRECTORY			"Browsing Directory"
 #define REGKEY_WORKING_DIRECTORY			"Working Directory"

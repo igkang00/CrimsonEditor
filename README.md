@@ -70,11 +70,12 @@ In Visual Studio Installer, on the **Individual components** tab, install the fo
 
 At startup the app resolves its install directory in this order:
 
-1. `HKCU\Software\Crimson System\Crimson Editor\Install Directory` (per-user, written back on first run)
-2. `HKLM\Software\Crimson System\Crimson Editor` value `InstallDir` (machine-wide, intended for installers)
-3. The directory of the running EXE itself (automatic fallback so unzip-and-run setups work without any setup)
+1. `HKLM\Software\Crimson System\Crimson Editor` value `InstallDir` — written once by the installer, machine-wide, the single source of truth.
+2. The directory of the running EXE itself — automatic fallback so installer-less unzip-and-run setups work without any setup.
 
-Step 3 means the app boots without help, but **installers are recommended to write step 2 explicitly**. Doing so gives every user on the machine a consistent path, makes uninstallers / updaters able to locate the install without guessing, and avoids surprises if a user later runs the EXE from a different directory (e.g. a USB stick) before the per-user HKCU value is set.
+**Installers must write step 1.** It is what every component (the editor itself, the `ShellExt.dll` context-menu handler, future uninstallers / updaters) reads to locate the install. The EXE-directory fallback exists for portable / unzipped use only.
+
+`InstallDir` is intentionally the only piece of state in HKLM. All per-user state (window placement, MRU, last workspace, BrowsingDirectory, etc.) lives under `HKCU\Software\Crimson System\Crimson Editor\` and is written by the running app under normal user permissions.
 
 See [docs/configuration.md](docs/configuration.md) for the full picture of how settings — including this install-directory lookup — are loaded and saved.
 

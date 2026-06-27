@@ -254,17 +254,29 @@ BOOL CCedtApp::InitInstance()
 	m_szLoadingDirectory = ChopDirectory(szTemp);
 	TRACE1("LoadingDirectory: \"%s\"\n", m_szLoadingDirectory);
 
-	// get InstallDir from the registry
-	m_szInstallDirectory = GetProfileString(REGKEY_INSTALL_DIRECTORY, "", NULL);
-	if( ! m_szInstallDirectory.GetLength() ) {
-		if( ! GetRegKeyValue(HKEY_LOCAL_MACHINE, REGPATH_INSTALL_DIRECTORY, "InstallDir", m_szInstallDirectory) ) {
-			// No registry hint on either side - infer from the running EXE's directory.
-			// This makes installer-less unzip-and-run setups work without prompting the user.
-			TCHAR szExePath[MAX_PATH];
-			GetModuleFileName(NULL, szExePath, MAX_PATH);
-			m_szInstallDirectory = GetFileDirectory(szExePath);
-		}
-		WriteProfileString(REGKEY_INSTALL_DIRECTORY, "", m_szInstallDirectory);
+	// Resolve the install directory.
+	//
+	//   1. HKLM\Software\Crimson System\Crimson Editor  ("InstallDir")
+	//      — the installer writes this once at install time. It is the
+	//        machine-wide source of truth and the only thing external
+	//        components (e.g. the shell extension) need to look at.
+	//
+	//   2. The directory of the running EXE.
+	//      — fallback for installer-less unzip-and-run setups, USB-stick
+	//        portable use, or any environment where HKLM was never
+	//        written. Recomputed every launch so drive-letter changes
+	//        are followed automatically.
+	//
+	// We intentionally do NOT cache this in HKCU. The old design cached
+	// it as the default value of an "Install Directory" subkey under
+	// HKCU, but that turned a machine property into a per-user one,
+	// went stale whenever the EXE moved, and forced every external
+	// reader (ShellExt etc.) to know the cache layout. With the cache
+	// gone, lookup is one read with a deterministic fallback.
+	if( ! GetRegKeyValue(HKEY_LOCAL_MACHINE, REGPATH_INSTALL_DIRECTORY, "InstallDir", m_szInstallDirectory) ) {
+		TCHAR szExePath[MAX_PATH];
+		GetModuleFileName(NULL, szExePath, MAX_PATH);
+		m_szInstallDirectory = GetFileDirectory(szExePath);
 	}
 	TRACE1("InstallDirectory: \"%s\"\n", m_szInstallDirectory);
 
