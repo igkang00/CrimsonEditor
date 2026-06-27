@@ -33,7 +33,6 @@ void CAboutDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COPYRIGHT, m_edtCopyright);
 	DDX_Control(pDX, IDOK, m_btnOK);
 	DDX_Control(pDX, IDC_HOMEPAGE, m_lnkHomePage);
-	DDX_Control(pDX, IDC_FEEDBACK, m_lnkFeedBack);
 	//}}AFX_DATA_MAP
 }
 
@@ -64,9 +63,6 @@ BOOL CAboutDialog::OnInitDialog()
 	m_lnkHomePage.SetURL(STRING_HOMEPAGEURL);
 	m_lnkHomePage.ModifyLinkStyle(0, CHyperLink::StyleUseHover);
 
-	m_lnkFeedBack.SetURL(STRING_EMAILADDRESS);
-	m_lnkFeedBack.ModifyLinkStyle(0, CHyperLink::StyleUseHover);
-	
 	m_lnkSponsoring.SetURL(STRING_SPONSORURL);
 	m_lnkSponsoring.ModifyLinkStyle(0, CHyperLink::StyleUseHover);
 

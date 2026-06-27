@@ -27,7 +27,6 @@ public:
 	CEdit	m_edtCopyright;
 	CButton		m_btnOK;
 	CHyperLink	m_lnkHomePage;
-	CHyperLink	m_lnkFeedBack;
 	CHyperLink	m_lnkSponsoring;
 	//}}AFX_DATA
 

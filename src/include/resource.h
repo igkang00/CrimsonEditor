@@ -60,7 +60,6 @@
 #define IDC_HOMEPAGE                    1000
 #define IDC_LIST                        1000
 #define IDC_MACRO_LIST                  1000
-#define IDC_FEEDBACK                    1001
 #define IDC_SEPERATOR                   1002
 #define IDC_SPONSORING                  1002
 #define IDC_NAME                        1003
