@@ -5,12 +5,12 @@
 
 
 #define STRING_COMPANYNAME					"Crimson System"
-#define STRING_PROJECTFILEVER				"Crimson Editor 3.60"
-#define STRING_CONFIGURATIONVER				"Configuration 3.71"
-#define STRING_COLORSETTINGSVER				"Color Settings 3.71"
-#define STRING_FTPACCOUNTVER				"FTP Account 3.71"
-#define STRING_USERTOOLSVER					"User Command 3.40"
-#define STRING_USERMACROVER					"User Macro 3.50 Beta"
+#define STRING_PROJECTFILEVER				"Crimson Editor 3.80"
+#define STRING_CONFIGURATIONVER				"Configuration 3.80 x64"
+#define STRING_COLORSETTINGSVER				"Color Settings 3.80 x64"
+#define STRING_FTPACCOUNTVER				"FTP Account 3.80 x64"
+#define STRING_USERTOOLSVER					"User Command 3.80 x64"
+#define STRING_USERMACROVER					"User Macro 3.80 x64"
 
 #define STRING_HOMEPAGEURL					"http://www.crimsoneditor.com/"
 #define STRING_SPONSORURL					"http://www.crimsoneditor.com/english/sponsor.html"

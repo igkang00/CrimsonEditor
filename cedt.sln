@@ -9,24 +9,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cedt_tests", "tests\cedt_te
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug-KR|Win32 = Debug-KR|Win32
-		Debug-US|Win32 = Debug-US|Win32
-		Release-KR|Win32 = Release-KR|Win32
-		Release-US|Win32 = Release-US|Win32
 		Debug-KR|x64 = Debug-KR|x64
 		Debug-US|x64 = Debug-US|x64
 		Release-KR|x64 = Release-KR|x64
 		Release-US|x64 = Release-US|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{8B5C6D43-2E1A-4F8E-9C2B-1234567890AB}.Debug-KR|Win32.ActiveCfg = Debug-KR|Win32
-		{8B5C6D43-2E1A-4F8E-9C2B-1234567890AB}.Debug-KR|Win32.Build.0 = Debug-KR|Win32
-		{8B5C6D43-2E1A-4F8E-9C2B-1234567890AB}.Debug-US|Win32.ActiveCfg = Debug-US|Win32
-		{8B5C6D43-2E1A-4F8E-9C2B-1234567890AB}.Debug-US|Win32.Build.0 = Debug-US|Win32
-		{8B5C6D43-2E1A-4F8E-9C2B-1234567890AB}.Release-KR|Win32.ActiveCfg = Release-KR|Win32
-		{8B5C6D43-2E1A-4F8E-9C2B-1234567890AB}.Release-KR|Win32.Build.0 = Release-KR|Win32
-		{8B5C6D43-2E1A-4F8E-9C2B-1234567890AB}.Release-US|Win32.ActiveCfg = Release-US|Win32
-		{8B5C6D43-2E1A-4F8E-9C2B-1234567890AB}.Release-US|Win32.Build.0 = Release-US|Win32
 		{8B5C6D43-2E1A-4F8E-9C2B-1234567890AB}.Debug-KR|x64.ActiveCfg = Debug-KR|x64
 		{8B5C6D43-2E1A-4F8E-9C2B-1234567890AB}.Debug-KR|x64.Build.0 = Debug-KR|x64
 		{8B5C6D43-2E1A-4F8E-9C2B-1234567890AB}.Debug-US|x64.ActiveCfg = Debug-US|x64
@@ -35,14 +23,6 @@ Global
 		{8B5C6D43-2E1A-4F8E-9C2B-1234567890AB}.Release-KR|x64.Build.0 = Release-KR|x64
 		{8B5C6D43-2E1A-4F8E-9C2B-1234567890AB}.Release-US|x64.ActiveCfg = Release-US|x64
 		{8B5C6D43-2E1A-4F8E-9C2B-1234567890AB}.Release-US|x64.Build.0 = Release-US|x64
-		{A1B2C3D4-1234-4F56-9ABC-DEF012345678}.Debug-KR|Win32.ActiveCfg = Debug|Win32
-		{A1B2C3D4-1234-4F56-9ABC-DEF012345678}.Debug-KR|Win32.Build.0 = Debug|Win32
-		{A1B2C3D4-1234-4F56-9ABC-DEF012345678}.Debug-US|Win32.ActiveCfg = Debug|Win32
-		{A1B2C3D4-1234-4F56-9ABC-DEF012345678}.Debug-US|Win32.Build.0 = Debug|Win32
-		{A1B2C3D4-1234-4F56-9ABC-DEF012345678}.Release-KR|Win32.ActiveCfg = Release|Win32
-		{A1B2C3D4-1234-4F56-9ABC-DEF012345678}.Release-KR|Win32.Build.0 = Release|Win32
-		{A1B2C3D4-1234-4F56-9ABC-DEF012345678}.Release-US|Win32.ActiveCfg = Release|Win32
-		{A1B2C3D4-1234-4F56-9ABC-DEF012345678}.Release-US|Win32.Build.0 = Release|Win32
 		{A1B2C3D4-1234-4F56-9ABC-DEF012345678}.Debug-KR|x64.ActiveCfg = Debug|x64
 		{A1B2C3D4-1234-4F56-9ABC-DEF012345678}.Debug-KR|x64.Build.0 = Debug|x64
 		{A1B2C3D4-1234-4F56-9ABC-DEF012345678}.Debug-US|x64.ActiveCfg = Debug|x64

@@ -1,22 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug-KR|Win32">
-      <Configuration>Debug-KR</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release-KR|Win32">
-      <Configuration>Release-KR</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug-US|Win32">
-      <Configuration>Debug-US</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release-US|Win32">
-      <Configuration>Release-US</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug-KR|x64">
       <Configuration>Debug-KR</Configuration>
       <Platform>x64</Platform>
@@ -102,22 +86,9 @@
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </Midl>
   </ItemDefinitionGroup>
-  <!-- Release Win32: link against the bundled 32-bit HtmlHelp.lib
-       (no x64 build available there). The SAFESEH workaround is only
-       meaningful on x86, drop the flag on x64 builds. -->
-  <ItemDefinitionGroup Condition="('$(Configuration)'=='Release-KR' or '$(Configuration)'=='Release-US') and '$(Platform)'=='Win32'">
-    <Link>
-      <AdditionalLibraryDirectories>third_party\htmlhelp;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <TargetMachine>MachineX86</TargetMachine>
-      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
-    </Link>
-    <Midl>
-      <TargetEnvironment>Win32</TargetEnvironment>
-    </Midl>
-  </ItemDefinitionGroup>
   <!-- Release x64: use the Windows SDK's HtmlHelp.Lib (resolved
-       automatically from the SDK lib path) instead of the 1999
-       32-bit bundled lib. -->
+       automatically from the SDK lib path) instead of the bundled
+       32-bit one. -->
   <ItemDefinitionGroup Condition="('$(Configuration)'=='Release-KR' or '$(Configuration)'=='Release-US') and '$(Platform)'=='x64'">
     <Link>
       <TargetMachine>MachineX64</TargetMachine>
@@ -155,20 +126,6 @@
     </ResourceCompile>
     <Midl>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </Midl>
-  </ItemDefinitionGroup>
-  <!-- Debug Win32: bundled 32-bit HtmlHelp.lib + EditAndContinue
-       (EditAndContinue is x86-only on this toolset). -->
-  <ItemDefinitionGroup Condition="('$(Configuration)'=='Debug-KR' or '$(Configuration)'=='Debug-US') and '$(Platform)'=='Win32'">
-    <ClCompile>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-    </ClCompile>
-    <Link>
-      <AdditionalLibraryDirectories>third_party\htmlhelp;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <TargetMachine>MachineX86</TargetMachine>
-    </Link>
-    <Midl>
-      <TargetEnvironment>Win32</TargetEnvironment>
     </Midl>
   </ItemDefinitionGroup>
   <!-- Debug x64: Windows SDK HtmlHelp.Lib + ProgramDatabase debug
