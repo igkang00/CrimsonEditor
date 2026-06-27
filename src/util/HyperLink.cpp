@@ -517,7 +517,7 @@ HINSTANCE CHyperLink::GotoURL(LPCTSTR url, int showcmd)
     HINSTANCE result = ShellExecute(NULL, _T("open"), url, NULL,NULL, showcmd);
 
     // If it failed, get the .htm regkey and lookup the program
-    if ((UINT)result <= HINSTANCE_ERROR) {		
+    if ((INT_PTR)result <= (INT_PTR)HINSTANCE_ERROR) {
 		
         if (GetRegKey(HKEY_CLASSES_ROOT, _T(".htm"), key, sizeof(key) / sizeof(TCHAR)) == ERROR_SUCCESS) {
             lstrcat(key, _T("\\shell\\open\\command"));
@@ -537,7 +537,7 @@ HINSTANCE CHyperLink::GotoURL(LPCTSTR url, int showcmd)
 
                 lstrcat(pos, _T(" "));
                 lstrcat(pos, url);
-                result = (HINSTANCE) WinExec(key,showcmd);
+                result = (HINSTANCE)(INT_PTR) WinExec(key,showcmd);
             }
         }
 	}
@@ -548,8 +548,8 @@ HINSTANCE CHyperLink::GotoURL(LPCTSTR url, int showcmd)
 // Activate the link
 void CHyperLink::FollowLink() 
 {	
-	int result = (int) GotoURL(m_strURL, SW_SHOW);
-    if (result <= HINSTANCE_ERROR) {
+	INT_PTR result = (INT_PTR) GotoURL(m_strURL, SW_SHOW);
+    if (result <= (INT_PTR)HINSTANCE_ERROR) {
         MessageBeep(MB_ICONEXCLAMATION);	// Unable to follow link
         ReportError(result);
     } else {

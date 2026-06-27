@@ -734,7 +734,7 @@ HTREEITEM CFileWindow::InsertProjectTreeItem(HTREEITEM hParent, LPCTSTR lpszText
 	lpInfo->nItemType = nType;	lpInfo->nFtpAccount = nAccount;
 	lstrcpyn(lpInfo->szPathName, lpszPathName, MAX_PATH);
 
-	BOOL bReturn = m_treProjectTree.SetItemData( hItem, (DWORD)lpInfo );
+	BOOL bReturn = m_treProjectTree.SetItemData( hItem, (DWORD_PTR)lpInfo );
 
 	TVSORTCB sort; sort.hParent = hParent; sort.lpfnCompare = CompareProjectItem; sort.lParam = 0L;
 	BOOL bSorted = m_treProjectTree.SortChildrenCB( & sort );
@@ -1104,7 +1104,7 @@ BOOL CFileWindow::ExecuteProjectItem(LPPROJECTITEMINFO lpInfo)
 
 	CWnd * pWnd = AfxGetMainWnd(); if( ! pWnd ) return FALSE;
 	HINSTANCE hResult = ::ShellExecute(NULL, "open", szPath, NULL, NULL, SW_SHOWNORMAL);
-	return ((UINT)hResult > 32) ? TRUE : FALSE;
+	return ((INT_PTR)hResult > 32) ? TRUE : FALSE;
 }
 
 BOOL CFileWindow::ShowPropProjectItem(LPPROJECTITEMINFO lpInfo)

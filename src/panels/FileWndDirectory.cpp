@@ -945,7 +945,7 @@ BOOL CFileWindow::ExecuteDirectoryItem(LPCTSTR lpszPathName)
 
 	CWnd * pWnd = AfxGetMainWnd(); if( ! pWnd ) return FALSE;
 	HINSTANCE hResult = ::ShellExecute(NULL, "open", szPath, NULL, NULL, SW_SHOWNORMAL);
-	return ((UINT)hResult > 32) ? TRUE : FALSE;
+	return ((INT_PTR)hResult > 32) ? TRUE : FALSE;
 }
 
 BOOL CFileWindow::ExploreDirectoryItem(LPCTSTR lpszPathName)
@@ -955,7 +955,7 @@ BOOL CFileWindow::ExploreDirectoryItem(LPCTSTR lpszPathName)
 
 	CWnd * pWnd = AfxGetMainWnd(); if( ! pWnd ) return FALSE;
 	HINSTANCE hResult = ::ShellExecute(NULL, "open", szPath, NULL, NULL, SW_SHOWNORMAL);
-	return ((UINT)hResult > 32) ? TRUE : FALSE;
+	return ((INT_PTR)hResult > 32) ? TRUE : FALSE;
 }
 
 BOOL CFileWindow::FindInDirectoryItem(LPCTSTR lpszPathName)
@@ -965,7 +965,7 @@ BOOL CFileWindow::FindInDirectoryItem(LPCTSTR lpszPathName)
 
 	CWnd * pWnd = AfxGetMainWnd(); if( ! pWnd ) return FALSE;
 	HINSTANCE hResult = ::ShellExecute(NULL, "find", szPath, NULL, NULL, SW_SHOWNORMAL);
-	return ((UINT)hResult > 32) ? TRUE : FALSE;
+	return ((INT_PTR)hResult > 32) ? TRUE : FALSE;
 }
 
 BOOL CFileWindow::ShowPropDirectoryItem(LPCTSTR lpszPathName)

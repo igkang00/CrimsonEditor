@@ -209,13 +209,13 @@ HINSTANCE GotoURL(LPCTSTR URL, INT nCmdShow)
 	HINSTANCE hResult = ShellExecute(NULL, _T("open"), URL, NULL, NULL, nCmdShow);
 
 	// If it failed, get the .htm regkey and lookup the program
-	if ((UINT)hResult <= HINSTANCE_ERROR) {
+	if ((INT_PTR)hResult <= (INT_PTR)HINSTANCE_ERROR) {
 		CString szCommand = GetDefaultBrowserPath();
 
 		if( szCommand.GetLength() ) {
 			szCommand += " ";
 			szCommand += URL;
-            hResult = (HINSTANCE) WinExec(szCommand, nCmdShow);
+            hResult = (HINSTANCE)(INT_PTR) WinExec(szCommand, nCmdShow);
 		}
 	}
 	  

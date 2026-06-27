@@ -470,7 +470,7 @@ int CCedtApp::ExitInstance()
 
 	// Uninitialize HtmlHelp if it was initialized
 	if( m_bHtmlHelpInitialized ) {
-		::HtmlHelp(NULL, NULL, HH_UNINITIALIZE, (DWORD)&m_dwHtmlHelpCookie);
+		::HtmlHelp(NULL, NULL, HH_UNINITIALIZE, (DWORD_PTR)&m_dwHtmlHelpCookie);
 		m_bHtmlHelpInitialized = FALSE;
 	}
 

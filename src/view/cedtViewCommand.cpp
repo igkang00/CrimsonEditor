@@ -327,7 +327,7 @@ BOOL CCedtView::ExecuteWinHelp(LPCTSTR lpszCommand, LPCTSTR lpszArgument)
 //	HWND hWnd = ::GetDesktopWindow(); -- changed to release input focus
 	HWND hWnd = AfxGetMainWnd()->m_hWnd;
 
-	return ::WinHelp( hWnd, lpszCommand, HELP_PARTIALKEY, (DWORD)lpszArgument );
+	return ::WinHelp( hWnd, lpszCommand, HELP_PARTIALKEY, (DWORD_PTR)lpszArgument );
 }
 
 BOOL CCedtView::ExecuteHtmlHelp(LPCTSTR lpszCommand, LPCTSTR lpszArgument)
@@ -338,7 +338,7 @@ BOOL CCedtView::ExecuteHtmlHelp(LPCTSTR lpszCommand, LPCTSTR lpszArgument)
 	link.fIndexOnFail = TRUE;
 
 	if( ! CCedtApp::m_bHtmlHelpInitialized ) {
-		::HtmlHelp(NULL, NULL, HH_INITIALIZE, (DWORD)&CCedtApp::m_dwHtmlHelpCookie);
+		::HtmlHelp(NULL, NULL, HH_INITIALIZE, (DWORD_PTR)&CCedtApp::m_dwHtmlHelpCookie);
 		CCedtApp::m_bHtmlHelpInitialized = TRUE;
 	} // HtmlHelp will be uninitialized in CCedtApp::ExitInstance()
 
@@ -346,7 +346,7 @@ BOOL CCedtView::ExecuteHtmlHelp(LPCTSTR lpszCommand, LPCTSTR lpszArgument)
 	HWND hWnd = AfxGetMainWnd()->m_hWnd;
 
 //	HWND hHlp = ::HtmlHelp( hWnd, lpszCommand, HH_DISPLAY_TOC, NULL);
-	HWND hHlp = ::HtmlHelp( hWnd, lpszCommand, HH_KEYWORD_LOOKUP, (DWORD)(& link) );
+	HWND hHlp = ::HtmlHelp( hWnd, lpszCommand, HH_KEYWORD_LOOKUP, (DWORD_PTR)(& link) );
 
 	return hHlp ? TRUE : FALSE;
 }
