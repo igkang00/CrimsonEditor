@@ -53,11 +53,7 @@ BOOL CAboutDialog::OnInitDialog()
 	CRect rect; GetClientRect( & rect );
 	m_stcLogo.MoveWindow( rect.right - 236 - 14 - 2, 14 + 2, 236 + 2, 31 + 2);
 
-	CString szCopyright; // szCopyright.LoadString(IDS_TEXT_COPYRIGHT);
-	szCopyright += STRING_COPYRIGHT1;
-	szCopyright += STRING_COPYRIGHT2;
-	szCopyright += STRING_COPYRIGHT3;
-	szCopyright += STRING_COPYRIGHT4;
+	CString szCopyright; szCopyright.LoadString(IDS_TEXT_COPYRIGHT);
 	m_edtCopyright.SetWindowText(szCopyright);
 
 	CString szCredits; szCredits.LoadString(IDS_TEXT_CREDITS);

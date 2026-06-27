@@ -1,0 +1,11 @@
+# cedt_kr.rc is MBCS / CP949 (Korean codepage). Treat as binary so neither
+# Git's CRLF normalization nor a careless re-save in an editor can rewrite
+# it as UTF-8 — that loses every Korean menu/string in the file.
+cedt_kr.rc -text
+
+# Resource compiler outputs and other binary build inputs.
+*.aps    binary
+*.res    binary
+*.ico    binary
+*.bmp    binary
+*.cur    binary

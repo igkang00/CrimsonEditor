@@ -2259,7 +2259,7 @@ BEGIN
             VALUE "FileDescription", "Crimson Editor\0"
             VALUE "FileVersion", "3.71 English\0"
             VALUE "InternalName", "cedt.exe\0"
-            VALUE "LegalCopyright", "Copyright (C) 1999-2004 Ingyu Kang\0"
+            VALUE "LegalCopyright", "Copyright (C) 1999-2026 Ingyu Kang\0"
             VALUE "LegalTrademarks", "Crimson Editor\0"
             VALUE "OriginalFilename", "cedt.exe\0"
             VALUE "PrivateBuild", "1\0"
@@ -3338,8 +3338,8 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_TEXT_COPYRIGHT      "\r\n  Crimson Editor 3.71 English (Freeware)\r\n\r\n  Copyright (C) 1999-2004 Ingyu Kang, All rights reserved.\r\n"
-    IDS_TEXT_CREDITS        "\r\n  Part of this software was derived from Henry Spencer's\r\n  regular expression library.\r\n\r\n  This software is packaged using NSIS by courtesy of\r\n  Nullsoft (www.nullsoft.com).\r\n"
+    IDS_TEXT_COPYRIGHT      "\r\n  Crimson Editor 3.71 English (Freeware)\r\n\r\n  Copyright (C) 1999-2026 Ingyu Kang, All rights reserved.\r\n"
+    IDS_TEXT_CREDITS        "\r\n  Part of this software was derived from Henry Spencer's\r\n  regular expression library.\r\n\r\n  This software is packaged using Inno Setup by\r\n  Jordan Russell (jrsoftware.org).\r\n"
 END
 
 STRINGTABLE DISCARDABLE 

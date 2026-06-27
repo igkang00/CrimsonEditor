@@ -12,11 +12,6 @@
 #define STRING_USERTOOLSVER					"User Command 3.40"
 #define STRING_USERMACROVER					"User Macro 3.50 Beta"
 
-#define STRING_COPYRIGHT1					"\r\n  Crimson Editor 3.71 Korean (Freeware)"
-#define STRING_COPYRIGHT2					"\r\n"
-#define STRING_COPYRIGHT3					"\r\n  Copyright (C) 1999-2005 Ingyu Kang, All rights reserved."
-#define STRING_COPYRIGHT4					"\r\n"
-
 #define STRING_HOMEPAGEURL					"http://www.crimsoneditor.com/"
 #define STRING_SPONSORURL					"http://www.crimsoneditor.com/english/sponsor.html"
 #define STRING_EMAILADDRESS					"mailto:crimsonware@yahoo.com"
