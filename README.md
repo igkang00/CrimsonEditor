@@ -79,6 +79,27 @@ At startup the app resolves its install directory in this order:
 
 See [docs/configuration.md](docs/configuration.md) for the full picture of how settings — including this install-directory lookup — are loaded and saved.
 
+### Installer build
+
+The installer (Inno Setup 6) is produced by [build_installer.ps1](build_installer.ps1) at the repo root:
+
+```powershell
+.\build_installer.ps1
+```
+
+The script does four things, in order:
+
+1. Builds `cedt` (Release-KR, Release-US, Win32) via MSBuild.
+2. Builds the two helper binaries: `tools\launch\launch.vcxproj` (Win32 Release) and `tools\shellext\shellext.vcxproj` (x64 Release).
+3. Downloads `dist\redist\vc_redist.x86.exe` from `aka.ms/vs/17/release/vc_redist.x86.exe` if it isn't already cached.
+4. Invokes ISCC on [installer.iss](installer.iss).
+
+Output: `dist\crimson-editor-3.80-setup.exe`. The whole `dist\` tree is `.gitignore`d (binaries + downloaded redist + setup output). `-SkipBuild` and `-SkipRedist` switches skip the matching steps for quick iteration on `installer.iss` alone.
+
+Inno Setup must be installed first; the script auto-discovers `ISCC.exe` at `C:\Program Files (x86)\Inno Setup 6\ISCC.exe`. Get it from <https://jrsoftware.org/isdl.php>.
+
+The installer ships a single executable per selected edition (Korean or English) into `Program Files\Crimson Editor`, records the install path under `HKLM\Software\Crimson System\Crimson Editor\InstallDir`, optionally registers `ShellExt.dll` for the right-click "Edit with Crimson Editor" menu, and installs the bundled `runtime\` assets (dictionaries, syntax specs, color schemes, templates, docs). The uninstaller deregisters the shell extension and removes everything it installed; user settings under `HKCU` and `%APPDATA%\Crimson Editor\` are left alone so a re-install picks them back up.
+
 ---
 
 ## Tests

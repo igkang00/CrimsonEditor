@@ -12,6 +12,10 @@
 # (so the main project lands at /build/ and tests/cedt_tests.vcxproj at /tests/build/)
 **/build/
 
+# Installer build outputs: dist/redist/vc_redist.x86.exe (downloaded by
+# build_installer.ps1) and dist/crimson-editor-*-setup.exe (ISCC output).
+dist/
+
 # Modern Visual Studio
 .vs/
 *.vcxproj.user
