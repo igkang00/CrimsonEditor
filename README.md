@@ -41,10 +41,12 @@ Debug/Release × KR/US are split into four configurations. Each configuration co
 
 | Configuration | Artifact |
 | --- | --- |
-| `Debug-KR \| Win32`   | `Debug-KR\cedt_kr.exe` |
-| `Release-KR \| Win32` | `Release-KR\cedt_kr.exe` |
-| `Debug-US \| Win32`   | `Debug-US\cedt_us.exe` |
-| `Release-US \| Win32` | `Release-US\cedt_us.exe` |
+| `Debug-KR \| Win32`   | `build\Debug-KR\cedt_kr.exe` |
+| `Release-KR \| Win32` | `build\Release-KR\cedt_kr.exe` |
+| `Debug-US \| Win32`   | `build\Debug-US\cedt_us.exe` |
+| `Release-US \| Win32` | `build\Release-US\cedt_us.exe` |
+
+All build artifacts (object files, PCH, EXE) go under `build/<Configuration>/`. The `cedt_tests` project follows the same convention (`build\Debug\cedt_tests.exe` / `build\Release\cedt_tests.exe`). The `build/` directory is gitignored.
 
 ### Build Setup
 
@@ -88,7 +90,7 @@ Quick run:
 
 ```
 msbuild tests\cedt_tests.vcxproj /p:Configuration=Debug /p:Platform=Win32
-tests\Debug\cedt_tests.exe
+build\Debug\cedt_tests.exe
 ```
 
 See [docs/testing.md](docs/testing.md) for the per-module test list, project settings (toolset, charset, subsystem), how to add a new test, and the planned roadmap for the integration (L2) and end-to-end (L3) layers — including the rationale for extracting `cedt_core` as a **static library** (not a DLL) as the L2 prerequisite.

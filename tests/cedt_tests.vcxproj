@@ -42,8 +42,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <OutDir>$(ProjectDir)$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)build\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)build\$(Configuration)\</IntDir>
     <TargetName>cedt_tests</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">

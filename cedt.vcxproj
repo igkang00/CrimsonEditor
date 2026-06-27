@@ -49,8 +49,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <OutDir>$(ProjectDir)$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)build\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)build\$(Configuration)\</IntDir>
     <TargetName Condition="'$(Configuration)'=='Release-KR' or '$(Configuration)'=='Debug-KR'">cedt_kr</TargetName>
     <TargetName Condition="'$(Configuration)'=='Release-US' or '$(Configuration)'=='Debug-US'">cedt_us</TargetName>
   </PropertyGroup>

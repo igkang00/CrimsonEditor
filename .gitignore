@@ -8,13 +8,8 @@
 # Backups
 *.bak
 
-# Build output directories
-Debug/
-Release/
-Debug-KR/
-Debug-US/
-Release-KR/
-Release-US/
+# Build output (cedt.vcxproj + cedt_tests.vcxproj OutDir/IntDir)
+build/
 
 # Modern Visual Studio
 .vs/
