@@ -352,7 +352,7 @@ BOOL CDictionary::FileLoad(LPCTSTR lpszPathName, CALLBACK_FUNCTION fcnCallback)
 		}
 
 		// call a callback function if exist
-		if( ! (nCount % 100) && fcnCallback ) fcnCallback( fin.tellg() );
+		if( ! (nCount % 100) && fcnCallback ) fcnCallback( (UINT)fin.tellg() );
 	}
 
 	fin.close();
@@ -558,7 +558,7 @@ void CMemText::MemoryLoad(CHAR * pMem, INT size)
 	while( fwd - pMem < size ) {
 		beg = fwd;
 		while( fwd - pMem < size && * fwd != '\r' && * fwd != '\n' && * fwd != '\0' ) fwd++;
-		AddTail( CString(beg, fwd-beg) );
+		AddTail( CString(beg, (int)(fwd-beg)) );
 		if( * fwd != '\0' ) { if(* fwd == '\r') fwd++; if(* fwd == '\n') fwd++; }
 		else break;
 	}
@@ -729,7 +729,7 @@ BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 				}
 
 				nCount = MultiByteToWideChar(CP_ACP, 0, rLine, -1, (LPWSTR)pWideBuffer, nBufferSize + 1);
-				INT nLength = wcslen( (LPCWSTR)pWideBuffer );
+				INT nLength = (INT)wcslen( (LPCWSTR)pWideBuffer );
 
 				file.Write( pWideBuffer, 2 * nLength );
 				if( pos ) file.Write( szWideDelim, 2 * nDelimSize );
@@ -751,7 +751,7 @@ BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 				}
 
 				nCount = MultiByteToWideChar(CP_ACP, 0, rLine, -1, (LPWSTR)pWideBuffer, nBufferSize + 1);
-				INT nLength = wcslen( (LPCWSTR)pWideBuffer );
+				INT nLength = (INT)wcslen( (LPCWSTR)pWideBuffer );
 				for( INT i = 0; i < nLength; i++ ) _SWAP_UCHAR( pWideBuffer[2*i], pWideBuffer[2*i+1] );
 
 				file.Write( pWideBuffer, 2 * nLength );
@@ -773,7 +773,7 @@ BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 
 				nCount = MultiByteToWideChar(CP_ACP, 0, rLine, -1, (LPWSTR)pWideBuffer, nBufferSize + 1);
 				nCount = WideCharToMultiByte(CP_UTF8, 0, (LPCWSTR)pWideBuffer, -1, pBuffer, 3 * (nBufferSize + 1), NULL, NULL);
-				INT nLength = strlen( pBuffer );
+				INT nLength = (INT)strlen( pBuffer );
 
 				file.Write( pBuffer, nLength );
 				if( pos ) file.Write( szDelim, nDelimSize );
@@ -847,7 +847,7 @@ CString CUserCommand::GetHotKeyText()
 {
 	UINT nScanCode = MapVirtualKey( m_wVirtualKeyCode, 0 );
 	LPARAM lParam = nScanCode << 16;
-	TCHAR szKeyName[1024]; GetKeyNameText( lParam, szKeyName, 1024 );
+	TCHAR szKeyName[1024]; GetKeyNameText( (LONG)lParam, szKeyName, 1024 );
 
 	CString szHotKeyText = "";
 	if( strlen(szKeyName) ) {
@@ -955,7 +955,7 @@ CString CMacroBuffer::GetHotKeyText()
 {
 	UINT nScanCode = MapVirtualKey( m_wVirtualKeyCode, 0 );
 	LPARAM lParam = nScanCode << 16;
-	TCHAR szKeyName[1024]; GetKeyNameText( lParam, szKeyName, 1024 );
+	TCHAR szKeyName[1024]; GetKeyNameText( (LONG)lParam, szKeyName, 1024 );
 
 	CString szHotKeyText = "";
 	if( strlen(szKeyName) ) {
@@ -979,28 +979,28 @@ BOOL CMacroBuffer::StreamSave(ofstream & fout)
 	fout.write((const char *)(& nLength), sizeof(nLength));
 	if( nLength ) fout.write((const char *)(LPCTSTR)m_szName, nLength);
 
-	nCount = m_lstAction.GetCount(); pos = m_lstAction.GetHeadPosition();
+	nCount = (INT)m_lstAction.GetCount(); pos = m_lstAction.GetHeadPosition();
 	fout.write((const char *)(& nCount), sizeof(nCount));
 	while( pos ) { 
 		nAction = m_lstAction.GetNext(pos); 
 		fout.write((const char *)(& nAction), sizeof(nAction));
 	}
 
-	nCount = m_lstParam.GetCount(); pos = m_lstParam.GetHeadPosition();
+	nCount = (INT)m_lstParam.GetCount(); pos = m_lstParam.GetHeadPosition();
 	fout.write((const char *)(& nCount), sizeof(nCount));
 	while( pos ) { 
 		nParam = m_lstParam.GetNext(pos); 
 		fout.write((const char *)(& nParam), sizeof(nParam));
 	}
 
-	nCount = m_lstFlags.GetCount(); pos = m_lstFlags.GetHeadPosition();
+	nCount = (INT)m_lstFlags.GetCount(); pos = m_lstFlags.GetHeadPosition();
 	fout.write((const char *)(& nCount), sizeof(nCount));
 	while( pos ) { 
 		nFlags = m_lstFlags.GetNext(pos); 
 		fout.write((const char *)(& nFlags), sizeof(nFlags));
 	}
 
-	nCount = m_lstString.GetCount(); pos = m_lstString.GetHeadPosition();
+	nCount = (INT)m_lstString.GetCount(); pos = m_lstString.GetHeadPosition();
 	fout.write((const char *)(& nCount), sizeof(nCount));
 	while( pos ) { 
 		szString = m_lstString.GetNext(pos); nLength = szString.GetLength();

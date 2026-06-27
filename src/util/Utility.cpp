@@ -34,8 +34,8 @@ void MakeCapitalize(CString & rString)
 // find string
 INT ForwardFindString(LPCTSTR lpszString, LPCTSTR lpszSubStr, INT nFrom, BOOL bWholeWord, BOOL bMatchCase)
 {
-	INT nLen1 = strlen(lpszString); if( ! nLen1 ) return -1;
-	INT nLen2 = strlen(lpszSubStr); if( ! nLen2 ) return -1;
+	INT nLen1 = (INT)strlen(lpszString); if( ! nLen1 ) return -1;
+	INT nLen2 = (INT)strlen(lpszSubStr); if( ! nLen2 ) return -1;
 	if( nFrom < 0 ) nFrom = 0; if( nFrom > nLen1 ) return -1;
 
 	TCHAR * pString = (TCHAR *)lpszString;
@@ -50,8 +50,8 @@ INT ForwardFindString(LPCTSTR lpszString, LPCTSTR lpszSubStr, INT nFrom, BOOL bW
 		if( bWholeWord ) {
 			UINT nBef = (pResult > pString) ? pResult[-1] : 0;
 			UINT nAft = pResult[nLen2];
-			if( ! __iscsym(nBef) && ! __iscsym(nAft) ) { nFound = pResult - pString; break; }
-		} else { nFound = pResult - pString; break; }
+			if( ! __iscsym(nBef) && ! __iscsym(nAft) ) { nFound = (INT)(pResult - pString); break; }
+		} else { nFound = (INT)(pResult - pString); break; }
 
 		pOffset = pResult + 1; 
 	}
@@ -66,8 +66,8 @@ INT ForwardFindString(LPCTSTR lpszString, LPCTSTR lpszSubStr, INT nFrom, BOOL bW
 
 INT ReverseFindString(LPCTSTR lpszString, LPCTSTR lpszSubStr, INT nFrom, BOOL bWholeWord, BOOL bMatchCase)
 {
-	INT nLen1 = strlen(lpszString); if( ! nLen1 ) return -1;
-	INT nLen2 = strlen(lpszSubStr); if( ! nLen2 ) return -1;
+	INT nLen1 = (INT)strlen(lpszString); if( ! nLen1 ) return -1;
+	INT nLen2 = (INT)strlen(lpszSubStr); if( ! nLen2 ) return -1;
 	if( nFrom < 0 ) nFrom = nLen1; if( nFrom > nLen1 ) return -1;
 
 	TCHAR * pString = (TCHAR *)lpszString;
@@ -84,8 +84,8 @@ INT ReverseFindString(LPCTSTR lpszString, LPCTSTR lpszSubStr, INT nFrom, BOOL bW
 		} else if( bWholeWord ) {
 			UINT nBef = (pResult > pString) ? pResult[-1] : 0;
 			UINT nAft = pResult[nLen2];
-			if( ! __iscsym(nBef) && ! __iscsym(nAft) ) nFound = pResult - pString;
-		} else nFound = pResult - pString;
+			if( ! __iscsym(nBef) && ! __iscsym(nAft) ) nFound = (INT)(pResult - pString);
+		} else nFound = (INT)(pResult - pString);
 
 		pOffset = pResult + 1;
 	}
@@ -101,8 +101,8 @@ INT ReverseFindString(LPCTSTR lpszString, LPCTSTR lpszSubStr, INT nFrom, BOOL bW
 // regular expression
 INT ForwardFindStringRegExp(LPCTSTR lpszString, LPCTSTR lpszRegExp, CRegExp & clsRegExp, INT nFrom, BOOL bWholeWord, BOOL bMatchCase)
 {
-	INT nLen1 = strlen(lpszString); // if( ! nLen1 ) return -1; -- can be zero length string
-	INT nLen2 = strlen(lpszRegExp); if( ! nLen2 ) return -1;
+	INT nLen1 = (INT)strlen(lpszString); // if( ! nLen1 ) return -1; -- can be zero length string
+	INT nLen2 = (INT)strlen(lpszRegExp); if( ! nLen2 ) return -1;
 	if( nFrom < 0 ) nFrom = 0; if( nFrom > nLen1 ) return -1;
 
 	TCHAR * pString = (TCHAR *)lpszString;
@@ -123,8 +123,8 @@ INT ForwardFindStringRegExp(LPCTSTR lpszString, LPCTSTR lpszRegExp, CRegExp & cl
 		} else if( bWholeWord ) {
 			UINT nBef = (pOffset + nResult > pString) ? pOffset[nResult - 1] : 0;
 			UINT nAft = pOffset[nResult + nLen3];
-			if( ! __iscsym(nBef) && ! __iscsym(nAft) ) { nFound = pOffset - pString + nResult; break; }
-		} else { nFound = pOffset - pString + nResult; break; }
+			if( ! __iscsym(nBef) && ! __iscsym(nAft) ) { nFound = (INT)(pOffset - pString + nResult); break; }
+		} else { nFound = (INT)(pOffset - pString + nResult); break; }
 
 		pOffset = pOffset + nResult + 1;
 	}
@@ -134,8 +134,8 @@ INT ForwardFindStringRegExp(LPCTSTR lpszString, LPCTSTR lpszRegExp, CRegExp & cl
 
 INT ReverseFindStringRegExp(LPCTSTR lpszString, LPCTSTR lpszRegExp, CRegExp & clsRegExp, INT nFrom, BOOL bWholeWord, BOOL bMatchCase)
 {
-	INT nLen1 = strlen(lpszString); // if( ! nLen1 ) return -1; -- can be zero length string
-	INT nLen2 = strlen(lpszRegExp); if( ! nLen2 ) return -1;
+	INT nLen1 = (INT)strlen(lpszString); // if( ! nLen1 ) return -1; -- can be zero length string
+	INT nLen2 = (INT)strlen(lpszRegExp); if( ! nLen2 ) return -1;
 	if( nFrom < 0 ) nFrom = nLen1; if( nFrom > nLen1 ) return -1;
 
 	TCHAR * pString = (TCHAR *)lpszString;
@@ -158,8 +158,8 @@ INT ReverseFindStringRegExp(LPCTSTR lpszString, LPCTSTR lpszRegExp, CRegExp & cl
 		} else if( bWholeWord ) {
 			UINT nBef = (pOffset + nResult > pString) ? pOffset[nResult - 1] : 0;
 			UINT nAft = pOffset[nResult + nLen3];
-			if( ! __iscsym(nBef) && ! __iscsym(nAft) ) nLocal = pOffset - pString + nResult;
-		} else nLocal = pOffset - pString + nResult;
+			if( ! __iscsym(nBef) && ! __iscsym(nAft) ) nLocal = (INT)(pOffset - pString + nResult);
+		} else nLocal = (INT)(pOffset - pString + nResult);
 
 		// greedy rule of regular expression
 		if( nLocal >= 0 && nLocal + nLen3 != nFound + nLength ) { nFound = nLocal; nLength = nLen3; }

@@ -8,7 +8,7 @@ BOOL ParseFileFilter(CStringArray & arrDescription, CStringArray & arrExtension,
 	if( szFilter[strlen(szFilter)-1] != '|' ) strcat( szFilter, "|" );
 
 	arrDescription.RemoveAll(); arrExtension.RemoveAll();
-	TCHAR * pFilter = szFilter; INT nLen = strlen(szFilter);
+	TCHAR * pFilter = szFilter; INT nLen = (INT)strlen(szFilter);
 	BOOL bDescription = TRUE; CString szDescription;
 
 	for(INT i = 0; i < nLen; i++) {
@@ -26,7 +26,7 @@ BOOL ParseFileFilter(CStringArray & arrDescription, CStringArray & arrExtension,
 				bDescription = TRUE;
 			}
 
-			pFilter += strlen(pFilter) + 1;
+			pFilter += (INT)strlen(pFilter) + 1;
 		}
 	}
 
@@ -43,20 +43,20 @@ BOOL MatchFileFilter(LPCTSTR lpszPath, LPCTSTR lpszFilter)
 	strcpy( szFilter, lpszFilter );
 	if( nFilterLen == 0 || szFilter[nFilterLen - 1] != ';' ) strcat( szFilter, ";" );
 
-	TCHAR * pFilter = szFilter; INT nLen = strlen(szFilter);
+	TCHAR * pFilter = szFilter; INT nLen = (INT)strlen(szFilter);
 	BOOL bMatch = FALSE;
 
 	for(INT i = 0; i < nLen; i++) {
 		if( szFilter[i] == ';' ) {
 			szFilter[i] = '\0';
-			INT nFilter = strlen( pFilter );
-			INT nPath = strlen( lpszPath );
+			INT nFilter = (INT)strlen( pFilter );
+			INT nPath = (INT)strlen( lpszPath );
 
 			if( ! strcmp(pFilter, "*.*") ) { bMatch = TRUE; break; }
 			if( ! strncmp(pFilter, "*.", 2) && (nPath >= nFilter-1)
 				&& ! stricmp(pFilter+1, lpszPath+nPath-(nFilter-1)) ) { bMatch = TRUE; break; }
 
-			pFilter += strlen(pFilter) + 1;
+			pFilter += (INT)strlen(pFilter) + 1;
 		}
 	}
 
@@ -100,7 +100,7 @@ BOOL FindAllFilePath(CStringArray & arrPath, LPCTSTR lpszPath)
 
 CString QuotePathName(LPCTSTR lpszPathName)
 {
-	INT nLen = strlen(lpszPathName);
+	INT nLen = (INT)strlen(lpszPathName);
 	CString szPathName;
 
 	if( nLen >= 2 && lpszPathName[0] == '\"' && lpszPathName[nLen-1] == '\"' ) szPathName = lpszPathName;
@@ -112,7 +112,7 @@ CString QuotePathName(LPCTSTR lpszPathName)
 
 CString ChopDirectory(LPCTSTR lpszDirectory)
 {
-	INT nLen = strlen(lpszDirectory);
+	INT nLen = (INT)strlen(lpszDirectory);
 	CString szDirectory = lpszDirectory;  
 
 	if( nLen >= 1 && lpszDirectory[nLen-1] == '\\' ) return szDirectory.Mid(0, nLen-1);

@@ -499,7 +499,7 @@ void CRegExp::regtail(TCHAR *p, TCHAR *val)
 	for (scan = p; (temp = regnext(scan)) != NULL; scan = temp)
 		continue;
 
-	*((short *)(scan+1)) = (OP(scan) == BACK) ? scan - val : val - scan;
+	*((short *)(scan+1)) = (short)((OP(scan) == BACK) ? scan - val : val - scan);
 }
 
 
@@ -572,7 +572,7 @@ int CRegExp::RegFind(const TCHAR *str)
 		for (s = string; s != NULL; s = _tcschr(s+1, regstart))
 			if (regtry(s))
 			{
-				int nPos = s-str;
+				int nPos = (int)(s-str);
 
 				// Save the found substring in case we need it later
 				sFoundText = new TCHAR[GetFoundLength()+1];
@@ -590,7 +590,7 @@ int CRegExp::RegFind(const TCHAR *str)
 			if (*s == _T('\0'))
 				return(-1);
 
-		int nPos = s-str;
+		int nPos = (int)(s-str);
 
 		// Save the found substring in case we need it later
 		sFoundText = new TCHAR[GetFoundLength()+1];
@@ -863,7 +863,7 @@ TCHAR* CRegExp::GetReplaceString( const TCHAR* sReplaceExp )
 		{
 			// Get tagged expression
 			len = endp[no] - startp[no];
-			replacelen += len;
+			replacelen += (int)len;
 		}
 	}
 
@@ -900,7 +900,7 @@ TCHAR* CRegExp::GetReplaceString( const TCHAR* sReplaceExp )
 		{
 			// Get tagged expression
 			len = endp[no] - startp[no];
-			int tagpos = startp[no] - startp[0];
+			int tagpos = (int)(startp[no] - startp[0]);
 
 			_tcsncpy(buf, sFoundText + tagpos, len);
 			buf += len;
@@ -913,13 +913,13 @@ TCHAR* CRegExp::GetReplaceString( const TCHAR* sReplaceExp )
 int CRegExp::GetFoundLength()
 {
 	if( startp[0] == NULL || endp[0] == NULL ) return 0;
-	return endp[0] - startp[0];
+	return (int)(endp[0] - startp[0]);
 }
 
 BOOL CRegExp::GetFoundString(CString & szFoundString)
 {
 	if( startp[0] == NULL || endp[0] == NULL ) return FALSE;
-	szFoundString = CString(startp[0], endp[0] - startp[0]);
+	szFoundString = CString(startp[0], (int)(endp[0] - startp[0]));
 	return TRUE;
 }
 
