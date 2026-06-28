@@ -1,0 +1,266 @@
+# Source Layout
+
+A walk-through of the Crimson Editor source tree, intended for contributors who need to find where a feature lives or where to add one. For the high-level "what is this project" view, see the top-level [README](../README.md).
+
+---
+
+## Architecture Overview
+
+A standard MFC **MDI Document/View** structure.
+
+```
+CCedtApp  (src/app/cedtapp.h)        ── derived from CWinApp, application entry point
+   │
+   ├─ CMainFrame  (src/frame/MainFrm.h)  ── CMDIFrameWnd, hosts menus/toolbar/status bar/docking panes
+   │     ├─ CStatusBarEx
+   │     ├─ CToolBar
+   │     ├─ CMDIFileTab              ── top file-tab control
+   │     ├─ CFileWindow              ── left dock: Directory/Project/Remote panels
+   │     └─ COutputWindow            ── bottom dock: external tool output console
+   │
+   ├─ CChildFrame (src/frame/ChildFrm.h) ── CMDIChildWnd, split view (SplitterWndEx)
+   │
+   ├─ CCedtDoc    (src/doc/cedtDoc.h)    ── CDocument, text buffer / undo / syntax / file I/O
+   │     └─ CAnalyzedText : CList<CAnalyzedString, LPCTSTR>
+   │
+   └─ CCedtView   (src/view/cedtView.h)  ── CView, caret / drawing / input / macros / commands
+```
+
+### Core Domain Classes ([src/core/cedtElement.h](../src/core/cedtElement.h))
+
+| Class | Role |
+| --- | --- |
+| `CAnalyzedString` / `CAnalyzedText` | Text buffer holding per-line analysis results |
+| `CFormatedString` / `CFormatedText` | Word-wrapped / formatted on-screen representation |
+| `CLangSpec`, `CKeywords` | Language specification and keyword map |
+| `CDictionary` | Dictionary used for word autocompletion |
+| `CUndoBuffer` | Undo/redo history |
+| `CUserCommand`, `CMacroBuffer` | User-defined tools and macros |
+| `CSyntaxType`, `COutputPattern`, `CFileFilter` | Syntax / output parser / file filter settings |
+| `CFtpAccount` | FTP connection info |
+| `CMemText` | In-memory scratch text |
+
+---
+
+## Source File Groups
+
+The `.cpp`/`.h` files live under [src/](../src/), split into domain-specific directories. Large classes (`CCedtApp`, `CCedtDoc`, `CCedtView`, `CMainFrame`, `CFileWindow`) are spread across multiple `.cpp` files by feature area.
+
+### 1. Application (`CCedtApp`) — [src/app/](../src/app/)
+
+| File | Role |
+| --- | --- |
+| [cedtapp.cpp](../src/app/cedtapp.cpp), [cedtapp.h](../src/app/cedtapp.h) | `InitInstance`, message map, global state |
+| [cedtAppConf.cpp](../src/app/cedtAppConf.cpp) | Save/load of user settings, color schemes, macros |
+| [cedtAppDirectory.cpp](../src/app/cedtAppDirectory.cpp) | Directory panel command handling |
+| [cedtAppFile.cpp](../src/app/cedtAppFile.cpp) | Document open/save/spawn, shell command handling |
+| [cedtAppFilter.cpp](../src/app/cedtAppFilter.cpp) | File filter refresh and callbacks |
+| [cedtAppHndr.cpp](../src/app/cedtAppHndr.cpp) | Menu/command handlers (font, tab, color, etc.) |
+| [cedtAppProject.cpp](../src/app/cedtAppProject.cpp) | Project workspace |
+| [cedtAppRegistry.cpp](../src/app/cedtAppRegistry.cpp) | Registry I/O (including shell integration) |
+| [cedtAppSearch.cpp](../src/app/cedtAppSearch.cpp) | Find In Files |
+| [cedtAppView.cpp](../src/app/cedtAppView.cpp) | Refresh all open views |
+
+### 2. Document (`CCedtDoc`) — [src/doc/](../src/doc/)
+
+| File | Role |
+| --- | --- |
+| [cedtDoc.cpp](../src/doc/cedtDoc.cpp), [cedtDoc.h](../src/doc/cedtDoc.h) | Document basics / flags / remote paths |
+| [cedtDocAnal.cpp](../src/doc/cedtDocAnal.cpp) | Text analysis (word tokenisation) |
+| [cedtDocDictionary.cpp](../src/doc/cedtDocDictionary.cpp) | Autocompletion dictionary |
+| [cedtDocEdit.cpp](../src/doc/cedtDocEdit.cpp), [cedtDocEditAdv.cpp](../src/doc/cedtDocEditAdv.cpp) | Edit operations (basic / advanced) |
+| [cedtDocFile.cpp](../src/doc/cedtDocFile.cpp) | Encoding (ASCII/Unicode/UTF-8), line endings (DOS/UNIX/MAC), backups |
+| [cedtDocHndr.cpp](../src/doc/cedtDocHndr.cpp) | Document command handlers |
+| [cedtDocMap.cpp](../src/doc/cedtDocMap.cpp) | Line coordinate mapping |
+| [cedtDocSearch.cpp](../src/doc/cedtDocSearch.cpp) | Find/replace (including RegExp) |
+| [cedtDocSyntax.cpp](../src/doc/cedtDocSyntax.cpp) | Apply syntax / language specification |
+| [cedtDocUndo.cpp](../src/doc/cedtDocUndo.cpp) | Undo/redo |
+| [cedtDocView.cpp](../src/doc/cedtDocView.cpp) | View synchronisation |
+
+### 3. View (`CCedtView`) — [src/view/](../src/view/)
+
+| File | Role |
+| --- | --- |
+| [cedtView.cpp](../src/view/cedtView.cpp), [cedtView.h](../src/view/cedtView.h) | View basics / static members |
+| [cedtViewAction.cpp](../src/view/cedtViewAction.cpp) | User action dispatch |
+| [cedtViewCaret.cpp](../src/view/cedtViewCaret.cpp) | Caret position / shape |
+| [cedtViewCommand.cpp](../src/view/cedtViewCommand.cpp) | Running user tools, child-process I/O |
+| [cedtViewDraw.cpp](../src/view/cedtViewDraw.cpp) | Screen rendering |
+| [cedtViewEdit.cpp](../src/view/cedtViewEdit.cpp), [cedtViewEditAdv.cpp](../src/view/cedtViewEditAdv.cpp) | Edit commands |
+| [cedtViewEditCompose.cpp](../src/view/cedtViewEditCompose.cpp) | IME composition handling |
+| [cedtViewEvent.cpp](../src/view/cedtViewEvent.cpp) | Keyboard / mouse events |
+| [cedtViewFont.cpp](../src/view/cedtViewFont.cpp) | Font metrics |
+| [cedtViewFormat.cpp](../src/view/cedtViewFormat.cpp) | Word wrap / formatting |
+| [cedtViewHighlight.cpp](../src/view/cedtViewHighlight.cpp) | Syntax highlighting |
+| [cedtViewHndrEdit.cpp](../src/view/cedtViewHndrEdit.cpp), [cedtViewHndrMisc.cpp](../src/view/cedtViewHndrMisc.cpp) | Menu handlers |
+| [cedtViewMacro.cpp](../src/view/cedtViewMacro.cpp) | Macro record/replay |
+| [cedtViewMap.cpp](../src/view/cedtViewMap.cpp), [cedtViewMapAdv.cpp](../src/view/cedtViewMapAdv.cpp) | Screen ↔ document coordinate mapping |
+| [cedtViewMetric.cpp](../src/view/cedtViewMetric.cpp) | Character / line metrics |
+| [cedtViewMisc.cpp](../src/view/cedtViewMisc.cpp) | Miscellaneous |
+| [cedtViewMove.cpp](../src/view/cedtViewMove.cpp) | Caret movement |
+| [cedtViewPrint.cpp](../src/view/cedtViewPrint.cpp) | Print / print preview |
+| [cedtViewScroll.cpp](../src/view/cedtViewScroll.cpp) | Scrolling |
+| [cedtViewSearch.cpp](../src/view/cedtViewSearch.cpp) | Find (view side) |
+| [cedtViewSelect.cpp](../src/view/cedtViewSelect.cpp) | Selection |
+| [cedtViewUndo.cpp](../src/view/cedtViewUndo.cpp) | Undo coordination on the view side |
+
+### 4. Main Frame / Child Frame — [src/frame/](../src/frame/)
+
+| File | Role |
+| --- | --- |
+| [MainFrm.cpp](../src/frame/MainFrm.cpp), [MainFrm.h](../src/frame/MainFrm.h) | `CMDIFrameWnd`, hosts docking controls |
+| [MainFrmHndr.cpp](../src/frame/MainFrmHndr.cpp) | Main frame command handlers |
+| [MainFrmDropTarget.cpp](../src/frame/MainFrmDropTarget.cpp), [MainFrmDropTarget.h](../src/frame/MainFrmDropTarget.h) | OLE Drag & Drop |
+| [ChildFrm.cpp](../src/frame/ChildFrm.cpp), [ChildFrm.h](../src/frame/ChildFrm.h) | MDI child, splitter window |
+| [SplitterWndEx.cpp](../src/frame/SplitterWndEx.cpp), [SplitterWndEx.h](../src/frame/SplitterWndEx.h) | Extended splitter window |
+| [StatusBarEx.cpp](../src/frame/StatusBarEx.cpp), [StatusBarEx.h](../src/frame/StatusBarEx.h) | Status bar with progress / flash messages |
+
+### 5. Docking Panels — [src/panels/](../src/panels/)
+
+| File | Role |
+| --- | --- |
+| [SizeCBar.cpp](../src/panels/SizeCBar.cpp), [SizeCBar.h](../src/panels/SizeCBar.h) | Resizable control bar base |
+| [FileWnd.cpp](../src/panels/FileWnd.cpp), [FileWnd.h](../src/panels/FileWnd.h) | Left panel (Directory / Project / Remote) |
+| [FileWndDirectory.cpp](../src/panels/FileWndDirectory.cpp) | Directory tree |
+| [FileWndProject.cpp](../src/panels/FileWndProject.cpp) | Project tree |
+| [FileWndRemote.cpp](../src/panels/FileWndRemote.cpp) | Remote (FTP) tree |
+| [FileWndDropTarget.cpp](../src/panels/FileWndDropTarget.cpp) | Panel D&D target |
+| [OutputWindow.cpp](../src/panels/OutputWindow.cpp), [OutputWindow.h](../src/panels/OutputWindow.h) | Bottom output / input console |
+| [FileTab.cpp](../src/panels/FileTab.cpp), [FileTab.h](../src/panels/FileTab.h) | MDI file tab control |
+| [FileTabDropTarget.cpp](../src/panels/FileTabDropTarget.cpp) | File tab D&D |
+| [XPTabCtrl.cpp](../src/panels/XPTabCtrl.cpp), [XPTabCtrl.h](../src/panels/XPTabCtrl.h) | XP-style tab control |
+
+### 6. Dialogs — [src/dialogs/](../src/dialogs/)
+
+#### Preferences — [src/dialogs/preferences/](../src/dialogs/preferences/)
+
+[prefdialog.cpp](../src/dialogs/preferences/prefdialog.cpp), [prefdialog.h](../src/dialogs/preferences/prefdialog.h) act as the property sheet hosting these tab pages:
+
+| File | Role |
+| --- | --- |
+| [PrefDialogGeneral.cpp](../src/dialogs/preferences/PrefDialogGeneral.cpp) | General |
+| [PrefDialogFile.cpp](../src/dialogs/preferences/PrefDialogFile.cpp) | File / Encoding |
+| [PrefDialogBackup.cpp](../src/dialogs/preferences/PrefDialogBackup.cpp) | Backup |
+| [PrefDialogDirectory.cpp](../src/dialogs/preferences/PrefDialogDirectory.cpp) | Working directory |
+| [PrefDialogVisual.cpp](../src/dialogs/preferences/PrefDialogVisual.cpp) | Visual effects |
+| [PrefDialogColors.cpp](../src/dialogs/preferences/PrefDialogColors.cpp) | Colors |
+| [PrefDialogFonts.cpp](../src/dialogs/preferences/PrefDialogFonts.cpp) | Fonts |
+| [PrefDialogSyntax.cpp](../src/dialogs/preferences/PrefDialogSyntax.cpp) | Syntax |
+| [PrefDialogPrint.cpp](../src/dialogs/preferences/PrefDialogPrint.cpp) | Printing |
+| [PrefDialogOutput.cpp](../src/dialogs/preferences/PrefDialogOutput.cpp) | Output window |
+| [PrefDialogTools.cpp](../src/dialogs/preferences/PrefDialogTools.cpp) | User tools |
+| [PrefDialogCommands.cpp](../src/dialogs/preferences/PrefDialogCommands.cpp) | Commands |
+| [PrefDialogMacros.cpp](../src/dialogs/preferences/PrefDialogMacros.cpp) | Macros |
+| [PrefDialogFilters.cpp](../src/dialogs/preferences/PrefDialogFilters.cpp) | File filters |
+| [PrefDialogAssoc.cpp](../src/dialogs/preferences/PrefDialogAssoc.cpp) | File associations |
+
+#### Feature Dialogs
+
+| File | Role |
+| --- | --- |
+| [AboutDialog.cpp](../src/dialogs/AboutDialog.cpp) | About |
+| [FindDialog.cpp](../src/dialogs/FindDialog.cpp), [ReplaceDialog.cpp](../src/dialogs/ReplaceDialog.cpp), [AskReplaceDialog.cpp](../src/dialogs/AskReplaceDialog.cpp) | Find / Replace |
+| [FindInFilesDialog.cpp](../src/dialogs/FindInFilesDialog.cpp) | Find in Files |
+| [GoToDialog.cpp](../src/dialogs/GoToDialog.cpp) | Go to line number |
+| [FolderDialog.cpp](../src/util/FolderDialog.cpp) | Folder picker (lives in the util group) |
+| [ReloadAsDialog.cpp](../src/dialogs/ReloadAsDialog.cpp) | Reload with a different encoding |
+| [UserInputDialog.cpp](../src/dialogs/UserInputDialog.cpp) | Input prompt for macros / commands |
+| [MacroDefineDialog.cpp](../src/dialogs/MacroDefineDialog.cpp) | Macro definition |
+| [DocumentSummary.cpp](../src/dialogs/DocumentSummary.cpp) | Document summary |
+| [DummyDialog.cpp](../src/dialogs/DummyDialog.cpp) | Placeholder |
+| [FtpSettingsDialog.cpp](../src/dialogs/FtpSettingsDialog.cpp), [FtpAdvancedDialog.cpp](../src/dialogs/FtpAdvancedDialog.cpp), [FtpPasswordDialog.cpp](../src/dialogs/FtpPasswordDialog.cpp), [FtpTransferDialog.cpp](../src/dialogs/FtpTransferDialog.cpp), [OpenRemoteDialog.cpp](../src/dialogs/OpenRemoteDialog.cpp) | FTP-related dialogs |
+
+### 7. Network / Remote Files — [src/network/](../src/network/)
+
+| File | Role |
+| --- | --- |
+| [FtpClnt.cpp](../src/network/FtpClnt.cpp), [FtpClnt.h](../src/network/FtpClnt.h) | FTP client |
+| [RemoteFile.cpp](../src/network/RemoteFile.cpp), [RemoteFile.h](../src/network/RemoteFile.h) | Remote file handling |
+
+### 8. Utilities / Common — [src/util/](../src/util/)
+
+| File | Role |
+| --- | --- |
+| [Utility.cpp](../src/util/Utility.cpp), [Utility.h](../src/util/Utility.h) | Helper functions |
+| [PathName.cpp](../src/util/PathName.cpp), [PathName.h](../src/util/PathName.h) | Path manipulation |
+| [RegExp.cpp](../src/util/RegExp.cpp), [RegExp.h](../src/util/RegExp.h) | Regex engine ([RegExp.html](../RegExp.html) bundled as docs) |
+| [SortStringArray.cpp](../src/util/SortStringArray.cpp) | Sorted string array |
+| [ColorListBox.cpp](../src/util/ColorListBox.cpp) | List box used by color combos |
+| [HyperLink.cpp](../src/util/HyperLink.cpp) | Clickable hyperlink static |
+| [VerticalStatic.cpp](../src/util/VerticalStatic.cpp) | Vertical text static |
+| [Separator.cpp](../src/util/Separator.cpp) | Separator control |
+| [FolderDialog.cpp](../src/util/FolderDialog.cpp) | Folder picker dialog |
+| [CmdLine.cpp](../src/util/CmdLine.cpp) | Command-line parser (and inter-instance IPC) |
+| [registry.cpp](../src/util/registry.cpp), [registry.h](../src/util/registry.h) | Registry helpers |
+| [encode.cpp](../src/util/encode.cpp), [encode.h](../src/util/encode.h) | Character encoding conversion |
+| [date.cpp](../src/util/date.cpp), [date.h](../src/util/date.h) | Date / time formatting |
+| [evaluate.cpp](../src/util/evaluate.cpp), [evaluate.h](../src/util/evaluate.h) | Expression evaluator |
+
+### 9. Global Headers / PCH — [src/include/](../src/include/)
+
+| File | Role |
+| --- | --- |
+| [StdAfx.cpp](../src/include/StdAfx.cpp), [StdAfx.h](../src/include/StdAfx.h) | PCH (bulk-includes MFC headers) |
+| [cedtHeader.h](../src/include/cedtHeader.h) | Global macros / constants, bulk header includes |
+| [cedtColors.h](../src/include/cedtColors.h) | Color index definitions |
+| [resource.h](../src/include/resource.h) | Resource IDs |
+| [fstream_compat.h](../src/include/fstream_compat.h) | Shim for VC6 `<fstream.h>` |
+
+### 10. Domain Core — [src/core/](../src/core/)
+
+[cedtElement.h](../src/core/cedtElement.h) / [cedtElement.cpp](../src/core/cedtElement.cpp) hold 50+ global constants and 13 domain classes in a single pair — the project-wide "core definitions" unit that App, Doc, and View all depend on. See the "Core Domain Classes" table above.
+
+### 11. Resources
+
+| File | Role |
+| --- | --- |
+| [cedt_kr.rc](../cedt_kr.rc) | Korean resources |
+| [cedt_us.rc](../cedt_us.rc) | English resources |
+| [res/](../res/) | Icons, bitmaps, cursors, manifest, `cedt.rc2` |
+| [third_party/htmlhelp/](../third_party/htmlhelp/) | Bundled HTML Help SDK header (`HtmlHelp.h` only) |
+
+---
+
+## Directory Tree (full)
+
+```
+CrimsonEditor/
+├── cedt.sln, cedt.vcxproj, cedt.vcxproj.filters  # Visual Studio 2026
+├── README.md, LICENSE, .gitignore
+├── cedt_kr.rc, cedt_us.rc                # Resources (KR/US split builds)
+├── installer.iss                         # Inno Setup installer script
+├── res/                                  # Icons, bitmaps, cursors, manifest, cedt.rc2
+├── docs/                                 # Long-form design / behavior notes
+├── scripts/                              # Build automation (build_installer.ps1, ...)
+├── third_party/
+│   └── htmlhelp/                         # HtmlHelp.h (header only; Lib comes from Windows SDK)
+├── tests/                                # Google Test project (cedt_tests)
+│   ├── vcpkg.json                        #   gtest dependency declaration
+│   ├── cedt_tests.vcxproj                #   Test executable
+│   └── <Module>_test.cpp                 #   One file per module under test
+├── tools/                                # Small helper exes shipped with the installer
+│   ├── launch/                           #   launch.exe — single-instance dispatcher
+│   └── shellext/                         #   ShellExt.dll — Explorer context-menu handler
+└── src/
+    ├── include/                          # Global headers + PCH + compatibility shim
+    ├── core/                             # Domain core (cedtElement)
+    ├── app/                              # CCedtApp + cedtApp*.cpp
+    ├── doc/                              # CCedtDoc + cedtDoc*.cpp
+    ├── view/                             # CCedtView + cedtView*.cpp
+    ├── frame/                            # MainFrm/ChildFrm/Splitter/StatusBar
+    ├── panels/                           # FileWnd/FileTab/OutputWindow/SizeCBar/XPTabCtrl
+    ├── dialogs/                          # Feature dialogs
+    │     └── preferences/                #   prefdialog + PrefDialog* pages
+    ├── network/                          # FtpClnt, RemoteFile
+    └── util/                             # Utility/PathName/RegExp/encode/...
+```
+
+---
+
+## Shell Integration / Multi-Instance
+
+- **Single-instance IPC**: a named mutex `CrimsonEditor.CmdLine` detects the first instance, and a `WM_ANOTHER_INSTANCE` message is sent to the first window (see the `#pragma data_seg("Shared")` block near [cedtapp.cpp:22](../src/app/cedtapp.cpp#L22)).
+- **Shell extension**: integrates with the right-click menu via `HKCR\*\shellex\ContextMenuHandlers\Crimson Editor`. The handler DLL is built from [tools/shellext/](../tools/shellext/) and registered by the installer.
+- **IE integration**: can be registered as "View Source Editor".
+
+The relevant constants live at the top of [src/include/cedtHeader.h](../src/include/cedtHeader.h).
