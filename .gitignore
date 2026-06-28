@@ -25,3 +25,6 @@ vcpkg_installed/
 
 # Windows
 Thumbs.db
+
+# Personal AI-assistant instructions (kept locally, not shared)
+CLAUDE.md
