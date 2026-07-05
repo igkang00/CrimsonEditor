@@ -30,9 +30,19 @@
 #define STRING_USERTOOLSVER					"User Command 3.80 x64"
 #define STRING_USERMACROVER					"User Macro 3.80 x64"
 
-#define STRING_HOMEPAGEURL					"http://www.crimsoneditor.com/"
-#define STRING_SPONSORURL					"http://www.crimsoneditor.com/english/sponsor.html"
-#define STRING_EMAILADDRESS					"mailto:crimsonware@yahoo.com"
+// Homepage and sponsor pages have per-language landing URLs, so branch
+// on the edition macro (same one that switches STRING_CONFIGURATIONVER).
+#if defined(CEDT_LANG_KR)
+#	define STRING_HOMEPAGEURL				"https://crimsoneditor.com/ko/"
+#	define STRING_SPONSORURL				"https://crimsoneditor.com/ko/sponsor/"
+#else
+#	define STRING_HOMEPAGEURL				"https://crimsoneditor.com/"
+#	define STRING_SPONSORURL				"https://crimsoneditor.com/sponsor/"
+#endif
+// Feedback used to be a mailto: to the developer's yahoo address —
+// switched to the GitHub issue tracker so reports are public and
+// searchable, and there is no per-edition variant.
+#define STRING_FEEDBACKURL					"https://github.com/igkang00/CrimsonEditor/issues"
 
 #define REGPATH_INSTALL_DIRECTORY			"Software\\Crimson System\\Crimson Editor"
 #define REGPATH_USEININTERNETEXPLORER		"Software\\Microsoft\\Internet Explorer\\View Source Editor\\Editor Name"

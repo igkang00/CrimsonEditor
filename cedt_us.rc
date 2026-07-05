@@ -3157,9 +3157,9 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     ID_HELP_TOPICS          "List help topics\nHelp Topics"
-    ID_HELP_FEEDBACK        "Send feedback to developer - [mailto:crimsonware@yahoo.com]\nFeedback"
-    ID_HELP_VISIT_HOMEPAGE  "Visit Crimson Editor homepage - [http://www.crimsoneditor.com/]\nVisit Homepage"
-    ID_HELP_SPONSORING      "Sponsor Crimson Editor development - [http://www.crimsoneditor.com/english/sponsor.html]\nSponsoring"
+    ID_HELP_FEEDBACK        "Report an issue on GitHub - [https://github.com/igkang00/CrimsonEditor/issues]\nFeedback"
+    ID_HELP_VISIT_HOMEPAGE  "Visit Crimson Editor homepage - [https://crimsoneditor.com/]\nVisit Homepage"
+    ID_HELP_SPONSORING      "Sponsor Crimson Editor development - [https://crimsoneditor.com/sponsor/]\nSponsoring"
 END
 
 STRINGTABLE DISCARDABLE 

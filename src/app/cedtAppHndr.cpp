@@ -373,7 +373,7 @@ void CCedtApp::OnHelpVisitHomepage()
 
 void CCedtApp::OnHelpFeedback() 
 {
-	GotoURL(STRING_EMAILADDRESS, SW_SHOW);
+	GotoURL(STRING_FEEDBACKURL, SW_SHOW);
 }
 
 void CCedtApp::OnHelpSponsoring() 

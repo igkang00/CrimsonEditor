@@ -3141,9 +3141,9 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     ID_HELP_TOPICS          "도움말 항목을 보여줍니다\n도움말 항목"
-    ID_HELP_FEEDBACK        "개발자에게 사용자 의견을 보냅니다 - [mailto:crimsonware@yahoo.com]\n사용자 의견"
-    ID_HELP_VISIT_HOMEPAGE  "크림슨에디터 홈페이지를 방문합니다 - [http://www.crimsoneditor.com/]\n홈페이지 방문"
-    ID_HELP_SPONSORING      "크림슨에디터 개발을 후원합니다 - [http://www.crimsoneditor.com/english/sponsor.html]\n후원하기"
+    ID_HELP_FEEDBACK        "GitHub에 이슈를 등록합니다 - [https://github.com/igkang00/CrimsonEditor/issues]\n사용자 의견"
+    ID_HELP_VISIT_HOMEPAGE  "크림슨에디터 홈페이지를 방문합니다 - [https://crimsoneditor.com/ko/]\n홈페이지 방문"
+    ID_HELP_SPONSORING      "크림슨에디터 개발을 후원합니다 - [https://crimsoneditor.com/ko/sponsor/]\n후원하기"
 END
 
 STRINGTABLE DISCARDABLE 
