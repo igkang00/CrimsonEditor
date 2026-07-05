@@ -35,17 +35,31 @@ The end state of this branch is: every string CString/API touches is UTF-16, the
 
 ## Phase plan
 
-### Phase 1 — Build-system flip + first compile attempt
+### Phase 1 — Build-system flip + first compile attempt (done)
 
-1. `cedt.vcxproj`:
-    - `<CharacterSet>MultiByte</CharacterSet>` → `Unicode` in all four Configuration groups.
-    - `<PreprocessorDefinitions>` — replace `_MBCS` with `_UNICODE;UNICODE`.
-2. `tests/cedt_tests.vcxproj` and `tools/launch/launch.vcxproj` — same treatment. (`tools/shellext/shellext.vcxproj` is already Unicode.)
-3. First build attempt. Expect a large bucket of errors:
-    - String literal type mismatches (`"foo"` where `LPCWSTR` is expected)
-    - `char*` variables receiving return values from now-`LPCWSTR` APIs
-    - `strlen` / `strcpy` / `strcmp` / etc. on `TCHAR*` (now `wchar_t*`)
-4. Collect the error report, break it down by kind so Phase 2 can be scripted rather than one-file-at-a-time.
+1. ✅ `cedt.vcxproj`:
+    - `<CharacterSet>MultiByte</CharacterSet>` → `Unicode` in both `Release-KR|Release-US` and `Debug-KR|Debug-US` Configuration groups.
+    - `<PreprocessorDefinitions>` — `_MBCS` → `_UNICODE;UNICODE` in both Release and Debug ItemDefinitionGroups.
+2. ✅ `tests/cedt_tests.vcxproj` — same treatment (CharacterSet × 2, PreprocessorDefinitions × 2).
+3. ✅ `tools/launch/launch.vcxproj` — same treatment. (`tools/shellext/shellext.vcxproj` was already Unicode.)
+4. ✅ Verification: `_MBCS` / `MultiByte` count is `0` across all three projects; `_UNICODE` / `Unicode` count matches the expected number of ClCompile blocks.
+
+**First Debug-KR|x64 rebuild produced 2,521 errors** — as expected. Distribution:
+
+| Code | Count | Meaning | Fix category |
+| --- | --- | --- | --- |
+| `C2664` | 2,133 (85%) | function argument `char*` ↔ `TCHAR*` mismatch | wrap literal with `_T("...")`, retype local buffer |
+| `C2665` | 309 (12%) | overloaded function had no viable `TCHAR*` overload for a `char*` arg | same fix pattern as C2664 |
+| `C2440` | 55 (2%) | plain `=` assignment `char*` ↔ `TCHAR*` | retype variable, or wrap literal |
+| `C2678` | 20 (<1%) | `std::istream::operator>>` on a `char` when the sink is now `wchar_t` | use `std::wistringstream` / `std::wifstream` (or bridge through a narrow string on the IO side) |
+| `C2660` | 1 | `MultiByteToWideChar` called with 5 args instead of 6 | manual fix in `XPTabCtrl.cpp:422` |
+| `C1003` | 3 | "too many errors in one file, stopping" | not real errors, just cl.exe giving up early — the actual count is larger than 2,521 |
+
+Nothing surprising. The overwhelming majority (99%) is one class of problem: a string literal or a `char`-typed variable being handed to an API that is now `TCHAR`-typed. All addressable by the two Phase 2 patterns (wrap the literal with `_T()`; retype the variable). The three exotic codes are one-off targeted fixes.
+
+The `C1003` note means we're not seeing every error yet — `cl.exe` stops after 100 in a single translation unit. Phase 2 fixes will make more errors visible in later passes. This is normal; we knew going in.
+
+Raw log is at `%TEMP%\cedt-unicode-first.log` for anyone who wants the individual sites.
 
 ### Phase 2 — Mechanical fixes (bulk-scriptable)
 
