@@ -117,7 +117,13 @@ Source: "build\x64\Release-US\{#MyAppExeUs}";          DestDir: "{app}"; Compone
 
 ; Helper binaries — always installed.
 Source: "tools\launch\build\x64\Release\launch.exe";    DestDir: "{app}"; Flags: ignoreversion
-Source: "tools\shellext\build\x64\Release\ShellExt.dll"; DestDir: "{app}"; Flags: ignoreversion 64bit
+; restartreplace / uninsrestartdelete: if Explorer has ShellExt.dll
+; loaded when we install or uninstall, the file will be locked. Ask
+; Windows to swap/delete the file on the next reboot instead of
+; failing the run. PrepareToInstall below tries to release the lock
+; up front (regsvr32 /u on the existing DLL) so the reboot path is
+; a last-resort fallback for most users.
+Source: "tools\shellext\build\x64\Release\ShellExt.dll"; DestDir: "{app}"; Flags: ignoreversion 64bit restartreplace uninsrestartdelete
 
 ; Runtime assets — always installed, the support files cedt looks up
 ; under <InstallDir> at runtime (dictionaries, syntax specs, color
@@ -194,3 +200,27 @@ Filename: "{app}\{#MyAppExeUs}"; Description: "Launch Crimson Editor"; Flags: no
 ; Unregister the shell extension before files are removed. Use
 ; RunOnceId so multiple uninstall runs don't unregister twice.
 Filename: "{sys}\regsvr32.exe"; Parameters: "/u /s ""{app}\ShellExt.dll"""; Flags: runascurrentuser; RunOnceId: "UnregShellExt"
+
+
+[Code]
+// Before Setup starts copying files, unregister the existing
+// ShellExt.dll (if any) that the previous install left behind and
+// that Explorer may still have loaded. This releases the file lock
+// in almost all cases so the overwrite in [Files] succeeds without
+// the "file in use" retry loop that could hang the installer.
+// regsvr32 exit codes are ignored — the DLL might not exist yet
+// (first install), the CLSID might already be gone, or the call
+// might just no-op; either way we want to proceed.
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  OldDll: String;
+  ResultCode: Integer;
+begin
+  Result := '';
+  OldDll := ExpandConstant('{app}\ShellExt.dll');
+  if FileExists(OldDll) then begin
+    Exec(ExpandConstant('{sys}\regsvr32.exe'),
+         '/u /s "' + OldDll + '"',
+         '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  end;
+end;
