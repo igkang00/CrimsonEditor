@@ -12,12 +12,12 @@ CString CCedtApp::GetComposedFileFilter()
 		CString & szDescription = m_clsFileFilters[i].m_szDescription;
 		CString & szExtensions  = m_clsFileFilters[i].m_szExtensions;
 
-		szElement.Format("%s (%s)|%s|", szDescription, szExtensions, szExtensions);
+		szElement.Format(_T("%s (%s)|%s|"), szDescription, szExtensions, szExtensions);
 		szFileFilter += szElement;
 	}
 
-	if( ! szFileFilter.GetLength() ) szFileFilter = "All Files (*.*)|*.*|";
-	szFileFilter += "|";
+	if( ! szFileFilter.GetLength() ) szFileFilter = _T("All Files (*.*)|*.*|");
+	szFileFilter += _T("|");
 
 	return szFileFilter;
 }

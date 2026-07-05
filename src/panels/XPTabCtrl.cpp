@@ -299,9 +299,9 @@ void CXPTabCtrl::DrawTabItem(CDC* pDC, int ixItem, const CRect& rcItemC, UINT ui
 	if(sText.GetLength())
 	{
 		// Code added by Ingyu Kang, 2005.01.04
-		sText.Replace("&&", "\x1B"); 
-		sText.Replace("&", "");
-		sText.Replace("\x1B", "&");
+		sText.Replace(_T("&&"), _T("\x1B"));
+		sText.Replace(_T("&"), _T(""));
+		sText.Replace(_T("\x1B"), _T("&"));
 		// Until this line
 
 		CFont* pOldFont=pDC->SelectObject(GetFont());		// prepare dc
@@ -378,7 +378,8 @@ BOOL IsThemeActiveEx()
 	HINSTANCE hDll=LoadLibrary(CString((LPCTSTR)IDS_UTIL_UXTHEME));							// 'UxTheme.dll'
 	if(hDll==NULL) return FALSE;				// the DLL won't be available on anything except Windows XP
 	UINT (PASCAL *pfnIsThemeActive)();
-	(FARPROC&)pfnIsThemeActive=GetProcAddress(hDll,CString((LPCTSTR)IDS_UTIL_THEMEACT));	// 'IsThemeActive'
+	CStringA sIsThemeActive(CString((LPCTSTR)IDS_UTIL_THEMEACT));
+	(FARPROC&)pfnIsThemeActive=GetProcAddress(hDll,(LPCSTR)sIsThemeActive);	// 'IsThemeActive'
 	UINT uiThemeActive=0;
 	if(pfnIsThemeActive)
 		uiThemeActive=pfnIsThemeActive();			
@@ -413,18 +414,21 @@ HRESULT DrawThemesPart(HDC hDC, int iPartId, int iStateId, LPCSTR uiPartNameID, 
 	HINSTANCE hDll=LoadLibrary(CString((LPCTSTR)IDS_UTIL_UXTHEME));								// 'UxTheme.dll'
 	if(!hDll) return E_FAIL;
 	BOOL (PASCAL* pfnIsThemeActive)();	UINT hTheme=0;
-	(FARPROC&)pfnIsThemeActive=GetProcAddress(hDll,CString((LPCTSTR)IDS_UTIL_THEMEACT));		// 'IsThemeActive'
+	CStringA sIsThemeActive(CString((LPCTSTR)IDS_UTIL_THEMEACT));
+	(FARPROC&)pfnIsThemeActive=GetProcAddress(hDll,(LPCSTR)sIsThemeActive);		// 'IsThemeActive'
 	HRESULT hResult=E_FAIL;
 	if(pfnIsThemeActive && pfnIsThemeActive())
 	{	CString sPartName((LPCTSTR)uiPartNameID);
 		if(sPartName.GetLength()>0)
 		{	WCHAR swPartName[WPART_NAME_SZ];
-			MultiByteToWideChar(CP_ACP,0,(LPCSTR)sPartName,-1,swPartName,sizeof(swPartName)/sizeof(WCHAR));
+			lstrcpynW(swPartName, sPartName, sizeof(swPartName)/sizeof(WCHAR));
 			UINT (PASCAL* pfnOpenThemeData)(HWND hwnd, LPCWSTR pszClassList);
-			(FARPROC&)pfnOpenThemeData=GetProcAddress(hDll,CString((LPCTSTR)IDS_UTIL_THEMEOPN));// 'OpenThemeData'
+			CStringA sOpenThemeData(CString((LPCTSTR)IDS_UTIL_THEMEOPN));
+			(FARPROC&)pfnOpenThemeData=GetProcAddress(hDll,(LPCSTR)sOpenThemeData);// 'OpenThemeData'
 			if(pfnOpenThemeData && (hTheme=pfnOpenThemeData(NULL, swPartName))!=0)
 			{	UINT (PASCAL* pfnDrawThemeBackground)(UINT htheme,HDC hdc,int iPartID,int iStateID,const RECT* prcBx,const RECT* prcClip);
-				(FARPROC&)pfnDrawThemeBackground=GetProcAddress(hDll,CString((LPCTSTR)IDS_UTIL_THEMEBCKG));	// 'DrawThemeBackground'
+				CStringA sDrawThemeBackground(CString((LPCTSTR)IDS_UTIL_THEMEBCKG));
+				(FARPROC&)pfnDrawThemeBackground=GetProcAddress(hDll,(LPCSTR)sDrawThemeBackground);	// 'DrawThemeBackground'
 				if(pfnDrawThemeBackground)
 					hResult=pfnDrawThemeBackground(hTheme, hDC, iPartId, iStateId, prcBox, NULL);
 	}	}	}

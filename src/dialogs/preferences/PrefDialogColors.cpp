@@ -321,8 +321,9 @@ BOOL CPreferenceDialog::LoadColorScheme(LPCTSTR lpszPathName)
 	ifstream fin(lpszPathName, ios::in | ios::binary);
 	if( ! fin.is_open() ) return FALSE;
 
-	TCHAR szBuffer[2048]; INT nLength = (INT)strlen(STRING_COLORSETTINGSVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
-	if( strcmp(szBuffer, STRING_COLORSETTINGSVER) ) { fin.close(); return FALSE; }
+	CStringA sVer(STRING_COLORSETTINGSVER);
+	char szBuffer[2048]; INT nLength = sVer.GetLength(); fin.read(szBuffer, nLength); szBuffer[nLength] = '\0';
+	if( strcmp(szBuffer, (LPCSTR)sVer) ) { fin.close(); return FALSE; }
 
 	fin.read((char *)m_crBkgrColor, sizeof(m_crBkgrColor));
 	if( ! fin.good() ) { fin.close(); return FALSE; }
@@ -340,8 +341,9 @@ BOOL CPreferenceDialog::SaveColorScheme(LPCTSTR lpszPathName)
 	ofstream fout(lpszPathName, ios::out | ios::binary);
 	if( ! fout.is_open() ) return FALSE;
 
-	INT nLength = (INT)strlen(STRING_COLORSETTINGSVER);
-	fout.write((const char *)STRING_COLORSETTINGSVER, nLength);
+	CStringA sVer(STRING_COLORSETTINGSVER);
+	INT nLength = sVer.GetLength();
+	fout.write((LPCSTR)sVer, nLength);
 
 	fout.write((const char *)m_crBkgrColor, sizeof(m_crBkgrColor));
 	fout.write((const char *)m_crTextColor, sizeof(m_crTextColor));
@@ -613,10 +615,10 @@ void CPreferenceDialog::OnSaveColorScheme()
 {
 	DWORD dwFlags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
 	CString szFilter; szFilter.LoadString(IDS_FILTER_COLOR_SCHEME);
-	CFileDialog dlg(FALSE, ".color", NULL, dwFlags, szFilter);
+	CFileDialog dlg(FALSE, _T(".color"), NULL, dwFlags, szFilter);
 
 	CString szTitle; szTitle.LoadString(IDS_DLG_SAVE_COLOR_SCHEME);
-	CString szInitialDirectory = CCedtApp::m_szInstallDirectory + "\\schemes";
+	CString szInitialDirectory = CCedtApp::m_szInstallDirectory + _T("\\schemes");
 
 	TCHAR szCurrentDirectory[MAX_PATH];
 	GetCurrentDirectory( MAX_PATH, szCurrentDirectory );

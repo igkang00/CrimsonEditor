@@ -281,7 +281,7 @@ BOOL CCedtView::ReplaceShellVariables(CString & szArgu, CMapStringToString & cls
 		if( (nFound = szVar1.Find('%')) >= 0 ) { szVar2 = szVar1.Left(nFound); szExpn = szVar1.Mid(nFound); }
 
 		BOOL bFound = clsVariables.Lookup( szVar2, szValu );
-		if( ! bFound ) szValu = getenv( szVar2 );
+		if( ! bFound ) szValu = _tgetenv( szVar2 );
 		TRACE2("- Original Value: '%s' -> '%s'\n", szVar2, szValu);
 
 		if( szExpn.GetLength() ) ExpandShellVariable( szValu, szExpn );
@@ -358,9 +358,9 @@ BOOL CCedtView::ExecuteExecutable(LPCTSTR lpszCommand, LPCTSTR lpszArgument, LPC
 	if( ! bCaptureOutput && ! bCloseOnExit ) {
 		CString szLauncher = CCedtApp::m_szInstallDirectory + _T("\\launch.exe");
 		CString szShortPath = GetShortPathName( lpszCommand );
-		_sntprintf(szCommandLine, kCmdLineMax - 1, _T("\")%s\_T(" %s %s"), (LPCTSTR)szLauncher, (LPCTSTR)szShortPath, lpszArgument);
+		_sntprintf(szCommandLine, kCmdLineMax - 1, _T("\"%s\" %s %s"), (LPCTSTR)szLauncher, (LPCTSTR)szShortPath, lpszArgument);
 	} else {
-		_sntprintf(szCommandLine, kCmdLineMax - 1, _T("\")%s\_T(" %s"), lpszCommand, lpszArgument);
+		_sntprintf(szCommandLine, kCmdLineMax - 1, _T("\"%s\" %s"), lpszCommand, lpszArgument);
 	}
 	szCommandLine[kCmdLineMax - 1] = '\0';   // _snprintf does not null-terminate on overflow
 

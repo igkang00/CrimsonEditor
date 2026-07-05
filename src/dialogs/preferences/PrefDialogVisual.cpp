@@ -63,24 +63,24 @@ BOOL CPreferenceDialog::LoadVisualSettings()
 {
 	CString str; 
 	
-	str.Format("%d", CCedtView::m_nLineSpacing);
+	str.Format(_T("%d"), CCedtView::m_nLineSpacing);
 	m_edtLineSpacing.SetWindowText(str);
-	str.Format("%d", CCedtView::m_nCaretWidthRatio);
+	str.Format(_T("%d"), CCedtView::m_nCaretWidthRatio);
 	m_edtCaretWidth.SetWindowText(str);
 
-	str.Format("%d", CCedtView::m_nLineNumberDigits);
+	str.Format(_T("%d"), CCedtView::m_nLineNumberDigits);
 	m_edtLineNumberDigits.SetWindowText(str);
-	str.Format("%d", CCedtView::m_nFileTabLength);
+	str.Format(_T("%d"), CCedtView::m_nFileTabLength);
 	m_edtFileTabLength.SetWindowText(str);
 
 	m_chkColumnMarker1.SetCheck( CCedtView::m_bShowColumnMarker1 ? 1 : 0 );
 	m_edtColumnMarker1.EnableWindow( CCedtView::m_bShowColumnMarker1 );
-	str.Format("%d", CCedtView::m_nColumnMarker1Pos); 
+	str.Format(_T("%d"), CCedtView::m_nColumnMarker1Pos); 
 	m_edtColumnMarker1.SetWindowText( str );
 
 	m_chkColumnMarker2.SetCheck( CCedtView::m_bShowColumnMarker2 ? 1 : 0 );
 	m_edtColumnMarker2.EnableWindow( CCedtView::m_bShowColumnMarker2 );
-	str.Format("%d", CCedtView::m_nColumnMarker2Pos); 
+	str.Format(_T("%d"), CCedtView::m_nColumnMarker2Pos); 
 	m_edtColumnMarker2.SetWindowText( str );
 
 	m_chkShowLineNumbers.SetCheck(CCedtView::m_bShowLineNumbers ? 1 : 0);
@@ -102,22 +102,22 @@ BOOL CPreferenceDialog::SaveVisualSettings()
 {
 	TCHAR buf[1024];
 
-	m_edtLineSpacing.GetWindowText(buf, 1024); CCedtView::m_nLineSpacing = atoi(buf);
+	m_edtLineSpacing.GetWindowText(buf, 1024); CCedtView::m_nLineSpacing = _ttoi(buf);
 	ASSURE_BOUND_VALUE(CCedtView::m_nLineSpacing, 50, 200);
-	m_edtCaretWidth.GetWindowText(buf, 1024); CCedtView::m_nCaretWidthRatio = atoi(buf);
+	m_edtCaretWidth.GetWindowText(buf, 1024); CCedtView::m_nCaretWidthRatio = _ttoi(buf);
 	ASSURE_BOUND_VALUE(CCedtView::m_nCaretWidthRatio, 1, 100);
 
-	m_edtLineNumberDigits.GetWindowText(buf, 1024); CCedtView::m_nLineNumberDigits = atoi(buf);
+	m_edtLineNumberDigits.GetWindowText(buf, 1024); CCedtView::m_nLineNumberDigits = _ttoi(buf);
 	ASSURE_BOUND_VALUE(CCedtView::m_nLineNumberDigits, 2, 8);
-	m_edtFileTabLength.GetWindowText(buf, 1024); CCedtView::m_nFileTabLength = atoi(buf);
+	m_edtFileTabLength.GetWindowText(buf, 1024); CCedtView::m_nFileTabLength = _ttoi(buf);
 	ASSURE_BOUND_VALUE(CCedtView::m_nFileTabLength, 12, 60);
 
 	CCedtView::m_bShowColumnMarker1 = m_chkColumnMarker1.GetCheck();
-	m_edtColumnMarker1.GetWindowText(buf, 1024); CCedtView::m_nColumnMarker1Pos = atoi(buf);
+	m_edtColumnMarker1.GetWindowText(buf, 1024); CCedtView::m_nColumnMarker1Pos = _ttoi(buf);
 	ASSURE_BOUND_VALUE(CCedtView::m_nColumnMarker1Pos, 0, 160);
 
 	CCedtView::m_bShowColumnMarker2 = m_chkColumnMarker2.GetCheck();
-	m_edtColumnMarker2.GetWindowText(buf, 1024); CCedtView::m_nColumnMarker2Pos = atoi(buf);
+	m_edtColumnMarker2.GetWindowText(buf, 1024); CCedtView::m_nColumnMarker2Pos = _ttoi(buf);
 	ASSURE_BOUND_VALUE(CCedtView::m_nColumnMarker2Pos, 0, 160);
 
 	CCedtView::m_bShowLineNumbers = m_chkShowLineNumbers.GetCheck();

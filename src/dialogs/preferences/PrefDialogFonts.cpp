@@ -129,21 +129,21 @@ BOOL CPreferenceDialog::SaveFontSettings()
 void CPreferenceDialog::DispScreenFontText(INT nScreenFont)
 {
 	m_lstScreenFonts.SetItemText(nScreenFont, 1, m_lfScreen[nScreenFont].lfFaceName);
-	CString szSize; szSize.Format("%d", m_lfScreen[nScreenFont].lfHeight / 10);
+	CString szSize; szSize.Format(_T("%d"), m_lfScreen[nScreenFont].lfHeight / 10);
 	m_lstScreenFonts.SetItemText(nScreenFont, 2, szSize);
 }
 
 void CPreferenceDialog::DispPrinterFontText(INT nPrinterFont)
 {
 	m_lstPrinterFonts.SetItemText(nPrinterFont, 1, m_lfPrinter[nPrinterFont].lfFaceName);
-	CString szSize; szSize.Format("%d", m_lfPrinter[nPrinterFont].lfHeight / 10);
+	CString szSize; szSize.Format(_T("%d"), m_lfPrinter[nPrinterFont].lfHeight / 10);
 	m_lstPrinterFonts.SetItemText(nPrinterFont, 2, szSize);
 }
 
 void CPreferenceDialog::DispMiscelFontText(INT nMiscelFont)
 {
 	m_lstMiscelFonts.SetItemText(nMiscelFont, 1, m_lfMiscel[nMiscelFont].lfFaceName);
-	CString szSize; szSize.Format("%d", m_lfMiscel[nMiscelFont].lfHeight / 10);
+	CString szSize; szSize.Format(_T("%d"), m_lfMiscel[nMiscelFont].lfHeight / 10);
 	m_lstMiscelFonts.SetItemText(nMiscelFont, 2, szSize);
 }
 

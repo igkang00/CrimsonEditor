@@ -350,7 +350,7 @@ void CCedtView::FormatScreenText(INT nIndex, INT nCount)
 
 	if( nCount > 1000 ) {
 		pWait = new CWaitCursor;
-		pMainFrame->BeginProgress("Formatting...");
+		pMainFrame->BeginProgress(_T("Formatting..."));
 	}
 
 	// now start formatting text
@@ -451,7 +451,7 @@ void CCedtView::FormatPrintText(CDC * pDC, RECT rectDraw, INT nIndex, INT nCount
 
 	if( nCount > 100 ) {
 		pWait = new CWaitCursor;
-		pMainFrame->BeginProgress("Formatting...");
+		pMainFrame->BeginProgress(_T("Formatting..."));
 	}
 
 	// now start formatting text

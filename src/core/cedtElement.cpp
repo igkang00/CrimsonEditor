@@ -196,7 +196,7 @@ void CLangSpec::ResetContents()
 	m_bCaseSensitive[0] = m_bCaseSensitive[1] = m_bCaseSensitive[2] = TRUE; 
 
 	m_bVariableHighlightInString = FALSE;
-	m_szDelimiters = _T("(){}[]<>+-*/%=\")'~!@#$^&|\\?:;,."; // Omited '_' from default delimiters 2004.08.08
+	m_szDelimiters = _T("(){}[]<>+-*/%=\"'~!@#$^&|\\?:;,."); // Omited '_' from default delimiters 2004.08.08
 	m_szHexaDecimalMark = m_szKeywordPrefix = m_szVariablePrefix = _T("");
 	m_szVariableOptionallyEnclosedBy = m_szSpecialVariableChars = _T("");
 	m_chVariableQuotation = 0x00;
@@ -230,7 +230,7 @@ BOOL CLangSpec::FileLoad(LPCTSTR lpszPathName)
 	TCHAR szLine[4096];
 	ResetContents(); // clear previous settings
 
-	ifstream fin(lpszPathName, ios::in);
+	wifstream fin(lpszPathName, ios::in);
 	if( ! fin.is_open() ) return FALSE;
 
 	while( fin.good() ) {
@@ -318,7 +318,7 @@ BOOL CKeywords::FileLoad(LPCTSTR lpszPathName, BOOL bCaseSensitive[])
 
 	RemoveAll(); // clear hash table first
 
-	ifstream fin(lpszPathName, ios::in);
+	wifstream fin(lpszPathName, ios::in);
 	if( ! fin.is_open() ) return FALSE;
 
 	while( fin.good() ) {
@@ -347,7 +347,7 @@ BOOL CKeywords::FileLoad(LPCTSTR lpszPathName, BOOL bCaseSensitive[])
 			if( _tcsstr(ptr2, _T("NOEMBOLDEN")) ) bNoEmbolden = TRUE;
 
 		} else if( ucType ) {
-			std::istringstream sin(szLine);
+			std::wistringstream sin(szLine);
 			while( sin.good() ) {
 				sin >> std::ws; if( ! sin.good() ) break;
 				sin.width(sizeof(szWord) / sizeof(TCHAR));   // bound the read to the buffer size
@@ -405,7 +405,7 @@ BOOL CDictionary::FileLoad(LPCTSTR lpszPathName, CALLBACK_FUNCTION fcnCallback)
 {
 	TCHAR szWord[MAX_WORD_LENGTH+1]; UCHAR ucValue; UINT nCount = 0;
 
-	ifstream fin(lpszPathName, ios::in);
+	wifstream fin(lpszPathName, ios::in);
 	if( ! fin.is_open() ) return FALSE;
 
 	while( fin.good() ) {
@@ -678,7 +678,7 @@ BOOL CAnalyzedText::FileLoad(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 				if( nCount >= 2 && szWideBuffer[nCount-2] == chKill  && szWideBuffer[nCount-1] == 0x00 ) { szWideBuffer[nCount-2] = szWideBuffer[nCount-1] = 0x00; nCount -= 2; }
 
 				nCount = WideCharToMultiByte(CP_ACP, 0, (LPCWSTR)szWideBuffer, -1, szBuffer, FILE_READ_BUFFER_SIZE + 1, NULL, NULL);
-				nCount = lstrlen( szBuffer );
+				nCount = lstrlenA( szBuffer );
 
 				GetTail() += szBuffer;
 				if( bDelimFound ) AddTail(_T(""));
@@ -705,7 +705,7 @@ BOOL CAnalyzedText::FileLoad(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 
 				for( i = 0; i < nCount; i += 2 ) _SWAP_UCHAR( szWideBuffer[i], szWideBuffer[i+1] );
 				nCount = WideCharToMultiByte(CP_ACP, 0, (LPCWSTR)szWideBuffer, -1, szBuffer, FILE_READ_BUFFER_SIZE + 1, NULL, NULL);
-				nCount = lstrlen( szBuffer );
+				nCount = lstrlenA( szBuffer );
 
 				GetTail() += szBuffer;
 				if( bDelimFound ) AddTail(_T(""));
@@ -769,9 +769,9 @@ BOOL CAnalyzedText::FileLoad(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 
 BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileFormat)
 {
-	CHAR szDelim[3]; lstrcpy(szDelim, _T("\r\n")); INT nDelimSize = 2; // FILE_FORMAT_DOS
-	if( nFileFormat == FILE_FORMAT_UNIX ) { lstrcpy(szDelim, _T("\n")); nDelimSize = 1; }
-	else if( nFileFormat == FILE_FORMAT_MAC ) { lstrcpy(szDelim, _T("\r")); nDelimSize = 1; }
+	CHAR szDelim[3]; lstrcpyA(szDelim, "\r\n"); INT nDelimSize = 2; // FILE_FORMAT_DOS
+	if( nFileFormat == FILE_FORMAT_UNIX ) { lstrcpyA(szDelim, "\n"); nDelimSize = 1; }
+	else if( nFileFormat == FILE_FORMAT_MAC ) { lstrcpyA(szDelim, "\r"); nDelimSize = 1; }
 	
 	try {
 		CFile file(lpszPathName, CFile::modeReadWrite | CFile::modeCreate | CFile::shareExclusive);
@@ -796,7 +796,8 @@ BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 					delete [] pWideBuffer;	pWideBuffer = new UCHAR[2 * (nBufferSize + 1)];
 				}
 
-				nCount = MultiByteToWideChar(CP_ACP, 0, rLine, -1, (LPWSTR)pWideBuffer, nBufferSize + 1);
+				CStringA sLineA(rLine);
+				nCount = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)sLineA, -1, (LPWSTR)pWideBuffer, nBufferSize + 1);
 				INT nLength = (INT)wcslen( (LPCWSTR)pWideBuffer );
 
 				file.Write( pWideBuffer, 2 * nLength );
@@ -818,7 +819,8 @@ BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 					delete [] pWideBuffer;	pWideBuffer = new UCHAR[2 * (nBufferSize + 1)];
 				}
 
-				nCount = MultiByteToWideChar(CP_ACP, 0, rLine, -1, (LPWSTR)pWideBuffer, nBufferSize + 1);
+				CStringA sLineA(rLine);
+				nCount = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)sLineA, -1, (LPWSTR)pWideBuffer, nBufferSize + 1);
 				INT nLength = (INT)wcslen( (LPCWSTR)pWideBuffer );
 				for( INT i = 0; i < nLength; i++ ) _SWAP_UCHAR( pWideBuffer[2*i], pWideBuffer[2*i+1] );
 
@@ -839,9 +841,10 @@ BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 					delete [] pWideBuffer;	pWideBuffer = new UCHAR[2 * (nBufferSize + 1)];
 				}
 
-				nCount = MultiByteToWideChar(CP_ACP, 0, rLine, -1, (LPWSTR)pWideBuffer, nBufferSize + 1);
+				CStringA sLineA(rLine);
+				nCount = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)sLineA, -1, (LPWSTR)pWideBuffer, nBufferSize + 1);
 				nCount = WideCharToMultiByte(CP_UTF8, 0, (LPCWSTR)pWideBuffer, -1, pBuffer, 3 * (nBufferSize + 1), NULL, NULL);
-				INT nLength = (INT)_tcslen( pBuffer );
+				INT nLength = (INT)strlen( pBuffer );
 
 				file.Write( pBuffer, nLength );
 				if( pos ) file.Write( szDelim, nDelimSize );
@@ -1315,7 +1318,7 @@ BOOL CFtpAccount::StreamSave(ofstream & fout)
 	fout.write((const char *)(LPCTSTR)m_szUserName, nLength);
 
 	CString szEncodedPassword = _T("");
-	if( m_bSavePassword ) szEncodedPassword = map_encode(m_szPassword);
+	if( m_bSavePassword ) szEncodedPassword = CString(CA2T(map_encode((LPCSTR)CT2A((LPCTSTR)m_szPassword))));
 
 	nLength = szEncodedPassword.GetLength();
 	fout.write((const char *)(& nLength), sizeof(nLength));
@@ -1361,7 +1364,7 @@ BOOL CFtpAccount::StreamLoad(ifstream & fin)
 	fin.read((char *)(szBuffer), nLength); szBuffer[nLength] = '\0';
 
 	CString szEncodedPassword = szBuffer;
-	m_szPassword = map_decode(szEncodedPassword);
+	m_szPassword = CString(CA2T(map_decode((LPCSTR)CT2A((LPCTSTR)szEncodedPassword))));
 
 	fin.read((char *)(& nLength), sizeof(nLength));
 	if( nLength < 0 || nLength > 2048 ) return FALSE;

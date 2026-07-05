@@ -138,7 +138,7 @@ BOOL DownloadRemoteFileFtpClnt(CFtpAccount & rFtpAccount, LPCTSTR lpszRemoteFile
 	CString szResponse = client.GetResponseMessage();
 	INT nFound = szResponse.Find('(');
 	if( nFound >= 0 ) {
-		dwSize = atoi( szResponse.Mid(nFound+1) );
+		dwSize = _ttoi( szResponse.Mid(nFound+1) );
 	} else {
 		AfxMessageBox(IDS_ERR_FTP_FIND_REMOTE, MB_OK | MB_ICONSTOP);
 		client.LogOff(); client.Close(); return FALSE;
@@ -365,9 +365,9 @@ BOOL GetRemoteFileListWinInet(CSortStringArray & arrFileInfo, CFtpAccount & rFtp
 		DWORD dwSize = (DWORD)find.GetLength();
 		TRACE2("RemoteFileList: %s (%d)\n", szName, dwSize);
 
-		if( ! find.IsDirectory() && find.IsNormal() && MatchFileFilter(szName, lpszFilter) ) { szFileInfo.Format("F/%s/%d", szName, dwSize); arrFileInfo.Add(szFileInfo); }
-		else if( ! find.IsDirectory() && ! find.IsNormal() ) { szFileInfo.Format("D/%s/L", szName); arrFileInfo.Add(szFileInfo); }
-		else if( find.IsDirectory() && ! find.IsDots() ) { szFileInfo.Format("D/%s/N", szName); arrFileInfo.Add(szFileInfo); }
+		if( ! find.IsDirectory() && find.IsNormal() && MatchFileFilter(szName, lpszFilter) ) { szFileInfo.Format(_T("F/%s/%d"), szName, dwSize); arrFileInfo.Add(szFileInfo); }
+		else if( ! find.IsDirectory() && ! find.IsNormal() ) { szFileInfo.Format(_T("D/%s/L"), szName); arrFileInfo.Add(szFileInfo); }
+		else if( find.IsDirectory() && ! find.IsDots() ) { szFileInfo.Format(_T("D/%s/N"), szName); arrFileInfo.Add(szFileInfo); }
 	}
 
 	pFtpConnection->Close(); delete pFtpConnection;
@@ -415,9 +415,9 @@ BOOL GetRemoteFileListFtpClnt(CSortStringArray & arrFileInfo, CFtpAccount & rFtp
 		if( ! ParseRemoteFileListItem(szMode, dwSize, szTime, szName, szListItem) ) continue;
 		TRACE2("RemoteFileList: %s (%d)\n", szName, dwSize);
 
-		if( szMode[0] == '-' && MatchFileFilter(szName, lpszFilter) ) { szFileInfo.Format("F/%s/%d", szName, dwSize); arrFileInfo.Add(szFileInfo); }
-		else if( szMode[0] == 'l' ) { szFileInfo.Format("D/%s/L", szName); arrFileInfo.Add(szFileInfo); }
-		else if( szMode[0] == 'd' && szName.Compare("..") && szName.Compare(".") ) { szFileInfo.Format("D/%s/N", szName); arrFileInfo.Add(szFileInfo); }
+		if( szMode[0] == '-' && MatchFileFilter(szName, lpszFilter) ) { szFileInfo.Format(_T("F/%s/%d"), szName, dwSize); arrFileInfo.Add(szFileInfo); }
+		else if( szMode[0] == 'l' ) { szFileInfo.Format(_T("D/%s/L"), szName); arrFileInfo.Add(szFileInfo); }
+		else if( szMode[0] == 'd' && szName.Compare(_T("..")) && szName.Compare(_T(".")) ) { szFileInfo.Format(_T("D/%s/N"), szName); arrFileInfo.Add(szFileInfo); }
 	}
 
 	client.LogOff(); client.Close();
@@ -432,7 +432,7 @@ static BOOL CheckIfWinSockInitialized()
 
 	if( ! bWinSockInitialized ) {
 		if( ! AfxSocketInit() ) {
-			AfxMessageBox("Could not initialize Windows Sockets!");
+			AfxMessageBox(_T("Could not initialize Windows Sockets!"));
 			return FALSE;
 		}
 		bWinSockInitialized = TRUE;
@@ -447,18 +447,18 @@ static BOOL CleanRemoteFileListItem(CString & szItem)
 	static BOOL bCompiled = FALSE;
 
 	// compile regular expression for Korean HP server
-	if( ! bCompiled && clsRegExp.RegComp("([0-9]+)월 ([0-9]+)일 [0-9]+:[0-9]+") ) bCompiled = TRUE;
+	if( ! bCompiled && clsRegExp.RegComp(_T("([0-9]+)월 ([0-9]+)일 [0-9]+:[0-9]+")) ) bCompiled = TRUE;
 
 	INT nFound; CString szFormat, szReplace;
 	if( bCompiled && (nFound = clsRegExp.RegFind(szItem)) >= 0 ) {
 		INT nLength = clsRegExp.GetFoundLength();
 		CTime time = CTime::GetCurrentTime();
-		szFormat.Format("%s.\\1.\\2", time.Format("%Y"));
+		szFormat.Format(_T("%s.\\1.\\2"), time.Format(_T("%Y")));
 		clsRegExp.GetReplaceString(szFormat, szReplace);
 		szItem = szItem.Mid(0, nFound) + szReplace + szItem.Mid(nFound + nLength);
 	}
 
-	if( (nFound = szItem.Find(" -> ")) >= 0 ) {
+	if( (nFound = szItem.Find(_T(" -> "))) >= 0 ) {
 		szItem = szItem.Mid(0, nFound);
 	}
 
@@ -499,7 +499,7 @@ static BOOL ParseRemoteFileListItem(CString & szMode, DWORD & dwSize, CString & 
 	// extract file size
 	while( * FWD && ! isspace(* FWD) ) FWD++;
 	if( FWD == BEG ) return FALSE;
-	dwSize = atoi(BEG);
+	dwSize = _ttoi(BEG);
 
 	// skip spaces
 	while( * FWD && isspace(* FWD) ) FWD++;

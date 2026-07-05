@@ -5,6 +5,8 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+#include "fstream_compat.h"
+
 
 #define FILE_WINDOW_DIRECTORY		0x00
 #define FILE_WINDOW_REMOTE			0x02
@@ -214,11 +216,11 @@ public: // *** FileWndProject.cpp ***
 	BOOL RenameSelectedProjectItem();
 
 protected: // inner functions
-	BOOL SaveProjectItem(ostream & os, INT nLevel, HTREEITEM hItem);
-	BOOL LoadProjectItem(istream & is, TCHAR szText[], HTREEITEM hParent);
+	BOOL SaveProjectItem(wostream & os, INT nLevel, HTREEITEM hItem);
+	BOOL LoadProjectItem(wistream & is, TCHAR szText[], HTREEITEM hParent);
 
-	BOOL SaveWorkspaceItem(ostream & os, INT nLevel, CMDIChildWnd * pChild);
-	BOOL LoadWorkspaceItem(istream & is, TCHAR szText[], CWinApp * pApp);
+	BOOL SaveWorkspaceItem(wostream & os, INT nLevel, CMDIChildWnd * pChild);
+	BOOL LoadWorkspaceItem(wistream & is, TCHAR szText[], CWinApp * pApp);
 
 	BOOL ParseItemAttribute(LPCTSTR lpszText, CMapStringToString & mapAttr);
 

@@ -56,10 +56,10 @@ INT CCedtView::GetSpaceWidth(CDC * pDC)
 	static INT nSequence = -1, nWidth = 0;
 
 	if( pDC ) {
-		CSize size = pDC->GetTextExtent(" ", 1);
+		CSize size = pDC->GetTextExtent(_T(" "), 1);
 		return size.cx; 
 	} else if( nSequence != m_nScreenFontChangeSequence ) {
-		CSize size = m_dcScreen.GetTextExtent(" ", 1);
+		CSize size = m_dcScreen.GetTextExtent(_T(" "), 1);
 		nSequence = m_nScreenFontChangeSequence;
 		return nWidth = size.cx;
 	} else return nWidth;
@@ -70,10 +70,10 @@ INT CCedtView::GetNumberWidth(CDC * pDC)
 	static INT nSequence = -1, nWidth = 0;
 
 	if( pDC ) {
-		CSize size = pDC->GetTextExtent("0", 1);
+		CSize size = pDC->GetTextExtent(_T("0"), 1);
 		return size.cx; 
 	} else if( nSequence != m_nScreenFontChangeSequence ) {
-		CSize size = m_dcScreen.GetTextExtent("0", 1);
+		CSize size = m_dcScreen.GetTextExtent(_T("0"), 1);
 		nSequence = m_nScreenFontChangeSequence;
 		return nWidth = size.cx;
 	} else return nWidth;

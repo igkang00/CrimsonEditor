@@ -249,13 +249,13 @@ BOOL CCedtDoc::OnNewDocument()
 		while( pos ) m_clsAnalyzedText.AddTail( CCedtApp::m_clsMemText.GetNext(pos) );
 	} else if( CCedtApp::m_bOpenTemplate ) {
 		m_clsAnalyzedText.FileLoad(CCedtApp::m_szOpenTemplatePathName, m_nEncodingType, m_nFileFormat);
-	} else m_clsAnalyzedText.AddTail("");
+	} else m_clsAnalyzedText.AddTail(_T(""));
 
 	ZeroMemory( & m_clsFileStatus, sizeof(m_clsFileStatus) );
 	m_dwFileAttribute = FILE_ATTRIBUTE_NORMAL;
 
-	m_szLangSpecFile = ""; m_clsLangSpec.ResetContents(); 
-	m_szKeywordsFile = ""; m_clsKeywords.ResetContents();
+	m_szLangSpecFile = _T(""); m_clsLangSpec.ResetContents();
+	m_szKeywordsFile = _T(""); m_clsKeywords.ResetContents();
 	m_bAutomaticSyntaxType = TRUE;
 
 	if( CCedtApp::m_bOpenTemplate && DetectSyntaxType(CCedtApp::m_szOpenTemplatePathName, m_clsAnalyzedText.GetHead()) ) LoadSyntaxInformation();
@@ -273,7 +273,7 @@ BOOL CCedtDoc::OnNewDocument()
 
 BOOL CCedtDoc::OnReloadDocument(LPCTSTR lpszPathName, INT nEncodingType)
 {
-	if( ! strlen(lpszPathName) ) return FALSE;
+	if( ! _tcslen(lpszPathName) ) return FALSE;
 
 //	m_nFtpAccount = m_nCurrentFtpAccount;
 //	m_szRemotePathName = m_szCurrentRemotePathName;
@@ -375,8 +375,8 @@ BOOL CCedtDoc::OnOpenDocument(LPCTSTR lpszPathName)
 	CFile::GetStatus(lpszPathName, m_clsFileStatus);
 	m_dwFileAttribute = GetFileAttributes(lpszPathName);
 
-	m_szLangSpecFile = ""; m_clsLangSpec.ResetContents(); 
-	m_szKeywordsFile = ""; m_clsKeywords.ResetContents();
+	m_szLangSpecFile = _T(""); m_clsLangSpec.ResetContents();
+	m_szKeywordsFile = _T(""); m_clsKeywords.ResetContents();
 	m_bAutomaticSyntaxType = TRUE;
 
 	if( DetectSyntaxType(lpszPathName, m_clsAnalyzedText.GetHead()) ) LoadSyntaxInformation();

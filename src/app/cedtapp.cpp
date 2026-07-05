@@ -252,7 +252,7 @@ BOOL CCedtApp::InitInstance()
 	// get current working directory
 	TCHAR szTemp[MAX_PATH]; GetCurrentDirectory(MAX_PATH, szTemp);
 	m_szLoadingDirectory = ChopDirectory(szTemp);
-	TRACE1("LoadingDirectory: \"%s\_T("\n"), m_szLoadingDirectory);
+	TRACE1("LoadingDirectory: \"%s\"\n", m_szLoadingDirectory);
 
 	// Resolve the install directory.
 	//
@@ -278,13 +278,13 @@ BOOL CCedtApp::InitInstance()
 		GetModuleFileName(NULL, szExePath, MAX_PATH);
 		m_szInstallDirectory = GetFileDirectory(szExePath);
 	}
-	TRACE1("InstallDirectory: \"%s\_T("\n"), m_szInstallDirectory);
+	TRACE1("InstallDirectory: \"%s\"\n", m_szInstallDirectory);
 
 	// get application data directory
 	TCHAR szTmp2[MAX_PATH]; m_szAppDataDirectory = m_szInstallDirectory;
 	BOOL bResul2 = SHGetSpecialFolderPath(NULL, szTmp2, CSIDL_APPDATA, TRUE);
 	if( bResul2 ) m_szAppDataDirectory.Format(_T("%s\\Crimson Editor"), szTmp2);
-	TRACE1("AppDataDirectory: \"%s\_T("\n"), m_szAppDataDirectory);
+	TRACE1("AppDataDirectory: \"%s\"\n", m_szAppDataDirectory);
 
 
 	// load multi-instance flag
@@ -303,9 +303,9 @@ BOOL CCedtApp::InitInstance()
 
 		BOOL quote = ( _tcslen(m_lpCmdLine) && VerifyFilePath(m_lpCmdLine) );
 
-		ofstream fout(m_szAppDataDirectory + _T("\\cmdline.txt"), ios::out | ios::app);
-		fout << _T("/D:\")_T(" << m_szLoadingDirectory << ")\_T("");
-		fout << (quote ? _T(" \")_T(" : ") _T(") << m_lpCmdLine << (quote ? ")\_T("") : _T("")) << endl;
+		ofstream fout((LPCSTR)CT2A(m_szAppDataDirectory + _T("\\cmdline.txt")), ios::out | ios::app);
+		fout << "/D:\"" << (LPCSTR)CT2A(m_szLoadingDirectory) << "\"";
+		fout << (quote ? " \"" : " ") << (LPCSTR)CT2A(m_lpCmdLine) << (quote ? "\"" : "") << endl;
 		fout.close(); 
 
 		lock.Unlock();
@@ -450,7 +450,7 @@ BOOL CCedtApp::InitInstance()
 		TRACE1("CmdLine: %s\n", m_lpCmdLine);
 		OpenDocumentFile( GetLongPathName(m_lpCmdLine) );
 	} else {
-		CCmdLine cmdLine(__argc, __argv);
+		CCmdLine cmdLine(__argc, __wargv);
 		ProcessShellCommand(cmdLine);
 	}
 
@@ -479,20 +479,25 @@ int CCedtApp::ExitInstance()
 // CCedtApp operations
 void CCedtApp::OnAnotherInstance()
 {
-	TCHAR szBuffer[4096]; CStringArray arrCmdLine;
+	CStringArray arrCmdLine;
 
 	CMutex mutex(FALSE, MUTEX_NAME_CMDLINE);
 	CSingleLock lock( & mutex ); lock.Lock();
 
-	ifstream fin(m_szAppDataDirectory + _T("\\cmdline.txt"), ios::in);
-	while( fin.good() ) {
-		fin.getline(szBuffer, 4096);
-		if( _tcslen(szBuffer) ) arrCmdLine.Add(szBuffer);
+	{
+		char szNarrow[4096];
+		ifstream fin((LPCSTR)CT2A(m_szAppDataDirectory + _T("\\cmdline.txt")), ios::in);
+		while( fin.good() ) {
+			fin.getline(szNarrow, 4096);
+			if( strlen(szNarrow) ) arrCmdLine.Add(CString(CA2T(szNarrow)));
+		}
+		fin.close();
 	}
-	fin.close();
 
-	ofstream fout(m_szAppDataDirectory + _T("\\cmdline.txt"), ios::out );
-	fout.close();
+	{
+		ofstream fout((LPCSTR)CT2A(m_szAppDataDirectory + _T("\\cmdline.txt")), ios::out );
+		fout.close();
+	}
 
 	lock.Unlock();
 

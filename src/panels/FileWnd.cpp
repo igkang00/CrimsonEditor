@@ -461,7 +461,7 @@ void CFileWindow::ShowOrHideProjectControls(INT nSelect)
 BOOL CFileWindow::InitDirectoryImageList( CImageList & imglst )
 {
 	SHFILEINFO shFinfo; HIMAGELIST hImageList = NULL;
-	hImageList = (HIMAGELIST)SHGetFileInfo("", 0, &shFinfo, sizeof(shFinfo), SHGFI_SMALLICON | SHGFI_SYSICONINDEX);
+	hImageList = (HIMAGELIST)SHGetFileInfo(_T(""), 0, &shFinfo, sizeof(shFinfo), SHGFI_SMALLICON | SHGFI_SYSICONINDEX);
 	if ( ! hImageList ) return FALSE;
 
 	if( imglst.Detach() ) return FALSE;

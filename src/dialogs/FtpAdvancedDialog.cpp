@@ -59,7 +59,7 @@ BOOL CFtpAdvancedDialog::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 	
-	m_cmbServerType.InsertString(0, "Generic FTP Server");
+	m_cmbServerType.InsertString(0, _T("Generic FTP Server"));
 //	m_cmbServerType.InsertString(1, "Hewlett-Packard Server");
 //	m_cmbServerType.InsertString(2, "Sun Microsystems Server");
 
@@ -69,7 +69,7 @@ BOOL CFtpAdvancedDialog::OnInitDialog()
 	m_chkUseWinInet.SetCheck( m_bUseWinInet );
 	m_chkPassiveMode.SetCheck( m_bPassiveMode );
 
-	CString szPortNumber; szPortNumber.Format("%d", m_nPortNumber );
+	CString szPortNumber; szPortNumber.Format(_T("%d"), m_nPortNumber );
 	m_edtPortNumber.SetWindowText( szPortNumber );
 
 	BOOL bDefaultPort = ( m_nPortNumber == 21 );
@@ -102,13 +102,13 @@ void CFtpAdvancedDialog::OnPassiveMode()
 void CFtpAdvancedDialog::OnChangePortNumber() 
 {
 	CString szPortNumber; m_edtPortNumber.GetWindowText( szPortNumber );
-	m_nPortNumber = atoi( szPortNumber );
+	m_nPortNumber = _ttoi( szPortNumber );
 }
 
 void CFtpAdvancedDialog::OnDefaultPort() 
 {
 	BOOL bDefaultPort = m_chkDefaultPort.GetCheck();
-	if( bDefaultPort ) { m_nPortNumber = 21; m_edtPortNumber.SetWindowText( "21" ); }
+	if( bDefaultPort ) { m_nPortNumber = 21; m_edtPortNumber.SetWindowText( _T("21") ); }
 	m_edtPortNumber.EnableWindow( ! bDefaultPort );
 }
 

@@ -54,7 +54,7 @@ BOOL CCedtDoc::GetContainsPartOfLinkFile(LPCTSTR lpszLinkFilePath, CString & szC
 	ifstream fin( lpszLinkFilePath, ios::in);
 	if( ! fin.is_open() ) return FALSE;
 
-	TCHAR buff[1024], * ptr1, * ptr2;
+	char buff[1024], * ptr1, * ptr2;
 	while( fin.good() ) {
 		fin.getline(buff, 1024);
 		if( ! strlen(buff) ) continue;
@@ -63,7 +63,7 @@ BOOL CCedtDoc::GetContainsPartOfLinkFile(LPCTSTR lpszLinkFilePath, CString & szC
 		ptr2 = strtok(NULL, "\n");
 
 		if( ! _stricmp(ptr1, "CONTAINS") ) {
-			szContains = ptr2; fin.close(); return TRUE;
+			szContains = CString(ptr2); fin.close(); return TRUE;
 		}
 	}
 
@@ -71,14 +71,14 @@ BOOL CCedtDoc::GetContainsPartOfLinkFile(LPCTSTR lpszLinkFilePath, CString & szC
 	return FALSE;
 }
 
-BOOL CCedtDoc::ReadExtensionLinkFile(LPCTSTR lpszLinkFilePath) 
+BOOL CCedtDoc::ReadExtensionLinkFile(LPCTSTR lpszLinkFilePath)
 {
-	m_szLangSpecFile = m_szKeywordsFile = "";
+	m_szLangSpecFile = m_szKeywordsFile = _T("");
 
 	ifstream fin( lpszLinkFilePath, ios::in);
 	if( ! fin.is_open() ) return FALSE;
 
-	TCHAR buff[1024], * ptr1, * ptr2;
+	char buff[1024], * ptr1, * ptr2;
 	while( fin.good() ) {
 		fin.getline(buff, 1024);
 		if( ! strlen(buff) ) continue;
@@ -87,11 +87,11 @@ BOOL CCedtDoc::ReadExtensionLinkFile(LPCTSTR lpszLinkFilePath)
 		ptr2 = strtok(NULL, "\n");
 
 		if( ! _stricmp(ptr1, "SPECIFICATION") ) {
-			m_szLangSpecFile = ptr2;
+			m_szLangSpecFile = CString(ptr2);
 		} else if( ! _stricmp(ptr1, "LANGSPEC") ) {
-			m_szLangSpecFile = ptr2;
+			m_szLangSpecFile = CString(ptr2);
 		} else if( ! _stricmp(ptr1, "KEYWORDS") ) {
-			m_szKeywordsFile = ptr2;
+			m_szKeywordsFile = CString(ptr2);
 		}
 	}
 

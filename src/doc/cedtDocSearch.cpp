@@ -179,9 +179,9 @@ BOOL CCedtDoc::ForwardFindEndingPair(INT & nIdxX, INT & nIdxY)
 	SHORT i, siWordCount, siBegin; INT j, nLine = nIdxY;
 
 	LPCTSTR PAIRS[3]; INT nPairs[3]; INT nDepth[3];
-	PAIRS[0] = m_clsLangSpec.m_szPairs1; nPairs[0] = (INT)strlen(PAIRS[0]); nDepth[0] = 0;
-	PAIRS[1] = m_clsLangSpec.m_szPairs2; nPairs[1] = (INT)strlen(PAIRS[1]); nDepth[1] = 0;
-	PAIRS[2] = m_clsLangSpec.m_szPairs3; nPairs[2] = (INT)strlen(PAIRS[2]); nDepth[2] = 0;
+	PAIRS[0] = m_clsLangSpec.m_szPairs1; nPairs[0] = (INT)_tcslen(PAIRS[0]); nDepth[0] = 0;
+	PAIRS[1] = m_clsLangSpec.m_szPairs2; nPairs[1] = (INT)_tcslen(PAIRS[1]); nDepth[1] = 0;
+	PAIRS[2] = m_clsLangSpec.m_szPairs3; nPairs[2] = (INT)_tcslen(PAIRS[2]); nDepth[2] = 0;
 
 	while( pos ) {
 		CAnalyzedString & rLine = m_clsAnalyzedText.GetNext(pos);
@@ -227,9 +227,9 @@ BOOL CCedtDoc::ReverseFindBeginningPair(INT & nIdxX, INT & nIdxY)
 	SHORT i, siWordCount, siBegin; INT j, nLine = nIdxY;
 
 	LPCTSTR PAIRS[3]; INT nPairs[3]; INT nDepth[3];
-	PAIRS[0] = m_clsLangSpec.m_szPairs1; nPairs[0] = (INT)strlen(PAIRS[0]); nDepth[0] = 0;
-	PAIRS[1] = m_clsLangSpec.m_szPairs2; nPairs[1] = (INT)strlen(PAIRS[1]); nDepth[1] = 0;
-	PAIRS[2] = m_clsLangSpec.m_szPairs3; nPairs[2] = (INT)strlen(PAIRS[2]); nDepth[2] = 0;
+	PAIRS[0] = m_clsLangSpec.m_szPairs1; nPairs[0] = (INT)_tcslen(PAIRS[0]); nDepth[0] = 0;
+	PAIRS[1] = m_clsLangSpec.m_szPairs2; nPairs[1] = (INT)_tcslen(PAIRS[1]); nDepth[1] = 0;
+	PAIRS[2] = m_clsLangSpec.m_szPairs3; nPairs[2] = (INT)_tcslen(PAIRS[2]); nDepth[2] = 0;
 
 	while( pos ) {
 		CAnalyzedString & rLine = m_clsAnalyzedText.GetPrev(pos);
@@ -286,7 +286,7 @@ BOOL CCedtDoc::IsThisOneOfPairs(INT nIdxX, INT nIdxY, BOOL & bBeginning)
 	PAIRS[2] = m_clsLangSpec.m_szPairs3;
 
 	for(INT i = 0; i < 3; i++) {
-		if( strlen(PAIRS[i]) != 2 ) continue;
+		if( _tcslen(PAIRS[i]) != 2 ) continue;
 
 		if( nChar == PAIRS[i][0] ) {
 			_nPairCancelWith = PAIRS[i][0];	_nPairLookingFor = PAIRS[i][1];

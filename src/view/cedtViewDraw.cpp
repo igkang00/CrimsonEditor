@@ -116,7 +116,7 @@ void CCedtView::DrawScreenBackgroundAndText()
 		if( bLineVisible ) {
 			// draw line number
 			if( m_bShowLineNumbers && rLine.m_siSplitIndex == 0 ) {
-				CString szLineNumber; szLineNumber.Format("%d", nParaCount+1);
+				CString szLineNumber; szLineNumber.Format(_T("%d"), nParaCount+1);
 				CSize size = m_dcScreen.GetTextExtent(szLineNumber);
 				INT nPosX = nLeftMargin - size.cx - nNumWidth / 2;
 				m_dcScreen.SetTextColor( m_crTextColor[WT_LINEBREAK] );
@@ -373,7 +373,7 @@ void CCedtView::DrawPrintPageBackgroundAndText(CDC * pDC, RECT rectDraw, INT nCu
 		if( bLineVisible ) {
 			// draw line number
 			if( m_bPrintLineNumbers && rLine.m_siSplitIndex == 0 ) {
-				CString szLineNumber; szLineNumber.Format("%d:", nParaCount+1);
+				CString szLineNumber; szLineNumber.Format(_T("%d:"), nParaCount+1);
 				CSize size = pDC->GetTextExtent(szLineNumber);
 				INT nPosX = nLeftMargin - size.cx - nNumWidth / 1;
 				pDC->SetTextColor( RGB(0, 0, 0) );
@@ -611,8 +611,8 @@ void CCedtView::ParsePageHeaderAndFooter(INT nCurPage, INT nMaxPage)
 	szPathName = pDoc->GetTitle();
 	szFileName = GetFileName( szPathName );
 
-	szPageNumber.Format("%d", nCurPage );
-	szTotalPage.Format("%d", nMaxPage );
+	szPageNumber.Format(_T("%d"), nCurPage );
+	szTotalPage.Format(_T("%d"), nMaxPage );
 	szCurrDate = GetCurrentDate();
 	szCurrTime = GetCurrentTime();
 
@@ -629,11 +629,11 @@ void CCedtView::ParsePageHeaderAndFooter(CString & szArgument, LPCTSTR lpszFileP
 										 LPCTSTR lpszPageNumber, LPCTSTR lpszTotalPage, LPCTSTR lpszCurrDate, LPCTSTR lpszCurrTime)
 {
 	INT nFound;
-	while( (nFound = szArgument.Find("$(FilePath)"  )) >= 0 ) szArgument = szArgument.Left(nFound) + lpszFilePath   + szArgument.Mid(nFound + 11);
-	while( (nFound = szArgument.Find("$(FileName)"  )) >= 0 ) szArgument = szArgument.Left(nFound) + lpszFileName   + szArgument.Mid(nFound + 11);
-	while( (nFound = szArgument.Find("$(PageNumber)")) >= 0 ) szArgument = szArgument.Left(nFound) + lpszPageNumber + szArgument.Mid(nFound + 13);
-	while( (nFound = szArgument.Find("$(TotalPage)" )) >= 0 ) szArgument = szArgument.Left(nFound) + lpszTotalPage  + szArgument.Mid(nFound + 12);
-	while( (nFound = szArgument.Find("$(CurrDate)"  )) >= 0 ) szArgument = szArgument.Left(nFound) + lpszCurrDate   + szArgument.Mid(nFound + 11);
-	while( (nFound = szArgument.Find("$(CurrTime)"  )) >= 0 ) szArgument = szArgument.Left(nFound) + lpszCurrTime   + szArgument.Mid(nFound + 11);
+	while( (nFound = szArgument.Find(_T("$(FilePath)")  )) >= 0 ) szArgument = szArgument.Left(nFound) + lpszFilePath   + szArgument.Mid(nFound + 11);
+	while( (nFound = szArgument.Find(_T("$(FileName)")  )) >= 0 ) szArgument = szArgument.Left(nFound) + lpszFileName   + szArgument.Mid(nFound + 11);
+	while( (nFound = szArgument.Find(_T("$(PageNumber)"))) >= 0 ) szArgument = szArgument.Left(nFound) + lpszPageNumber + szArgument.Mid(nFound + 13);
+	while( (nFound = szArgument.Find(_T("$(TotalPage)") )) >= 0 ) szArgument = szArgument.Left(nFound) + lpszTotalPage  + szArgument.Mid(nFound + 12);
+	while( (nFound = szArgument.Find(_T("$(CurrDate)")  )) >= 0 ) szArgument = szArgument.Left(nFound) + lpszCurrDate   + szArgument.Mid(nFound + 11);
+	while( (nFound = szArgument.Find(_T("$(CurrTime)")  )) >= 0 ) szArgument = szArgument.Left(nFound) + lpszCurrTime   + szArgument.Mid(nFound + 11);
 }
 

@@ -61,12 +61,12 @@ BOOL CPreferenceDialog::LoadGeneralSettings()
 {
 	CString str;
 
-	str.Format("%d", CCedtView::m_nTabSize);
+	str.Format(_T("%d"), CCedtView::m_nTabSize);
 	m_edtTabSize.SetWindowText(str);
 	m_chkUseSpacesInPlaceOfTab.SetCheck(CCedtView::m_bUseSpacesInPlaceOfTab ? 1 : 0);
 
 	if( CCedtView::m_nIndentationSize ) {
-		str.Format("%d", CCedtView::m_nIndentationSize);
+		str.Format(_T("%d"), CCedtView::m_nIndentationSize);
 		m_edtIndentationSize.SetWindowText(str);
 		m_chkUseTabAsIndentation.SetCheck(FALSE);
 	} else {
@@ -75,14 +75,14 @@ BOOL CPreferenceDialog::LoadGeneralSettings()
 		m_chkUseTabAsIndentation.SetCheck(TRUE);
 	}
 
-	str.Format("%d", CCedtView::m_nWrapIndentation);
+	str.Format(_T("%d"), CCedtView::m_nWrapIndentation);
 	m_edtWrapIndentation.SetWindowText(str);
 	m_chkFixedWrapWidth.SetCheck(CCedtView::m_nFixedWrapWidth ? 1 : 0);
 	if( CCedtView::m_nFixedWrapWidth ) {
-		str.Format("%d", CCedtView::m_nFixedWrapWidth);
+		str.Format(_T("%d"), CCedtView::m_nFixedWrapWidth);
 		m_edtFixedWrapWidth.SetWindowText(str);
 	} else {
-		m_edtFixedWrapWidth.SetWindowText("80");
+		m_edtFixedWrapWidth.SetWindowText(_T("80"));
 		m_edtFixedWrapWidth.EnableWindow(FALSE);
 	}
 	m_chkOpenDocumentWordWrapped.SetCheck(CCedtView::m_bOpenDocumentWordWrapped ? 1 : 0);
@@ -102,19 +102,19 @@ BOOL CPreferenceDialog::SaveGeneralSettings()
 {
 	TCHAR buf[1024];
 
-	m_edtTabSize.GetWindowText(buf, 1024); CCedtView::m_nTabSize = atoi(buf);
+	m_edtTabSize.GetWindowText(buf, 1024); CCedtView::m_nTabSize = _ttoi(buf);
 	ASSURE_BOUND_VALUE(CCedtView::m_nTabSize, 1, 64);
 	CCedtView::m_bUseSpacesInPlaceOfTab = m_chkUseSpacesInPlaceOfTab.GetCheck();
 
 	if( ! m_chkUseTabAsIndentation.GetCheck() ) {
-		m_edtIndentationSize.GetWindowText(buf, 1024); CCedtView::m_nIndentationSize = atoi(buf);
+		m_edtIndentationSize.GetWindowText(buf, 1024); CCedtView::m_nIndentationSize = _ttoi(buf);
 		ASSURE_BOUND_VALUE(CCedtView::m_nIndentationSize, 1, _MY_MIN(8, CCedtView::m_nTabSize));
 	} else CCedtView::m_nIndentationSize = 0;
 
-	m_edtWrapIndentation.GetWindowText(buf, 1024); CCedtView::m_nWrapIndentation = atoi(buf);
+	m_edtWrapIndentation.GetWindowText(buf, 1024); CCedtView::m_nWrapIndentation = _ttoi(buf);
 	ASSURE_BOUND_VALUE(CCedtView::m_nWrapIndentation, 0, 16);
 	if( m_chkFixedWrapWidth.GetCheck() ) {
-		m_edtFixedWrapWidth.GetWindowText(buf, 1024); CCedtView::m_nFixedWrapWidth = atoi(buf);
+		m_edtFixedWrapWidth.GetWindowText(buf, 1024); CCedtView::m_nFixedWrapWidth = _ttoi(buf);
 		ASSURE_BOUND_VALUE(CCedtView::m_nFixedWrapWidth, 16, 160);
 	} else CCedtView::m_nFixedWrapWidth = 0;
 	CCedtView::m_bOpenDocumentWordWrapped = m_chkOpenDocumentWordWrapped.GetCheck();

@@ -133,7 +133,7 @@ void CCedtView::ActionCopyLineSelection(CMemText & rBlock)
 	GetSelectedIndex(nBegX, nBegY, nEndX, nEndY);
 
 	if( nBegY != nEndY ) CopyToLineSelection(rBlock, nBegX, nBegY, nEndX, nEndY);
-	else { rBlock.AddTail(""); CopyToString(rBlock.GetTail(), nBegX, nBegY, nEndX-nBegX); }
+	else { rBlock.AddTail(_T("")); CopyToString(rBlock.GetTail(), nBegX, nBegY, nEndX-nBegX); }
 }
 
 void CCedtView::ActionCopyColumnSelection(CMemText & rBlock)
@@ -149,7 +149,7 @@ void CCedtView::ActionCopyLine(CMemText & rBlock)
 	rBlock.RemoveAll(); INT nIdxY = GetIdxYFromPosY( m_nCaretPosY );
 
 	rBlock.AddTail( GetLineFromIdxY( nIdxY ) );
-	rBlock.AddTail( "" );
+	rBlock.AddTail( _T("") );
 }
 
 void CCedtView::ActionCopyFilePath(CMemText & rBlock)
@@ -168,7 +168,7 @@ void CCedtView::ActionPasteLineSelection(CMemText & rBlock)
 	if( rBlock.GetCount() == 1 ) {
 		LPCTSTR lpszString = rBlock.GetTail();
 		InsertString(nBegX, nBegY, lpszString);
-		nEndX = nBegX + (INT)strlen(lpszString);
+		nEndX = nBegX + (INT)_tcslen(lpszString);
 	} else if( rBlock.GetCount() > 1 ) InsertLineSelection(nBegX, nBegY, nEndX, nEndY, rBlock);
 
 	SetCaretPosY( GetPosYFromIdxY( nEndX, nEndY ) );
@@ -407,7 +407,7 @@ void CCedtView::CopyToColumnSelection(CMemText & rBlock, INT nBegX, INT nBegY, I
 	rBlock.RemoveAll(); INT nLineHeight = GetLineHeight();
 
 	for(INT nPosY = nBegY; nPosY <= nEndY; nPosY += nLineHeight ) {
-		rBlock.AddTail(""); CString & rString = rBlock.GetTail();
+		rBlock.AddTail(_T("")); CString & rString = rBlock.GetTail();
 		CFormatedString & rLine = GetLineFromPosY( nPosY );
 		INT nIdxY = GetIdxYFromPosY( nPosY ), nLstX = GetLastPosX( rLine );
 
@@ -485,7 +485,7 @@ void CCedtView::InsertColumnSelection(INT nBegX, INT nBegY, INT & nEndX, INT & n
 			FORMATEDWORD & rWord = GetWordFromIdxX( rLine, nIdxX );
 			if ( IS_DBCHAR(rWord) && rWord.m_nPosition < nBegX ) {
 				DeleteString( nIdxX, nIdxY, 2 );
-				InsertString( nIdxX, nIdxY, "  " );
+				InsertString( nIdxX, nIdxY, _T("  ") );
 			}
 		}
 
@@ -516,7 +516,7 @@ void CCedtView::DeleteColumnSelection(INT nBegX, INT nBegY, INT nEndX, INT nEndY
 
 			if( bHalf1 && bHalf2 ) {
 				DeleteString(nIdxX1, nIdxY, nIdxX2 - nIdxX1 + 2);
-				InsertString(nIdxX1, nIdxY, "  ");
+				InsertString(nIdxX1, nIdxY, _T("  "));
 			} else if( bHalf1 ) {
 				DeleteString(nIdxX1, nIdxY, nIdxX2 - nIdxX1);
 				InsertChar(nIdxX1, nIdxY, ' ');

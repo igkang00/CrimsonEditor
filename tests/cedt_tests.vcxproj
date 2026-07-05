@@ -58,7 +58,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <ConformanceMode>false</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <SDLCheck>false</SDLCheck>
       <AdditionalIncludeDirectories>..\src\include;..\src\core;..\src\util;..\src\network;..\third_party\htmlhelp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/source-charset:utf-8 %(AdditionalOptions)</AdditionalOptions>
@@ -93,7 +93,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <ConformanceMode>false</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <SDLCheck>false</SDLCheck>
       <AdditionalIncludeDirectories>..\src\include;..\src\core;..\src\util;..\src\network;..\third_party\htmlhelp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/source-charset:utf-8 %(AdditionalOptions)</AdditionalOptions>

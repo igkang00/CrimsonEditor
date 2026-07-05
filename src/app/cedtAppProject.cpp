@@ -8,13 +8,13 @@ void CCedtApp::OnProjectNew()
 {
 	DWORD dwFlags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
 	CString szFilter; szFilter.LoadString(IDS_FILTER_PROJECT);
-	CFileDialog dlg(FALSE, ".prj", NULL, dwFlags, szFilter);
+	CFileDialog dlg(FALSE, _T(".prj"), NULL, dwFlags, szFilter);
 
 	TCHAR szCurrentDirectory[MAX_PATH];
 	GetCurrentDirectory( MAX_PATH, szCurrentDirectory );
 
 	TCHAR szInitialDirectory[MAX_PATH]; lstrcpyn( szInitialDirectory, m_szProjectInitialDirectory, MAX_PATH );
-	if( ! strlen( szInitialDirectory ) ) lstrcpyn( szInitialDirectory, szCurrentDirectory, MAX_PATH );
+	if( ! _tcslen( szInitialDirectory ) ) lstrcpyn( szInitialDirectory, szCurrentDirectory, MAX_PATH );
 
 	CString szTitle; szTitle.LoadString(IDS_DLG_NEW_PROJECT);
 	dlg.m_ofn.lpstrTitle = szTitle; dlg.m_ofn.lpstrInitialDir = szInitialDirectory;
@@ -54,7 +54,7 @@ void CCedtApp::OnProjectOpen()
 	GetCurrentDirectory( MAX_PATH, szCurrentDirectory );
 
 	TCHAR szInitialDirectory[MAX_PATH]; lstrcpyn( szInitialDirectory, m_szProjectInitialDirectory, MAX_PATH );
-	if( ! strlen( szInitialDirectory ) ) lstrcpyn( szInitialDirectory, szCurrentDirectory, MAX_PATH );
+	if( ! _tcslen( szInitialDirectory ) ) lstrcpyn( szInitialDirectory, szCurrentDirectory, MAX_PATH );
 
 	CString szTitle; szTitle.LoadString(IDS_DLG_OPEN_PROJECT);
 	dlg.m_ofn.lpstrTitle = szTitle; dlg.m_ofn.lpstrInitialDir = szInitialDirectory;

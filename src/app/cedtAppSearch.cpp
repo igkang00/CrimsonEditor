@@ -50,13 +50,13 @@ BOOL CCedtApp::DoFindInFiles(LPCTSTR lpszFindString, LPCTSTR lpszFileType, LPCTS
 	CWaitCursor wait; CRegExp clsRegExp; 
 
 	if( SEARCH_REG_EXP(nOptions) ) { // compile regular expression
-		CString szExpression = lpszFindString; 			szExpression.Replace( "\\\\", "\x1B" );
-		szExpression.Replace( "\\s" , "[ \t\r\n]" );	szExpression.Replace( "\\S" , "[^ \t\r\n]" );
-		szExpression.Replace( "\\w" , "[A-Za-z0-9]" );	szExpression.Replace( "\\W" , "[^A-Za-z0-9]" );
-		szExpression.Replace( "\\a" , "[A-Za-z]" );		szExpression.Replace( "\\A" , "[^A-Za-z]" );
-		szExpression.Replace( "\\d" , "[0-9]" );		szExpression.Replace( "\\D" , "[^0-9]" );
-		szExpression.Replace( "\\h" , "[A-Fa-f0-9]" );	szExpression.Replace( "\\H" , "[^A-Fa-f0-9]" );
-		szExpression.Replace( "\\t" , "\t" );			szExpression.Replace( "\x1B", "\\\\" );
+		CString szExpression = lpszFindString; 			szExpression.Replace( _T("\\\\"), _T("\x1B") );
+		szExpression.Replace( _T("\\s") , _T("[ \t\r\n]") );	szExpression.Replace( _T("\\S") , _T("[^ \t\r\n]") );
+		szExpression.Replace( _T("\\w") , _T("[A-Za-z0-9]") );	szExpression.Replace( _T("\\W") , _T("[^A-Za-z0-9]") );
+		szExpression.Replace( _T("\\a") , _T("[A-Za-z]") );		szExpression.Replace( _T("\\A") , _T("[^A-Za-z]") );
+		szExpression.Replace( _T("\\d") , _T("[0-9]") );		szExpression.Replace( _T("\\D") , _T("[^0-9]") );
+		szExpression.Replace( _T("\\h") , _T("[A-Fa-f0-9]") );	szExpression.Replace( _T("\\H") , _T("[^A-Fa-f0-9]") );
+		szExpression.Replace( _T("\\t") , _T("\t") );			szExpression.Replace( _T("\x1B"), _T("\\\\") );
 
 		if( ! SEARCH_MATCH_CASE(nOptions) ) szExpression.MakeLower();
 		if( ! clsRegExp.RegComp( szExpression ) ) return FALSE;
@@ -92,10 +92,10 @@ INT CCedtApp::FindInFilesInFolder(LPCTSTR lpszFindString, LPCTSTR lpszFileType, 
 {
 	CFileFind find; BOOL bFound; INT nFound = 0;
 
-	CString szFolder = lpszFolder; INT nLen = (INT)strlen(lpszFolder);
-	if( szFolder[nLen-1] != '\\' ) szFolder += "\\";
+	CString szFolder = lpszFolder; INT nLen = (INT)_tcslen(lpszFolder);
+	if( szFolder[nLen-1] != _T('\\') ) szFolder += _T("\\");
 
-	bFound = find.FindFile(szFolder + "*.*");
+	bFound = find.FindFile(szFolder + _T("*.*"));
 	while( bFound ) {
 		bFound = find.FindNextFile();
 		if( ! find.IsDirectory() && ! find.IsDots() && ! find.IsHidden() ) {
@@ -108,7 +108,7 @@ INT CCedtApp::FindInFilesInFolder(LPCTSTR lpszFindString, LPCTSTR lpszFileType, 
 	// do not look in sub folders
 	if( ! bLookInSubfolders ) return nFound;
 
-	bFound = find.FindFile(szFolder + "*.*");
+	bFound = find.FindFile(szFolder + _T("*.*"));
 	while( bFound ) {
 		bFound = find.FindNextFile();
 		if( find.IsDirectory() && ! find.IsDots() && ! find.IsHidden() ) {
@@ -142,7 +142,7 @@ INT CCedtApp::FindInFilesInFile(LPCTSTR lpszFindString, LPCTSTR lpszFilePath, UI
 				if( ! SEARCH_REG_EXP(nOptions) ) nIdxX = ::ForwardFindString(szString, lpszFindString, 0, SEARCH_WHOLE_WORD(nOptions), SEARCH_MATCH_CASE(nOptions));
 				else nIdxX = ::ForwardFindStringRegExp(szString, lpszFindString, clsRegExp, 0, SEARCH_WHOLE_WORD(nOptions), SEARCH_MATCH_CASE(nOptions));
 				if( nIdxX >= 0 ) { // found it!
-					szMessage.Format("%s(%d,%d): %s", lpszFilePath, nIdxY+1, nIdxX+1, szString);
+					szMessage.Format(_T("%s(%d,%d): %s"), lpszFilePath, nIdxY+1, nIdxX+1, szString);
 					pFrame->AddStringToOutputWindow( szMessage, RGB(0, 0, 0) ); nFound++;
 				}
 			}

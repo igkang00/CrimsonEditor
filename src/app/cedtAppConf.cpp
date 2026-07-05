@@ -761,16 +761,18 @@ BOOL CCedtApp::SaveUserConfiguration(LPCTSTR lpszPathName)
 
 	// header format
 	for(i = 0; i < 3; i++) {
-		nLength = CCedtView::m_szHeaderFormat[i].GetLength();
+		CStringA sHdr(CCedtView::m_szHeaderFormat[i]);
+		nLength = sHdr.GetLength();
 		fout.write((const char *)(& nLength), sizeof(INT));
-		if( nLength ) fout.write((const char *)(CCedtView::m_szHeaderFormat[i]), nLength);
+		if( nLength ) fout.write((LPCSTR)sHdr, nLength);
 	}
 
 	// footer format
 	for(i = 0; i < 3; i++) {
-		nLength = CCedtView::m_szFooterFormat[i].GetLength();
+		CStringA sFtr(CCedtView::m_szFooterFormat[i]);
+		nLength = sFtr.GetLength();
 		fout.write((const char *)(& nLength), sizeof(INT));
-		if( nLength ) fout.write((const char *)(CCedtView::m_szFooterFormat[i]), nLength);
+		if( nLength ) fout.write((LPCSTR)sFtr, nLength);
 	}
 
 	// document related
@@ -787,13 +789,19 @@ BOOL CCedtApp::SaveUserConfiguration(LPCTSTR lpszPathName)
 	fout.write((const char *)(& CCedtDoc::m_nMakeBackupFile), sizeof(UINT));
 	fout.write((const char *)(& CCedtDoc::m_nBackupMethod), sizeof(UINT));
 
-	nLength = CCedtDoc::m_szBackupExtension.GetLength();
-	fout.write((const char *)(& nLength), sizeof(INT));
-	if( nLength ) fout.write((const char *)(CCedtDoc::m_szBackupExtension), nLength);
+	{
+		CStringA sExt(CCedtDoc::m_szBackupExtension);
+		nLength = sExt.GetLength();
+		fout.write((const char *)(& nLength), sizeof(INT));
+		if( nLength ) fout.write((LPCSTR)sExt, nLength);
+	}
 
-	nLength = CCedtDoc::m_szBackupDirectory.GetLength();
-	fout.write((const char *)(& nLength), sizeof(INT));
-	if( nLength ) fout.write((const char *)(CCedtDoc::m_szBackupDirectory), nLength);
+	{
+		CStringA sDir(CCedtDoc::m_szBackupDirectory);
+		nLength = sDir.GetLength();
+		fout.write((const char *)(& nLength), sizeof(INT));
+		if( nLength ) fout.write((LPCSTR)sDir, nLength);
+	}
 
 	// syntax types
 	for( i = 0; i < MAX_SYNTAX_TYPE; i++ ) {
@@ -801,14 +809,20 @@ BOOL CCedtApp::SaveUserConfiguration(LPCTSTR lpszPathName)
 	}
 
 	// working directory
-	nLength = CCedtApp::m_szInitialWorkingDirectory.GetLength();
-	fout.write((const char *)(& nLength), sizeof(INT));
-	if( nLength ) fout.write((const char *)(CCedtApp::m_szInitialWorkingDirectory), nLength);
+	{
+		CStringA sWD(CCedtApp::m_szInitialWorkingDirectory);
+		nLength = sWD.GetLength();
+		fout.write((const char *)(& nLength), sizeof(INT));
+		if( nLength ) fout.write((LPCSTR)sWD, nLength);
+	}
 
 	// remote backup directory
-	nLength = CCedtApp::m_szRemoteBackupDirectory.GetLength();
-	fout.write((const char *)(& nLength), sizeof(INT));
-	if( nLength ) fout.write((const char *)(CCedtApp::m_szRemoteBackupDirectory), nLength);
+	{
+		CStringA sRB(CCedtApp::m_szRemoteBackupDirectory);
+		nLength = sRB.GetLength();
+		fout.write((const char *)(& nLength), sizeof(INT));
+		if( nLength ) fout.write((LPCSTR)sRB, nLength);
+	}
 
 	// application initialization options
 	fout.write((const char *)(& CCedtApp::m_bCreateNewDocumentOnStartup), sizeof(BOOL));

@@ -103,8 +103,8 @@ CString QuotePathName(LPCTSTR lpszPathName)
 	INT nLen = (INT)_tcslen(lpszPathName);
 	CString szPathName;
 
-	if( nLen >= 2 && lpszPathName[0] == '\_T("' && lpszPathName[nLen-1] == '\")' ) szPathName = lpszPathName;
-	else szPathName.Format(_T("\")%s\_T(""), lpszPathName);
+	if( nLen >= 2 && lpszPathName[0] == _T('\"') && lpszPathName[nLen-1] == _T('\"') ) szPathName = lpszPathName;
+	else szPathName.Format(_T("\"%s\""), lpszPathName);
 
 	return szPathName;
 }

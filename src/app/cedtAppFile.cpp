@@ -82,7 +82,7 @@ void CCedtApp::OnFileOpenRemote()
 			INT nFound = szFileInfo.Find('\n'); ASSERT(nFound >= 0);
 
 			CString szPathName = szFileInfo.Mid(0, nFound);
-			DWORD dwFileSize = atol( szFileInfo.Mid(nFound+1) );
+			DWORD dwFileSize = _ttol( szFileInfo.Mid(nFound+1) );
 			OpenRemoteDocumentFile( nFtpAccount, szPathName, 0, NULL );
 		}
 	} else {
@@ -124,14 +124,14 @@ BOOL CCedtApp::ReloadLastWorkingFiles()
 	if( ! m_szPrevWorkspacePathName.GetLength() ) return FALSE;
 	CString szExtension = GetFileExtension( m_szPrevWorkspacePathName );
 
-	if( ! szExtension.CompareNoCase(".prj") ) {
+	if( ! szExtension.CompareNoCase(_T(".prj")) ) {
 		// activate project tab if file window is visible
 		CMainFrame * pFrame = (CMainFrame *)AfxGetMainWnd();
 		if( pFrame->IsFileWindowVisible() ) pFrame->ShowFileWindowCategory( FILE_WINDOW_PROJECT );
 
 		return OpenProjectWorkspace(m_szPrevWorkspacePathName);
 
-	} else if( ! szExtension.CompareNoCase(".wks") ) {
+	} else if( ! szExtension.CompareNoCase(_T(".wks")) ) {
 		return OpenRegularWorkspace(m_szPrevWorkspacePathName);
 
 	} else return FALSE;
@@ -142,9 +142,9 @@ BOOL CCedtApp::ProcessShellCommand(CCmdLine & rCmdLine)
 	CString szOption, szDirectory; 
 	BOOL bLoadWorkspace = FALSE; INT nLineNumber = 1;
 
-	if( rCmdLine.HasSwitch("W", szOption) ) bLoadWorkspace = TRUE;
-	if( rCmdLine.HasSwitch("L", szOption) ) nLineNumber = atoi(szOption);
-	if( rCmdLine.HasSwitch("D", szOption) ) szDirectory = ChopDirectory(szOption);
+	if( rCmdLine.HasSwitch(_T("W"), szOption) ) bLoadWorkspace = TRUE;
+	if( rCmdLine.HasSwitch(_T("L"), szOption) ) nLineNumber = _ttoi(szOption);
+	if( rCmdLine.HasSwitch(_T("D"), szOption) ) szDirectory = ChopDirectory(szOption);
 
 	CString szPrefix = ChopDirectory(m_szLoadingDirectory);
 	if( szDirectory.GetLength() ) szPrefix = ChopDirectory(szDirectory);

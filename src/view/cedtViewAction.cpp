@@ -23,9 +23,9 @@ void CCedtView::ActionEvaluateLine()
 
 	if( nError == EVAL_ERROR_SUCCESSFUL ) {
 		double dFraction, dInteger; dFraction = modf( dValue, & dInteger );
-		if( dFraction == 0.0 ) szResult.Format("$ans = %.0f", dValue);
-		else szResult.Format("$ans = %f", dValue);
-	} else szResult.Format("error(%d): %s", pExpr - pFormula + 1, EVAL::GetErrorMessage(nError));
+		if( dFraction == 0.0 ) szResult.Format(_T("$ans = %.0f"), dValue);
+		else szResult.Format(_T("$ans = %f"), dValue);
+	} else szResult.Format(_T("error(%d): %s"), pExpr - pFormula + 1, EVAL::GetErrorMessage(nError));
 
 	SplitLine(GetLastIdxX(rString), nIdxY);
 	nIdxY = nIdxY + 1; nIdxX = 0;

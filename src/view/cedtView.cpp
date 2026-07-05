@@ -919,7 +919,7 @@ void CCedtView::OnLButtonDown(UINT nFlags, CPoint point)
 		CMemText Block; INT nBegX, nBegY, nEndX, nEndY;
 		GetSelectedIndex(nBegX, nBegY, nEndX, nEndY);
 
-		if( nBegY == nEndY ) { Block.AddTail(""); CopyToString(Block.GetTail(), nBegX, nBegY, nEndX-nBegX); }
+		if( nBegY == nEndY ) { Block.AddTail(_T("")); CopyToString(Block.GetTail(), nBegX, nBegY, nEndX-nBegX); }
 		else if( ! m_bColumnMode ) CopyToLineSelection(Block, nBegX, nBegY, nEndX, nEndY);
 		else { GetSelectedPosition(nBegX, nBegY, nEndX, nEndY); CopyToColumnSelection(Block, nBegX, nBegY, nEndX, nEndY); }
 		INT size = Block.MemorySize(); 

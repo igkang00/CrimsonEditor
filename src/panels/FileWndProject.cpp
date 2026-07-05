@@ -34,13 +34,13 @@ BOOL CFileWindow::NewProjectWorkspace(LPCTSTR lpszPathName)
 
 BOOL CFileWindow::SaveProjectWorkspace(LPCTSTR lpszPathName)
 {
-	ofstream fout(lpszPathName, ios::out);
+	wofstream fout(lpszPathName, ios::out);
 	if( ! fout.is_open() ) return FALSE;
 
 	CString szContents;
 
 	// save project
-	szContents.Format(_T("<project version=\")%s\_T(">"), STRING_PROJECTFILEVER);
+	szContents.Format(_T("<project version=\"%s\">"), STRING_PROJECTFILEVER);
 	fout << szContents << endl;
 
 	HTREEITEM hRoot = m_treProjectTree.GetRootItem();
@@ -53,7 +53,7 @@ BOOL CFileWindow::SaveProjectWorkspace(LPCTSTR lpszPathName)
 	fout << _T("</project>") << endl << endl;
 
 	// save workspace
-	szContents.Format(_T("<workspace version=\")%s\_T(">"), STRING_PROJECTFILEVER);
+	szContents.Format(_T("<workspace version=\"%s\">"), STRING_PROJECTFILEVER);
 	fout << szContents << endl;
 
 	CMainFrame * pFrame = (CMainFrame *)AfxGetMainWnd();
@@ -74,14 +74,14 @@ BOOL CFileWindow::OpenProjectWorkspace(LPCTSTR lpszPathName)
 	EnableAllProjectButtons(FALSE);
 
 	// open file to load project workspace
-	ifstream fin(lpszPathName, ios::in);
+	wifstream fin(lpszPathName, ios::in);
 
 	CMapStringToString mapAttr; TCHAR szText[kProjectTokenBufSize];
 	fin.width(kProjectTokenBufSize); fin >> szText; // get first token
 
 	// load project
 	if( ! _tcsicmp(szText, _T("<project")) ) {
-		fin.getline(szText, 4096, '>'); // get attributes
+		fin.getline(szText, 4096, L'>'); // get attributes
 		if( ! ParseItemAttribute( szText, mapAttr ) ) { fin.close(); return FALSE; }
 
 		CString szVersion; BOOL bLookup = mapAttr.Lookup(_T("version"), szVersion);
@@ -103,7 +103,7 @@ BOOL CFileWindow::OpenProjectWorkspace(LPCTSTR lpszPathName)
 
 	// load workspace
 	if( ! _tcsicmp(szText, _T("<workspace")) ) {
-		fin.getline(szText, 4096, '>'); // get attributes
+		fin.getline(szText, 4096, L'>'); // get attributes
 		if( ! ParseItemAttribute( szText, mapAttr ) ) { fin.close(); return FALSE; }
 
 		CString szVersion; BOOL bLookup = mapAttr.Lookup(_T("version"), szVersion);
@@ -125,13 +125,13 @@ BOOL CFileWindow::OpenProjectWorkspace(LPCTSTR lpszPathName)
 
 BOOL CFileWindow::SaveRegularWorkspace(LPCTSTR lpszPathName)
 {
-	ofstream fout(lpszPathName, ios::out);
+	wofstream fout(lpszPathName, ios::out);
 	if( ! fout.is_open() ) return FALSE;
 
 	CString szContents;
 
 	// save workspace
-	szContents.Format(_T("<workspace version=\")%s\_T(">"), STRING_PROJECTFILEVER);
+	szContents.Format(_T("<workspace version=\"%s\">"), STRING_PROJECTFILEVER);
 	fout << szContents << endl;
 
 	CMainFrame * pFrame = (CMainFrame *)AfxGetMainWnd();
@@ -156,14 +156,14 @@ BOOL CFileWindow::OpenRegularWorkspace(LPCTSTR lpszPathName)
 	if( ! InsertProjectTreeItem(TVI_ROOT, szItemText, PROJECT_ITEM_PROJECT, 0, _T("")) ) return FALSE;
 
 	// open file to load regular workspace
-	ifstream fin(lpszPathName, ios::in);
+	wifstream fin(lpszPathName, ios::in);
 
 	CMapStringToString mapAttr; TCHAR szText[kProjectTokenBufSize];
 	fin.width(kProjectTokenBufSize); fin >> szText; // get first token
 
 	// load workspace
 	if( ! _tcsicmp(szText, _T("<workspace")) ) {
-		fin.getline(szText, 4096, '>'); // get attributes
+		fin.getline(szText, 4096, L'>'); // get attributes
 		if( ! ParseItemAttribute( szText, mapAttr ) ) { fin.close(); return FALSE; }
 
 		CString szVersion; BOOL bLookup = mapAttr.Lookup(_T("version"), szVersion);
@@ -322,14 +322,14 @@ BOOL CFileWindow::RenameSelectedProjectItem()
 
 /////////////////////////////////////////////////////////////////////////////
 // Inner Functions
-BOOL CFileWindow::SaveProjectItem(ostream & os, INT nLevel, HTREEITEM hItem)
+BOOL CFileWindow::SaveProjectItem(wostream & os, INT nLevel, HTREEITEM hItem)
 {
 	INT nImage, nSelectedImage; m_treProjectTree.GetItemImage( hItem, nImage, nSelectedImage );
 	CString szContents, szIndent('\t', nLevel), szText = m_treProjectTree.GetItemText( hItem );
 	CString szExpanded = (m_treProjectTree.GetItemState(hItem, TVIS_EXPANDED) & TVIS_EXPANDED) ? _T("yes") : _T("no");
 
 	if( nImage == PROJECT_ITEM_CATEGORY ) {
-		szContents.Format(_T("<category name=\")%s\_T(" expanded=\")%s\_T(">"), szText, szExpanded);
+		szContents.Format(_T("<category name=\"%s\" expanded=\"%s\">"), szText, szExpanded);
 		os << szIndent << szContents << endl;
 
 		HTREEITEM hChild = m_treProjectTree.GetChildItem( hItem );
@@ -342,7 +342,7 @@ BOOL CFileWindow::SaveProjectItem(ostream & os, INT nLevel, HTREEITEM hItem)
 
 	} else if( nImage == PROJECT_ITEM_LOCAL_FILE ) {
 		CString szPath = GetProjectItemPathName( hItem );
-		szContents.Format(_T("<localfile path=\")%s\_T(" />"), szPath);
+		szContents.Format(_T("<localfile path=\"%s\" />"), szPath);
 
 		os << szIndent << szContents << endl;
 
@@ -351,7 +351,7 @@ BOOL CFileWindow::SaveProjectItem(ostream & os, INT nLevel, HTREEITEM hItem)
 		INT nAccount = lpInfo->nFtpAccount;
 		CString szPath = lpInfo->szPathName;
 
-		szContents.Format(_T("<remotefile account=\")%d\_T(" path=\")%s\_T(" />"), nAccount, szPath);
+		szContents.Format(_T("<remotefile account=\"%d\" path=\"%s\" />"), nAccount, szPath);
 
 		os << szIndent << szContents << endl;
 
@@ -360,12 +360,12 @@ BOOL CFileWindow::SaveProjectItem(ostream & os, INT nLevel, HTREEITEM hItem)
 	return TRUE;
 }
 
-BOOL CFileWindow::LoadProjectItem(istream & is, TCHAR szText[], HTREEITEM hParent)
+BOOL CFileWindow::LoadProjectItem(wistream & is, TCHAR szText[], HTREEITEM hParent)
 {
 	CMapStringToString mapAttr; 
 
 	if( ! _tcsicmp(szText, _T("<category")) ) {
-		is.getline(szText, 4096, '>'); // get attributes
+		is.getline(szText, 4096, L'>'); // get attributes
 		if( ! ParseItemAttribute( szText, mapAttr ) ) return FALSE;
 
 		CString szName; BOOL bLookup = mapAttr.Lookup(_T("name"), szName);
@@ -386,7 +386,7 @@ BOOL CFileWindow::LoadProjectItem(istream & is, TCHAR szText[], HTREEITEM hParen
 		if( ! szExpanded.Compare(_T("yes")) ) m_treProjectTree.Expand( hItem, TVE_EXPAND );
 
 	} else if( ! _tcsicmp(szText, _T("<localfile")) ) {
-		is.getline(szText, 4096, '>'); // get attributes
+		is.getline(szText, 4096, L'>'); // get attributes
 		INT nLen = (INT)_tcslen(szText); if( szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
 		if( ! ParseItemAttribute( szText, mapAttr ) ) return FALSE;
 
@@ -397,7 +397,7 @@ BOOL CFileWindow::LoadProjectItem(istream & is, TCHAR szText[], HTREEITEM hParen
 		is.width(kProjectTokenBufSize); is >> szText; // get next token
 
 	} else if( ! _tcsicmp(szText, _T("<remotefile")) ) {
-		is.getline(szText, 4096, '>'); // get attributes
+		is.getline(szText, 4096, L'>'); // get attributes
 		INT nLen = (INT)_tcslen(szText); if( szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
 		if( ! ParseItemAttribute( szText, mapAttr ) ) return FALSE;
 
@@ -411,14 +411,14 @@ BOOL CFileWindow::LoadProjectItem(istream & is, TCHAR szText[], HTREEITEM hParen
 		is.width(kProjectTokenBufSize); is >> szText; // get next token
 
 	} else { // not recognized item
-		is.getline(szText, 4096, '>'); // skip attributes
+		is.getline(szText, 4096, L'>'); // skip attributes
 		is.width(kProjectTokenBufSize); is >> szText; // get next token
 	}
 
 	return TRUE;
 }
 
-BOOL CFileWindow::SaveWorkspaceItem(ostream & os, INT nLevel, CMDIChildWnd * pChild)
+BOOL CFileWindow::SaveWorkspaceItem(wostream & os, INT nLevel, CMDIChildWnd * pChild)
 {
 	CCedtDoc * pDoc = (CCedtDoc *)pChild->GetActiveDocument();
 	if( pDoc->IsNewFileNotSaved() ) return TRUE;
@@ -433,7 +433,7 @@ BOOL CFileWindow::SaveWorkspaceItem(ostream & os, INT nLevel, CMDIChildWnd * pCh
 		INT nLineNum = pView->GetCurrentLineNumber();
 		WINDOWPLACEMENT wndpl; pChild->GetWindowPlacement( & wndpl );
 
-		szContents.Format(_T("<remotefile account=\")%d\_T(" path=\")%s\_T(" linenum=\")%d\_T(" placement=\")%d:%d:%d:%d:%d:%d:%d:%d:%d:%d\_T(" />"),
+		szContents.Format(_T("<remotefile account=\"%d\" path=\"%s\" linenum=\"%d\" placement=\"%d:%d:%d:%d:%d:%d:%d:%d:%d:%d\" />"),
 			nAccount, szPath, nLineNum, (INT)wndpl.flags, (INT)wndpl.showCmd, 
 			wndpl.ptMinPosition.x, wndpl.ptMinPosition.y, 
 			wndpl.ptMaxPosition.x, wndpl.ptMaxPosition.y,
@@ -450,7 +450,7 @@ BOOL CFileWindow::SaveWorkspaceItem(ostream & os, INT nLevel, CMDIChildWnd * pCh
 
 		WINDOWPLACEMENT wndpl; pChild->GetWindowPlacement( & wndpl );
 
-		szContents.Format(_T("<localfile path=\")%s\_T(" linenum=\")%d\_T(" placement=\")%d:%d:%d:%d:%d:%d:%d:%d:%d:%d\_T(" />"), 
+		szContents.Format(_T("<localfile path=\"%s\" linenum=\"%d\" placement=\"%d:%d:%d:%d:%d:%d:%d:%d:%d:%d\" />"),
 			szPath, nLineNum, (INT)wndpl.flags, (INT)wndpl.showCmd, 
 			wndpl.ptMinPosition.x, wndpl.ptMinPosition.y, 
 			wndpl.ptMaxPosition.x, wndpl.ptMaxPosition.y,
@@ -463,13 +463,13 @@ BOOL CFileWindow::SaveWorkspaceItem(ostream & os, INT nLevel, CMDIChildWnd * pCh
 	return TRUE;
 }
 
-BOOL CFileWindow::LoadWorkspaceItem(istream & is, TCHAR szText[], CWinApp * pApp)
+BOOL CFileWindow::LoadWorkspaceItem(wistream & is, TCHAR szText[], CWinApp * pApp)
 {
 	CCedtApp * pCedtApp = (CCedtApp *)pApp;
 	CMapStringToString mapAttr;
 
 	if( ! _tcsicmp(szText, _T("<remotefile")) ) {
-		is.getline(szText, 4096, '>'); // get attributes
+		is.getline(szText, 4096, L'>'); // get attributes
 		INT nLen = (INT)_tcslen(szText); if( szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
 		if( ! ParseItemAttribute( szText, mapAttr ) ) return FALSE;
 
@@ -506,7 +506,7 @@ BOOL CFileWindow::LoadWorkspaceItem(istream & is, TCHAR szText[], CWinApp * pApp
 		is.width(kProjectTokenBufSize); is >> szText; // get next token
 
 	} else if( ! _tcsicmp(szText, _T("<localfile")) ) {
-		is.getline(szText, 4096, '>'); // get attributes
+		is.getline(szText, 4096, L'>'); // get attributes
 		INT nLen = (INT)_tcslen(szText); if( szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
 		if( ! ParseItemAttribute( szText, mapAttr ) ) return FALSE;
 
@@ -540,7 +540,7 @@ BOOL CFileWindow::LoadWorkspaceItem(istream & is, TCHAR szText[], CWinApp * pApp
 		is.width(kProjectTokenBufSize); is >> szText; // get next token
 
 	} else { // not recognized item
-		is.getline(szText, 4096, '>'); // skip attributes
+		is.getline(szText, 4096, L'>'); // skip attributes
 		is.width(kProjectTokenBufSize); is >> szText; // get next token
 	}
 

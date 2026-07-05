@@ -96,7 +96,7 @@ BOOL CFtpSettingsDialog::OnInitDialog()
 	m_imgButtons.Create(IDB_GENERAL_BUTTONS, 9, 0, RGB(255, 0, 255));
 
 	m_lstFtpAccounts.SetExtendedStyle(LVS_EX_FULLROWSELECT);
-	m_lstFtpAccounts.InsertColumn(0, "FTP Accounts", LVCFMT_LEFT, 268);
+	m_lstFtpAccounts.InsertColumn(0, _T("FTP Accounts"), LVCFMT_LEFT, 268);
 	
 	CButton * pButton0 = (CButton *)GetDlgItem(IDC_MOVE_UP);
 	pButton0->SetIcon( m_imgButtons.ExtractIcon(0) );

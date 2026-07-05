@@ -153,7 +153,7 @@ void CCedtDoc::FastDeleteChar(CAnalyzedString & rLine, INT nIdxX, INT nIdxY)
 
 void CCedtDoc::FastInsertString(CAnalyzedString & rLine, INT nIdxX, INT nIdxY, LPCTSTR lpszString)
 {
-	INT nLength = (INT)strlen(lpszString);
+	INT nLength = (INT)_tcslen(lpszString);
 	rLine.Insert(nIdxX, lpszString);
 
 	RecordInsertString(nIdxX, nIdxY, nLength);

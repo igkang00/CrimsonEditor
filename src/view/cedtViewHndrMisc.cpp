@@ -150,7 +150,7 @@ void CCedtView::OnToolEvaluateLine()
 void CCedtView::OnToolMsDosShell() 
 {
 	CString szShellPath = GetMsDosShellPath();
-	WinExec( szShellPath, SW_SHOWNORMAL );
+	WinExec( (LPCSTR)CT2A(szShellPath), SW_SHOWNORMAL );
 }
 
 void CCedtView::OnToolViewInBrowser() 
@@ -164,8 +164,8 @@ void CCedtView::OnToolViewInBrowser()
 	CString szPathName = GetShortPathName( pDoc->GetPathName() );
 	if( ! szPathName.GetLength() ) return;
 
-	CString szCommand = szBrowserPath + " " + szPathName;
-	WinExec( szCommand, SW_SHOWNORMAL );
+	CString szCommand = szBrowserPath + _T(" ") + szPathName;
+	WinExec( (LPCSTR)CT2A(szCommand), SW_SHOWNORMAL );
 }
 
 void CCedtView::OnCommandExecute(INT nCommand)
@@ -236,7 +236,7 @@ void CCedtView::OnUpdateCommandKillProcess(CCmdUI* pCmdUI)
 void CCedtView::OnUpdateCommandExecute(INT nCommand, CCmdUI* pCmdUI)
 {
 	if( nCommand != 0 && pCmdUI->m_pMenu ) {
-		CString szMenuText; szMenuText.Format("&%d %s\t%s", nCommand % 10, GetCommandName(nCommand), GetCommandHotKeyText(nCommand));
+		CString szMenuText; szMenuText.Format(_T("&%d %s\t%s"), nCommand % 10, GetCommandName(nCommand), GetCommandHotKeyText(nCommand));
 		pCmdUI->SetText(szMenuText);
 		pCmdUI->Enable( IsCommandAssigned(nCommand) ); 
 	}
@@ -320,7 +320,7 @@ void CCedtView::OnMacroReplay0() { OnMacroReplay(10); }
 
 void CCedtView::OnUpdateMacroReplay(INT nMacro, CCmdUI* pCmdUI) {
 	if( nMacro != 0 && pCmdUI->m_pMenu ) {
-		CString szMenuText; szMenuText.Format("&%d %s\t%s", nMacro % 10, GetMacroName(nMacro), GetMacroHotKeyText(nMacro));
+		CString szMenuText; szMenuText.Format(_T("&%d %s\t%s"), nMacro % 10, GetMacroName(nMacro), GetMacroHotKeyText(nMacro));
 		pCmdUI->SetText(szMenuText);
 	}
 

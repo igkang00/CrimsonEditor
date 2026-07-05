@@ -191,7 +191,7 @@ CString GetDefaultBrowserPath()
 	if( ! GetRegKeyValue(HKEY_CLASSES_ROOT, szKey, _T(""), szKey, MAX_PATH + MAX_PATH) ) return _T("");
 
     TCHAR * pos;
-    pos = _tcsstr(szKey, _T("\_T("%1\")"));
+    pos = _tcsstr(szKey, _T("\"%1\""));
     if (pos == NULL) {                     // No quotes found
         pos = _tcsstr(szKey, _T("%1"));    // Check for %1, without quotes
         if (pos == NULL)                   // No parameter at all...
@@ -215,7 +215,7 @@ HINSTANCE GotoURL(LPCTSTR URL, INT nCmdShow)
 		if( szCommand.GetLength() ) {
 			szCommand += _T(" ");
 			szCommand += URL;
-            hResult = (HINSTANCE)(INT_PTR) WinExec(szCommand, nCmdShow);
+            hResult = (HINSTANCE)(INT_PTR) WinExec((LPCSTR)CT2A(szCommand), nCmdShow);
 		}
 	}
 	  

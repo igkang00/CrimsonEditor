@@ -33,7 +33,7 @@ CString CCedtView::GetMacroHotKeyText(INT nMacro)
 {
 	CMacroBuffer & rBuffer = m_clsMacroBuffer[nMacro];
 	CString szHotKeyText = rBuffer.GetHotKeyText();
-	if( ! szHotKeyText.GetLength() ) szHotKeyText.Format("Alt+%d", nMacro % 10);
+	if( ! szHotKeyText.GetLength() ) szHotKeyText.Format(_T("Alt+%d"), nMacro % 10);
 	return szHotKeyText;
 }
 

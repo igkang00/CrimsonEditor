@@ -103,7 +103,7 @@ void CCedtView::ActionInsertColumnChar(UINT nChar)
 			FORMATEDWORD & rWord = GetWordFromIdxX( rLine, nIdxX );
 			if( IS_DBCHAR(rWord) && rWord.m_nPosition < nBegX ) {
 				DeleteString(nIdxX, nIdxY, 2);
-				InsertString(nIdxX, nIdxY, "  ");
+				InsertString(nIdxX, nIdxY, _T("  "));
 			}
 		} else {
 			nIdxX = GetIdxXFromPosX( rLine, nLstX, TRUE );
@@ -140,7 +140,7 @@ void CCedtView::ActionInsertColumnSpacesInPlaceOfTab()
 			FORMATEDWORD & rWord = GetWordFromIdxX( rLine, nIdxX );
 			if( IS_DBCHAR(rWord) && rWord.m_nPosition < nBegX ) {
 				DeleteString(nIdxX, nIdxY, 2);
-				InsertString(nIdxX, nIdxY, "  ");
+				InsertString(nIdxX, nIdxY, _T("  "));
 			}
 		} else {
 			nIdxX = GetIdxXFromPosX( rLine, nLstX, TRUE );
@@ -166,7 +166,7 @@ void CCedtView::ActionInsertString(LPCTSTR lpszString)
 	CFormatedString & rLine = GetLineFromPosY( m_nCaretPosY );
 	INT nIdxX = GetIdxXFromPosX( rLine, m_nCaretPosX, ! m_bColumnMode );
 
-	INT nSize = (INT)strlen( lpszString );
+	INT nSize = (INT)_tcslen( lpszString );
 
 	CAnalyzedString & rString = GetLineFromIdxY( nIdxY );
 	INT nLstX = GetLastIdxX( rString );

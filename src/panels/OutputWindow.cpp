@@ -184,7 +184,7 @@ void COutputWindow::OnDblclkOutput()
 	if( ! VerifyFilePath(szPathName) ) return;
 
 	CString szLineNum  = szString.Mid(nIndex1+1, nIndex2-nIndex1-1);
-	INT nLineNum = atoi(szLineNum); if( ! nLineNum ) return;
+	INT nLineNum = _ttoi(szLineNum); if( ! nLineNum ) return;
 
 	CCedtApp * pApp = (CCedtApp *)AfxGetApp(); if( ! pApp ) return;
 	pApp->PostOpenDocumentFile( szPathName, nLineNum );
@@ -208,7 +208,7 @@ void COutputWindow::ApplyOutputFont(BOOL bRedraw)
 
 void COutputWindow::EnableInputConsole(BOOL bEnable)
 {
-	m_edtConsoleInput.SetWindowText("");
+	m_edtConsoleInput.SetWindowText(_T(""));
 	m_edtConsoleInput.SetReadOnly(!bEnable);
 }
 
@@ -255,7 +255,7 @@ BOOL COutputWindow::GetTheLastString(CString & szString)
 {
 	INT nCount = m_lstConsoleOutput.GetCount();
 	if( nCount > 0 ) m_lstConsoleOutput.GetText(nCount-1, szString);
-	else szString = "";
+	else szString = _T("");
 
 	return TRUE;
 }
@@ -297,7 +297,7 @@ void COutputWindow::OnOutputWindowCopy()
 	INT nSelect = m_lstConsoleOutput.GetCurSel(); if( nSelect == LB_ERR ) return;
 
 	m_lstConsoleOutput.GetText(nSelect, szText);
-	Block.AddTail( szText ); Block.AddTail("");
+	Block.AddTail( szText ); Block.AddTail(_T(""));
 
 	CCedtView::SetClipboardData( Block );
 }
@@ -311,7 +311,7 @@ void COutputWindow::OnOutputWindowSendInput()
 	m_edtConsoleInput.GetLine(0, szInputString, 4096);
 
 	CCedtView::SetChildInputString( szInputString );
-	m_edtConsoleInput.SetWindowText(""); // clear input console
+	m_edtConsoleInput.SetWindowText(_T("")); // clear input console
 }
 
 void COutputWindow::OnOutputWindowKillProcess() 

@@ -182,24 +182,24 @@ INT CCedtDoc::FastUnindentLine(CAnalyzedString & rLine, INT nIdxY, INT nTabSize,
 INT CCedtDoc::FastMakeCommentLine(CAnalyzedString & rLine, INT nIdxY)
 {
 	LPCTSTR LCS = m_clsLangSpec.m_szLineComment1;
-	INT  lenLCS = (INT)strlen(LCS); if( ! lenLCS ) return 0;
+	INT  lenLCS = (INT)_tcslen(LCS); if( ! lenLCS ) return 0;
 
 	if( rLine.GetLength() ) {
-		CString szString = LCS; szString += " ";
+		CString szString = LCS; szString += _T(" ");
 		FastInsertString(rLine, 0, nIdxY, szString); return lenLCS+1;
 	} else return 0;
 }
 
 INT CCedtDoc::FastReleaseCommentLine(CAnalyzedString & rLine, INT nIdxY)
 {
-	LPCTSTR LCS = m_clsLangSpec.m_szLineComment1; 
-	INT  lenLCS = (INT)strlen(LCS); if( ! lenLCS ) return 0;
+	LPCTSTR LCS = m_clsLangSpec.m_szLineComment1;
+	INT  lenLCS = (INT)_tcslen(LCS); if( ! lenLCS ) return 0;
 
 	if( rLine.GetLength() ) {
-		CString szString = LCS; szString += " ";
-		if( ! _strnicmp(rLine, szString, lenLCS+1) ) {
+		CString szString = LCS; szString += _T(" ");
+		if( ! _tcsnicmp((LPCTSTR)rLine, szString, lenLCS+1) ) {
 			FastDeleteString(rLine, 0, nIdxY, lenLCS+1); return lenLCS+1;
-		} else if( ! _strnicmp(rLine, LCS, lenLCS) ) {
+		} else if( ! _tcsnicmp((LPCTSTR)rLine, LCS, lenLCS) ) {
 			FastDeleteString(rLine, 0, nIdxY, lenLCS); return lenLCS;
 		} else return 0;
 	} else return 0;

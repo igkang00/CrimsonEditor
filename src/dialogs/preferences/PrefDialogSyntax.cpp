@@ -46,7 +46,7 @@ BOOL CPreferenceDialog::LoadSyntaxTypes()
 {
 	for(INT i = 0; i < MAX_SYNTAX_TYPE; i++) {
 		m_clsSyntaxTypes[i].CopyContents( CCedtDoc::m_clsSyntaxTypes[i] );
-		m_lstSyntaxTypes.InsertItem(i, "");
+		m_lstSyntaxTypes.InsertItem(i, _T(""));
 		DispSyntaxType(i);
 	}
 

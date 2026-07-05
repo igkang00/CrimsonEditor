@@ -53,11 +53,11 @@ void CStatusBarEx::BeginProgress(LPCTSTR lpszMessage)
 {
 	if( m_bSplashMessage ) {
 		KillTimer(ID_TIMER_SPLASH_MESSAGE);
-		m_szSplashMessage = "";
+		m_szSplashMessage = _T("");
 		m_bSplashMessage = FALSE;
 	}
 
-	CStatusBar::SetPaneText(0, "", FALSE);
+	CStatusBar::SetPaneText(0, _T(""), FALSE);
 	m_szPaneText = lpszMessage;
 
 	Invalidate();
@@ -98,7 +98,7 @@ void CStatusBarEx::SetProgress(INT nPercent)
 	DrawPaneBorder( & m_dcPane, border );
 
 	// draw pane
-	CString szPaneText; szPaneText.Format("%s %i%%", m_szPaneText, nPercent);
+	CString szPaneText; szPaneText.Format(_T("%s %i%%"), m_szPaneText, nPercent);
 	DrawPaneText( & m_dcPane, border, szPaneText, RGB(0, 0, 0), TRUE );
 
 	INT nSplit = border.Width() * nPercent / 100;
@@ -145,7 +145,7 @@ void CStatusBarEx::OnTimer(UINT_PTR nIDEvent)
 	switch( nIDEvent ) {
 	case ID_TIMER_SPLASH_MESSAGE:
 		KillTimer(ID_TIMER_SPLASH_MESSAGE);
-		m_szSplashMessage = "";
+		m_szSplashMessage = _T("");
 		m_bSplashMessage = FALSE;
 
 		Invalidate(); 
@@ -251,7 +251,7 @@ void CStatusBarEx::DrawPaneBorder(CDC * pDC, CRect rect)
 
 void CStatusBarEx::DrawPaneText(CDC * pDC, CRect rect, LPCTSTR lpszPaneText, COLORREF crTextColor, BOOL bAlignCenter)
 {
-	INT nLength = (INT)strlen(lpszPaneText);
+	INT nLength = (INT)_tcslen(lpszPaneText);
 	CSize size = pDC->GetTextExtent(lpszPaneText, nLength);
 
 	INT nPosX = rect.left + (rect.Width() - size.cx) / 2;

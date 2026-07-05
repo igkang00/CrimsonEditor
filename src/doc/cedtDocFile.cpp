@@ -274,16 +274,16 @@ BOOL CCedtDoc::BackupDocument(LPCTSTR lpszPathName)
 	if( m_szBackupDirectory.GetLength() ) {
 		CString szFileDirectory = GetFileDirectory( lpszPathName );
 		if( IsRemoteFile() ) {
-			CString szLocalPath = ChopDirectory(CCedtApp::m_szAppDataDirectory) + "\\";
-			if( CCedtApp::m_szRemoteBackupDirectory.GetLength() ) szLocalPath = ChopDirectory(CCedtApp::m_szRemoteBackupDirectory) + "\\";
-			CString szRemainDir = szFileDirectory; szRemainDir.Replace( szLocalPath, "" );
-			szBackupDirectory = ChopDirectory(m_szBackupDirectory) + "\\" + szRemainDir;
+			CString szLocalPath = ChopDirectory(CCedtApp::m_szAppDataDirectory) + _T("\\");
+			if( CCedtApp::m_szRemoteBackupDirectory.GetLength() ) szLocalPath = ChopDirectory(CCedtApp::m_szRemoteBackupDirectory) + _T("\\");
+			CString szRemainDir = szFileDirectory; szRemainDir.Replace( szLocalPath, _T("") );
+			szBackupDirectory = ChopDirectory(m_szBackupDirectory) + _T("\\") + szRemainDir;
 		} else {
 			CString szDriveName = szFileDirectory.Left(2);
 			CString szRemainDir = szFileDirectory.Mid(2);
-			if( ! szDriveName.Compare("\\\\") ) szDriveName = ""; // "Network\\";
-			else if( szDriveName[1] == ':' ) szDriveName.Format("%c drive", szDriveName[0]);
-			szBackupDirectory = ChopDirectory(m_szBackupDirectory) + "\\" + szDriveName + szRemainDir;
+			if( ! szDriveName.Compare(_T("\\\\")) ) szDriveName = _T(""); // "Network\\";
+			else if( szDriveName[1] == ':' ) szDriveName.Format(_T("%c drive"), szDriveName[0]);
+			szBackupDirectory = ChopDirectory(m_szBackupDirectory) + _T("\\") + szDriveName + szRemainDir;
 		}
 	}
 
@@ -291,29 +291,29 @@ BOOL CCedtDoc::BackupDocument(LPCTSTR lpszPathName)
 	if( szBackupDirectory[nLength-1] == '\\' ) szBackupDirectory = szBackupDirectory.Mid(0, nLength-1);
 
 	CString szBackupExtension = m_szBackupExtension;
-	if( ! szBackupExtension.GetLength() ) szBackupExtension = "bak";
+	if( ! szBackupExtension.GetLength() ) szBackupExtension = _T("bak");
 
 	CString szBackupFilePath;
 	if( m_nBackupMethod == BACKUP_METHOD01 ) { // filename.ext.bak
 		CString szFileName = GetFileName( lpszPathName );
-		szBackupFilePath = szBackupDirectory + "\\" + szFileName + "." + szBackupExtension;
+		szBackupFilePath = szBackupDirectory + _T("\\") + szFileName + _T(".") + szBackupExtension;
 	} else if( m_nBackupMethod == BACKUP_METHOD02 ) { // filename_bak.ext
 		CString szFileTitle = GetFileTitle( lpszPathName );
 		CString szExtension = GetFileExtension( lpszPathName );
-		szBackupFilePath = szBackupDirectory + "\\" + szFileTitle + "_" + szBackupExtension + szExtension;
+		szBackupFilePath = szBackupDirectory + _T("\\") + szFileTitle + _T("_") + szBackupExtension + szExtension;
 	} else { // otherwise filename.bak
 		CString szFileTitle = GetFileTitle( lpszPathName );
-		szBackupFilePath = szBackupDirectory + "\\" + szFileTitle + "." + szBackupExtension;
+		szBackupFilePath = szBackupDirectory + _T("\\") + szFileTitle + _T(".") + szBackupExtension;
 	}
 
-	if( ! szBackupExtension.Compare("$$$") ) { // incremental number
+	if( ! szBackupExtension.Compare(_T("$$$")) ) { // incremental number
 		CString szTestFilePath, szIncrement;
 		INT nIncrement = 0;
 
 		do { // test until there is no such file path
 			szTestFilePath = szBackupFilePath;
-			szIncrement.Format("%03d", nIncrement++);
-			szTestFilePath.Replace("$$$", szIncrement);
+			szIncrement.Format(_T("%03d"), nIncrement++);
+			szTestFilePath.Replace(_T("$$$"), szIncrement);
 		} while( VerifyFilePath(szTestFilePath) );
 
 		szBackupFilePath = szTestFilePath;

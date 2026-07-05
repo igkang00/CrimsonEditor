@@ -170,7 +170,7 @@ BOOL CPreferenceDialog::AssociateExtension(LPCTSTR lpszExtension)
 
 	// register shell/open/command
 	CString szRegPath2 = szNewProgID + _T("\\shell\\open\\command");
-	CString szProgram = CCedtApp::m_szInstallDirectory + _T("\\cedt.exe \")%1\_T("");
+	CString szProgram = CCedtApp::m_szInstallDirectory + _T("\\cedt.exe \"%1\"");
 	if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath2, _T(""), szProgram) ) return FALSE;
 
 	// associate extension

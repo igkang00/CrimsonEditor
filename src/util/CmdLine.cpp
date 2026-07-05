@@ -36,10 +36,10 @@ CString CCmdLine::GetArgument(INT nIndex)
 
 CString CCmdLine::GetFullArgument()
 {
-	INT nSize = (INT)m_arrArguments.GetSize(); if( nSize < 1 ) return "";
+	INT nSize = (INT)m_arrArguments.GetSize(); if( nSize < 1 ) return _T("");
 	CString szFullArgument = m_arrArguments[0];
 	for(INT i = 1; i < nSize; i++)
-		szFullArgument += CString(" ") + m_arrArguments[i];
+		szFullArgument += CString(_T(" ")) + m_arrArguments[i];
 	return szFullArgument;
 }
 
@@ -50,7 +50,7 @@ INT CCmdLine::SplitLine(LPCTSTR lpszCmdLine, TCHAR ** argv)
 	BOOL bQuoted = FALSE;
 
 	argv[argc] = new TCHAR [MAX_PATH];
-	strcpy(argv[argc], "__program_name");
+	_tcscpy(argv[argc], _T("__program_name"));
 	argc++;
 
 	pChar = (TCHAR *)lpszCmdLine;
@@ -107,8 +107,8 @@ void CCmdLine::FreeParam(INT argc, TCHAR ** argv)
 BOOL CCmdLine::IsSwitch(LPCTSTR lpszParam)
 {
 	if( lpszParam == NULL ) return FALSE;
-	INT nLen = (INT)strlen(lpszParam); if( nLen < 2 ) return FALSE;
-	if( lpszParam[0] == '/' || lpszParam[0] == '-' ) return isalpha(lpszParam[1]);
+	INT nLen = (INT)_tcslen(lpszParam); if( nLen < 2 ) return FALSE;
+	if( lpszParam[0] == '/' || lpszParam[0] == '-' ) return _istalpha(lpszParam[1]);
 	else return FALSE;
 }
 
@@ -117,6 +117,6 @@ BOOL CCmdLine::ParseSwitch(LPCTSTR lpszParam, CString & szSwitch, CString & szOp
 	CString szParam(lpszParam); if( szParam.GetLength() < 2 ) return FALSE;
 	INT nPos = szParam.Find(':');
 	szSwitch = ( nPos > 0 ) ? szParam.Mid(1, nPos-1) : szParam.Mid(1);
-	szOption = ( nPos > 0 ) ? szParam.Mid(nPos+1) : "";
+	szOption = ( nPos > 0 ) ? szParam.Mid(nPos+1) : _T("");
 	return TRUE;
 }

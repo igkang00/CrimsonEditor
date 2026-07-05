@@ -4,36 +4,36 @@
 
 TEST(PathNameTest, GetFileName_ReturnsLastSegment)
 {
-    EXPECT_STREQ("file.txt", (LPCTSTR)GetFileName("C:\\folder\\file.txt"));
-    EXPECT_STREQ("file.txt", (LPCTSTR)GetFileName("file.txt"));
+    EXPECT_STREQ(_T("file.txt"), (LPCTSTR)GetFileName(_T("C:\\folder\\file.txt")));
+    EXPECT_STREQ(_T("file.txt"), (LPCTSTR)GetFileName(_T("file.txt")));
 }
 
 TEST(PathNameTest, GetFileTitle_StripsExtension)
 {
-    EXPECT_STREQ("file", (LPCTSTR)GetFileTitle("C:\\folder\\file.txt"));
-    EXPECT_STREQ("archive.tar", (LPCTSTR)GetFileTitle("archive.tar.gz"));
+    EXPECT_STREQ(_T("file"), (LPCTSTR)GetFileTitle(_T("C:\\folder\\file.txt")));
+    EXPECT_STREQ(_T("archive.tar"), (LPCTSTR)GetFileTitle(_T("archive.tar.gz")));
 }
 
 TEST(PathNameTest, GetFileExtension_ReturnsExtWithDot)
 {
-    EXPECT_STREQ(".txt", (LPCTSTR)GetFileExtension("C:\\folder\\file.txt"));
-    EXPECT_STREQ("",     (LPCTSTR)GetFileExtension("Makefile"));
+    EXPECT_STREQ(_T(".txt"), (LPCTSTR)GetFileExtension(_T("C:\\folder\\file.txt")));
+    EXPECT_STREQ(_T(""),     (LPCTSTR)GetFileExtension(_T("Makefile")));
 }
 
 TEST(PathNameTest, GetFileDirectory_StripsTrailingFile)
 {
-    EXPECT_STREQ("C:\\folder", (LPCTSTR)GetFileDirectory("C:\\folder\\file.txt"));
+    EXPECT_STREQ(_T("C:\\folder"), (LPCTSTR)GetFileDirectory(_T("C:\\folder\\file.txt")));
 }
 
 TEST(PathNameTest, ChopDirectory_RemovesTrailingBackslash)
 {
-    EXPECT_STREQ("C:\\folder", (LPCTSTR)ChopDirectory("C:\\folder\\"));
-    EXPECT_STREQ("C:\\folder", (LPCTSTR)ChopDirectory("C:\\folder"));
+    EXPECT_STREQ(_T("C:\\folder"), (LPCTSTR)ChopDirectory(_T("C:\\folder\\")));
+    EXPECT_STREQ(_T("C:\\folder"), (LPCTSTR)ChopDirectory(_T("C:\\folder")));
 }
 
 TEST(PathNameTest, QuotePathName_WrapsWithDoubleQuotes)
 {
-    CString quoted = QuotePathName("file with spaces.txt");
-    EXPECT_EQ('"', quoted[0]);
-    EXPECT_EQ('"', quoted[quoted.GetLength() - 1]);
+    CString quoted = QuotePathName(_T("file with spaces.txt"));
+    EXPECT_EQ(_T('"'), quoted[0]);
+    EXPECT_EQ(_T('"'), quoted[quoted.GetLength() - 1]);
 }

@@ -134,7 +134,7 @@ BOOL CMDIFileTab::OnNeedtextFileTab(UINT id, NMHDR * pNMHDR, LRESULT * pResult)
 	static TCHAR szText[MAX_PATH]; pChild->GetWindowText(szText, MAX_PATH);
 
 	CCedtDoc * pDoc = (CCedtDoc *)pChild->GetActiveDocument();
-	if( ! strlen(szText) ) lstrcpyn(szText, pDoc->GetTitle(), MAX_PATH);
+	if( ! _tcslen(szText) ) lstrcpyn(szText, pDoc->GetTitle(), MAX_PATH);
 
 	pTTT->lpszText = szText;
 	pTTT->hinst = NULL;
@@ -466,7 +466,7 @@ void CMDIFileTab::InsertMDIFileTab(CMDIChildWnd * pChild, INT nTab)
 	CTabCtrl * pTabCtrl = (CTabCtrl *)GetDlgItem(IDC_FILE_TAB); ASSERT( pTabCtrl );
 
 	TCITEM item; item.mask = TCIF_TEXT | TCIF_IMAGE | TCIF_PARAM;
-	item.pszText = ""; item.iImage = 0; item.lParam = (LPARAM)pChild;
+	item.pszText = (LPTSTR)_T(""); item.iImage = 0; item.lParam = (LPARAM)pChild;
 
 	if( nTab < 0 ) nTab = pTabCtrl->GetItemCount();
 	pTabCtrl->InsertItem(nTab, & item); PostMessage(WM_COMMAND, ID_FILE_TAB_REFRESH, 0L);
@@ -491,7 +491,7 @@ void CMDIFileTab::UpdateMDIFileTab(CMDIChildWnd * pChild)
 
 	// process window text to adjust into tab string
 	szText = GetFileName(szText); AdjustTabString(szText); 
-	szText.Replace("&", "&&"); szText += " ";
+	szText.Replace(_T("&"), _T("&&")); szText += _T(" ");
 
 	TCITEM item; item.mask = TCIF_TEXT | TCIF_IMAGE | TCIF_PARAM;
 	item.pszText = (LPTSTR)(LPCTSTR)szText;
@@ -506,7 +506,7 @@ void CMDIFileTab::UpdateMDIFileTab(CMDIChildWnd * pChild)
 	pTabCtrl->GetItem(nTab, & itm2);
 
 	// update tab item only if it is different from the current status
-	if( strcmp(item.pszText, itm2.pszText) || item.iImage != itm2.iImage ) {
+	if( _tcscmp(item.pszText, itm2.pszText) || item.iImage != itm2.iImage ) {
 		pTabCtrl->SetItem(nTab, & item);
 	}
 }

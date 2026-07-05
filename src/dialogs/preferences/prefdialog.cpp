@@ -602,7 +602,7 @@ BOOL CPreferenceDialog::PreTranslateMessage(MSG* pMsg)
 void CPreferenceDialog::InitAllPrefPages()
 {
 	m_ctlSeparator.SubclassDlgItem(IDC_SEPARATOR, this);
-	m_ctlSeparator.SetWindowText("");
+	m_ctlSeparator.SetWindowText(_T(""));
 
 	// categories
 	m_hItemGeneral = InsertCategoryItem( IDS_PREF_CATEGORY_GENERAL, TVI_ROOT, PREF_CATEGORY_GENERAL );

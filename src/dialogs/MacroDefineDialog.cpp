@@ -56,7 +56,7 @@ BOOL CMacroDefineDialog::OnInitDialog()
 	m_lstMacro.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 
 	for(INT i = 0; i < 10; i++) {
-		CString szText; szText.Format("%d", (i+1) % 10);
+		CString szText; szText.Format(_T("%d"), (i+1) % 10);
 		m_lstMacro.InsertItem(i, szText);
 		m_lstMacro.SetItemText(i, 1, m_szMacroName[i+1]);
 	}

@@ -526,7 +526,7 @@ HINSTANCE CHyperLink::GotoURL(LPCTSTR url, int showcmd)
                 TCHAR *pos;
                 pos = _tcsstr(key, _T("\"%1\""));
                 if (pos == NULL) {                     // No quotes found
-                    pos = strstr(key, _T("%1"));       // Check for %1, without quotes
+                    pos = _tcsstr(key, _T("%1"));       // Check for %1, without quotes
                     if (pos == NULL)                   // No parameter at all...
                         pos = key+lstrlen(key)-1;
                     else
@@ -537,7 +537,7 @@ HINSTANCE CHyperLink::GotoURL(LPCTSTR url, int showcmd)
 
                 lstrcat(pos, _T(" "));
                 lstrcat(pos, url);
-                result = (HINSTANCE)(INT_PTR) WinExec(key,showcmd);
+                result = (HINSTANCE)(INT_PTR) WinExec((LPCSTR)CT2A(key),showcmd);
             }
         }
 	}

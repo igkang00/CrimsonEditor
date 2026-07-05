@@ -54,7 +54,7 @@ BOOL CPreferenceDialog::LoadMacroBuffers()
 	for(INT i = 0; i < 11; i++) {
 		m_clsMacroBuffer[i].CopyContents(CCedtView::m_clsMacroBuffer[i]);
 		if( i > 0 ) {
-			m_lstMacroList.InsertItem(i-1, "");
+			m_lstMacroList.InsertItem(i-1, _T(""));
 			DispMacroText(i-1);
 		}
 	}
@@ -79,8 +79,9 @@ BOOL CPreferenceDialog::FileLoadMacroBuffers(LPCTSTR lpszPathName)
 	ifstream fin(lpszPathName, ios::in | ios::binary);
 	if( ! fin.is_open() ) return FALSE;
 
-	TCHAR szBuffer[2048]; INT nLength = (INT)strlen(STRING_USERMACROVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
-	if( strcmp(szBuffer, STRING_USERMACROVER) ) { fin.close(); return FALSE; }
+	CStringA sVer(STRING_USERMACROVER);
+	char szBuffer[2048]; INT nLength = sVer.GetLength(); fin.read(szBuffer, nLength); szBuffer[nLength] = '\0';
+	if( strcmp(szBuffer, (LPCSTR)sVer) ) { fin.close(); return FALSE; }
 
 	for(INT i = 0; i < 11; i++) {
 		if( ! m_clsMacroBuffer[i].StreamLoad(fin) ) { fin.close(); return FALSE; }
@@ -95,8 +96,9 @@ BOOL CPreferenceDialog::FileSaveMacroBuffers(LPCTSTR lpszPathName)
 	ofstream fout(lpszPathName, ios::out | ios::binary);
 	if( ! fout.is_open() ) return FALSE;
 
-	INT nLength = (INT)strlen(STRING_USERMACROVER);
-	fout.write((const char *)STRING_USERMACROVER, nLength);
+	CStringA sVer(STRING_USERMACROVER);
+	INT nLength = sVer.GetLength();
+	fout.write((LPCSTR)sVer, nLength);
 
 	for( INT i = 0; i < 11; i++ ) {
 		if( ! m_clsMacroBuffer[i].StreamSave(fout) ) { fout.close(); return FALSE; }
@@ -118,15 +120,15 @@ CString CPreferenceDialog::GetMacroName(INT nMacro)
 	CMacroBuffer & rBuffer = m_clsMacroBuffer[nMacro];
 	if( rBuffer.GetBufferCount() ) {
 		if( rBuffer.m_szName.GetLength() ) return rBuffer.m_szName;
-		else return "[Noname]";
-	} else return "- Empty -";
+		else return _T("[Noname]");
+	} else return _T("- Empty -");
 }
 
 CString CPreferenceDialog::GetMacroHotKeyText(INT nMacro)
 {
 	CMacroBuffer & rBuffer = m_clsMacroBuffer[nMacro];
 	CString szHotKeyText = rBuffer.GetHotKeyText();
-	if( ! szHotKeyText.GetLength() ) szHotKeyText.Format("Alt+%d", nMacro % 10);
+	if( ! szHotKeyText.GetLength() ) szHotKeyText.Format(_T("Alt+%d"), nMacro % 10);
 	return szHotKeyText;
 }
 
@@ -153,7 +155,7 @@ void CPreferenceDialog::OnMacroLoadMacros()
 	CFileDialog dlg(TRUE, NULL, NULL, dwFlags, szFilter);
 
 	CString szTitle; szTitle.LoadString(IDS_DLG_LOAD_MACRO_BUFFERS);
-	CString szInitialDirectory = CCedtApp::m_szInstallDirectory + "\\tools";
+	CString szInitialDirectory = CCedtApp::m_szInstallDirectory + _T("\\tools");
 
 	TCHAR szCurrentDirectory[MAX_PATH];
 	GetCurrentDirectory( MAX_PATH, szCurrentDirectory );
@@ -171,10 +173,10 @@ void CPreferenceDialog::OnMacroSaveMacros()
 {
 	DWORD dwFlags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
 	CString szFilter; szFilter.LoadString(IDS_FILTER_MACRO_BUFFER);
-	CFileDialog dlg(FALSE, ".macro", NULL, dwFlags, szFilter);
+	CFileDialog dlg(FALSE, _T(".macro"), NULL, dwFlags, szFilter);
 
 	CString szTitle; szTitle.LoadString(IDS_DLG_SAVE_MACRO_BUFFERS);
-	CString szInitialDirectory = CCedtApp::m_szInstallDirectory + "\\tools";
+	CString szInitialDirectory = CCedtApp::m_szInstallDirectory + _T("\\tools");
 
 	TCHAR szCurrentDirectory[MAX_PATH];
 	GetCurrentDirectory( MAX_PATH, szCurrentDirectory );

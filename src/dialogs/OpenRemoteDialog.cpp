@@ -89,7 +89,7 @@ DWORD COpenRemoteDialog::GetFileSize()
 {
 	CString & szFileInfo = m_lstSelectedFileInfo.GetHead();
 	INT nFound = szFileInfo.Find('\n'); ASSERT(nFound >= 0);
-	return atoi( szFileInfo.Mid(nFound+1) );
+	return _ttoi( szFileInfo.Mid(nFound+1) );
 }
 
 void COpenRemoteDialog::InitFtpAccounts()
@@ -133,8 +133,8 @@ void COpenRemoteDialog::ChangeDirectory(LPCTSTR lpszDirectory)
 	} */
 
 	if( lpszDirectory[0] == '/' ) szCurrentDirectory = lpszDirectory;
-	else if( szCurrentDirectory.Compare("/") == 0 ) szCurrentDirectory += lpszDirectory;
-	else szCurrentDirectory += CString("/") + lpszDirectory;
+	else if( szCurrentDirectory.Compare(_T("/")) == 0 ) szCurrentDirectory += lpszDirectory;
+	else szCurrentDirectory += CString(_T("/")) + lpszDirectory;
 
 	m_pFtpAccounts[nAccount].m_szSubDirectory = szCurrentDirectory;
 }
@@ -160,7 +160,7 @@ BOOL COpenRemoteDialog::RefreshFileList()
 	if( nFilter == CB_ERR ) nFilter = 0;
 
 	CString szFilter = m_arrFilterExtensions.GetAt(nFilter);
-	if( ! szFilter.GetLength() ) szFilter = "*.*";
+	if( ! szFilter.GetLength() ) szFilter = _T("*.*");
 
 	// get remote file list
 	CSortStringArray arrFileInfo;
@@ -177,8 +177,8 @@ BOOL COpenRemoteDialog::RefreshFileList()
 	INT i, nSize, nItemCount = 0;
 	m_lstFiles.DeleteAllItems();
 
-	if( szCurrentDirectory.Compare("/") ) { // not a root directory
-		m_lstFiles.InsertItem(nItemCount, "..", REMOTE_ITEM_PARENT);
+	if( szCurrentDirectory.Compare(_T("/")) ) { // not a root directory
+		m_lstFiles.InsertItem(nItemCount, _T(".."), REMOTE_ITEM_PARENT);
 		m_lstFiles.SetItemData(nItemCount, 0); nItemCount++;
 		m_btnParentDirectory.EnableWindow( TRUE );
 	} else { // root directory
@@ -197,7 +197,7 @@ BOOL COpenRemoteDialog::RefreshFileList()
 		if( szFileInfo[0] == 'D' ) {
 			if( szInfo[0] == 'N' ) nImage = REMOTE_ITEM_DIRECTORY;
 			else nImage = REMOTE_ITEM_LINK;
-		} else dwSize = atoi( szInfo );
+		} else dwSize = _ttoi( szInfo );
 
 		m_lstFiles.InsertItem(nItemCount, szName, nImage);
 		m_lstFiles.SetItemData(nItemCount, dwSize); nItemCount++;
@@ -284,16 +284,16 @@ void COpenRemoteDialog::OnSelchangeFileType()
 
 void COpenRemoteDialog::OnCreateDirectory() 
 {
-	AfxMessageBox("Sorry, not available now");
+	AfxMessageBox(_T("Sorry, not available now"));
 }
 
 void COpenRemoteDialog::OnParentDirectory() 
 {
-	ChangeDirectory( ".." );
+	ChangeDirectory( _T("..") );
 	m_btnOK.EnableWindow( RefreshFileList() );
 }
 
-void COpenRemoteDialog::OnFtpSettings() 
+void COpenRemoteDialog::OnFtpSettings()
 {
 	CFtpSettingsDialog dlg;
 	dlg.SetFtpAccounts( m_nAccountCount, m_pFtpAccounts );
@@ -323,8 +323,8 @@ void COpenRemoteDialog::OnItemchangedFileList(NMHDR* pNMHDR, LRESULT* pResult)
 		m_lstFiles.GetItem( & item );
 
 		if( item.iImage == REMOTE_ITEM_FILE ) { // append only file items to the file name edit control
-			CString szQuoted; szQuoted.Format("\"%s\"", szText);
-			szFileList = szQuoted + " " + szFileList; nCount++;
+			CString szQuoted; szQuoted.Format(_T("\"%s\""), szText);
+			szFileList = szQuoted + _T(" ") + szFileList; nCount++;
 		}
 	}
 
@@ -348,7 +348,7 @@ void COpenRemoteDialog::OnDblclkFileList(NMHDR* pNMHDR, LRESULT* pResult)
 
 		if( item.iImage == REMOTE_ITEM_PARENT ) {
 			// if it is a parent directory item then change directory
-			ChangeDirectory( ".." );
+			ChangeDirectory( _T("..") );
 			m_btnOK.EnableWindow( RefreshFileList() );
 		} else if( item.iImage == REMOTE_ITEM_LINK || item.iImage == REMOTE_ITEM_DIRECTORY ) {
 			// if it is a directory item then change directory
@@ -384,12 +384,12 @@ void COpenRemoteDialog::OnOK()
 		m_lstFiles.GetItem( & item );
 
 		if( item.iImage == REMOTE_ITEM_FILE ) { // append only file items
-			szFileInfo.Format("%s\n%d", szDirectory + szText, item.lParam);
+			szFileInfo.Format(_T("%s\n%d"), szDirectory + szText, item.lParam);
 			m_lstSelectedFileInfo.AddTail( szFileInfo );
 		}
 	}
 
-	if( m_lstSelectedFileInfo.GetCount() == 0 ) m_lstSelectedFileInfo.AddTail("");
+	if( m_lstSelectedFileInfo.GetCount() == 0 ) m_lstSelectedFileInfo.AddTail(_T(""));
 
 	if( m_lstSelectedFileInfo.GetCount() == 1 ) {
 		// check if the file name specified in the edit control exist in the list control
@@ -407,20 +407,20 @@ void COpenRemoteDialog::OnOK()
 
 		if( m_bOpenFileDialog ) { // if it is open dialog then check if the file name specified exists
 			if( nItemFound < 0 ) { // if the file name specified is not found in the list
-				CString szMessage; szMessage.Format("%s\nThere is no such file!", szFileName);
-				AfxMessageBox(szMessage); return; 
+				CString szMessage; szMessage.Format(_T("%s\nThere is no such file!"), szFileName);
+				AfxMessageBox(szMessage); return;
 			} else if( item.iImage == REMOTE_ITEM_PARENT || item.iImage == REMOTE_ITEM_LINK 
 				|| item.iImage == REMOTE_ITEM_DIRECTORY ) { // if the file name specified is a directory
 				ChangeDirectory( szFileName );
 				m_btnOK.EnableWindow( RefreshFileList() ); return;
 			} else {
-				szFileInfo.Format("%s\n%d", szDirectory + szFileName, item.lParam);
+				szFileInfo.Format(_T("%s\n%d"), szDirectory + szFileName, item.lParam);
 				POSITION pos = m_lstSelectedFileInfo.GetHeadPosition();
 				m_lstSelectedFileInfo.SetAt(pos, szFileInfo);
 			}
 		} else { // if it is save dialog then we could add file overwrite check here
 			if( nItemFound < 0 ) { // if the file name specified is not found in the list
-				szFileInfo.Format("%s\n%d", szDirectory + szFileName, 0);
+				szFileInfo.Format(_T("%s\n%d"), szDirectory + szFileName, 0);
 				POSITION pos = m_lstSelectedFileInfo.GetHeadPosition();
 				m_lstSelectedFileInfo.SetAt(pos, szFileInfo);
 			} else if( item.iImage == REMOTE_ITEM_PARENT || item.iImage == REMOTE_ITEM_LINK 
@@ -428,10 +428,10 @@ void COpenRemoteDialog::OnOK()
 				ChangeDirectory( szFileName );
 				m_btnOK.EnableWindow( RefreshFileList() ); return;
 			} else {
-				CString szPrompt; szPrompt.Format("%s\nOverwrite the existing file?", szFileName);
+				CString szPrompt; szPrompt.Format(_T("%s\nOverwrite the existing file?"), szFileName);
 				if( AfxMessageBox(szPrompt, MB_YESNO | MB_ICONEXCLAMATION) != IDYES ) return;
 
-				szFileInfo.Format("%s\n%d", szDirectory + szFileName, item.lParam);
+				szFileInfo.Format(_T("%s\n%d"), szDirectory + szFileName, item.lParam);
 				POSITION pos = m_lstSelectedFileInfo.GetHeadPosition();
 				m_lstSelectedFileInfo.SetAt(pos, szFileInfo);
 			}

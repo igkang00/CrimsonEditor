@@ -46,7 +46,7 @@ void CPreferenceDialog::ShowFiltersPage()
 BOOL CPreferenceDialog::LoadFileFilters()
 {
 	for( INT i = 0; i < MAX_FILE_FILTER; i++ ) {
-		m_lstFileFilters.InsertItem(i, ""); // make room for filters
+		m_lstFileFilters.InsertItem(i, _T("")); // make room for filters
 		m_clsFileFilters[i].CopyContents( CCedtApp::m_clsFileFilters[i] );
 		DispFileFilterText(i);
 	}
@@ -79,9 +79,9 @@ BOOL CPreferenceDialog::DispFileFilterText(INT nFilter)
 	CString & szDescription = m_clsFileFilters[nFilter].m_szDescription;
 	CString & szExtensions  = m_clsFileFilters[nFilter].m_szExtensions;
 	if( szDescription.GetLength() ) {
-		if( szExtensions.GetLength() ) szText.Format("%s (%s)", szDescription, szExtensions);
+		if( szExtensions.GetLength() ) szText.Format(_T("%s (%s)"), szDescription, szExtensions);
 		else szText = szDescription;
-	} else szText = "- Empty -";
+	} else szText = _T("- Empty -");
 	m_lstFileFilters.SetItemText(nFilter, 0, szText);
 	return TRUE;
 }

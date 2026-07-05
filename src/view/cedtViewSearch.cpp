@@ -10,7 +10,7 @@ BOOL CCedtView::ActionForwardFindString(LPCTSTR lpszFindString, UINT nOptions, C
 	else PositionToIndex(m_nCaretPosX, m_nCaretPosY, nIdxX, nIdxY);
 
 	BOOL bFound = ForwardFindString(nIdxX, nIdxY, lpszFindString, nOptions, clsRegExp, pSearchWrap);
-	INT nLength = SEARCH_REG_EXP(nOptions) ? clsRegExp.GetFoundLength() : (INT)strlen(lpszFindString);
+	INT nLength = SEARCH_REG_EXP(nOptions) ? clsRegExp.GetFoundLength() : (INT)_tcslen(lpszFindString);
 
 	if( bFound ) {
 		SetCaretPosY( GetPosYFromIdxY( nIdxX, nIdxY ) );
@@ -33,7 +33,7 @@ BOOL CCedtView::ActionReverseFindString(LPCTSTR lpszFindString, UINT nOptions, C
 	else PositionToIndex(m_nCaretPosX, m_nCaretPosY, nIdxX, nIdxY);
 
 	BOOL bFound = ReverseFindString(nIdxX, nIdxY, lpszFindString, nOptions, clsRegExp, pSearchWrap);
-	INT nLength = SEARCH_REG_EXP(nOptions) ? clsRegExp.GetFoundLength() : (INT)strlen(lpszFindString);
+	INT nLength = SEARCH_REG_EXP(nOptions) ? clsRegExp.GetFoundLength() : (INT)_tcslen(lpszFindString);
 
 	if( bFound ) {
 		SetCaretPosY( GetPosYFromIdxY( nIdxX, nIdxY ) );
@@ -219,12 +219,12 @@ INT CCedtView::ReplaceAllInSelection(INT & nBegX, INT & nBegY, INT & nEndX, INT 
 	while( OnePassFindString(nIdxX, nIdxY, lpszFindString, nOptions, clsRegExp) ) {
 		if( SEARCH_REG_EXP(nOptions) ) {
 			INT nFound; CString szExpression = lpszReplaceString;
-			while( (nFound = szExpression.Find("\\t", 0)) >= 0 ) { szExpression = szExpression.Left(nFound) + "\t" + szExpression.Mid(nFound+2); }
+			while( (nFound = szExpression.Find(_T("\\t"), 0)) >= 0 ) { szExpression = szExpression.Left(nFound) + _T("\t") + szExpression.Mid(nFound+2); }
 			clsRegExp.GetReplaceString( szExpression, szReplaceString );
 		}
 
-		INT nLen = SEARCH_REG_EXP(nOptions) ? clsRegExp.GetFoundLength() : (INT)strlen(lpszFindString);
-		INT nLe2 = (INT)strlen(szReplaceString);
+		INT nLen = SEARCH_REG_EXP(nOptions) ? clsRegExp.GetFoundLength() : (INT)_tcslen(lpszFindString);
+		INT nLe2 = (INT)_tcslen(szReplaceString);
 
 		if( ! IsStringInSelection(nIdxX, nIdxY, nLen, nBegX, nBegY, nEndX, nEndY) ) break;
 
@@ -252,12 +252,12 @@ INT CCedtView::ReplaceAllInFile(LPCTSTR lpszFindString, LPCTSTR lpszReplaceStrin
 	while( OnePassFindString(nIdxX, nIdxY, lpszFindString, nOptions, clsRegExp) ) {
 		if( SEARCH_REG_EXP(nOptions) ) {
 			INT nFound; CString szExpression = lpszReplaceString;
-			while( (nFound = szExpression.Find("\\t", 0)) >= 0 ) { szExpression = szExpression.Left(nFound) + "\t" + szExpression.Mid(nFound+2); }
+			while( (nFound = szExpression.Find(_T("\\t"), 0)) >= 0 ) { szExpression = szExpression.Left(nFound) + _T("\t") + szExpression.Mid(nFound+2); }
 			clsRegExp.GetReplaceString( szExpression, szReplaceString );
 		}
 
-		INT nLen = SEARCH_REG_EXP(nOptions) ? clsRegExp.GetFoundLength() : (INT)strlen(lpszFindString);
-		INT nLe2 = (INT)strlen(szReplaceString);
+		INT nLen = SEARCH_REG_EXP(nOptions) ? clsRegExp.GetFoundLength() : (INT)_tcslen(lpszFindString);
+		INT nLe2 = (INT)_tcslen(szReplaceString);
 
 		if( nLen ) DeleteString(nIdxX, nIdxY, nLen);
 		if( nLe2 ) InsertString(nIdxX, nIdxY, szReplaceString);
@@ -278,7 +278,7 @@ INT CCedtView::ReplaceThisOccurrence(INT & nBegX, INT & nBegY, INT & nEndX, INT 
 
 	if( SEARCH_REG_EXP(nOptions) ) {
 		INT nTab; CString szExpression = lpszReplaceString;
-		while( (nTab = szExpression.Find("\\t", 0)) >= 0 ) { szExpression = szExpression.Left(nTab) + "\t" + szExpression.Mid(nTab+2); }
+		while( (nTab = szExpression.Find(_T("\\t"), 0)) >= 0 ) { szExpression = szExpression.Left(nTab) + "\t" + szExpression.Mid(nTab+2); }
 		clsRegExp.GetReplaceString( szExpression, szReplaceString );
 	}
 
@@ -286,7 +286,7 @@ INT CCedtView::ReplaceThisOccurrence(INT & nBegX, INT & nBegY, INT & nEndX, INT 
 	else DeleteString(nBegX, nBegY, nEndX-nBegX);
 
 	InsertString(nBegX, nBegY, szReplaceString);
-	nEndY = nBegY; nEndX = nBegX + (INT)strlen(szReplaceString);
+	nEndY = nBegY; nEndX = nBegX + (INT)_tcslen(szReplaceString);
 
 	return 1;
 }
