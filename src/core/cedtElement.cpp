@@ -661,95 +661,97 @@ BOOL CAnalyzedText::FileLoad(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 
 		if( nEncodingType == ENCODING_TYPE_UNICODE_LE ) {
 			// extract byte-order mark
-			nCount = file.Read( szWideBuffer, 2 ); 
+			nCount = file.Read( szWideBuffer, 2 );
 
 			if( nCount >= 2 && szWideBuffer[0] == 0xFF && szWideBuffer[1] == 0xFE ) nTotal = 2;
 			file.Seek(nTotal, CFile::begin);
 
 			while( ( nCount = file.Read( szWideBuffer, FILE_READ_BUFFER_SIZE ) ) >= 2 ) { // read file contents
-				for( bDelimFound = FALSE, i = 0; i <= nCount-2; i += 2 ) { 
+				for( bDelimFound = FALSE, i = 0; i <= nCount-2; i += 2 ) {
 					if( szWideBuffer[i] == chDelim && szWideBuffer[i+1] == 0x00 ) { bDelimFound = TRUE; i += 2; break; }
 				}
 
-				nCount = i; nTotal += nCount; 
+				nCount = i; nTotal += nCount;
 				szWideBuffer[nCount] = szWideBuffer[nCount+1] = 0x00;
 
 				if( nCount >= 2 && szWideBuffer[nCount-2] == chDelim && szWideBuffer[nCount-1] == 0x00 ) { szWideBuffer[nCount-2] = szWideBuffer[nCount-1] = 0x00; nCount -= 2; }
 				if( nCount >= 2 && szWideBuffer[nCount-2] == chKill  && szWideBuffer[nCount-1] == 0x00 ) { szWideBuffer[nCount-2] = szWideBuffer[nCount-1] = 0x00; nCount -= 2; }
 
-				nCount = WideCharToMultiByte(CP_ACP, 0, (LPCWSTR)szWideBuffer, -1, szBuffer, FILE_READ_BUFFER_SIZE + 1, NULL, NULL);
-				nCount = lstrlenA( szBuffer );
-
-				GetTail() += szBuffer;
+				// Direct UTF-16 → CString<wchar_t>. No CP_ACP round-trip; preserves every code point.
+				GetTail() += (LPCWSTR)szWideBuffer;
 				if( bDelimFound ) AddTail(_T(""));
 
 				file.Seek(nTotal, CFile::begin);
 			}
 		} else if( nEncodingType == ENCODING_TYPE_UNICODE_BE ) {
 			// extract byte-order mark
-			nCount = file.Read( szWideBuffer, 2 ); 
+			nCount = file.Read( szWideBuffer, 2 );
 
 			if( nCount >= 2 && szWideBuffer[0] == 0xFE && szWideBuffer[1] == 0xFF ) nTotal = 2;
 			file.Seek(nTotal, CFile::begin);
 
 			while( ( nCount = file.Read( szWideBuffer, FILE_READ_BUFFER_SIZE ) ) >= 2 ) { // read file contents
-				for( bDelimFound = FALSE, i = 0; i <= nCount-2; i += 2 ) { 
+				for( bDelimFound = FALSE, i = 0; i <= nCount-2; i += 2 ) {
 					if( szWideBuffer[i] == 0x00 && szWideBuffer[i+1] == chDelim ) { bDelimFound = TRUE; i += 2; break; }
 				}
 
-				nCount = i; nTotal += nCount; 
+				nCount = i; nTotal += nCount;
 				szWideBuffer[nCount] = szWideBuffer[nCount+1] = 0x00;
 
 				if( nCount >= 2 && szWideBuffer[nCount-2] == 0x00 && szWideBuffer[nCount-1] == chDelim ) { szWideBuffer[nCount-2] = szWideBuffer[nCount-1] = 0x00; nCount -= 2; }
 				if( nCount >= 2 && szWideBuffer[nCount-2] == 0x00 && szWideBuffer[nCount-1] == chKill  ) { szWideBuffer[nCount-2] = szWideBuffer[nCount-1] = 0x00; nCount -= 2; }
 
+				// Byte-swap into little-endian order, then append the wide chars directly.
 				for( i = 0; i < nCount; i += 2 ) _SWAP_UCHAR( szWideBuffer[i], szWideBuffer[i+1] );
-				nCount = WideCharToMultiByte(CP_ACP, 0, (LPCWSTR)szWideBuffer, -1, szBuffer, FILE_READ_BUFFER_SIZE + 1, NULL, NULL);
-				nCount = lstrlenA( szBuffer );
 
-				GetTail() += szBuffer;
+				GetTail() += (LPCWSTR)szWideBuffer;
 				if( bDelimFound ) AddTail(_T(""));
 
 				file.Seek(nTotal, CFile::begin);
 			}
 		} else if( nEncodingType == ENCODING_TYPE_UTF8_WBOM || nEncodingType == ENCODING_TYPE_UTF8_XBOM ) {
 			// extract byte-order mark
-			nCount = file.Read( szWideBuffer, 4 ); 
+			nCount = file.Read( szWideBuffer, 4 );
 
 			if( nCount >= 3 && szWideBuffer[0] == 0xEF && szWideBuffer[1] == 0xBB && szWideBuffer[2] == 0xBF ) nTotal = 3;
 			file.Seek(nTotal, CFile::begin);
 
 			while( nCount = file.Read( szBuffer, FILE_READ_BUFFER_SIZE ) ) { // read file contents
-				for( bDelimFound = FALSE, i = 0; i <= nCount-1; i++ ) { 
-					if( szBuffer[i] == chDelim ) { bDelimFound = TRUE; i++; break; } 
+				for( bDelimFound = FALSE, i = 0; i <= nCount-1; i++ ) {
+					if( szBuffer[i] == chDelim ) { bDelimFound = TRUE; i++; break; }
 				}
 
-				nCount = i; nTotal += nCount; 
+				nCount = i; nTotal += nCount;
 				szBuffer[nCount] = 0x00;
 
 				if( nCount >= 1 && szBuffer[nCount-1] == chDelim ) { szBuffer[nCount-1] = 0x00; nCount--; }
 				if( nCount >= 1 && szBuffer[nCount-1] == chKill  ) { szBuffer[nCount-1] = 0x00; nCount--; }
 
-				nCount = MultiByteToWideChar(CP_UTF8, 0, szBuffer, -1, (LPWSTR)szWideBuffer, FILE_READ_BUFFER_SIZE + 1);
-				nCount = WideCharToMultiByte(CP_ACP, 0, (LPCWSTR)szWideBuffer, -1, szBuffer, FILE_READ_BUFFER_SIZE + 1, NULL, NULL);
-
-				GetTail() += szBuffer; 
+				// UTF-8 → UTF-16 directly. Dropping the CP_ACP round-trip is
+				// what makes '—', '“ ”', box-drawing chars, and other non-ANSI
+				// text finally render — that regression was the reason for
+				// the whole Unicode migration.
+				MultiByteToWideChar(CP_UTF8, 0, szBuffer, -1, (LPWSTR)szWideBuffer, FILE_READ_BUFFER_SIZE + 1);
+				GetTail() += (LPCWSTR)szWideBuffer;
 				if( bDelimFound ) AddTail(_T(""));
 
 				file.Seek(nTotal, CFile::begin);
 			}
 		} else { /* nEncodingType == ENCODING_TYPE_ASCII */
 			while( nCount = file.Read( szBuffer, FILE_READ_BUFFER_SIZE ) ) { // read file contents
-				for( bDelimFound = FALSE, i = 0; i <= nCount-1; i++ ) { 
-					if( szBuffer[i] == chDelim ) { bDelimFound = TRUE; i++; break; } 
+				for( bDelimFound = FALSE, i = 0; i <= nCount-1; i++ ) {
+					if( szBuffer[i] == chDelim ) { bDelimFound = TRUE; i++; break; }
 				}
 
-				nCount = i; nTotal += nCount; 
+				nCount = i; nTotal += nCount;
 				szBuffer[nCount] = 0x00;
 
 				if( nCount >= 1 && szBuffer[nCount-1] == chDelim ) { szBuffer[nCount-1] = 0x00; nCount--; }
 				if( nCount >= 1 && szBuffer[nCount-1] == chKill  ) { szBuffer[nCount-1] = 0x00; nCount--; }
 
+				// ANSI/legacy path: CString's LPCSTR overload uses CP_ACP,
+				// which preserves CP949 Korean on Korean systems (same as
+				// the pre-Unicode behavior for these files).
 				GetTail() += szBuffer;
 				if( bDelimFound ) AddTail(_T(""));
 
@@ -777,76 +779,75 @@ BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 		CFile file(lpszPathName, CFile::modeReadWrite | CFile::modeCreate | CFile::shareExclusive);
 		POSITION pos = GetHeadPosition();
 
-		INT nCount, nBufferSize = 0; CHAR * pBuffer = NULL;
+		INT nBufferSize = 0; CHAR * pBuffer = NULL;
 		UCHAR szWideDelim[4], * pWideBuffer = NULL;
 
 		if( nEncodingType == ENCODING_TYPE_UNICODE_LE ) {
 			// write byte-order mark
-			file.Write(_T("\xFF\xFE"), 2); 
+			static const UCHAR bomLE[2] = { 0xFF, 0xFE };
+			file.Write(bomLE, 2);
 
-			szWideDelim[0] = szDelim[0];	szWideDelim[1] = 0x00; 
-			szWideDelim[2] = szDelim[1];	szWideDelim[3] = 0x00; 
+			szWideDelim[0] = szDelim[0];	szWideDelim[1] = 0x00;
+			szWideDelim[2] = szDelim[1];	szWideDelim[3] = 0x00;
 
 			while( pos ) {
 				CAnalyzedString & rLine = GetNext(pos);
-				nCount = rLine.GetLength(); if( nCount < FILE_WRITE_BUFFER_SIZE ) nCount = FILE_WRITE_BUFFER_SIZE;
+				INT nLength = rLine.GetLength();
 
-				if( nBufferSize < nCount ) {
-					nBufferSize = nCount;
-					delete [] pWideBuffer;	pWideBuffer = new UCHAR[2 * (nBufferSize + 1)];
-				}
-
-				CStringA sLineA(rLine);
-				nCount = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)sLineA, -1, (LPWSTR)pWideBuffer, nBufferSize + 1);
-				INT nLength = (INT)wcslen( (LPCWSTR)pWideBuffer );
-
-				file.Write( pWideBuffer, 2 * nLength );
+				// rLine is already UTF-16 LE; write its wide-char buffer directly.
+				if( nLength ) file.Write( (LPCWSTR)rLine, 2 * nLength );
 				if( pos ) file.Write( szWideDelim, 2 * nDelimSize );
 			}
 		} else if( nEncodingType == ENCODING_TYPE_UNICODE_BE ) {
 			// write byte-order mark
-			file.Write(_T("\xFE\xFF"), 2); 
+			static const UCHAR bomBE[2] = { 0xFE, 0xFF };
+			file.Write(bomBE, 2);
 
 			szWideDelim[0] = 0x00; 	szWideDelim[1] = szDelim[0];
 			szWideDelim[2] = 0x00; 	szWideDelim[3] = szDelim[1];
 
 			while( pos ) {
 				CAnalyzedString & rLine = GetNext(pos);
-				nCount = rLine.GetLength(); if( nCount < FILE_WRITE_BUFFER_SIZE ) nCount = FILE_WRITE_BUFFER_SIZE;
+				INT nLength = rLine.GetLength();
 
-				if( nBufferSize < nCount ) {
-					nBufferSize = nCount;
+				if( nBufferSize < nLength ) {
+					nBufferSize = nLength;
 					delete [] pWideBuffer;	pWideBuffer = new UCHAR[2 * (nBufferSize + 1)];
 				}
 
-				CStringA sLineA(rLine);
-				nCount = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)sLineA, -1, (LPWSTR)pWideBuffer, nBufferSize + 1);
-				INT nLength = (INT)wcslen( (LPCWSTR)pWideBuffer );
-				for( INT i = 0; i < nLength; i++ ) _SWAP_UCHAR( pWideBuffer[2*i], pWideBuffer[2*i+1] );
-
-				file.Write( pWideBuffer, 2 * nLength );
+				// Copy the wide chars, then swap each pair to big-endian.
+				if( nLength ) {
+					memcpy(pWideBuffer, (LPCWSTR)rLine, 2 * nLength);
+					for( INT i = 0; i < nLength; i++ ) _SWAP_UCHAR( pWideBuffer[2*i], pWideBuffer[2*i+1] );
+					file.Write( pWideBuffer, 2 * nLength );
+				}
 				if( pos ) file.Write( szWideDelim, 2 * nDelimSize );
 			}
 		} else if( nEncodingType == ENCODING_TYPE_UTF8_WBOM || nEncodingType == ENCODING_TYPE_UTF8_XBOM ) {
 			// write byte-order mark when it is not ENCODING_TYPE_UTF8_XBOM
-			if( nEncodingType != ENCODING_TYPE_UTF8_XBOM ) file.Write(_T("\xEF\xBB\xBF"), 3); 
+			if( nEncodingType != ENCODING_TYPE_UTF8_XBOM ) {
+				static const UCHAR bomUTF8[3] = { 0xEF, 0xBB, 0xBF };
+				file.Write(bomUTF8, 3);
+			}
 
 			while( pos ) {
 				CAnalyzedString & rLine = GetNext(pos);
-				nCount = rLine.GetLength(); if( nCount < FILE_WRITE_BUFFER_SIZE ) nCount = FILE_WRITE_BUFFER_SIZE;
+				INT nLength = rLine.GetLength();
 
-				if( nBufferSize < nCount ) {
-					nBufferSize = nCount;
-					delete [] pBuffer;		pBuffer = new CHAR[3 * (nBufferSize + 1)];
-					delete [] pWideBuffer;	pWideBuffer = new UCHAR[2 * (nBufferSize + 1)];
+				if( nBufferSize < nLength ) {
+					nBufferSize = nLength;
+					delete [] pBuffer;		pBuffer = new CHAR[3 * (nBufferSize + 1) + 1];
 				}
 
-				CStringA sLineA(rLine);
-				nCount = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)sLineA, -1, (LPWSTR)pWideBuffer, nBufferSize + 1);
-				nCount = WideCharToMultiByte(CP_UTF8, 0, (LPCWSTR)pWideBuffer, -1, pBuffer, 3 * (nBufferSize + 1), NULL, NULL);
-				INT nLength = (INT)strlen( pBuffer );
-
-				file.Write( pBuffer, nLength );
+				// UTF-16 → UTF-8 directly, no CP_ACP round-trip. WideCharToMultiByte
+				// asks for length via -1 only when the source is null-terminated,
+				// which (LPCWSTR)rLine is; we count 3× worst-case bytes per char.
+				INT nBytes = 0;
+				if( nLength ) {
+					nBytes = WideCharToMultiByte(CP_UTF8, 0, (LPCWSTR)rLine, nLength,
+						pBuffer, 3 * (nBufferSize + 1), NULL, NULL);
+					if( nBytes > 0 ) file.Write( pBuffer, nBytes );
+				}
 				if( pos ) file.Write( szDelim, nDelimSize );
 			}
 		} else { /* nEncodingType == ENCODING_TYPE_ASCII */
@@ -854,7 +855,19 @@ BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 				CAnalyzedString & rLine = GetNext(pos);
 				INT nLength = rLine.GetLength();
 
-				file.Write( rLine, nLength );
+				if( nBufferSize < nLength ) {
+					nBufferSize = nLength;
+					delete [] pBuffer;		pBuffer = new CHAR[2 * (nBufferSize + 1) + 1];
+				}
+
+				// UTF-16 → CP_ACP for legacy MBCS on-disk format. Non-ANSI
+				// characters get replaced by '?' by design — same behavior
+				// as the pre-Unicode ASCII save path.
+				if( nLength ) {
+					INT nBytes = WideCharToMultiByte(CP_ACP, 0, (LPCWSTR)rLine, nLength,
+						pBuffer, 2 * (nBufferSize + 1), NULL, NULL);
+					if( nBytes > 0 ) file.Write( pBuffer, nBytes );
+				}
 				if( pos ) file.Write( szDelim, nDelimSize );
 			}
 		}

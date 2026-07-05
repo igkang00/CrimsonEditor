@@ -71,7 +71,13 @@ private:
 	// Inline functions
 private:
 	TCHAR OP(TCHAR *p) {return *p;};
-	TCHAR *OPERAND( TCHAR *p) {return (TCHAR*)((short *)(p+1)+1); };
+	// Node layout: [op TCHAR][next-ptr short (spans 1 or 2 TCHARs)][padding][operand ...]
+	// regnode() always reserves 3 TCHAR slots for the header, so OPERAND
+	// starts at p+3 regardless of sizeof(TCHAR). The pre-Unicode code
+	// wrote (short*)(p+1)+1 which resolved to p+3 under MBCS but p+2 under
+	// Unicode, losing one TCHAR — which is what broke every regex match
+	// under _UNICODE.
+	TCHAR *OPERAND(TCHAR *p) { return p + 3; };
 
 	// regc - emit (if appropriate) a byte of code
 	void regc(TCHAR b)

@@ -109,17 +109,17 @@ BOOL CCedtView::ExecuteCommand(INT nCommand)
 
 	// replace shell variables
 	if( szCommand.GetLength() ) ReplaceShellVariables( szCommand, clsVariables );
-	TRACE1( _T("COMMAND EXECUTABLE: '%s'\n"), szCommand );
+	TRACE1( "COMMAND EXECUTABLE: '%s'\n", szCommand );
 
 	// replace program argument
 	if( szArgument.GetLength() ) ReplaceShellVariables( szArgument, clsVariables );
-	TRACE1( _T("COMMAND ARGUMENTS : '%s'\n"), szArgument );
+	TRACE1( "COMMAND ARGUMENTS : '%s'\n", szArgument );
 
 	// replace execute directory
 	if( szDirectory.GetLength() ) ReplaceShellVariables( szDirectory, clsVariables );
 	INT nLength = szDirectory.GetLength(); 
 	if( nLength > 0 && szDirectory[nLength-1] != '\\' ) szDirectory += _T("\\");
-	TRACE1( _T("COMMAND DIRECTORY : '%s'\n"), szDirectory );
+	TRACE1( "COMMAND DIRECTORY : '%s'\n", szDirectory );
 	
 	// execute command!!!
 	CString  szExtension = szCommand.Right(4);
