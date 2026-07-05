@@ -141,6 +141,19 @@
       <TargetEnvironment>X64</TargetEnvironment>
     </Midl>
   </ItemDefinitionGroup>
+  <!-- Language-edition marker macros: keep KR-saved and US-saved user
+       settings from silently overwriting each other. See the magic-header
+       branch in src/include/cedtHeader.h. -->
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug-KR' or '$(Configuration)'=='Release-KR'">
+    <ClCompile>
+      <PreprocessorDefinitions>CEDT_LANG_KR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug-US' or '$(Configuration)'=='Release-US'">
+    <ClCompile>
+      <PreprocessorDefinitions>CEDT_LANG_US;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\app\cedtapp.cpp" />
     <ClCompile Include="src\app\cedtAppConf.cpp" />
