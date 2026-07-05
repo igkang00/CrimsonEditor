@@ -226,7 +226,7 @@ void CMainFrame::OnClose()
 		SaveBarState(REGKEY_BAR_STATE);
 		SaveWindowPlacement(REGKEY_WINDOW_PLACEMENT);
 
-		CCedtApp::SaveUserConfiguration(CCedtApp::m_szAppDataDirectory + "\\cedt.conf");
+		CCedtApp::SaveUserConfiguration(CCedtApp::m_szAppDataDirectory + "\\" STRING_CONFFILENAME);
 
 		CCedtApp * pApp = (CCedtApp *)AfxGetApp(); // get application pointer
 		pApp->SaveBrowsingDirectory(REGKEY_BROWSING_DIRECTORY);

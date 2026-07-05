@@ -66,7 +66,7 @@ void CCedtApp::OnViewLineNumbers()
 	CCedtView::m_bShowLineNumbers = ! CCedtView::m_bShowLineNumbers;
 	UpdateAllViews();
 	
-	SaveUserConfiguration(m_szAppDataDirectory + "\\cedt.conf");
+	SaveUserConfiguration(m_szAppDataDirectory + "\\" STRING_CONFFILENAME);
 }
 
 void CCedtApp::OnUpdateViewLineNumbers(CCmdUI* pCmdUI) 
@@ -89,7 +89,7 @@ void CCedtApp::OnViewLineSpacing(INT nSpacing)
 	RestoreCaretAndAnchorPosAllViews();
 	UpdateAllViews();
 	
-	SaveUserConfiguration(m_szAppDataDirectory + "\\cedt.conf");
+	SaveUserConfiguration(m_szAppDataDirectory + "\\" STRING_CONFFILENAME);
 }
 
 void CCedtApp::OnUpdateViewLineSpacing100(CCmdUI* pCmdUI) { OnUpdateViewLineSpacing(100, pCmdUI); }
@@ -128,7 +128,7 @@ void CCedtApp::OnViewScreenFont(INT nFont)
 	RestoreCaretAndAnchorPosAllViews();
 	UpdateAllViews();
 	
-	SaveUserConfiguration(m_szAppDataDirectory + "\\cedt.conf");
+	SaveUserConfiguration(m_szAppDataDirectory + "\\" STRING_CONFFILENAME);
 }
 
 void CCedtApp::OnUpdateViewScreenFont0(CCmdUI* pCmdUI) { OnUpdateViewScreenFont(0, pCmdUI); }
@@ -159,7 +159,7 @@ void CCedtApp::OnViewPrinterFont(INT nFont)
 	CCedtView::m_nCurrentPrinterFont = nFont;
 	UpdateAllViews();
 	
-	SaveUserConfiguration(m_szAppDataDirectory + "\\cedt.conf");
+	SaveUserConfiguration(m_szAppDataDirectory + "\\" STRING_CONFFILENAME);
 }
 
 void CCedtApp::OnUpdateViewPrinterFont0(CCmdUI* pCmdUI) { OnUpdateViewPrinterFont(0, pCmdUI); }
@@ -194,7 +194,7 @@ void CCedtApp::OnViewTabSize(INT nTabSize)
 	RestoreCaretAndAnchorPosAllViews();
 	UpdateAllViews();
 	
-	SaveUserConfiguration(m_szAppDataDirectory + "\\cedt.conf");
+	SaveUserConfiguration(m_szAppDataDirectory + "\\" STRING_CONFFILENAME);
 }
 
 void CCedtApp::OnUpdateViewTabSize02(CCmdUI* pCmdUI) { OnUpdateViewTabSize( 2, pCmdUI); }
@@ -248,35 +248,35 @@ void CCedtApp::OnViewEmboldenKeywords()
 {
 	CCedtView::m_bEmboldenKeywords = ! CCedtView::m_bEmboldenKeywords;
 	UpdateAllViews();
-	SaveUserConfiguration(m_szAppDataDirectory + "\\cedt.conf");
+	SaveUserConfiguration(m_szAppDataDirectory + "\\" STRING_CONFFILENAME);
 }
 
 void CCedtApp::OnViewItalicizeComment() 
 {
 	CCedtView::m_bItalicizeComment = ! CCedtView::m_bItalicizeComment;
 	UpdateAllViews();
-	SaveUserConfiguration(m_szAppDataDirectory + "\\cedt.conf");
+	SaveUserConfiguration(m_szAppDataDirectory + "\\" STRING_CONFFILENAME);
 }
 
 void CCedtApp::OnViewShowSpaces() 
 {
 	CCedtView::m_bShowSpaces = ! CCedtView::m_bShowSpaces;
 	UpdateAllViews();
-	SaveUserConfiguration(m_szAppDataDirectory + "\\cedt.conf");
+	SaveUserConfiguration(m_szAppDataDirectory + "\\" STRING_CONFFILENAME);
 }
 
 void CCedtApp::OnViewShowTabChars() 
 {
 	CCedtView::m_bShowTabChars = ! CCedtView::m_bShowTabChars;
 	UpdateAllViews();
-	SaveUserConfiguration(m_szAppDataDirectory + "\\cedt.conf");
+	SaveUserConfiguration(m_szAppDataDirectory + "\\" STRING_CONFFILENAME);
 }
 
 void CCedtApp::OnViewShowLineBreak() 
 {
 	CCedtView::m_bShowLineBreak = ! CCedtView::m_bShowLineBreak;
 	UpdateAllViews();
-	SaveUserConfiguration(m_szAppDataDirectory + "\\cedt.conf");
+	SaveUserConfiguration(m_szAppDataDirectory + "\\" STRING_CONFFILENAME);
 }
 
 void CCedtApp::OnViewShowAllWhite() 
@@ -292,7 +292,7 @@ void CCedtApp::OnViewShowAllWhite()
 	}
 
 	UpdateAllViews();
-	SaveUserConfiguration(m_szAppDataDirectory + "\\cedt.conf");
+	SaveUserConfiguration(m_szAppDataDirectory + "\\" STRING_CONFFILENAME);
 }
 
 void CCedtApp::OnUpdateViewEmboldenKeywords(CCmdUI* pCmdUI) { pCmdUI->SetCheck( CCedtView::m_bEmboldenKeywords ); }

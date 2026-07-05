@@ -49,7 +49,7 @@ void CCedtApp::OnDirectoryItemSetWorkdir()
 	CMainFrame * pMainFrame = (CMainFrame *)AfxGetMainWnd();
 	CFileWindow * pFileWindow = (CFileWindow *)pMainFrame->GetFileWindow();
 	pFileWindow->SetAsWorkingDirSelectedDirectoryItem();
-	SaveUserConfiguration(m_szAppDataDirectory + "\\cedt.conf");
+	SaveUserConfiguration(m_szAppDataDirectory + "\\" STRING_CONFFILENAME);
 }
 
 void CCedtApp::OnDirectoryItemMove() 

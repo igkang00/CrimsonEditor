@@ -342,8 +342,8 @@ BOOL CCedtApp::InitInstance()
 
 	// load user configuration
 	{
-		CString szAppConf     = m_szAppDataDirectory   + "\\cedt.conf";
-		CString szInstallConf = m_szInstallDirectory   + "\\cedt.conf";
+		CString szAppConf     = m_szAppDataDirectory   + "\\" STRING_CONFFILENAME;
+		CString szInstallConf = m_szInstallDirectory   + "\\" STRING_CONFFILENAME;
 		if( ! LoadUserConfiguration(szAppConf) ) {
 			if( ! LoadUserConfiguration(szInstallConf) ) {
 				// Distinguish "file missing" (clean first run) from
@@ -463,7 +463,7 @@ BOOL CCedtApp::InitInstance()
 int CCedtApp::ExitInstance() 
 {
 	// User configuration is saved when mainframe is closed and whenever there is a change
-	// SaveUserConfiguration(m_szAppDataDirectory + "\\cedt.conf");
+	// SaveUserConfiguration(m_szAppDataDirectory + "\\" STRING_CONFFILENAME);
 
 	// Uninitialize HtmlHelp if it was initialized
 	if( m_bHtmlHelpInitialized ) {

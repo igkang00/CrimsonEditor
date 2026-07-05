@@ -701,7 +701,7 @@ BOOL CPreferenceDialog::SaveAllPrefSettings()
 	pApp->SaveMultiInstancesFlag(REGKEY_ALLOW_MULTI_INSTANCES);
 	pApp->ApplyPreferencesToAllViews();
 
-	CCedtApp::SaveUserConfiguration(CCedtApp::m_szAppDataDirectory + "\\cedt.conf");
+	CCedtApp::SaveUserConfiguration(CCedtApp::m_szAppDataDirectory + "\\" STRING_CONFFILENAME);
 	CCedtApp::SaveColorScheme    (CCedtApp::m_szAppDataDirectory + "\\cedt.color");
 	CCedtApp::SaveUserCommands   (CCedtApp::m_szAppDataDirectory + "\\cedt.tools");
 	CCedtApp::SaveMacroBuffers   (CCedtApp::m_szAppDataDirectory + "\\cedt.macro");

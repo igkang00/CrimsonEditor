@@ -7,28 +7,25 @@
 #define STRING_COMPANYNAME					"Crimson System"
 #define STRING_PROJECTFILEVER				"Crimson Editor 3.81"
 
-// The KR/US config file (cedt.conf) holds the file-filter and syntax-type
-// display strings, which are language-dependent. If both editions read/write
-// the same file they will silently overwrite each other's list on every run.
-// Suffix the magic header with the edition code so the two editions treat
-// each other's file as an unrecognized version and fall back to loading
-// their own resource defaults. CEDT_LANG_KR / CEDT_LANG_US are defined by
-// cedt.vcxproj (see the language-edition ItemDefinitionGroup blocks).
-#if defined(CEDT_LANG_KR)
-#	define STRING_CONFIGURATIONVER			"Configuration 3.80 x64 KR"
-#elif defined(CEDT_LANG_US)
-#	define STRING_CONFIGURATIONVER			"Configuration 3.80 x64 US"
-#else
-#	error "Neither CEDT_LANG_KR nor CEDT_LANG_US is defined — check the cedt.vcxproj configuration."
-#endif
-
-// The other magic headers stay edition-neutral. Color palette, FTP account
-// list, user tools, and macros are language-independent by construction, so
-// KR and US should keep sharing them.
+#define STRING_CONFIGURATIONVER				"Configuration 3.80 x64"
 #define STRING_COLORSETTINGSVER				"Color Settings 3.80 x64"
 #define STRING_FTPACCOUNTVER				"FTP Account 3.80 x64"
 #define STRING_USERTOOLSVER					"User Command 3.80 x64"
 #define STRING_USERMACROVER					"User Macro 3.80 x64"
+
+// The user config file stores the file-filter and syntax-type display
+// strings, which are language-dependent. Give each edition its own file
+// under %APPDATA%\Crimson Editor so KR and US installs don't overwrite
+// each other's list when the user switches editions. CEDT_LANG_KR /
+// CEDT_LANG_US are defined by cedt.vcxproj (see the language-edition
+// ItemDefinitionGroup blocks).
+#if defined(CEDT_LANG_KR)
+#	define STRING_CONFFILENAME				"cedt_kr.conf"
+#elif defined(CEDT_LANG_US)
+#	define STRING_CONFFILENAME				"cedt_us.conf"
+#else
+#	error "Neither CEDT_LANG_KR nor CEDT_LANG_US is defined — check the cedt.vcxproj configuration."
+#endif
 
 // Homepage and sponsor pages have per-language landing URLs, so branch
 // on the edition macro (same one that switches STRING_CONFIGURATIONVER).

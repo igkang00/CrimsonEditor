@@ -60,13 +60,15 @@ Code for the registry helpers: [src/app/cedtAppRegistry.cpp](../src/app/cedtAppR
 
 | File | Contents | Loader |
 | --- | --- | --- |
-| `cedt.conf` | Main settings — fonts, view options, syntax options, print options. Most of the Preferences dialog ends up here. | [`LoadUserConfiguration`](../src/app/cedtAppConf.cpp) |
+| `cedt_kr.conf` / `cedt_us.conf` | Main settings — fonts, view options, syntax options, print options. Most of the Preferences dialog ends up here. **Edition-specific**: the KR build reads/writes `cedt_kr.conf`, the US build reads/writes `cedt_us.conf`. See §9.1.3. | [`LoadUserConfiguration`](../src/app/cedtAppConf.cpp) |
 | `cedt.color` | Active color scheme (text/background/syntax category colors). | [`LoadColorScheme`](../src/app/cedtAppConf.cpp) |
 | `cedt.ftp` | FTP account list. | [`LoadFtpAccountInfo`](../src/app/cedtAppConf.cpp) |
 | `cedt.tools` | User-defined external tools (the Tools menu). | [`LoadUserCommands`](../src/app/cedtAppConf.cpp) |
 | `cedt.macro` | Recorded macros. | [`LoadMacroBuffers`](../src/app/cedtAppConf.cpp) |
 
 All five are stored as **binary** files (opened with `ios::in | ios::binary`), with a version magic written at the top of each so the loader can reject schema mismatches. They are not meant to be hand-edited.
+
+For brevity the rest of this document refers to the settings file as `cedt.conf`; whenever you see that name, read it as "whichever of `cedt_kr.conf` / `cedt_us.conf` the running edition owns." The other four files are language-neutral and shared across both editions.
 
 ### 2.3 InstallDir copies as factory defaults
 
