@@ -73,9 +73,16 @@ static UCHAR _GetRangeType2(LPCTSTR lpszRange)
 
 BOOL DetectEncodingTypeAndFileFormat(LPCTSTR lpszPathName, UINT & nEncodingType, UINT & nFileFormat)
 {
+	// 64 KiB sample matches what uchardet / chardet use as their default
+	// detection window — small enough that reading it is still constant-time
+	// even on huge log files, large enough that source files with a long
+	// ASCII header and non-ASCII text further down still reveal their
+	// encoding within the sample.
+	const INT SNIFF_SIZE = 65536;
+
 	try {
 		CFile file(lpszPathName, CFile::modeRead | CFile::typeBinary);
-		UCHAR szBuffer[4096]; INT nCount = file.Read( szBuffer, 4096 );
+		UCHAR szBuffer[SNIFF_SIZE]; INT nCount = file.Read( szBuffer, SNIFF_SIZE );
 		file.Close();
 
 		DetectEncodingType(szBuffer, nCount, nEncodingType);
@@ -88,7 +95,7 @@ BOOL DetectEncodingTypeAndFileFormat(LPCTSTR lpszPathName, UINT & nEncodingType,
 		nEncodingType = ENCODING_TYPE_UNKNOWN;
 		nFileFormat = FILE_FORMAT_UNKNOWN;
 
-		ex->Delete(); 
+		ex->Delete();
 		return FALSE;
 	}
 }
@@ -97,11 +104,70 @@ BOOL DetectEncodingType(LPVOID lpContents, INT nLength, UINT & nEncodingType)
 {
 	LPBYTE lpBuffer = (LPBYTE)lpContents;
 
+	// 1) BOM-based detection — fast path, zero ambiguity.
 	if( nLength >= 2 && lpBuffer[0] == 0xFF && lpBuffer[1] == 0xFE ) { nEncodingType = ENCODING_TYPE_UNICODE_LE; return TRUE; }
 	if( nLength >= 2 && lpBuffer[0] == 0xFE && lpBuffer[1] == 0xFF ) { nEncodingType = ENCODING_TYPE_UNICODE_BE; return TRUE; }
 	if( nLength >= 3 && lpBuffer[0] == 0xEF && lpBuffer[1] == 0xBB && lpBuffer[2] == 0xBF ) { nEncodingType = ENCODING_TYPE_UTF8_WBOM; return TRUE; }
 
-	nEncodingType = ENCODING_TYPE_UNKNOWN; // default encoding type
+	// 2) BOM-less UTF-8 heuristic.
+	//
+	// Modern editors (VS Code, GitHub's web UI, most CLI tools) save UTF-8
+	// without a BOM by default, so relying purely on the BOM misdetects the
+	// majority of new text files as ASCII/MBCS (CP949 on a Korean Windows)
+	// and corrupts every non-ASCII byte on load. Add a byte-sequence check —
+	// the same idea Notepad2/Notepad++ community proposals use and what
+	// uchardet/chardet do under the hood.
+	//
+	// Rules for a valid UTF-8 multi-byte sequence:
+	//   110xxxxx + 10xxxxxx                      (2 bytes)
+	//   1110xxxx + 10xxxxxx*2                    (3 bytes)
+	//   11110xxx + 10xxxxxx*3                    (4 bytes)
+	// A standalone continuation byte (10xxxxxx) or a leading byte in the
+	// 11111xxx range means the file is not UTF-8.
+	//
+	// A file that reaches the end of the sample with at least one fully-
+	// validated multi-byte sequence and zero rule violations is treated as
+	// UTF-8 without BOM (ENCODING_TYPE_UTF8_XBOM). Pure ASCII stays UNKNOWN
+	// because ASCII is a valid subset of both UTF-8 and MBCS — no need to
+	// commit to one over the other.
+	//
+	// Trade-off: a very short CP949 file whose few bytes happen to satisfy
+	// UTF-8 leading/continuation ranges could be misclassified as UTF-8. In
+	// practice the probability drops quickly with each additional character,
+	// and the flip side — misdetecting BOM-less UTF-8 as CP949 — was the
+	// more common day-to-day problem.
+	BOOL bHasValidatedNonAscii = FALSE;
+	INT i = 0;
+	while( i < nLength ) {
+		BYTE b = lpBuffer[i];
+		if( b < 0x80 ) { i++; continue; }
+
+		INT nContinuation;
+		if     ( (b & 0xE0) == 0xC0 ) nContinuation = 1; // 110xxxxx
+		else if( (b & 0xF0) == 0xE0 ) nContinuation = 2; // 1110xxxx
+		else if( (b & 0xF8) == 0xF0 ) nContinuation = 3; // 11110xxx
+		else { nEncodingType = ENCODING_TYPE_UNKNOWN; return FALSE; }
+
+		// If the multi-byte sequence is cut off at the sample boundary, be
+		// conservative and stop scanning — don't commit either way based on
+		// a partial sequence we can't finish validating.
+		if( i + nContinuation >= nLength ) break;
+
+		for( INT k = 1; k <= nContinuation; k++ ) {
+			if( (lpBuffer[i + k] & 0xC0) != 0x80 ) {
+				nEncodingType = ENCODING_TYPE_UNKNOWN;
+				return FALSE;
+			}
+		}
+		bHasValidatedNonAscii = TRUE;
+		i += nContinuation + 1;
+	}
+	if( bHasValidatedNonAscii ) {
+		nEncodingType = ENCODING_TYPE_UTF8_XBOM;
+		return TRUE;
+	}
+
+	nEncodingType = ENCODING_TYPE_UNKNOWN; // pure ASCII / undetectable
 	return FALSE;
 }
 
