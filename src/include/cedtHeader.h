@@ -5,7 +5,7 @@
 
 
 #define STRING_COMPANYNAME					"Crimson System"
-#define STRING_PROJECTFILEVER				"Crimson Editor 3.82"
+#define STRING_PROJECTFILEVER				"Crimson Editor 3.83"
 
 #define STRING_CONFIGURATIONVER				"Configuration 3.80 x64"
 #define STRING_COLORSETTINGSVER				"Color Settings 3.80 x64"

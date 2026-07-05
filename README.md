@@ -10,7 +10,7 @@ A freeware source-code editor for Windows, originally written between 1999 and 2
 
 The current release ships an x64 installer for Windows 10 and 11.
 
-- **[Download cedt-381-setup.exe](https://github.com/igkang00/CrimsonEditor/releases/latest)** (≈ 26 MB) — from the GitHub Releases page
+- **[Download cedt-383-setup.exe](https://github.com/igkang00/CrimsonEditor/releases/latest)** (≈ 26 MB) — from the GitHub Releases page
 
 Run the installer and accept the UAC prompt. It installs to `Program Files\Crimson Editor`, bundles the Visual C++ x64 runtime, and optionally adds an "Edit with Crimson Editor" entry to the Explorer right-click menu.
 
@@ -49,7 +49,7 @@ msbuild cedt.sln /p:Configuration=Debug-US   /p:Platform=x64
 .\scripts\build_installer.ps1
 ```
 
-Build artifacts land in `build\x64\<Configuration>\` (e.g. `build\x64\Release-KR\cedt_kr.exe`); the installer lands in `dist\cedt-381-setup.exe`. Both `build\` and `dist\` are gitignored.
+Build artifacts land in `build\x64\<Configuration>\` (e.g. `build\x64\Release-KR\cedt_kr.exe`); the installer lands in `dist\cedt-383-setup.exe`. Both `build\` and `dist\` are gitignored.
 
 ### Prerequisites
 
@@ -163,6 +163,6 @@ scaling** because the legacy UI predates high-DPI:
 
 ---
 
-- **Version**: 3.82
+- **Version**: 3.83
 - **Copyright**: © 1999–2026 Ingyu Kang
 - **License**: see [LICENSE](LICENSE)
