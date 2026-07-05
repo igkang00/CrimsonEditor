@@ -2237,8 +2237,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,8,1,0
- PRODUCTVERSION 3,8,1,0
+ FILEVERSION 3,8,2,0
+ PRODUCTVERSION 3,8,2,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x29L
@@ -2256,14 +2256,14 @@ BEGIN
             VALUE "Comments", "Free Text Editor, Html Editor, Programmers Editor for Windows\0"
             VALUE "CompanyName", "Ingyu Kang\0"
             VALUE "FileDescription", "Crimson Editor\0"
-            VALUE "FileVersion", "3.81 English\0"
+            VALUE "FileVersion", "3.82 English\0"
             VALUE "InternalName", "cedt.exe\0"
             VALUE "LegalCopyright", "Copyright (C) 1999-2026 Ingyu Kang\0"
             VALUE "LegalTrademarks", "Crimson Editor\0"
             VALUE "OriginalFilename", "cedt.exe\0"
             VALUE "PrivateBuild", "1\0"
             VALUE "ProductName", "Crimson Editor\0"
-            VALUE "ProductVersion", "3.81 English\0"
+            VALUE "ProductVersion", "3.82 English\0"
             VALUE "SpecialBuild", "1\0"
         END
     END
@@ -3337,7 +3337,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_TEXT_COPYRIGHT      "\r\n  Crimson Editor 3.81 English (Freeware)\r\n\r\n  Copyright (C) 1999-2026 Ingyu Kang, All rights reserved.\r\n"
+    IDS_TEXT_COPYRIGHT      "\r\n  Crimson Editor 3.82 English (Freeware)\r\n\r\n  Copyright (C) 1999-2026 Ingyu Kang, All rights reserved.\r\n"
     IDS_TEXT_CREDITS        "\r\n  Part of this software was derived from Henry Spencer's\r\n  regular expression library.\r\n\r\n  This software is packaged using Inno Setup by\r\n  Jordan Russell (jrsoftware.org).\r\n"
 END
 

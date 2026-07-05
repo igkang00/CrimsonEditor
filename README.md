@@ -127,6 +127,6 @@ For the full source breakdown — every `.cpp` and what it does, the MFC class d
 
 ---
 
-- **Version**: 3.81
+- **Version**: 3.82
 - **Copyright**: © 1999–2026 Ingyu Kang
 - **License**: see [LICENSE](LICENSE)
