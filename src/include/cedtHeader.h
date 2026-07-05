@@ -41,6 +41,16 @@
 // searchable, and there is no per-edition variant.
 #define STRING_FEEDBACKURL					"https://github.com/igkang00/CrimsonEditor/issues"
 
+// Help ▸ Help Topics used to open a locally-bundled runtime/docs/*.html
+// tree, which drifted out of date every release. Point it at the docs
+// section of the live site instead — same per-language landing scheme
+// as STRING_HOMEPAGEURL.
+#if defined(CEDT_LANG_KR)
+#	define STRING_HELPDOCSURL				"https://crimsoneditor.com/ko/docs/"
+#else
+#	define STRING_HELPDOCSURL				"https://crimsoneditor.com/docs/"
+#endif
+
 #define REGPATH_INSTALL_DIRECTORY			"Software\\Crimson System\\Crimson Editor"
 #define REGPATH_USEININTERNETEXPLORER		"Software\\Microsoft\\Internet Explorer\\View Source Editor\\Editor Name"
 #define REGPATH_SHELLEXTENSIONAPPROVED		"Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved"

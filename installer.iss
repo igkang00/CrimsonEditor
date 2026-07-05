@@ -151,6 +151,24 @@ Name: "{autodesktop}\Crimson Editor (KR)"; Filename: "{app}\{#MyAppExeKr}"; Comp
 Name: "{autodesktop}\Crimson Editor (US)"; Filename: "{app}\{#MyAppExeUs}"; Components: exe_us; Tasks: desktopicon
 
 
+[InstallDelete]
+; Since 3.82 the bundled offline documentation was moved to the online
+; docs at https://crimsoneditor.com/docs/. Sweep the leftover files
+; from earlier installs so users upgrading from 3.81 or earlier don't
+; end up with an inconsistent {app}\docs\ folder mixing new and stale
+; content. Deletions target only the exact old filenames — anything
+; new that we ship in {app}\docs\ (index.html, RegExp.html) is safe.
+Type: files;         Name: "{app}\docs\calculator.html"
+Type: files;         Name: "{app}\docs\cmdline.html"
+Type: files;         Name: "{app}\docs\commands.html"
+Type: files;         Name: "{app}\docs\howtos.html"
+Type: files;         Name: "{app}\docs\preferences.html"
+Type: files;         Name: "{app}\docs\syntaxfile.html"
+Type: files;         Name: "{app}\docs\tips.html"
+Type: files;         Name: "{app}\docs\style.css"
+Type: filesandordirs; Name: "{app}\docs\images"
+
+
 [Registry]
 ; The single source of truth for "where is Crimson Editor installed".
 ; Read by both cedt itself and ShellExt.dll; written in 64-bit view

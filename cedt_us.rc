@@ -3156,7 +3156,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    ID_HELP_TOPICS          "List help topics\nHelp Topics"
+    ID_HELP_TOPICS          "Open Crimson Editor documentation - [https://crimsoneditor.com/docs/]\nHelp Topics"
     ID_HELP_FEEDBACK        "Report an issue on GitHub - [https://github.com/igkang00/CrimsonEditor/issues]\nFeedback"
     ID_HELP_VISIT_HOMEPAGE  "Visit Crimson Editor homepage - [https://crimsoneditor.com/]\nVisit Homepage"
     ID_HELP_SPONSORING      "Sponsor Crimson Editor development - [https://crimsoneditor.com/sponsor/]\nSponsoring"

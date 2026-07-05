@@ -361,9 +361,9 @@ void CCedtApp::OnMacroConfigure()
 	dlg.DoModal(PREF_CATEGORY_MACROS);
 }
 
-void CCedtApp::OnHelpTopics() 
+void CCedtApp::OnHelpTopics()
 {
-	GotoURL(m_szInstallDirectory + "\\docs\\index.html", SW_SHOW);
+	GotoURL(STRING_HELPDOCSURL, SW_SHOW);
 }
 
 void CCedtApp::OnHelpVisitHomepage() 
