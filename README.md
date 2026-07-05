@@ -157,8 +157,7 @@ scaling** because the legacy UI predates high-DPI:
    `cedt_us.rc` / `cedt_kr.rc`, and convert plain `DIALOG` → `DIALOGEX`.
    Re-check each template's width/height for the new font metrics.
 2. Provide DPI-scaled, multi-size **32-bit** toolbar icons chosen at runtime by
-   the display DPI (groundwork in progress on the
-   `feature/toolbar-highdpi-icons` branch).
+   the display DPI.
 3. Only then switch `Manifest → DPI Awareness` back to `PerMonitorHighDPIAware`
    (or `High DPI Aware`) and re-test every dialog at 100 / 150 / 200 %.
 
