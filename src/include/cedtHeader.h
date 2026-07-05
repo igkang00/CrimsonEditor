@@ -7,11 +7,15 @@
 #define STRING_COMPANYNAME					_T("Crimson System")
 #define STRING_PROJECTFILEVER				_T("Crimson Editor 3.83")
 
-#define STRING_CONFIGURATIONVER				_T("Configuration 3.80 x64")
-#define STRING_COLORSETTINGSVER				_T("Color Settings 3.80 x64")
-#define STRING_FTPACCOUNTVER				_T("FTP Account 3.80 x64")
-#define STRING_USERTOOLSVER					_T("User Command 3.80 x64")
-#define STRING_USERMACROVER					_T("User Macro 3.80 x64")
+// Bumped to 3.90 for the MBCS → UTF-16 migration: struct strings on disk
+// are now written as CP_ACP bytes for backward-compatible layout, but the
+// application is Unicode-aware end-to-end. A 3.83 or earlier user config
+// won't match, so the app resets to defaults on first launch — expected.
+#define STRING_CONFIGURATIONVER				_T("Configuration 3.90 x64")
+#define STRING_COLORSETTINGSVER				_T("Color Settings 3.90 x64")
+#define STRING_FTPACCOUNTVER				_T("FTP Account 3.90 x64")
+#define STRING_USERTOOLSVER					_T("User Command 3.90 x64")
+#define STRING_USERMACROVER					_T("User Macro 3.90 x64")
 
 // The user config file stores the file-filter and syntax-type display
 // strings, which are language-dependent. Give each edition its own file

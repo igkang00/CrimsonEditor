@@ -336,9 +336,15 @@ BOOL CCedtApp::InitInstance()
 	g_uClipbrdFormatProjectItem = RegisterClipboardFormat(CLIPBRD_FORMAT_PROJECT_ITEM);
 	g_uClipbrdFormatFileTabItem = RegisterClipboardFormat(CLIPBRD_FORMAT_FILETAB_ITEM);
 
-	// check multi-byte language
+	// Legacy DBCS switch. Under _UNICODE every WM_CHAR delivers a full
+	// UTF-16 code unit so there is no lead-byte state to track. Force
+	// the flag off so no code path takes the DBCS-pair branch.
+#ifdef _UNICODE
+	g_bDoubleByteCharacterSet = FALSE;
+#else
 	g_bDoubleByteCharacterSet = FALSE;
 	if( GetSystemMetrics(SM_DBCSENABLED) ) g_bDoubleByteCharacterSet = TRUE;
+#endif
 
 	// load user configuration
 	{

@@ -70,7 +70,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <ConformanceMode>false</ConformanceMode>
       <LanguageStandard>Default</LanguageStandard>
-      <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <SDLCheck>false</SDLCheck>
     </ClCompile>
     <Link>
@@ -120,7 +120,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <ConformanceMode>false</ConformanceMode>
       <LanguageStandard>Default</LanguageStandard>
-      <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <SDLCheck>false</SDLCheck>
     </ClCompile>
     <Link>

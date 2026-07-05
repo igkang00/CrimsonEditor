@@ -11,6 +11,16 @@
 #define _SWAP_UCHAR(A, B)				{ _uchar_temp = (A); (A) = (B); (B) = _uchar_temp; }
 static UCHAR _uchar_temp;
 
+// Under _UNICODE every CString char is 2 bytes on disk. The pre-Unicode
+// StreamSave/StreamLoad passed GetLength() (char count) to write()/read()
+// (byte count), which chopped every stored string in half. These helpers
+// keep nLength as the char count on the wire and multiply by sizeof(TCHAR)
+// at the byte boundary so the format is char-count + wide-bytes.
+#define _WRITE_WIDE_STR(fout, ptr, nChars) \
+	do { if( (nChars) > 0 ) (fout).write((const char *)(ptr), (nChars) * (INT)sizeof(TCHAR)); } while(0)
+#define _READ_WIDE_STR(fin, buf, nChars) \
+	do { if( (nChars) > 0 ) (fin).read((char *)(buf), (nChars) * (INT)sizeof(TCHAR)); } while(0)
+
 #define _INITIAL_TYPES(types, atype)	{ types[0] = types[1] = types[2] = atype; types[3] = 0x00; }
 #define _COMPOSE_TYPES(types)			( MAKELONG( MAKEWORD(types[0], types[1]), MAKEWORD(types[2], types[3]) ) )
 #define _EXTRACT_TYPES(types, dword)	{ \
@@ -952,19 +962,19 @@ BOOL CUserCommand::StreamSave(ofstream & fout)
 
 	nLength = m_szName.GetLength();
 	fout.write((const char *)(& nLength), sizeof(nLength));
-	if( nLength ) fout.write((const char *)(LPCTSTR)m_szName, nLength);
+	_WRITE_WIDE_STR(fout, (LPCTSTR)m_szName, nLength);
 
 	nLength = m_szCommand.GetLength();
 	fout.write((const char *)(& nLength), sizeof(nLength));
-	if( nLength ) fout.write((const char *)(LPCTSTR)m_szCommand, nLength);
+	_WRITE_WIDE_STR(fout, (LPCTSTR)m_szCommand, nLength);
 
 	nLength = m_szArgument.GetLength();
 	fout.write((const char *)(& nLength), sizeof(nLength));
-	if( nLength ) fout.write((const char *)(LPCTSTR)m_szArgument, nLength);
+	_WRITE_WIDE_STR(fout, (LPCTSTR)m_szArgument, nLength);
 
 	nLength = m_szDirectory.GetLength();
 	fout.write((const char *)(& nLength), sizeof(nLength));
-	if( nLength ) fout.write((const char *)(LPCTSTR)m_szDirectory, nLength);
+	_WRITE_WIDE_STR(fout, (LPCTSTR)m_szDirectory, nLength);
 
 	fout.write((const char *)(& m_bCloseOnExit), sizeof(BOOL));
 	fout.write((const char *)(& m_bUseShortFileName), sizeof(BOOL));
@@ -982,20 +992,20 @@ BOOL CUserCommand::StreamLoad(ifstream & fin)
 	fin.read((char *)(& m_wModifiers), sizeof(WORD));
 
 	fin.read((char *)(& nLength), sizeof(nLength));
-	if( nLength ) fin.read((char *)(szBuffer), nLength); 
-	szBuffer[nLength] = '\0'; m_szName = szBuffer;
+	_READ_WIDE_STR(fin, szBuffer, nLength);
+	szBuffer[nLength] = _T('\0'); m_szName = szBuffer;
 
 	fin.read((char *)(& nLength), sizeof(nLength));
-	if( nLength ) fin.read((char *)(szBuffer), nLength); 
-	szBuffer[nLength] = '\0'; m_szCommand = szBuffer;
+	_READ_WIDE_STR(fin, szBuffer, nLength);
+	szBuffer[nLength] = _T('\0'); m_szCommand = szBuffer;
 
 	fin.read((char *)(& nLength), sizeof(nLength));
-	if( nLength ) fin.read((char *)(szBuffer), nLength); 
-	szBuffer[nLength] = '\0'; m_szArgument = szBuffer;
+	_READ_WIDE_STR(fin, szBuffer, nLength);
+	szBuffer[nLength] = _T('\0'); m_szArgument = szBuffer;
 
 	fin.read((char *)(& nLength), sizeof(nLength));
-	if( nLength ) fin.read((char *)(szBuffer), nLength); 
-	szBuffer[nLength] = '\0'; m_szDirectory = szBuffer;
+	_READ_WIDE_STR(fin, szBuffer, nLength);
+	szBuffer[nLength] = _T('\0'); m_szDirectory = szBuffer;
 
 	fin.read((char *)(& m_bCloseOnExit), sizeof(BOOL));
 	fin.read((char *)(& m_bUseShortFileName), sizeof(BOOL));
@@ -1061,7 +1071,7 @@ BOOL CMacroBuffer::StreamSave(ofstream & fout)
 
 	nLength = m_szName.GetLength();
 	fout.write((const char *)(& nLength), sizeof(nLength));
-	if( nLength ) fout.write((const char *)(LPCTSTR)m_szName, nLength);
+	_WRITE_WIDE_STR(fout, (LPCTSTR)m_szName, nLength);
 
 	nCount = (INT)m_lstAction.GetCount(); pos = m_lstAction.GetHeadPosition();
 	fout.write((const char *)(& nCount), sizeof(nCount));
@@ -1089,7 +1099,7 @@ BOOL CMacroBuffer::StreamSave(ofstream & fout)
 	while( pos ) { 
 		szString = m_lstString.GetNext(pos); nLength = szString.GetLength();
 		fout.write((const char *)(& nLength), sizeof(nLength));
-		fout.write((const char *)(LPCTSTR)szString, nLength);
+		_WRITE_WIDE_STR(fout, (LPCTSTR)szString, nLength);
 	}
 
 	return TRUE;
@@ -1104,8 +1114,8 @@ BOOL CMacroBuffer::StreamLoad(ifstream & fin)
 	fin.read((char *)(& m_wModifiers), sizeof(WORD));
 
 	fin.read((char *)(& nLength), sizeof(nLength));
-	if( nLength ) fin.read((char *)(szBuffer), nLength); 
-	szBuffer[nLength] = '\0'; m_szName = szBuffer;
+	_READ_WIDE_STR(fin, szBuffer, nLength);
+	szBuffer[nLength] = _T('\0'); m_szName = szBuffer;
 
 	fin.read((char *)(& nCount), sizeof(nCount));
 	m_lstAction.RemoveAll();
@@ -1132,7 +1142,8 @@ BOOL CMacroBuffer::StreamLoad(ifstream & fin)
 	m_lstString.RemoveAll();
 	while( nCount-- ) {
 		fin.read((char *)(& nLength), sizeof(nLength));
-		fin.read((char *)(szBuffer), nLength); szBuffer[nLength] = '\0';
+		_READ_WIDE_STR(fin, szBuffer, nLength);
+		szBuffer[nLength] = _T('\0');
 		m_lstString.AddTail(szBuffer);
 	}
 
@@ -1179,15 +1190,15 @@ BOOL CFileFilter::StreamSave(ofstream & fout)
 
 	nLength = m_szDescription.GetLength();
 	fout.write((const char *)(& nLength), sizeof(nLength));
-	if( nLength ) fout.write((const char *)(LPCTSTR)(m_szDescription), nLength);
+	_WRITE_WIDE_STR(fout, (LPCTSTR)m_szDescription, nLength);
 
 	nLength = m_szExtensions.GetLength();
 	fout.write((const char *)(& nLength), sizeof(nLength));
-	if( nLength ) fout.write((const char *)(LPCTSTR)(m_szExtensions), nLength);
+	_WRITE_WIDE_STR(fout, (LPCTSTR)m_szExtensions, nLength);
 
 	nLength = m_szDefaultExt.GetLength();
 	fout.write((const char *)(& nLength), sizeof(nLength));
-	if( nLength ) fout.write((const char *)(LPCTSTR)(m_szDefaultExt), nLength);
+	_WRITE_WIDE_STR(fout, (LPCTSTR)m_szDefaultExt, nLength);
 
 	return TRUE;
 }
@@ -1198,18 +1209,18 @@ BOOL CFileFilter::StreamLoad(ifstream & fin)
 
 	fin.read((char *)(& nLength), sizeof(nLength));
 	if( nLength < 0 || nLength >= 4096 ) return FALSE;
-	if( nLength ) fin.read((char *)(szBuffer), nLength);
-	szBuffer[nLength] = '\0'; m_szDescription = szBuffer;
+	_READ_WIDE_STR(fin, szBuffer, nLength);
+	szBuffer[nLength] = _T('\0'); m_szDescription = szBuffer;
 
 	fin.read((char *)(& nLength), sizeof(nLength));
 	if( nLength < 0 || nLength >= 4096 ) return FALSE;
-	if( nLength ) fin.read((char *)(szBuffer), nLength);
-	szBuffer[nLength] = '\0'; m_szExtensions = szBuffer;
+	_READ_WIDE_STR(fin, szBuffer, nLength);
+	szBuffer[nLength] = _T('\0'); m_szExtensions = szBuffer;
 
 	fin.read((char *)(& nLength), sizeof(nLength));
 	if( nLength < 0 || nLength >= 4096 ) return FALSE;
-	if( nLength ) fin.read((char *)(szBuffer), nLength);
-	szBuffer[nLength] = '\0'; m_szDefaultExt = szBuffer;
+	_READ_WIDE_STR(fin, szBuffer, nLength);
+	szBuffer[nLength] = _T('\0'); m_szDefaultExt = szBuffer;
 
 	return TRUE;
 }
@@ -1243,15 +1254,15 @@ BOOL CSyntaxType::StreamSave(ofstream & fout)
 
 	nLength = m_szDescription.GetLength();
 	fout.write((const char *)(& nLength), sizeof(nLength));
-	if( nLength ) fout.write((const char *)(LPCTSTR)m_szDescription, nLength);
+	_WRITE_WIDE_STR(fout, (LPCTSTR)m_szDescription, nLength);
 
 	nLength = m_szLangSpecFile.GetLength();
 	fout.write((const char *)(& nLength), sizeof(nLength));
-	if( nLength ) fout.write((const char *)(LPCTSTR)m_szLangSpecFile, nLength);
+	_WRITE_WIDE_STR(fout, (LPCTSTR)m_szLangSpecFile, nLength);
 
 	nLength = m_szKeywordsFile.GetLength();
 	fout.write((const char *)(& nLength), sizeof(nLength));
-	if( nLength ) fout.write((const char *)(LPCTSTR)m_szKeywordsFile, nLength);
+	_WRITE_WIDE_STR(fout, (LPCTSTR)m_szKeywordsFile, nLength);
 
 	return TRUE;
 }
@@ -1262,18 +1273,18 @@ BOOL CSyntaxType::StreamLoad(ifstream & fin)
 
 	fin.read((char *)(& nLength), sizeof(nLength));
 	if( nLength < 0 || nLength >= 4096 ) return FALSE;
-	if( nLength ) fin.read((char *)(szBuffer), nLength); 
-	szBuffer[nLength] = '\0'; m_szDescription = szBuffer;
+	_READ_WIDE_STR(fin, szBuffer, nLength);
+	szBuffer[nLength] = _T('\0'); m_szDescription = szBuffer;
 
 	fin.read((char *)(& nLength), sizeof(nLength));
 	if( nLength < 0 || nLength >= 4096 ) return FALSE;
-	if( nLength ) fin.read((char *)(szBuffer), nLength); 
-	szBuffer[nLength] = '\0'; m_szLangSpecFile = szBuffer;
+	_READ_WIDE_STR(fin, szBuffer, nLength);
+	szBuffer[nLength] = _T('\0'); m_szLangSpecFile = szBuffer;
 
 	fin.read((char *)(& nLength), sizeof(nLength));
 	if( nLength < 0 || nLength >= 4096 ) return FALSE;
-	if( nLength ) fin.read((char *)(szBuffer), nLength); 
-	szBuffer[nLength] = '\0'; m_szKeywordsFile = szBuffer;
+	_READ_WIDE_STR(fin, szBuffer, nLength);
+	szBuffer[nLength] = _T('\0'); m_szKeywordsFile = szBuffer;
 
 	return TRUE;
 }
@@ -1320,26 +1331,26 @@ BOOL CFtpAccount::StreamSave(ofstream & fout)
 
 	nLength = m_szDescription.GetLength();
 	fout.write((const char *)(& nLength), sizeof(nLength));
-	fout.write((const char *)(LPCTSTR)m_szDescription, nLength);
+	_WRITE_WIDE_STR(fout, (LPCTSTR)m_szDescription, nLength);
 
 	nLength = m_szServerName.GetLength();
 	fout.write((const char *)(& nLength), sizeof(nLength));
-	fout.write((const char *)(LPCTSTR)m_szServerName, nLength);
+	_WRITE_WIDE_STR(fout, (LPCTSTR)m_szServerName, nLength);
 
 	nLength = m_szUserName.GetLength();
 	fout.write((const char *)(& nLength), sizeof(nLength));
-	fout.write((const char *)(LPCTSTR)m_szUserName, nLength);
+	_WRITE_WIDE_STR(fout, (LPCTSTR)m_szUserName, nLength);
 
 	CString szEncodedPassword = _T("");
 	if( m_bSavePassword ) szEncodedPassword = CString(CA2T(map_encode((LPCSTR)CT2A((LPCTSTR)m_szPassword))));
 
 	nLength = szEncodedPassword.GetLength();
 	fout.write((const char *)(& nLength), sizeof(nLength));
-	fout.write((const char *)(LPCTSTR)szEncodedPassword, nLength);
+	_WRITE_WIDE_STR(fout, (LPCTSTR)szEncodedPassword, nLength);
 
 	nLength = m_szSubDirectory.GetLength();
 	fout.write((const char *)(& nLength), sizeof(nLength));
-	fout.write((const char *)(LPCTSTR)m_szSubDirectory, nLength);
+	_WRITE_WIDE_STR(fout, (LPCTSTR)m_szSubDirectory, nLength);
 
 	fout.write((const char *)(& m_bSavePassword), sizeof(m_bSavePassword));
 	fout.write((const char *)(& m_bPassiveMode), sizeof(m_bPassiveMode));
@@ -1359,29 +1370,29 @@ BOOL CFtpAccount::StreamLoad(ifstream & fin)
 
 	fin.read((char *)(& nLength), sizeof(nLength));
 	if( nLength < 0 || nLength > 2048 ) return FALSE;
-	fin.read((char *)(szBuffer), nLength); szBuffer[nLength] = '\0';
+	_READ_WIDE_STR(fin, szBuffer, nLength); szBuffer[nLength] = _T('\0');
 	m_szDescription = szBuffer;
 
 	fin.read((char *)(& nLength), sizeof(nLength));
 	if( nLength < 0 || nLength > 2048 ) return FALSE;
-	fin.read((char *)(szBuffer), nLength); szBuffer[nLength] = '\0';
+	_READ_WIDE_STR(fin, szBuffer, nLength); szBuffer[nLength] = _T('\0');
 	m_szServerName = szBuffer;
 
 	fin.read((char *)(& nLength), sizeof(nLength));
 	if( nLength < 0 || nLength > 2048 ) return FALSE;
-	fin.read((char *)(szBuffer), nLength); szBuffer[nLength] = '\0';
+	_READ_WIDE_STR(fin, szBuffer, nLength); szBuffer[nLength] = _T('\0');
 	m_szUserName = szBuffer;
 
 	fin.read((char *)(& nLength), sizeof(nLength));
 	if( nLength < 0 || nLength > 2048 ) return FALSE;
-	fin.read((char *)(szBuffer), nLength); szBuffer[nLength] = '\0';
+	_READ_WIDE_STR(fin, szBuffer, nLength); szBuffer[nLength] = _T('\0');
 
 	CString szEncodedPassword = szBuffer;
 	m_szPassword = CString(CA2T(map_decode((LPCSTR)CT2A((LPCTSTR)szEncodedPassword))));
 
 	fin.read((char *)(& nLength), sizeof(nLength));
 	if( nLength < 0 || nLength > 2048 ) return FALSE;
-	fin.read((char *)(szBuffer), nLength); szBuffer[nLength] = '\0';
+	_READ_WIDE_STR(fin, szBuffer, nLength); szBuffer[nLength] = _T('\0');
 	m_szSubDirectory = szBuffer;
 
 	fin.read((char *)(& m_bSavePassword), sizeof(m_bSavePassword));

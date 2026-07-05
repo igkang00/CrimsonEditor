@@ -41,7 +41,7 @@ BOOL CFileWindow::SaveProjectWorkspace(LPCTSTR lpszPathName)
 
 	// save project
 	szContents.Format(_T("<project version=\"%s\">"), STRING_PROJECTFILEVER);
-	fout << szContents << endl;
+	fout << szContents.GetString() << endl;
 
 	HTREEITEM hRoot = m_treProjectTree.GetRootItem();
 	HTREEITEM hChild = m_treProjectTree.GetChildItem( hRoot );
@@ -54,7 +54,7 @@ BOOL CFileWindow::SaveProjectWorkspace(LPCTSTR lpszPathName)
 
 	// save workspace
 	szContents.Format(_T("<workspace version=\"%s\">"), STRING_PROJECTFILEVER);
-	fout << szContents << endl;
+	fout << szContents.GetString() << endl;
 
 	CMainFrame * pFrame = (CMainFrame *)AfxGetMainWnd();
 	INT nCount = pFrame->GetChildFrameCount();
@@ -132,7 +132,7 @@ BOOL CFileWindow::SaveRegularWorkspace(LPCTSTR lpszPathName)
 
 	// save workspace
 	szContents.Format(_T("<workspace version=\"%s\">"), STRING_PROJECTFILEVER);
-	fout << szContents << endl;
+	fout << szContents.GetString() << endl;
 
 	CMainFrame * pFrame = (CMainFrame *)AfxGetMainWnd();
 	INT nCount = pFrame->GetChildFrameCount();
@@ -330,7 +330,7 @@ BOOL CFileWindow::SaveProjectItem(wostream & os, INT nLevel, HTREEITEM hItem)
 
 	if( nImage == PROJECT_ITEM_CATEGORY ) {
 		szContents.Format(_T("<category name=\"%s\" expanded=\"%s\">"), szText, szExpanded);
-		os << szIndent << szContents << endl;
+		os << szIndent.GetString() << szContents.GetString() << endl;
 
 		HTREEITEM hChild = m_treProjectTree.GetChildItem( hItem );
 		while( hChild ) { // recursive call to all child items
@@ -338,13 +338,13 @@ BOOL CFileWindow::SaveProjectItem(wostream & os, INT nLevel, HTREEITEM hItem)
 			hChild = m_treProjectTree.GetNextSiblingItem( hChild );
 		}
 
-		os << szIndent << _T("</category>") << endl;
+		os << szIndent.GetString() << _T("</category>") << endl;
 
 	} else if( nImage == PROJECT_ITEM_LOCAL_FILE ) {
 		CString szPath = GetProjectItemPathName( hItem );
 		szContents.Format(_T("<localfile path=\"%s\" />"), szPath);
 
-		os << szIndent << szContents << endl;
+		os << szIndent.GetString() << szContents.GetString() << endl;
 
 	} else if( nImage == PROJECT_ITEM_REMOTE_FILE ) {
 		LPPROJECTITEMINFO lpInfo = GetProjectItemInfo( hItem );
@@ -353,7 +353,7 @@ BOOL CFileWindow::SaveProjectItem(wostream & os, INT nLevel, HTREEITEM hItem)
 
 		szContents.Format(_T("<remotefile account=\"%d\" path=\"%s\" />"), nAccount, szPath);
 
-		os << szIndent << szContents << endl;
+		os << szIndent.GetString() << szContents.GetString() << endl;
 
 	} else return FALSE;
 
@@ -440,7 +440,7 @@ BOOL CFileWindow::SaveWorkspaceItem(wostream & os, INT nLevel, CMDIChildWnd * pC
 			wndpl.rcNormalPosition.left, wndpl.rcNormalPosition.top, 
 			wndpl.rcNormalPosition.right, wndpl.rcNormalPosition.bottom);
 
-		os << szIndent << szContents << endl;
+		os << szIndent.GetString() << szContents.GetString() << endl;
 
 	} else {
 		CString szPath = pDoc->GetPathName();
@@ -457,7 +457,7 @@ BOOL CFileWindow::SaveWorkspaceItem(wostream & os, INT nLevel, CMDIChildWnd * pC
 			wndpl.rcNormalPosition.left, wndpl.rcNormalPosition.top, 
 			wndpl.rcNormalPosition.right, wndpl.rcNormalPosition.bottom);
 
-		os << szIndent << szContents << endl;
+		os << szIndent.GetString() << szContents.GetString() << endl;
 	}
 
 	return TRUE;

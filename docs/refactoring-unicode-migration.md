@@ -6,6 +6,42 @@ The end state of this branch is: every string CString/API touches is UTF-16, the
 
 ---
 
+## Actual progress
+
+| Phase | Status | Commit(s) | Delta |
+| --- | --- | --- | --- |
+| 0 — Environment check | ✅ done | `0a3bb12` | MFC Unicode libs / HtmlHelp.h dual A/W verified |
+| 1 — Build system flip | ✅ done | `0054644` | 2,521 first-compile errors |
+| 2a — Bulk mechanical | ✅ done | `202cee2` | 22 hotspot files, → 653 errors |
+| 2b step 1 — RegExp + TRACE self-wrap | ✅ done | `73e6748` | → 369 errors |
+| 2b step 2 — `#define` literals | ✅ done | `ff1056a` | → 288 errors |
+| 2b step 3 — compile clean | ✅ done | `038c6c7` | → **0 errors**, cedt_tests 55/60 |
+| 3.1 — CRegExp bytecode fix | ✅ done | `c5f045b` | `OPERAND(p) = p + 3`, cedt_tests **60/60** |
+| 3.2 — File I/O: drop CP_ACP round-trip | ✅ done | `c5f045b` | em dash / smart quotes / CJK finally render |
+| 3.3 — em dash rendering | ✅ verified | — | UTF-8 (BOM) load + save-as round-trip pass; screenshot in commit trailer |
+| 3.4 — IME composition | ✅ verified | (pending) | `ImmGetCompositionString` narrow → wide buffer; DBCS branches guarded by `#ifdef _UNICODE` |
+| 3.5 — Config compat + wchar_t builtin | ✅ done | (pending) | Magic strings 3.80 → 3.90; `TreatWChar_tAsBuiltInType=true`; `_WRITE_WIDE_STR` / `_READ_WIDE_STR` helpers for every `StreamSave` / `StreamLoad` in `cedtElement.cpp` |
+| 3.6 — Project file streaming (WIP) | ⚠️ open | (pending) | `wofstream << CString` still emits pointer addresses; applied `.GetString()` cast at every call site, needs runtime verification |
+| 3.7 — Docs + release 3.90 | ⏳ pending | — | this file + README.md + version bump + installer |
+
+### Bugs found during Phase 3
+
+1. **CRegExp: `OPERAND(p) = (TCHAR*)((short*)(p+1)+1)`** resolves to `p+3` under MBCS but `p+2` under `_UNICODE` — `regnode()` always reserves 3 TCHAR slots so every operand read landed one TCHAR early. Fix: `OPERAND(p) = p + 3` for both widths. This one line was the entire regex breakage.
+2. **File I/O CP_ACP round-trip** — the pre-Unicode UTF-8 load path was `UTF-8 → wide → CP_ACP → narrow → CString`. The CP_ACP step silently mapped every non-ANSI code point to `?`. Rewrote every encoding path in `cedtElement.cpp::FileLoad` / `FileSave` to append `(LPCWSTR)szWideBuffer` directly.
+3. **`ImmGetCompositionString` with narrow buffer** — under `_UNICODE`, this API is the W variant and writes UTF-16 into the given buffer, returning the length in bytes. The pre-Unicode call used a `CHAR buf[1024]` and assigned it to a wide `CString`, which routed through CP_ACP and mangled every Korean composition. Switched to `TCHAR buf[512]` (same 1024 bytes) and divided the returned byte count by `sizeof(TCHAR)`.
+4. **StreamSave / StreamLoad width bug** — `nLength = m_szXxx.GetLength()` is a *character* count, but `fout.write(ptr, nLength)` writes *bytes*. Under Unicode every stored string was chopped in half. Wrapped every site in `cedtElement.cpp` with `_WRITE_WIDE_STR` / `_READ_WIDE_STR` helpers that multiply by `sizeof(TCHAR)` at the byte boundary.
+5. **`wofstream << CString` writing pointer addresses** — with `TreatWChar_tAsBuiltInType=false`, `wchar_t` is `unsigned short`, and the standard `basic_ostream<wchar_t>::operator<<(const wchar_t*)` overload doesn't match the CString → LPCTSTR conversion — the compiler falls back to `operator<<(const void*)` and prints the pointer. Fix: flip the setting to `true` project-wide, then add explicit `.GetString()` at every `<<` site to be robust regardless.
+6. **Config file magic string read/write with `_tcslen`** — `_tcslen("Configuration 3.90 x64")` is 22 (chars), but the buffer was read as bytes, so the compare always failed and the user got a "config file corrupted" popup on every start. Rewrote every magic-string site (`cedtAppConf.cpp`) to use `CStringA` — one byte per char on disk, matches Save side that was already narrow.
+
+### Deferred to next branch
+
+- **C4244 (TCHAR → BYTE) warnings** in `cedtDocAnal.cpp` — 18 unique sites, all inside `IsDBCSLeadByte()` calls that are dead code under `_UNICODE` (guarded by `g_bDoubleByteCharacterSet` which we now force to FALSE). Cast to `(BYTE)` or wrap the whole DBCS block in `#ifndef _UNICODE`.
+- **Manual smoke test grid** (Phase 5 in the original plan) — large-file scroll, column select over CJK, regex with Unicode pattern, filename dialog outside CP949.
+- **Release 3.90 installer** — bump `STRING_PROJECTFILEVER`, cut the installer, tag, push.
+- **Runtime verification of `FileWndProject` fix** — the `.GetString()` cast is applied but not yet confirmed on a fresh save/load round-trip.
+
+---
+
 ## Decisions (locked in at branch start)
 
 | | Decision | Rationale |

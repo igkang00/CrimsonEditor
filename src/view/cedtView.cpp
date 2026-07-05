@@ -633,11 +633,20 @@ void CCedtView::UpdateMDIFileTabOfTheDocument()
 
 INT CCedtView::GetCompositionString(DWORD dwIndex, CString & szString)
 {
-	HIMC hImc = ImmGetContext( m_hWnd ); CHAR buf[1024];
-	INT nSize = ImmGetCompositionString( hImc, dwIndex, buf, 1024 );
-	ImmReleaseContext( m_hWnd, hImc ); 
-	buf[nSize] = '\0'; szString = buf;
-	return nSize;
+	// Under _UNICODE, ImmGetCompositionString maps to the W variant which
+	// writes UTF-16 into the buffer; the returned length is in BYTES, not
+	// characters. The pre-Unicode code used a narrow CHAR buffer and did
+	// szString = buf, which fed wide bytes into CString's CP_ACP overload
+	// and mangled every Korean composition into mojibake.
+	HIMC hImc = ImmGetContext( m_hWnd );
+	TCHAR buf[512]; // 1024 bytes of storage, same as before
+	INT nBytes = ImmGetCompositionString( hImc, dwIndex, buf, sizeof(buf) - sizeof(TCHAR) );
+	ImmReleaseContext( m_hWnd, hImc );
+	if( nBytes < 0 ) nBytes = 0;
+	INT nChars = nBytes / (INT)sizeof(TCHAR);
+	buf[nChars] = _T('\0');
+	szString = buf;
+	return nChars;
 }
 
 INT CCedtView::GetCurrentLineNumber()
@@ -1333,8 +1342,15 @@ BOOL CCedtView::PreTranslateMessage(MSG* pMsg)
 			OnImeCompositionEnd(FALSE);
 		}
 
+#ifdef _UNICODE
+		// wParam is a single UTF-16 code unit; feed it through the normal
+		// character path. The old DBCS pair split fabricated two garbage
+		// wchar_t's from the low/high halves.
+		OnCharKeyDown( (UINT)pMsg->wParam );
+#else
 		szByte[0] = (TCHAR) pMsg->wParam & 0xFF; szByte[1] = (TCHAR) pMsg->wParam >> 8; szByte[2] = '\0';
 		TRACE1("DBCHAR: [%s]\n", szByte); OnDBCharKeyDown( szByte[0], szByte[1] );
+#endif
 
 		return TRUE;
 
