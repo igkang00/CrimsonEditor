@@ -20,15 +20,16 @@ The end state of this branch is: every string CString/API touches is UTF-16, the
 
 ---
 
-## Environment check (Phase 0)
+## Environment check (Phase 0 — done)
 
-| Component | Expected status |
+| Component | Status |
 | --- | --- |
-| MSVC v145 x64 toolset | ✅ already used for x64 build |
-| MFC v145 Unicode libraries (12 `.lib` files under `atlmfc\lib\x64` — `uafxcw.lib`, `mfc*u.lib`, etc.) | needs verification — same install as MBCS, but the `u`-suffixed libs must exist |
-| Windows SDK 10 — Unicode Imm32.lib | ✅ standard, same lib for both |
-| Bundled `HtmlHelp.h` | ⚠️ verify that its API prototypes are TCHAR-friendly (it's from 1999) — worst case, one wrapper cast |
-| Test project (`cedt_tests`) built with GoogleTest through vcpkg | ✅ vcpkg manifest already tolerant, gtest doesn't care about the app's charset |
+| MSVC v145 x64 toolset (`cl.exe Hostx64\x64`) | ✅ already used for x64 build at `VS\18\Professional\VC\Tools\MSVC\14.51.36231` |
+| MFC v145 x64 Unicode dynamic libraries | ✅ `mfc140u.lib` (9.1 MB release) + `mfc140ud.lib` (10.4 MB debug) present under `atlmfc\lib\x64` |
+| MFC v145 x64 Unicode support libraries | ✅ `mfcs140u.lib` / `mfcs140ud.lib` + `MFCM140U.lib` / `MFCM140Ud.lib` present |
+| Windows SDK 10 — Unicode `Imm32.lib` | ✅ standard, same lib for both A/W |
+| Bundled `HtmlHelp.h` (1999-vintage) | ✅ ships **both** `HtmlHelpA` and `HtmlHelpW` prototypes with a `#ifdef UNICODE` macro routing to the right one. No wrapper needed. Structure fields are already `LPCTSTR` throughout (one stray `LPCSTR pszCatName` in the info-type-enum struct, which we don't use) |
+| Test project (`cedt_tests`) built with GoogleTest through vcpkg | ✅ vcpkg manifest tolerant of either charset, gtest itself doesn't care |
 
 ---
 
