@@ -87,7 +87,7 @@ BOOL DetectEncodingTypeAndFileFormat(LPCTSTR lpszPathName, UINT & nEncodingType,
 
 		DetectEncodingType(szBuffer, nCount, nEncodingType);
 		DetectFileFormat(szBuffer, nCount, nFileFormat);
-		TRACE2(_T("DetectEncodingTypeAndFileFormat: %s, %s\n"), ENCODING_TYPE_DESCRIPTION_FULL[nEncodingType], FILE_FORMAT_DESCRIPTION_FULL[nFileFormat]);
+		TRACE2("DetectEncodingTypeAndFileFormat: %s, %s\n", ENCODING_TYPE_DESCRIPTION_FULL[nEncodingType], FILE_FORMAT_DESCRIPTION_FULL[nFileFormat]);
 
 		return TRUE;
 

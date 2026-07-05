@@ -82,7 +82,7 @@ int CFindDialog::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	if( CDialog::OnCreate(lpCreateStruct) == -1 ) return -1;
 	
-	TRACE0(_T("CFindDialog::OnCreate\n"));
+	TRACE0("CFindDialog::OnCreate\n");
 	m_lstButtonImage.Create(IDB_GENERAL_BUTTONS, 9, 0, RGB(255, 0, 255));
 
 	// load find preferences from profile
@@ -108,7 +108,7 @@ void CFindDialog::OnDestroy()
 {
 	CDialog::OnDestroy();
 
-	TRACE0(_T("CFindDialog::OnDestroy\n"));
+	TRACE0("CFindDialog::OnDestroy\n");
 	m_lstButtonImage.Detach();
 
 	// save find preferences to profile
@@ -132,7 +132,7 @@ void CFindDialog::OnDestroy()
 BOOL CFindDialog::OnInitDialog() 
 {
 	CDialog::OnInitDialog();
-	TRACE0(_T("CFindDialog::OnInitDialog\n"));
+	TRACE0("CFindDialog::OnInitDialog\n");
 
 	m_btnFindString.SetIcon( m_lstButtonImage.ExtractIcon(2) );
 

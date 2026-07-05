@@ -393,7 +393,7 @@ CString CFileWindow::GetDirectoryItemPathName(HTREEITEM hItem)
 		hItem = m_treDirectoryTree.GetParentItem( hItem );
 	}
 
-	TRACE1(_T("GetDirectoryItemPathName: %s\n"), szReturn);
+	TRACE1("GetDirectoryItemPathName: %s\n", szReturn);
 	return szReturn;
 }
 
@@ -783,17 +783,17 @@ void CFileWindow::OnBegindragDirectoryTree(NMHDR* pNMHDR, LRESULT* pResult)
 	if( eff == DROPEFFECT_MOVE ) {
 		// item has been moved - delete tree item
 		m_treDirectoryTree.DeleteItem( hItem );
-		TRACE0(_T("Item has been moved by DROPEFFECT_MOVE\n"));
+		TRACE0("Item has been moved by DROPEFFECT_MOVE\n");
 	} else if( eff == DROPEFFECT_NONE ) {
 		// check if item has been moved
 		if( ! VerifyPathName( szPathName ) ) {
 			// item has been moved - delete tree item
 			m_treDirectoryTree.DeleteItem( hItem );
-			TRACE0(_T("Item has been moved by DROPEFFECT_NONE\n"));
+			TRACE0("Item has been moved by DROPEFFECT_NONE\n");
 		} else {
 			// drag and drop has been canceled
 			::GlobalFree(hMemory);
-			TRACE0(_T("Drag and Drop has been canceled\n"));
+			TRACE0("Drag and Drop has been canceled\n");
 		}
 	}
 

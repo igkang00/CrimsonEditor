@@ -103,7 +103,7 @@ int CReplaceDialog::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	if( CDialog::OnCreate(lpCreateStruct) == -1 ) return -1;
 	
-	TRACE0(_T("CReplaceDialog::OnCreate\n"));
+	TRACE0("CReplaceDialog::OnCreate\n");
 	m_lstButtonImage.Create(IDB_GENERAL_BUTTONS, 9, 0, RGB(255, 0, 255));
 	
 	// load replace preferences from profile
@@ -138,7 +138,7 @@ void CReplaceDialog::OnDestroy()
 {
 	CDialog::OnDestroy();
 	
-	TRACE0(_T("CReplaceDialog::OnDestroy\n"));
+	TRACE0("CReplaceDialog::OnDestroy\n");
 	m_lstButtonImage.Detach();
 
 	// save find preferences to profile
@@ -172,7 +172,7 @@ void CReplaceDialog::OnDestroy()
 BOOL CReplaceDialog::OnInitDialog() 
 {
 	CDialog::OnInitDialog();
-	TRACE0(_T("CReplaceDialog::OnInitDialog\n"));
+	TRACE0("CReplaceDialog::OnInitDialog\n");
 
 	m_btnFindString.SetIcon( m_lstButtonImage.ExtractIcon(2) );
 	m_btnReplaceString.SetIcon( m_lstButtonImage.ExtractIcon(2) );

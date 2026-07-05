@@ -43,7 +43,7 @@ static void _WordFound(SHORT windex, UCHAR ucType, UCHAR ucInfo, INT_PTR siIndex
 	_words[windex].m_siIndex = (SHORT)siIndex;
 	_words[windex].m_siLength = (SHORT)siLength;
 
-//	TRACE2(_T("Word Found: %d, %d\n"), windex, siLength);
+//	TRACE2("Word Found: %d, %d\n", windex, siLength);
 }
 
 static void _WordFoundExtended(SHORT windex, UCHAR ucType[], UCHAR ucInfo, INT_PTR siIndex, INT_PTR siLength)
@@ -55,7 +55,7 @@ static void _WordFoundExtended(SHORT windex, UCHAR ucType[], UCHAR ucInfo, INT_P
 	_words[windex].m_siIndex = (SHORT)siIndex;
 	_words[windex].m_siLength = (SHORT)siLength;
 
-//	TRACE2(_T("Word Found: %d, %d\n"), windex, siLength);
+//	TRACE2("Word Found: %d, %d\n", windex, siLength);
 }
 
 static void _FinishLine(SHORT wcount, BOOL bOverflow, CAnalyzedString & rLine)

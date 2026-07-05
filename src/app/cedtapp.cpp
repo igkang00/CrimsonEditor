@@ -252,7 +252,7 @@ BOOL CCedtApp::InitInstance()
 	// get current working directory
 	TCHAR szTemp[MAX_PATH]; GetCurrentDirectory(MAX_PATH, szTemp);
 	m_szLoadingDirectory = ChopDirectory(szTemp);
-	TRACE1(_T("LoadingDirectory: \")%s\_T("\n"), m_szLoadingDirectory);
+	TRACE1("LoadingDirectory: \"%s\_T("\n"), m_szLoadingDirectory);
 
 	// Resolve the install directory.
 	//
@@ -278,13 +278,13 @@ BOOL CCedtApp::InitInstance()
 		GetModuleFileName(NULL, szExePath, MAX_PATH);
 		m_szInstallDirectory = GetFileDirectory(szExePath);
 	}
-	TRACE1(_T("InstallDirectory: \")%s\_T("\n"), m_szInstallDirectory);
+	TRACE1("InstallDirectory: \"%s\_T("\n"), m_szInstallDirectory);
 
 	// get application data directory
 	TCHAR szTmp2[MAX_PATH]; m_szAppDataDirectory = m_szInstallDirectory;
 	BOOL bResul2 = SHGetSpecialFolderPath(NULL, szTmp2, CSIDL_APPDATA, TRUE);
 	if( bResul2 ) m_szAppDataDirectory.Format(_T("%s\\Crimson Editor"), szTmp2);
-	TRACE1(_T("AppDataDirectory: \")%s\_T("\n"), m_szAppDataDirectory);
+	TRACE1("AppDataDirectory: \"%s\_T("\n"), m_szAppDataDirectory);
 
 
 	// load multi-instance flag
@@ -447,7 +447,7 @@ BOOL CCedtApp::InitInstance()
 
 	// Parse command line for standard shell commands, DDE, file open
 	if( _tcslen(m_lpCmdLine) && VerifyFilePath(m_lpCmdLine) ) {
-		TRACE1(_T("CmdLine: %s\n"), m_lpCmdLine);
+		TRACE1("CmdLine: %s\n", m_lpCmdLine);
 		OpenDocumentFile( GetLongPathName(m_lpCmdLine) );
 	} else {
 		CCmdLine cmdLine(__argc, __argv);

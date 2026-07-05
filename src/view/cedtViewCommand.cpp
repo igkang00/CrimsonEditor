@@ -254,7 +254,7 @@ BOOL CCedtView::ReplaceShellVariables(CString & szArgu, CMapStringToString & cls
 	TCHAR * pArgu = (TCHAR *)(LPCTSTR)szArgu;
 	TCHAR * pChar = pArgu;
 
-	TRACE1(_T("BEGIN ReplaceShellVariables: %s\n"), szArgu);
+	TRACE1("BEGIN ReplaceShellVariables: %s\n", szArgu);
 	while( * pChar && * pChar != '$' ) pChar++;
 
 	while( * pChar ) {
@@ -272,7 +272,7 @@ BOOL CCedtView::ReplaceShellVariables(CString & szArgu, CMapStringToString & cls
 
 		CString szVar0 = CString(pSave, (int)(pChar-pSave));
 		CString szVar1 = bEnclosed ? CString(pSave+2, (int)(pChar-pSave-3)) : CString(pSave+1, (int)(pChar-pSave-1));
-		TRACE1(_T("- Variable Found: '%s'\n"), szVar0);
+		TRACE1("- Variable Found: '%s'\n", szVar0);
 
 		CString szVar2 = szVar1, szExpn, szValu; INT nFound = -1;
 		if( (nFound = szVar1.Find('=')) >= 0 ) { szVar2 = szVar1.Left(nFound); szExpn = szVar1.Mid(nFound); }
@@ -282,10 +282,10 @@ BOOL CCedtView::ReplaceShellVariables(CString & szArgu, CMapStringToString & cls
 
 		BOOL bFound = clsVariables.Lookup( szVar2, szValu );
 		if( ! bFound ) szValu = getenv( szVar2 );
-		TRACE2(_T("- Original Value: '%s' -> '%s'\n"), szVar2, szValu);
+		TRACE2("- Original Value: '%s' -> '%s'\n", szVar2, szValu);
 
 		if( szExpn.GetLength() ) ExpandShellVariable( szValu, szExpn );
-		TRACE2(_T("- Value Expanded: '%s' -> '%s'\n"), szVar1, szValu);
+		TRACE2("- Value Expanded: '%s' -> '%s'\n", szVar1, szValu);
 
 		szArgu = szArgu.Left((int)(pSave-pArgu)) + szValu + szArgu.Mid((int)(pChar-pArgu));
 		pChar  = pArgu  = (TCHAR *)(LPCTSTR)szArgu;
@@ -293,7 +293,7 @@ BOOL CCedtView::ReplaceShellVariables(CString & szArgu, CMapStringToString & cls
 		while( * pChar && * pChar != '$' ) pChar++;
 	}
 
-	TRACE1(_T("ENDOF ReplaceShellVariables: %s\n"), szArgu);
+	TRACE1("ENDOF ReplaceShellVariables: %s\n", szArgu);
 	return TRUE;
 }
 

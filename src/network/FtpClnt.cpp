@@ -427,7 +427,7 @@ BOOL CFtpClient::WriteToControlChannel(LPCTSTR lpszString)
 	m_pControlWriteArchive->Flush();
 
 	// lpszString already contains linefeed
-	TRACE1(_T("FTP-SEND: %s"), lpszString);
+	TRACE1("FTP-SEND: %s", lpszString);
 
 	return TRUE;
 }
@@ -453,7 +453,7 @@ BOOL CFtpClient::ReadFromControlChannel()
 		szCode = szResponseMessage.Mid(0,3); m_nResponseCode = _ttoi(szCode);
 	}
 
-	TRACE1(_T("FTP-RECV: %s\n"), m_szResponseMessage);
+	TRACE1("FTP-RECV: %s\n", m_szResponseMessage);
 
 	return TRUE;
 }

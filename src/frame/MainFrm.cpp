@@ -86,13 +86,13 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if ( ! m_wndToolBar.CreateEx(this, TBSTYLE_FLAT, WS_CHILD | WS_VISIBLE | CBRS_TOP
 		 /* | CBRS_GRIPPER */ | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC) ||
 		 ! m_wndToolBar.LoadToolBar(IDR_MAINFRAME) ) {
-		TRACE0(_T("Failed to create toolbar\n"));
+		TRACE0("Failed to create toolbar\n");
 		return -1;      // fail to create
 	}
 
 	if ( ! m_wndStatusBar.Create(this) ||
 		 ! m_wndStatusBar.SetIndicators(indicators0, sizeof(indicators0)/sizeof(UINT)) ) {
-		TRACE0(_T("Failed to create status bar\n"));
+		TRACE0("Failed to create status bar\n");
 		return -1;      // fail to create
 	}
 
@@ -115,7 +115,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	// File Selector
 	if ( ! m_wndFileTab.Create(this) ) {
-		TRACE0(_T("Failed to create file tab\n"));
+		TRACE0("Failed to create file tab\n");
 		return -1;
 	}
 
@@ -126,7 +126,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	// File Window
 	if ( ! m_wndFileWindow.Create(this, CSize(200, 480), ID_FILE_WINDOW, WS_CHILD | CBRS_LEFT) ) {
-		TRACE0(_T("Failed to create file window\n"));
+		TRACE0("Failed to create file window\n");
 		return -1;
 	}
 
@@ -137,7 +137,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	// Output Window
 	if ( ! m_wndOutputWindow.Create(this, CSize(640, 100), ID_OUTPUT_WINDOW, WS_CHILD | CBRS_BOTTOM) ) {
-		TRACE0(_T("Failed to create output window\n"));
+		TRACE0("Failed to create output window\n");
 		return -1;
 	}
 
@@ -354,7 +354,7 @@ BOOL CMainFrame::PreTranslateMessage(MSG* pMsg)
 // drag and drop
 DROPEFFECT CMainFrame::OnDragEnter(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point)
 {
-	TRACE0(_T("CMainFrame::OnDragEnter\n"));
+	TRACE0("CMainFrame::OnDragEnter\n");
 
 	if( pDataObject->IsDataAvailable(CF_TEXT) ) {
 		// set drag object type
@@ -388,7 +388,7 @@ DROPEFFECT CMainFrame::OnDragEnter(COleDataObject* pDataObject, DWORD dwKeyState
 
 DROPEFFECT CMainFrame::OnDragOver(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point)
 {
-//	TRACE0(_T("CMainFrame::OnDragOver\n"));
+//	TRACE0("CMainFrame::OnDragOver\n");
 
 	if( m_nDragObjectType == DRAG_OBJECT_TEXT ) {
 		CRect rect; GetClientRect( & rect );
@@ -410,12 +410,12 @@ DROPEFFECT CMainFrame::OnDragOver(COleDataObject* pDataObject, DWORD dwKeyState,
 
 void CMainFrame::OnDragLeave()
 {
-	TRACE0(_T("CMainFrame::OnDragLeave\n"));
+	TRACE0("CMainFrame::OnDragLeave\n");
 }
 
 BOOL CMainFrame::OnDrop(COleDataObject* pDataObject, DROPEFFECT dropEffect, CPoint point)
 {
-	TRACE0(_T("CMainFrame::OnDrop\n"));
+	TRACE0("CMainFrame::OnDrop\n");
 
 	if( pDataObject->IsDataAvailable(CF_TEXT) ) {
 
