@@ -121,9 +121,46 @@ For the full source breakdown — every `.cpp` and what it does, the MFC class d
 - [x] **Inno Setup installer** — replaces the legacy NSIS installer, bundles VC++ x64 redist
 - [x] **Unit tests for the "medium" group** — `CSortStringArray`, `CMemText`, `CUndoBuffer`, `CKeywords`, `CDictionary`, `CLangSpec`, `CAnalyzedString`
 - [ ] **Unicode build** — currently MBCS-only. The Korean IME handling ([cedtViewEditCompose.cpp](src/view/cedtViewEditCompose.cpp)) and `char`/`TCHAR` assumptions across the codebase need a pass
+- [ ] **High-DPI awareness** — the app currently ships **DPI-unaware** on purpose (see *Known issues* below); making it DPI-aware requires modernizing the legacy dialogs and toolbar first
 - [ ] **GitHub Actions CI** — automatically build the four configurations and run `cedt_tests` on every push
 - [ ] **Integration tests (L2)** — exercise `CCedtDoc` and other CWinApp-dependent code without showing real windows. Requires extracting a `cedt_core` static library; see [docs/testing.md](docs/testing.md)
 - [ ] **End-to-end UI tests (L3)** — drive `cedt_*.exe` through WinAppDriver / FlaUI / PyWinAuto / AutoHotkey
+
+---
+
+## Known issues
+
+### High-DPI displays (display scaling > 100%)
+
+The app is built **DPI-unaware** on purpose — `Manifest → DPI Awareness = None`
+(`<EnableDpiAwareness>false</EnableDpiAwareness>`) in [cedt.vcxproj](cedt.vcxproj).
+At scaling factors other than 100%, Windows bitmap-scales the whole window
+uniformly: the UI stays correctly laid out but looks slightly soft. At 100% it
+is pixel-crisp.
+
+This is a deliberate workaround. The VS 2026 linker defaults to marking the app
+**System DPI-aware**, which looked crisper but **broke layout at non-100%
+scaling** because the legacy UI predates high-DPI:
+
+- **Dialogs clip.** Every dialog template uses `FONT 8, "MS Sans Serif"` — a
+  bitmap font that cannot scale to fractional DPI. Control rectangles are sized
+  in *dialog units* derived from that font, so at e.g. 150% the rendered text
+  outgrows its controls: truncated category labels and cut-off OK/Cancel/Apply
+  buttons on the Preferences dialog, clipped tab contents, etc.
+- **Toolbar shrinks.** The toolbar image list is a fixed 16×16 px bitmap with no
+  DPI scaling, so it stays physically tiny while the rest of the UI grows.
+
+**Proper fix — what it takes to re-enable DPI awareness:**
+
+1. Replace `FONT 8, "MS Sans Serif"` with a scalable UI font
+   (`FONT 9, "Segoe UI"`, or `"MS Shell Dlg 2"`) in **all** dialog templates in
+   `cedt_us.rc` / `cedt_kr.rc`, and convert plain `DIALOG` → `DIALOGEX`.
+   Re-check each template's width/height for the new font metrics.
+2. Provide DPI-scaled, multi-size **32-bit** toolbar icons chosen at runtime by
+   the display DPI (groundwork in progress on the
+   `feature/toolbar-highdpi-icons` branch).
+3. Only then switch `Manifest → DPI Awareness` back to `PerMonitorHighDPIAware`
+   (or `High DPI Aware`) and re-test every dialog at 100 / 150 / 200 %.
 
 ---
 

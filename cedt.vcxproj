@@ -78,6 +78,14 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>imm32.lib;htmlhelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <Manifest>
+      <!-- DPI Awareness = None. The legacy MFC dialogs are laid out in
+           dialog units derived from the bitmap font "MS Sans Serif", which
+           does not scale; marking the app DPI-aware clips dialogs/toolbar at
+           non-100% scaling. Stay unaware so Windows bitmap-scales the whole
+           UI uniformly. See README "Known issues / High-DPI". -->
+      <EnableDpiAwareness>false</EnableDpiAwareness>
+    </Manifest>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;_AFXDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>.;src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -120,6 +128,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>imm32.lib;htmlhelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <Manifest>
+      <!-- DPI Awareness = None (see the Release group above / README). -->
+      <EnableDpiAwareness>false</EnableDpiAwareness>
+    </Manifest>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;_AFXDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>.;src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
