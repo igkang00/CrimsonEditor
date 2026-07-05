@@ -11,7 +11,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#define REGKEY_SEARCH_DIALOG	"Search Dialog"
+#define REGKEY_SEARCH_DIALOG	_T("Search Dialog")
 
 /////////////////////////////////////////////////////////////////////////////
 // CFindDialog dialog

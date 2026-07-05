@@ -1,4 +1,4 @@
-﻿/***********************************************************************************************************/
+/***********************************************************************************************************/
 // XPTabCtrl.cpp : implementation file
 /////////////////////////////////////////////////////////////////////////////
 //	Compiler:	Visual C++, Service Pack 5, Windows NT 
@@ -37,11 +37,11 @@ static char THIS_FILE[] = __FILE__;
 
 /***********************************************************************************************************/
 // constant string definitions here (or you can put it into resource string table)
-#define IDS_UTIL_TAB            "TAB"
-#define IDS_UTIL_UXTHEME        "UxTheme.dll"
-#define IDS_UTIL_THEMEACT       "IsThemeActive"
-#define IDS_UTIL_THEMEOPN       "OpenThemeData"
-#define IDS_UTIL_THEMEBCKG      "DrawThemeBackground"
+#define IDS_UTIL_TAB            _T("TAB")
+#define IDS_UTIL_UXTHEME        _T("UxTheme.dll")
+#define IDS_UTIL_THEMEACT       _T("IsThemeActive")
+#define IDS_UTIL_THEMEOPN       _T("OpenThemeData")
+#define IDS_UTIL_THEMEBCKG      _T("DrawThemeBackground")
 /***********************************************************************************************************/
 // CXPTabCtrl
 /***********************************************************************************************************/

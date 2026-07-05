@@ -4,14 +4,14 @@
 #define __CEDT_HEADER_H_
 
 
-#define STRING_COMPANYNAME					"Crimson System"
-#define STRING_PROJECTFILEVER				"Crimson Editor 3.83"
+#define STRING_COMPANYNAME					_T("Crimson System")
+#define STRING_PROJECTFILEVER				_T("Crimson Editor 3.83")
 
-#define STRING_CONFIGURATIONVER				"Configuration 3.80 x64"
-#define STRING_COLORSETTINGSVER				"Color Settings 3.80 x64"
-#define STRING_FTPACCOUNTVER				"FTP Account 3.80 x64"
-#define STRING_USERTOOLSVER					"User Command 3.80 x64"
-#define STRING_USERMACROVER					"User Macro 3.80 x64"
+#define STRING_CONFIGURATIONVER				_T("Configuration 3.80 x64")
+#define STRING_COLORSETTINGSVER				_T("Color Settings 3.80 x64")
+#define STRING_FTPACCOUNTVER				_T("FTP Account 3.80 x64")
+#define STRING_USERTOOLSVER					_T("User Command 3.80 x64")
+#define STRING_USERMACROVER					_T("User Macro 3.80 x64")
 
 // The user config file stores the file-filter and syntax-type display
 // strings, which are language-dependent. Give each edition its own file
@@ -20,9 +20,9 @@
 // CEDT_LANG_US are defined by cedt.vcxproj (see the language-edition
 // ItemDefinitionGroup blocks).
 #if defined(CEDT_LANG_KR)
-#	define STRING_CONFFILENAME				"cedt_kr.conf"
+#	define STRING_CONFFILENAME				_T("cedt_kr.conf")
 #elif defined(CEDT_LANG_US)
-#	define STRING_CONFFILENAME				"cedt_us.conf"
+#	define STRING_CONFFILENAME				_T("cedt_us.conf")
 #else
 #	error "Neither CEDT_LANG_KR nor CEDT_LANG_US is defined — check the cedt.vcxproj configuration."
 #endif
@@ -30,47 +30,47 @@
 // Homepage and sponsor pages have per-language landing URLs, so branch
 // on the edition macro (same one that switches STRING_CONFIGURATIONVER).
 #if defined(CEDT_LANG_KR)
-#	define STRING_HOMEPAGEURL				"https://crimsoneditor.com/ko/"
-#	define STRING_SPONSORURL				"https://crimsoneditor.com/ko/sponsor/"
+#	define STRING_HOMEPAGEURL				_T("https://crimsoneditor.com/ko/")
+#	define STRING_SPONSORURL				_T("https://crimsoneditor.com/ko/sponsor/")
 #else
-#	define STRING_HOMEPAGEURL				"https://crimsoneditor.com/"
-#	define STRING_SPONSORURL				"https://crimsoneditor.com/sponsor/"
+#	define STRING_HOMEPAGEURL				_T("https://crimsoneditor.com/")
+#	define STRING_SPONSORURL				_T("https://crimsoneditor.com/sponsor/")
 #endif
 // Feedback used to be a mailto: to the developer's yahoo address —
 // switched to the GitHub issue tracker so reports are public and
 // searchable, and there is no per-edition variant.
-#define STRING_FEEDBACKURL					"https://github.com/igkang00/CrimsonEditor/issues"
+#define STRING_FEEDBACKURL					_T("https://github.com/igkang00/CrimsonEditor/issues")
 
 // Help ▸ Help Topics used to open a locally-bundled runtime/docs/*.html
 // tree, which drifted out of date every release. Point it at the docs
 // section of the live site instead — same per-language landing scheme
 // as STRING_HOMEPAGEURL.
 #if defined(CEDT_LANG_KR)
-#	define STRING_HELPDOCSURL				"https://crimsoneditor.com/ko/docs/"
+#	define STRING_HELPDOCSURL				_T("https://crimsoneditor.com/ko/docs/")
 #else
-#	define STRING_HELPDOCSURL				"https://crimsoneditor.com/docs/"
+#	define STRING_HELPDOCSURL				_T("https://crimsoneditor.com/docs/")
 #endif
 
-#define REGPATH_INSTALL_DIRECTORY			"Software\\Crimson System\\Crimson Editor"
-#define REGPATH_USEININTERNETEXPLORER		"Software\\Microsoft\\Internet Explorer\\View Source Editor\\Editor Name"
-#define REGPATH_SHELLEXTENSIONAPPROVED		"Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved"
-#define REGPATH_ADDTORIGHTMOUSEBUTTON		"*\\shellex\\ContextMenuHandlers\\Crimson Editor"
+#define REGPATH_INSTALL_DIRECTORY			_T("Software\\Crimson System\\Crimson Editor")
+#define REGPATH_USEININTERNETEXPLORER		_T("Software\\Microsoft\\Internet Explorer\\View Source Editor\\Editor Name")
+#define REGPATH_SHELLEXTENSIONAPPROVED		_T("Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved")
+#define REGPATH_ADDTORIGHTMOUSEBUTTON		_T("*\\shellex\\ContextMenuHandlers\\Crimson Editor")
 
-#define CLSID_SHELLEXT_CRIMSONEDITOR		"{475A9681-F01B-11d5-BC5E-0050CE184C9B}"
+#define CLSID_SHELLEXT_CRIMSONEDITOR		_T("{475A9681-F01B-11d5-BC5E-0050CE184C9B}")
 
-#define PROGID_SHELLEXT_CRIMSONEDITOR		"CrimsonEditor.ShellExt"
-#define PROGID_FILEASSOC_CRIMSONEDITOR		"CrimsonEditor"
+#define PROGID_SHELLEXT_CRIMSONEDITOR		_T("CrimsonEditor.ShellExt")
+#define PROGID_FILEASSOC_CRIMSONEDITOR		_T("CrimsonEditor")
 
-#define MUTEX_NAME_CMDLINE					"CrimsonEditor.CmdLine"
-#define CLIPBRD_FORMAT_PROJECT_ITEM			"CrimsonEditor.ProjectItem"
-#define CLIPBRD_FORMAT_FILETAB_ITEM			"CrimsonEditor.FileTabItem"
+#define MUTEX_NAME_CMDLINE					_T("CrimsonEditor.CmdLine")
+#define CLIPBRD_FORMAT_PROJECT_ITEM			_T("CrimsonEditor.ProjectItem")
+#define CLIPBRD_FORMAT_FILETAB_ITEM			_T("CrimsonEditor.FileTabItem")
 
-#define REGKEY_ALLOW_MULTI_INSTANCES		"Allow Multi-Instances"
-#define REGKEY_BROWSING_DIRECTORY			"Browsing Directory"
-#define REGKEY_WORKING_DIRECTORY			"Working Directory"
-#define REGKEY_LAST_WORKSPACE				"Last Workspace File"
-#define REGKEY_WINDOW_PLACEMENT				"Window Placement"
-#define REGKEY_BAR_STATE					"Bar State"
+#define REGKEY_ALLOW_MULTI_INSTANCES		_T("Allow Multi-Instances")
+#define REGKEY_BROWSING_DIRECTORY			_T("Browsing Directory")
+#define REGKEY_WORKING_DIRECTORY			_T("Working Directory")
+#define REGKEY_LAST_WORKSPACE				_T("Last Workspace File")
+#define REGKEY_WINDOW_PLACEMENT				_T("Window Placement")
+#define REGKEY_BAR_STATE					_T("Bar State")
 
 
 // USER MESSSAGE
