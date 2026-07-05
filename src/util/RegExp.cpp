@@ -162,7 +162,7 @@ TCHAR *CRegExp::reg(int paren, int *flagp)
 		// Make an OPEN node.
 		if (regnpar >= NSUBEXP)
 		{
-			TRACE1("Too many (). NSUBEXP is set to %d\n", NSUBEXP );
+			TRACE1(_T("Too many (). NSUBEXP is set to %d\n"), NSUBEXP );
 			return NULL;
 		}
 		parno = regnpar;
@@ -201,19 +201,19 @@ TCHAR *CRegExp::reg(int paren, int *flagp)
 	// Check for proper termination.
 	if (paren && *regparse++ != _T(')'))
 	{
-		TRACE0("unterminated ()\n");
+		TRACE0(_T("unterminated ()\n"));
 		return NULL;
 	}
 	else if (!paren && *regparse != _T('\0'))
 	{
 		if (*regparse == _T(')'))
 		{
-			TRACE0("unmatched ()\n");
+			TRACE0(_T("unmatched ()\n"));
 			return NULL;
 		}
 		else
 		{
-			TRACE0("internal error: junk on end\n");
+			TRACE0(_T("internal error: junk on end\n"));
 			return NULL;
 		}
 		// NOTREACHED
@@ -287,7 +287,7 @@ TCHAR *CRegExp::regpiece(int *flagp)
 
 	if (!(flags&HASWIDTH) && op != _T('?'))
 	{
-		TRACE0("*+ operand could be empty\n");
+		TRACE0(_T("*+ operand could be empty\n"));
 		return NULL;
 	}
 
@@ -300,7 +300,7 @@ TCHAR *CRegExp::regpiece(int *flagp)
 	if (op == _T('*') && (flags&SIMPLE))
 		reginsert(STAR, ret);
 	else if (op == _T('*')) {
-		// Emit x* as (x&|), where & means "self".
+		// Emit x* as (x&|), where & means _T("self").
 		reginsert(BRANCH, ret);		// Either x
 		regoptail(ret, regnode(BACK));	// and loop
 		regoptail(ret, ret);		// back
@@ -309,7 +309,7 @@ TCHAR *CRegExp::regpiece(int *flagp)
 	} else if (op == _T('+') && (flags&SIMPLE))
 		reginsert(PLUS, ret);
 	else if (op == _T('+')) {
-		// Emit x+ as x(&|), where & means "self".
+		// Emit x+ as x(&|), where & means _T("self").
 		next = regnode(BRANCH);		// Either
 		regtail(ret, next);
 		regtail(regnode(BACK), ret);	// loop back
@@ -326,7 +326,7 @@ TCHAR *CRegExp::regpiece(int *flagp)
 	regparse++;
 	if (ISREPN(*regparse))
 	{
-		TRACE0("nested *?+\n");
+		TRACE0(_T("nested *?+\n"));
 		return NULL;
 	}
 
@@ -384,7 +384,7 @@ TCHAR *CRegExp::regatom(int *flagp)
 				rangeend = (unsigned) (TCHAR)c;
 				if (range > rangeend)
 				{
-					TRACE0("invalid [] range\n");
+					TRACE0(_T("invalid [] range\n"));
 					return NULL;
 				}
 				for (range++; range <= rangeend; range++)
@@ -395,7 +395,7 @@ TCHAR *CRegExp::regatom(int *flagp)
 		regc(_T('\0'));
 		if (c != _T(']'))
 		{
-			TRACE0("unmatched []\n");
+			TRACE0(_T("unmatched []\n"));
 			return NULL;
 		}
 		*flagp |= HASWIDTH|SIMPLE;
@@ -411,19 +411,19 @@ TCHAR *CRegExp::regatom(int *flagp)
 	case _T('|'):
 	case _T(')'):
 		// supposed to be caught earlier
-		TRACE0("internal error: \\0|) unexpected\n");
+		TRACE0(_T("internal error: \\0|) unexpected\n"));
 		return NULL;
 		break;
 	case _T('?'):
 	case _T('+'):
 	case _T('*'):
-		TRACE0("?+* follows nothing\n");
+		TRACE0(_T("?+* follows nothing\n"));
 		return NULL;
 		break;
 	case _T('\\'):
 		if (*regparse == _T('\0'))
 		{
-			TRACE0("trailing \\\n");
+			TRACE0(_T("trailing \\\n"));
 			return NULL;
 		}
 		ret = regnode(EXACTLY);
@@ -439,7 +439,7 @@ TCHAR *CRegExp::regatom(int *flagp)
 		len = _tcscspn(regparse, META);
 		if (len == 0)
 		{
-			TRACE0("internal error: strcspn 0\n");
+			TRACE0(_T("internal error: strcspn 0\n"));
 			return NULL;
 		}
 		ender = *(regparse+len);
@@ -507,7 +507,7 @@ void CRegExp::regtail(TCHAR *p, TCHAR *val)
 
 void CRegExp::regoptail(TCHAR *p, TCHAR *val)
 {
-	// "Operandless" and "op != BRANCH" are synonymous in practice.
+	// _T("Operandless") and _T("op != BRANCH") are synonymous in practice.
 	if (!bEmitCode || OP(p) != BRANCH)
 		return;
 	regtail(OPERAND(p), val);
@@ -531,18 +531,18 @@ int CRegExp::RegFind(const TCHAR *str)
 	// Be paranoid.
 	if(string == NULL)
 	{
-		TRACE0("NULL argument to regexec\n");
+		TRACE0(_T("NULL argument to regexec\n"));
 		return(-1);
 	}
 
 	// Check validity of regex
 	if (!bCompiled)
 	{
-		TRACE0("No regular expression provided yet.\n");
+		TRACE0(_T("No regular expression provided yet.\n"));
 		return(-1);
 	}
 
-	// If there is a "must appear" string, look for it.
+	// If there is a _T("must appear") string, look for it.
 	if (regmust != NULL && _tcsstr(string, regmust) == NULL)
 		return(-1);
 
@@ -635,7 +635,7 @@ int	CRegExp::regtry(TCHAR *string)
 // Conceptually the strategy is simple:  check to see whether the current
 // node matches, call self recursively to see whether the rest matches,
 // and then act accordingly.  In practice we make some effort to avoid
-// recursion, in particular by going through "ordinary" nodes (that don't
+// recursion, in particular by going through _T("ordinary") nodes (that don't
 // need to know whether the rest of the match failed) by a loop instead of
 // by recursion.
 
@@ -765,16 +765,16 @@ int	CRegExp::regmatch(TCHAR *prog)
 			return(1);	// Success!
 			break;
 		default:
-			TRACE0("regexp corruption\n");
+			TRACE0(_T("regexp corruption\n"));
 			return(0);
 			break;
 		}
 	}
 
-	// We get here only if there's trouble -- normally "case END" is
+	// We get here only if there's trouble -- normally _T("case END") is
 	// the terminating point.
 
-	TRACE0("corrupted pointers\n");
+	TRACE0(_T("corrupted pointers\n"));
 	return(0);
 }
 
@@ -806,14 +806,14 @@ size_t CRegExp::regrepeat(TCHAR *node)
 		return(_tcscspn(reginput, OPERAND(node)));
 		break;
 	default:		// Oh dear.  Called inappropriately.
-		TRACE0("internal error: bad call of regrepeat\n");
+		TRACE0(_T("internal error: bad call of regrepeat\n"));
 		return(0);	// Best compromise.
 		break;
 	}
 	// NOTREACHED
 }
 
-// regnext - dig the "next" pointer out of a node
+// regnext - dig the _T("next") pointer out of a node
 
 TCHAR *CRegExp::regnext(TCHAR *p)
 {
@@ -846,7 +846,7 @@ TCHAR* CRegExp::GetReplaceString( const TCHAR* sReplaceExp )
 	{
 		if (c == _T('&'))
 			no = 0;
-		else if (c == _T('\\') && isdigit(*src))
+		else if (c == _T('\\') && _istdigit(*src))
 			no = *src++ - _T('0');
 		else
 			no = -1;
@@ -883,7 +883,7 @@ TCHAR* CRegExp::GetReplaceString( const TCHAR* sReplaceExp )
 	{
 		if (c == _T('&'))
 			no = 0;
-		else if (c == _T('\\') && isdigit(*src))
+		else if (c == _T('\\') && _istdigit(*src))
 			no = *src++ - _T('0');
 		else
 			no = -1;

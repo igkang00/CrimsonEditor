@@ -53,11 +53,11 @@ BOOL CPreferenceDialog::LoadAssocSettings()
 	DWORD dwSize = 2048; INT nCount = 0; CWaitCursor wait;
 	
 	while( ::RegEnumKeyEx(HKEY_CLASSES_ROOT, nCount, szKeyName, & dwSize, NULL, NULL, NULL, NULL) == ERROR_SUCCESS ) {
-		if( szKeyName[0] == '.' && GetRegKeyValue(HKEY_CLASSES_ROOT, szKeyName, "", szProgID) ) {
+		if( szKeyName[0] == '.' && GetRegKeyValue(HKEY_CLASSES_ROOT, szKeyName, _T(""), szProgID) ) {
 			szExtension = szKeyName; szExtension.MakeLower();
 			m_lstAssocExtensions.AddString(szExtension);
 
-			if( ! strncmp(szProgID, PROGID_FILEASSOC_CRIMSONEDITOR, strlen(PROGID_FILEASSOC_CRIMSONEDITOR)) ) {
+			if( ! _tcsncmp(szProgID, PROGID_FILEASSOC_CRIMSONEDITOR, _tcslen(PROGID_FILEASSOC_CRIMSONEDITOR)) ) {
 				m_lstAssocAssociated.AddString(szExtension);
 			}
 		}
@@ -85,14 +85,14 @@ BOOL CPreferenceDialog::SaveAssocSettings()
 void CPreferenceDialog::DispAssociationInfo(LPCTSTR lpszExtension)
 {
 	CString szProgID, szRegPath1, szRegPath2;
-	GetRegKeyValue(HKEY_CLASSES_ROOT, lpszExtension, "", szProgID);
-	szRegPath1 = szProgID + "\\Shell\\Open\\Command";
-	szRegPath2 = szProgID + "\\DefaultIcon";
+	GetRegKeyValue(HKEY_CLASSES_ROOT, lpszExtension, _T(""), szProgID);
+	szRegPath1 = szProgID + _T("\\Shell\\Open\\Command");
+	szRegPath2 = szProgID + _T("\\DefaultIcon");
 
 	CString szDescription, szProgram, szDefaultIcon;
-	GetRegKeyValue(HKEY_CLASSES_ROOT, szProgID, "", szDescription);
-	GetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath1, "", szProgram);
-	GetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath2, "", szDefaultIcon);
+	GetRegKeyValue(HKEY_CLASSES_ROOT, szProgID, _T(""), szDescription);
+	GetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath1, _T(""), szProgram);
+	GetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath2, _T(""), szDefaultIcon);
 
 	m_edtAssocDescription.SetWindowText( szDescription );
 	m_edtAssocProgram.SetWindowText( szProgram );
@@ -102,14 +102,14 @@ void CPreferenceDialog::DispAssociationInfo(LPCTSTR lpszExtension)
 void CPreferenceDialog::UpdateAssociationInfo(LPCTSTR lpszExtension)
 {
 	CString szProgID, szRegPath1, szRegPath2;
-	GetRegKeyValue(HKEY_CLASSES_ROOT, lpszExtension, "", szProgID);
-	szRegPath1 = szProgID + "\\Shell\\Open\\Command";
-	szRegPath2 = szProgID + "\\DefaultIcon";
+	GetRegKeyValue(HKEY_CLASSES_ROOT, lpszExtension, _T(""), szProgID);
+	szRegPath1 = szProgID + _T("\\Shell\\Open\\Command");
+	szRegPath2 = szProgID + _T("\\DefaultIcon");
 
 	CString szDescription, szProgram, szDefaultIcon;
-	GetRegKeyValue(HKEY_CLASSES_ROOT, szProgID, "", szDescription);
-	GetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath1, "", szProgram);
-	GetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath2, "", szDefaultIcon);
+	GetRegKeyValue(HKEY_CLASSES_ROOT, szProgID, _T(""), szDescription);
+	GetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath1, _T(""), szProgram);
+	GetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath2, _T(""), szDefaultIcon);
 
 	CString szDescription2, szProgram2, szDefaultIcon2;
 	m_edtAssocDescription.GetWindowText( szDescription2 );
@@ -117,11 +117,11 @@ void CPreferenceDialog::UpdateAssociationInfo(LPCTSTR lpszExtension)
 	m_edtAssocDefaultIcon.GetWindowText( szDefaultIcon2 );
 
 	if( szDescription.Compare( szDescription2 ) )
-		SetRegKeyValue(HKEY_CLASSES_ROOT, szProgID, "", szDescription2);
+		SetRegKeyValue(HKEY_CLASSES_ROOT, szProgID, _T(""), szDescription2);
 	if( szProgram.Compare( szProgram2 ) )
-		SetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath1, "", szProgram2);
+		SetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath1, _T(""), szProgram2);
 	if( szDefaultIcon.Compare( szDefaultIcon2 ) )
-		SetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath2, "", szDefaultIcon2);
+		SetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath2, _T(""), szDefaultIcon2);
 }
 
 void CPreferenceDialog::SetAssocExtensionsCurSel(LPCTSTR lpszExtension)
@@ -142,7 +142,7 @@ BOOL CPreferenceDialog::AssociateExtension(LPCTSTR lpszExtension)
 {
 	// find existing progID
 	BOOL bOldProgID; CString szOldProgID;
-	bOldProgID = GetRegKeyValue(HKEY_CLASSES_ROOT, lpszExtension, "", szOldProgID);
+	bOldProgID = GetRegKeyValue(HKEY_CLASSES_ROOT, lpszExtension, _T(""), szOldProgID);
 
 	// new progID
 	CString szNewProgID = PROGID_FILEASSOC_CRIMSONEDITOR;
@@ -150,31 +150,31 @@ BOOL CPreferenceDialog::AssociateExtension(LPCTSTR lpszExtension)
 
 	// get description
 	CString szDescription;
-	if( bOldProgID ) GetRegKeyValue(HKEY_CLASSES_ROOT, szOldProgID, "", szDescription);
+	if( bOldProgID ) GetRegKeyValue(HKEY_CLASSES_ROOT, szOldProgID, _T(""), szDescription);
 
 	if( ! szDescription.GetLength() ) {
 		szDescription = LPCTSTR(lpszExtension + 1);
-		szDescription.MakeUpper(); szDescription += " File";
+		szDescription.MakeUpper(); szDescription += _T(" File");
 	}
 
 	// register new progID
-	if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, szNewProgID, "", szDescription) ) return FALSE;
+	if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, szNewProgID, _T(""), szDescription) ) return FALSE;
 
 	// register existing progID to restore association
-	if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, szNewProgID, "backup", szOldProgID) ) return FALSE;
+	if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, szNewProgID, _T("backup"), szOldProgID) ) return FALSE;
 
 	// register default icon
-	CString szRegPath1 = szNewProgID + "\\DefaultIcon";
-	CString szDefaultIcon = CCedtApp::m_szInstallDirectory + "\\cedt.ico";
-	if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath1, "", szDefaultIcon) ) return FALSE;
+	CString szRegPath1 = szNewProgID + _T("\\DefaultIcon");
+	CString szDefaultIcon = CCedtApp::m_szInstallDirectory + _T("\\cedt.ico");
+	if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath1, _T(""), szDefaultIcon) ) return FALSE;
 
 	// register shell/open/command
-	CString szRegPath2 = szNewProgID + "\\shell\\open\\command";
-	CString szProgram = CCedtApp::m_szInstallDirectory + "\\cedt.exe \"%1\"";
-	if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath2, "", szProgram) ) return FALSE;
+	CString szRegPath2 = szNewProgID + _T("\\shell\\open\\command");
+	CString szProgram = CCedtApp::m_szInstallDirectory + _T("\\cedt.exe \")%1\_T("");
+	if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath2, _T(""), szProgram) ) return FALSE;
 
 	// associate extension
-	if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, lpszExtension, "", szNewProgID) ) return FALSE;
+	if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, lpszExtension, _T(""), szNewProgID) ) return FALSE;
 
 	return TRUE;
 }
@@ -188,21 +188,21 @@ BOOL CPreferenceDialog::RestoreAssociation(LPCTSTR lpszExtension)
 
 	// find old progID
 	BOOL bOldProgID; CString szOldProgID;
-	bOldProgID = GetRegKeyValue(HKEY_CLASSES_ROOT, szNewProgID, "backup", szOldProgID);
+	bOldProgID = GetRegKeyValue(HKEY_CLASSES_ROOT, szNewProgID, _T("backup"), szOldProgID);
 
 	// delete default icon
-	CString szRegPath1 = szNewProgID + "\\DefaultIcon";
+	CString szRegPath1 = szNewProgID + _T("\\DefaultIcon");
 	if( ! DeleteRegKey(HKEY_CLASSES_ROOT, szRegPath1) ) return FALSE;
 
 	// delete shell/open/command
-	CString szRegPath2 = szNewProgID + "\\shell\\open\\command";
+	CString szRegPath2 = szNewProgID + _T("\\shell\\open\\command");
 	if( ! DeleteRegKey(HKEY_CLASSES_ROOT, szRegPath2) ) return FALSE;
 
 	// delete new progID
 	if( ! DeleteRegKey(HKEY_CLASSES_ROOT, szNewProgID) ) return FALSE;
 
 	if( szOldProgID.GetLength() ) { // restore association
-		if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, lpszExtension, "", szOldProgID) ) return FALSE;
+		if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, lpszExtension, _T(""), szOldProgID) ) return FALSE;
 	} else { // delete registered extension
 		if( ! DeleteRegKey(HKEY_CLASSES_ROOT, lpszExtension) ) return FALSE;
 	}
@@ -234,7 +234,7 @@ void CPreferenceDialog::OnAssocAssociate()
 {
 	CString szExtension; m_edtAssocAssociate.GetWindowText( szExtension );
 	szExtension.TrimLeft(); szExtension.TrimRight(); szExtension.MakeLower();
-	if( szExtension[0] != '.' ) szExtension = CString(".") + szExtension;
+	if( szExtension[0] != '.' ) szExtension = CString(_T(".")) + szExtension;
 	if( szExtension.GetLength() < 2 ) return; // null extension
 
 	INT nFound = m_lstAssocAssociated.FindStringExact(-1, szExtension);
@@ -266,7 +266,7 @@ void CPreferenceDialog::OnAssocRestore()
 	m_lstAssocAssociated.DeleteString( nSelect );
 
 	CString szProgID;
-	if( ! GetRegKeyValue(HKEY_CLASSES_ROOT, szExtension, "", szProgID) ) {
+	if( ! GetRegKeyValue(HKEY_CLASSES_ROOT, szExtension, _T(""), szProgID) ) {
 		INT nFound = m_lstAssocExtensions.FindStringExact(-1, szExtension);
 		if( nFound != LB_ERR ) m_lstAssocExtensions.DeleteString( nFound );
 	}

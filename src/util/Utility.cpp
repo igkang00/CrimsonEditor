@@ -11,8 +11,8 @@ void MakeInvertCase(CString & rString)
 	INT nLen = rString.GetLength();
 	for(INT i = 0; i < nLen; i++) {
 		INT ch = rString[i];
-		if( isalpha(ch) ) {
-			if( isupper(ch) ) rString.SetAt(i, tolower(ch));
+		if( _istalpha(ch) ) {
+			if( _istupper(ch) ) rString.SetAt(i, tolower(ch));
 			else rString.SetAt(i, toupper(ch));
 		}
 	}
@@ -23,7 +23,7 @@ void MakeCapitalize(CString & rString)
 	INT nLen = rString.GetLength(); BOOL bAlpha = FALSE;
 	for(INT i = 0; i < nLen; i++) {
 		INT ch = rString[i];
-		if( isalpha(ch) ) {
+		if( _istalpha(ch) ) {
 			if( bAlpha ) rString.SetAt(i, tolower(ch));
 			else rString.SetAt(i, toupper(ch));
 			bAlpha = TRUE;
@@ -34,19 +34,19 @@ void MakeCapitalize(CString & rString)
 // find string
 INT ForwardFindString(LPCTSTR lpszString, LPCTSTR lpszSubStr, INT nFrom, BOOL bWholeWord, BOOL bMatchCase)
 {
-	INT nLen1 = (INT)strlen(lpszString); if( ! nLen1 ) return -1;
-	INT nLen2 = (INT)strlen(lpszSubStr); if( ! nLen2 ) return -1;
+	INT nLen1 = (INT)_tcslen(lpszString); if( ! nLen1 ) return -1;
+	INT nLen2 = (INT)_tcslen(lpszSubStr); if( ! nLen2 ) return -1;
 	if( nFrom < 0 ) nFrom = 0; if( nFrom > nLen1 ) return -1;
 
 	TCHAR * pString = (TCHAR *)lpszString;
 	TCHAR * pSubStr = (TCHAR *)lpszSubStr;
 	if( ! bMatchCase ) {
-		pString = new TCHAR[nLen1+1]; strcpy(pString, lpszString); _strlwr(pString);
-		pSubStr = new TCHAR[nLen2+1]; strcpy(pSubStr, lpszSubStr); _strlwr(pSubStr);
+		pString = new TCHAR[nLen1+1]; _tcscpy(pString, lpszString); _tcslwr(pString);
+		pSubStr = new TCHAR[nLen2+1]; _tcscpy(pSubStr, lpszSubStr); _tcslwr(pSubStr);
 	}
 
 	INT nFound = -1; TCHAR * pResult, * pOffset = pString + nFrom;
-	while( pOffset < pString + nLen1 && ( pResult = strstr(pOffset, pSubStr) ) ) {
+	while( pOffset < pString + nLen1 && ( pResult = _tcsstr(pOffset, pSubStr) ) ) {
 		if( bWholeWord ) {
 			UINT nBef = (pResult > pString) ? pResult[-1] : 0;
 			UINT nAft = pResult[nLen2];
@@ -66,19 +66,19 @@ INT ForwardFindString(LPCTSTR lpszString, LPCTSTR lpszSubStr, INT nFrom, BOOL bW
 
 INT ReverseFindString(LPCTSTR lpszString, LPCTSTR lpszSubStr, INT nFrom, BOOL bWholeWord, BOOL bMatchCase)
 {
-	INT nLen1 = (INT)strlen(lpszString); if( ! nLen1 ) return -1;
-	INT nLen2 = (INT)strlen(lpszSubStr); if( ! nLen2 ) return -1;
+	INT nLen1 = (INT)_tcslen(lpszString); if( ! nLen1 ) return -1;
+	INT nLen2 = (INT)_tcslen(lpszSubStr); if( ! nLen2 ) return -1;
 	if( nFrom < 0 ) nFrom = nLen1; if( nFrom > nLen1 ) return -1;
 
 	TCHAR * pString = (TCHAR *)lpszString;
 	TCHAR * pSubStr = (TCHAR *)lpszSubStr;
 	if( ! bMatchCase ) {
-		pString = new TCHAR[nLen1+1]; strcpy(pString, lpszString); _strlwr(pString);
-		pSubStr = new TCHAR[nLen2+1]; strcpy(pSubStr, lpszSubStr); _strlwr(pSubStr);
+		pString = new TCHAR[nLen1+1]; _tcscpy(pString, lpszString); _tcslwr(pString);
+		pSubStr = new TCHAR[nLen2+1]; _tcscpy(pSubStr, lpszSubStr); _tcslwr(pSubStr);
 	}
 
 	INT nFound = -1; TCHAR * pResult, * pOffset = pString;
-	while( pOffset < pString + nLen1 && ( pResult = strstr(pOffset, pSubStr) ) ) {
+	while( pOffset < pString + nLen1 && ( pResult = _tcsstr(pOffset, pSubStr) ) ) {
 		if( pResult + nLen2 > pString + nFrom ) {
 			break; // stop search if we get here...
 		} else if( bWholeWord ) {
@@ -101,8 +101,8 @@ INT ReverseFindString(LPCTSTR lpszString, LPCTSTR lpszSubStr, INT nFrom, BOOL bW
 // regular expression
 INT ForwardFindStringRegExp(LPCTSTR lpszString, LPCTSTR lpszRegExp, CRegExp & clsRegExp, INT nFrom, BOOL bWholeWord, BOOL bMatchCase)
 {
-	INT nLen1 = (INT)strlen(lpszString); // if( ! nLen1 ) return -1; -- can be zero length string
-	INT nLen2 = (INT)strlen(lpszRegExp); if( ! nLen2 ) return -1;
+	INT nLen1 = (INT)_tcslen(lpszString); // if( ! nLen1 ) return -1; -- can be zero length string
+	INT nLen2 = (INT)_tcslen(lpszRegExp); if( ! nLen2 ) return -1;
 	if( nFrom < 0 ) nFrom = 0; if( nFrom > nLen1 ) return -1;
 
 	TCHAR * pString = (TCHAR *)lpszString;
@@ -134,8 +134,8 @@ INT ForwardFindStringRegExp(LPCTSTR lpszString, LPCTSTR lpszRegExp, CRegExp & cl
 
 INT ReverseFindStringRegExp(LPCTSTR lpszString, LPCTSTR lpszRegExp, CRegExp & clsRegExp, INT nFrom, BOOL bWholeWord, BOOL bMatchCase)
 {
-	INT nLen1 = (INT)strlen(lpszString); // if( ! nLen1 ) return -1; -- can be zero length string
-	INT nLen2 = (INT)strlen(lpszRegExp); if( ! nLen2 ) return -1;
+	INT nLen1 = (INT)_tcslen(lpszString); // if( ! nLen1 ) return -1; -- can be zero length string
+	INT nLen2 = (INT)_tcslen(lpszRegExp); if( ! nLen2 ) return -1;
 	if( nFrom < 0 ) nFrom = nLen1; if( nFrom > nLen1 ) return -1;
 
 	TCHAR * pString = (TCHAR *)lpszString;
@@ -178,20 +178,20 @@ INT ReverseFindStringRegExp(LPCTSTR lpszString, LPCTSTR lpszRegExp, CRegExp & cl
 CString GetMsDosShellPath()
 {
 	TCHAR szShellPath[MAX_PATH];
-	GetEnvironmentVariable("COMSPEC", szShellPath, MAX_PATH);
+	GetEnvironmentVariable(_T("COMSPEC"), szShellPath, MAX_PATH);
 	return szShellPath;
 }
 
 CString GetDefaultBrowserPath()
 {
 	TCHAR szKey[MAX_PATH + MAX_PATH];
-	if( ! GetRegKeyValue(HKEY_CLASSES_ROOT, ".htm", "", szKey, MAX_PATH + MAX_PATH) ) return "";
+	if( ! GetRegKeyValue(HKEY_CLASSES_ROOT, _T(".htm"), _T(""), szKey, MAX_PATH + MAX_PATH) ) return _T("");
 
-	lstrcat(szKey, "\\shell\\open\\command");
-	if( ! GetRegKeyValue(HKEY_CLASSES_ROOT, szKey, "", szKey, MAX_PATH + MAX_PATH) ) return "";
+	lstrcat(szKey, _T("\\shell\\open\\command"));
+	if( ! GetRegKeyValue(HKEY_CLASSES_ROOT, szKey, _T(""), szKey, MAX_PATH + MAX_PATH) ) return _T("");
 
     TCHAR * pos;
-    pos = _tcsstr(szKey, _T("\"%1\""));
+    pos = _tcsstr(szKey, _T("\_T("%1\")"));
     if (pos == NULL) {                     // No quotes found
         pos = _tcsstr(szKey, _T("%1"));    // Check for %1, without quotes
         if (pos == NULL)                   // No parameter at all...
@@ -213,7 +213,7 @@ HINSTANCE GotoURL(LPCTSTR URL, INT nCmdShow)
 		CString szCommand = GetDefaultBrowserPath();
 
 		if( szCommand.GetLength() ) {
-			szCommand += " ";
+			szCommand += _T(" ");
 			szCommand += URL;
             hResult = (HINSTANCE)(INT_PTR) WinExec(szCommand, nCmdShow);
 		}

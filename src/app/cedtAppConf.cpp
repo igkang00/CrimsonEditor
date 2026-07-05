@@ -11,7 +11,7 @@ BOOL CCedtApp::SaveFtpAccountInfo(LPCTSTR lpszPathName)
 	ofstream fout(lpszPathName, ios::out | ios::binary);
 	if( ! fout.is_open() ) return FALSE;
 
-	INT nLength = (INT)strlen(STRING_FTPACCOUNTVER);
+	INT nLength = (INT)_tcslen(STRING_FTPACCOUNTVER);
 	fout.write((const char *)STRING_FTPACCOUNTVER, nLength);
 
 	for(INT i = 0; i < MAX_FTP_ACCOUNT; i++) {
@@ -27,8 +27,8 @@ BOOL CCedtApp::LoadFtpAccountInfo(LPCTSTR lpszPathName)
 	ifstream fin(lpszPathName, ios::in | ios::binary);
 	if( ! fin.is_open() ) return FALSE;
 
-	TCHAR szBuffer[2048]; INT nLength = (INT)strlen(STRING_FTPACCOUNTVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
-	if( strcmp(szBuffer, STRING_FTPACCOUNTVER) ) { fin.close(); return FALSE; }
+	TCHAR szBuffer[2048]; INT nLength = (INT)_tcslen(STRING_FTPACCOUNTVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
+	if( _tcscmp(szBuffer, STRING_FTPACCOUNTVER) ) { fin.close(); return FALSE; }
 
 	for(INT i = 0; i < MAX_FTP_ACCOUNT; i++) {
 		if( ! m_clsFtpAccounts[i].StreamLoad(fin) ) { fin.close(); return FALSE; }
@@ -45,7 +45,7 @@ BOOL CCedtApp::SaveUserCommands(LPCTSTR lpszPathName)
 	ofstream fout(lpszPathName, ios::out | ios::binary);
 	if( ! fout.is_open() ) return FALSE;
 
-	INT nLength = (INT)strlen(STRING_USERTOOLSVER);
+	INT nLength = (INT)_tcslen(STRING_USERTOOLSVER);
 	fout.write((const char *)STRING_USERTOOLSVER, nLength);
 
 	for(INT i = 0; i < 11; i++) {
@@ -61,8 +61,8 @@ BOOL CCedtApp::LoadUserCommands(LPCTSTR lpszPathName)
 	ifstream fin(lpszPathName, ios::in | ios::binary);
 	if( ! fin.is_open() ) return FALSE;
 
-	TCHAR szBuffer[2048]; INT nLength = (INT)strlen(STRING_USERTOOLSVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
-	if( strcmp(szBuffer, STRING_USERTOOLSVER) ) { fin.close(); return FALSE; }
+	TCHAR szBuffer[2048]; INT nLength = (INT)_tcslen(STRING_USERTOOLSVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
+	if( _tcscmp(szBuffer, STRING_USERTOOLSVER) ) { fin.close(); return FALSE; }
 
 	for(INT i = 0; i < 11; i++) {
 		if( ! CCedtView::m_clsUserCommand[i].StreamLoad(fin) ) { fin.close(); return FALSE; }
@@ -79,7 +79,7 @@ BOOL CCedtApp::SaveMacroBuffers(LPCTSTR lpszPathName)
 	ofstream fout(lpszPathName, ios::out | ios::binary);
 	if( ! fout.is_open() ) return FALSE;
 
-	INT nLength = (INT)strlen(STRING_USERMACROVER);
+	INT nLength = (INT)_tcslen(STRING_USERMACROVER);
 	fout.write((const char *)STRING_USERMACROVER, nLength);
 
 	for(INT i = 0; i < 11; i++) {
@@ -95,8 +95,8 @@ BOOL CCedtApp::LoadMacroBuffers(LPCTSTR lpszPathName)
 	ifstream fin(lpszPathName, ios::in | ios::binary);
 	if( ! fin.is_open() ) return FALSE;
 
-	TCHAR szBuffer[2048]; INT nLength = (INT)strlen(STRING_USERMACROVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
-	if( strcmp(szBuffer, STRING_USERMACROVER) ) { fin.close(); return FALSE; }
+	TCHAR szBuffer[2048]; INT nLength = (INT)_tcslen(STRING_USERMACROVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
+	if( _tcscmp(szBuffer, STRING_USERMACROVER) ) { fin.close(); return FALSE; }
 
 	for(INT i = 0; i < 11; i++) {
 		if( ! CCedtView::m_clsMacroBuffer[i].StreamLoad(fin) ) { fin.close(); return FALSE; }
@@ -294,8 +294,8 @@ BOOL CCedtApp::LoadColorScheme(LPCTSTR lpszPathName)
 	ifstream fin(lpszPathName, ios::in | ios::binary);
 	if( ! fin.is_open() ) return FALSE;
 
-	TCHAR szBuffer[2048]; INT nLength = (INT)strlen(STRING_COLORSETTINGSVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
-	if( strcmp(szBuffer, STRING_COLORSETTINGSVER) ) { fin.close(); return FALSE; }
+	TCHAR szBuffer[2048]; INT nLength = (INT)_tcslen(STRING_COLORSETTINGSVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
+	if( _tcscmp(szBuffer, STRING_COLORSETTINGSVER) ) { fin.close(); return FALSE; }
 
 	fin.read((char *)CCedtView::m_crBkgrColor, sizeof(CCedtView::m_crBkgrColor));
 	if( ! fin.good() ) { fin.close(); return FALSE; }
@@ -315,7 +315,7 @@ BOOL CCedtApp::SaveColorScheme(LPCTSTR lpszPathName)
 	ofstream fout(lpszPathName, ios::out | ios::binary);
 	if( ! fout.is_open() ) return FALSE;
 
-	INT nLength = (INT)strlen(STRING_COLORSETTINGSVER);
+	INT nLength = (INT)_tcslen(STRING_COLORSETTINGSVER);
 	fout.write((const char *)STRING_COLORSETTINGSVER, nLength);
 
 	fout.write((const char *)CCedtView::m_crBkgrColor, sizeof(CCedtView::m_crBkgrColor));
@@ -330,12 +330,12 @@ BOOL CCedtApp::SaveColorScheme(LPCTSTR lpszPathName)
 void CCedtApp::SetDefaultConfiguration()
 {
 	memset(CCedtView::m_lfScreen, 0x00, sizeof(CCedtView::m_lfScreen));
-	strcpy(CCedtView::m_lfScreen[0].lfFaceName, "Courier New");
-	strcpy(CCedtView::m_lfScreen[1].lfFaceName, "FixedSys");
-	strcpy(CCedtView::m_lfScreen[2].lfFaceName, "Verdana");
-	strcpy(CCedtView::m_lfScreen[3].lfFaceName, "Arial");
-	strcpy(CCedtView::m_lfScreen[4].lfFaceName, "Lucida Console");
-	strcpy(CCedtView::m_lfScreen[5].lfFaceName, "Terminal");
+	_tcscpy(CCedtView::m_lfScreen[0].lfFaceName, _T("Courier New"));
+	_tcscpy(CCedtView::m_lfScreen[1].lfFaceName, _T("FixedSys"));
+	_tcscpy(CCedtView::m_lfScreen[2].lfFaceName, _T("Verdana"));
+	_tcscpy(CCedtView::m_lfScreen[3].lfFaceName, _T("Arial"));
+	_tcscpy(CCedtView::m_lfScreen[4].lfFaceName, _T("Lucida Console"));
+	_tcscpy(CCedtView::m_lfScreen[5].lfFaceName, _T("Terminal"));
 	CCedtView::m_lfScreen[0].lfHeight = 100;	CCedtView::m_lfScreen[1].lfHeight = 90;
 	CCedtView::m_lfScreen[2].lfHeight = 100;	CCedtView::m_lfScreen[3].lfHeight = 100;
 	CCedtView::m_lfScreen[4].lfHeight = 100;	CCedtView::m_lfScreen[5].lfHeight = 100;
@@ -348,10 +348,10 @@ void CCedtApp::SetDefaultConfiguration()
 	CCedtView::m_nCurrentScreenFont = 0;
 
 	memset(CCedtView::m_lfPrinter, 0x00, sizeof(CCedtView::m_lfPrinter));
-	strcpy(CCedtView::m_lfPrinter[0].lfFaceName, "Courier New");
-	strcpy(CCedtView::m_lfPrinter[1].lfFaceName, "Verdana");
-	strcpy(CCedtView::m_lfPrinter[2].lfFaceName, "Arial");
-	strcpy(CCedtView::m_lfPrinter[3].lfFaceName, "Lucida Console");
+	_tcscpy(CCedtView::m_lfPrinter[0].lfFaceName, _T("Courier New"));
+	_tcscpy(CCedtView::m_lfPrinter[1].lfFaceName, _T("Verdana"));
+	_tcscpy(CCedtView::m_lfPrinter[2].lfFaceName, _T("Arial"));
+	_tcscpy(CCedtView::m_lfPrinter[3].lfFaceName, _T("Lucida Console"));
 	CCedtView::m_lfPrinter[0].lfHeight = 100;	CCedtView::m_lfPrinter[1].lfHeight = 100;
 	CCedtView::m_lfPrinter[2].lfHeight = 100;	CCedtView::m_lfPrinter[3].lfHeight = 100;
 	CCedtView::m_lfPrinter[0].lfCharSet = CCedtView::m_lfPrinter[1].lfCharSet = DEFAULT_CHARSET;
@@ -361,8 +361,8 @@ void CCedtApp::SetDefaultConfiguration()
 	CCedtView::m_nCurrentPrinterFont = 0;
 
 	memset(CCedtView::m_lfMiscel, 0x00, sizeof(CCedtView::m_lfMiscel));
-	strcpy(CCedtView::m_lfMiscel[0].lfFaceName, "Courier New");
-	strcpy(CCedtView::m_lfMiscel[1].lfFaceName, "Courier New");
+	_tcscpy(CCedtView::m_lfMiscel[0].lfFaceName, _T("Courier New"));
+	_tcscpy(CCedtView::m_lfMiscel[1].lfFaceName, _T("Courier New"));
 	CCedtView::m_lfMiscel[0].lfHeight = 100;	CCedtView::m_lfMiscel[1].lfHeight = 100;
 	CCedtView::m_lfMiscel[0].lfCharSet = CCedtView::m_lfMiscel[1].lfCharSet = DEFAULT_CHARSET;
 	CCedtView::m_lfMiscel[0].lfPitchAndFamily = CCedtView::m_lfMiscel[1].lfPitchAndFamily = 0x31;
@@ -412,12 +412,12 @@ void CCedtApp::SetDefaultConfiguration()
 	CCedtView::m_bPrintSyntaxHighlight = FALSE;
 	CCedtView::m_bPrintHeader = TRUE;
 	CCedtView::m_bPrintFooter = TRUE;
-	CCedtView::m_szHeaderFormat[0] = "$(FileName)";
-	CCedtView::m_szHeaderFormat[1] = "";
-	CCedtView::m_szHeaderFormat[2] = "$(PageNumber) / $(TotalPage)";
-	CCedtView::m_szFooterFormat[0] = "$(CurrDate)";
-	CCedtView::m_szFooterFormat[1] = "";
-	CCedtView::m_szFooterFormat[2] = "Crimson Editor";
+	CCedtView::m_szHeaderFormat[0] = _T("$(FileName)");
+	CCedtView::m_szHeaderFormat[1] = _T("");
+	CCedtView::m_szHeaderFormat[2] = _T("$(PageNumber) / $(TotalPage)");
+	CCedtView::m_szFooterFormat[0] = _T("$(CurrDate)");
+	CCedtView::m_szFooterFormat[1] = _T("");
+	CCedtView::m_szFooterFormat[2] = _T("Crimson Editor");
 
 	// document related
 	CCedtDoc::m_bConvertTabsToSpacesBeforeSaving = FALSE;
@@ -433,35 +433,35 @@ void CCedtApp::SetDefaultConfiguration()
 	CCedtDoc::m_nMakeBackupFile = BACKUP_DONT_BACKUP;
 	CCedtDoc::m_nBackupMethod = BACKUP_METHOD01;
 
-	CCedtDoc::m_szBackupExtension = "bak";
-	CCedtDoc::m_szBackupDirectory = "";
+	CCedtDoc::m_szBackupExtension = _T("bak");
+	CCedtDoc::m_szBackupDirectory = _T("");
 
 	// syntax types
 	CString szSyntaxCount; szSyntaxCount.LoadString(IDS_CONF_SYNTAX_COUNT);
-	INT nSyntaxCount = atoi(szSyntaxCount);
+	INT nSyntaxCount = _ttoi(szSyntaxCount);
 
 	for(INT i = 0; i < nSyntaxCount; i++) {
 		CString szSyntaxType; szSyntaxType.LoadString(IDS_CONF_SYNTAX_TYPE0 + i);
 		INT nFound; CString szDescription, szLangSpec, szKeywords;
 
-		nFound = szSyntaxType.Find('|'); if( nFound < 0 ) { szSyntaxType = "NULL Document|NULL.SPC|NULL.KEY"; nFound = 13; }
+		nFound = szSyntaxType.Find('|'); if( nFound < 0 ) { szSyntaxType = _T("NULL Document|NULL.SPC|NULL.KEY"); nFound = 13; }
 		szDescription = szSyntaxType.Left(nFound); szSyntaxType = szSyntaxType.Mid(nFound + 1);
-		nFound = szSyntaxType.Find('|'); if( nFound < 0 ) { szSyntaxType = "NULL.SPC|NULL.KEY", nFound = 8; }
+		nFound = szSyntaxType.Find('|'); if( nFound < 0 ) { szSyntaxType = _T("NULL.SPC|NULL.KEY"), nFound = 8; }
 		szLangSpec = szSyntaxType.Left(nFound); szKeywords = szSyntaxType.Mid(nFound + 1);
 
 		CCedtDoc::m_clsSyntaxTypes[i].AssignContents(szDescription, szLangSpec, szKeywords);
 	}
 
 	if( nSyntaxCount < 1 ) { // in case there is no syntax type
-		CString szDescription = "NULL Document";
-		CString szLangSpec = "NULL.SPC";
-		CString szKeywords = "NULL.KEY";
+		CString szDescription = _T("NULL Document");
+		CString szLangSpec = _T("NULL.SPC");
+		CString szKeywords = _T("NULL.KEY");
 		CCedtDoc::m_clsSyntaxTypes[0].AssignContents(szDescription, szLangSpec, szKeywords);
 	}
 
 	// working directory and application settings
-	CCedtApp::m_szInitialWorkingDirectory = "";
-	CCedtApp::m_szRemoteBackupDirectory = "";
+	CCedtApp::m_szInitialWorkingDirectory = _T("");
+	CCedtApp::m_szRemoteBackupDirectory = _T("");
 
 	CCedtApp::m_bCreateNewDocumentOnStartup = TRUE;
 	CCedtApp::m_bReloadWorkingFilesOnStartup = TRUE;
@@ -470,24 +470,24 @@ void CCedtApp::SetDefaultConfiguration()
 
 	// file filters
 	CString szFilterCount; szFilterCount.LoadString(IDS_CONF_FILTER_COUNT);
-	INT nFilterCount = atoi(szFilterCount);
+	INT nFilterCount = _ttoi(szFilterCount);
 
 	for(INT j = 0; j < nFilterCount; j++) {
 		CString szFileFilter; szFileFilter.LoadString(IDS_CONF_FILE_FILTER0 + j);
 		INT nFound; CString szDescription, szExtensions, szDefaultExt;
 
-		nFound = szFileFilter.Find('|'); if( nFound < 0 ) { szFileFilter = "All Files|*.*|"; nFound = 9; }
+		nFound = szFileFilter.Find('|'); if( nFound < 0 ) { szFileFilter = _T("All Files|*.*|"); nFound = 9; }
 		szDescription = szFileFilter.Left(nFound); szFileFilter = szFileFilter.Mid(nFound + 1);
-		nFound = szFileFilter.Find('|'); if( nFound < 0 ) { szFileFilter = "*.*|"; nFound = 3; }
+		nFound = szFileFilter.Find('|'); if( nFound < 0 ) { szFileFilter = _T("*.*|"); nFound = 3; }
 		szExtensions = szFileFilter.Left(nFound); szDefaultExt = szFileFilter.Mid(nFound + 1);
 
 		CCedtApp::m_clsFileFilters[j].AssignContents(szDescription, szExtensions, szDefaultExt);
 	}
 
 	if( nFilterCount < 1 ) { // in case there is no file filter
-		CString szDescription = "All Files";
-		CString szExtensions = "*.*";
-		CString szDefaultExt = "";
+		CString szDescription = _T("All Files");
+		CString szExtensions = _T("*.*");
+		CString szDefaultExt = _T("");
 		CCedtApp::m_clsFileFilters[0].AssignContents(szDescription, szExtensions, szDefaultExt);
 	}
 
@@ -503,8 +503,8 @@ BOOL CCedtApp::LoadUserConfiguration(LPCTSTR lpszPathName)
 	ifstream fin(lpszPathName, ios::in | ios::binary);
 	if( ! fin.is_open() ) return FALSE;
 
-	nLength = (INT)strlen(STRING_CONFIGURATIONVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
-	if( strcmp(szBuffer, STRING_CONFIGURATIONVER) ) { fin.close(); return FALSE; }
+	nLength = (INT)_tcslen(STRING_CONFIGURATIONVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
+	if( _tcscmp(szBuffer, STRING_CONFIGURATIONVER) ) { fin.close(); return FALSE; }
 
 	fin.read((char *)CCedtView::m_lfScreen, sizeof(CCedtView::m_lfScreen));
 	if( ! fin.good() ) { fin.close(); return FALSE; }
@@ -705,7 +705,7 @@ BOOL CCedtApp::SaveUserConfiguration(LPCTSTR lpszPathName)
 	ofstream fout(lpszPathName, ios::out | ios::binary);
 	if( ! fout.is_open() ) return FALSE;
 
-	nLength = (INT)strlen(STRING_CONFIGURATIONVER);
+	nLength = (INT)_tcslen(STRING_CONFIGURATIONVER);
 	fout.write((const char *)STRING_CONFIGURATIONVER, nLength);
 
 	fout.write((const char *)CCedtView::m_lfScreen, sizeof(CCedtView::m_lfScreen));

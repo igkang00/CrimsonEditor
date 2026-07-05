@@ -8,10 +8,10 @@
 
 BOOL CCedtView::RefreshUserCommandFilePathForMenu()
 {
-	for( INT i = 0; i < 8; i++ ) m_szUserCommandFilePath[i] = "";
+	for( INT i = 0; i < 8; i++ ) m_szUserCommandFilePath[i] = _T("");
 
 	CSortStringArray arrPathName;
-	CString szPathName = CCedtApp::m_szInstallDirectory + "\\tools\\*.tools";
+	CString szPathName = CCedtApp::m_szInstallDirectory + _T("\\tools\\*.tools");
 
 	BOOL bFound = FindAllFilePath(arrPathName, szPathName);
 	arrPathName.QuickSort();
@@ -27,14 +27,14 @@ CString CCedtView::GetCommandName(INT nCommand)
 {
 	CUserCommand & rCommand = m_clsUserCommand[nCommand];
 	if( rCommand.m_szName.GetLength() ) return rCommand.m_szName;
-	else return "- Empty -";
+	else return _T("- Empty -");
 }
 
 CString CCedtView::GetCommandHotKeyText(INT nCommand)
 {
 	CUserCommand & rCommand = m_clsUserCommand[nCommand];
 	CString szHotKeyText = rCommand.GetHotKeyText();
-	if( ! szHotKeyText.GetLength() ) szHotKeyText.Format("Ctrl+%d", nCommand % 10);
+	if( ! szHotKeyText.GetLength() ) szHotKeyText.Format(_T("Ctrl+%d"), nCommand % 10);
 	return szHotKeyText;
 }
 
@@ -93,44 +93,44 @@ BOOL CCedtView::ExecuteCommand(INT nCommand)
 	if( bUseShortFileName ) szPathName = GetShortPathName( szPathName );
 	CString szProjectPath = pApp->GetProjectPathName();
 
-	CString szLineNum; szLineNum.Format("%d", GetCurrentLineNumber());
+	CString szLineNum; szLineNum.Format(_T("%d"), GetCurrentLineNumber());
 	CString szCurrWord = GetCurrentWord();
 	if( m_bSelected ) szCurrWord = GetSelectedString();
 
 	CString szUserInput, szSelectPath1, szSelectPath2, szSelectDir1, szSelectDir2;
-	if( szArgument.Find("$(UserInput)")    >= 0 ) { if( ! AskUserInputArguments( szUserInput ) ) return FALSE; }
-	if( szArgument.Find("$(SelectPath1)")  >= 0 ) { if( ! AskUserSelectFilePath( pDoc->GetPathName(), szSelectPath1 ) ) return FALSE; }
-	if( szArgument.Find("$(SelectPath2)")  >= 0 ) { if( ! AskUserSelectFilePath( pDoc->GetPathName(), szSelectPath2 ) ) return FALSE; }
-	if( szArgument.Find("$(SelectDir1)")   >= 0 ) { if( ! AskUserSelectDirectory( pDoc->GetPathName(), szSelectDir1 ) ) return FALSE; }
-	if( szArgument.Find("$(SelectDir2)")   >= 0 ) { if( ! AskUserSelectDirectory( pDoc->GetPathName(), szSelectDir2 ) ) return FALSE; }
+	if( szArgument.Find(_T("$(UserInput)"))    >= 0 ) { if( ! AskUserInputArguments( szUserInput ) ) return FALSE; }
+	if( szArgument.Find(_T("$(SelectPath1)"))  >= 0 ) { if( ! AskUserSelectFilePath( pDoc->GetPathName(), szSelectPath1 ) ) return FALSE; }
+	if( szArgument.Find(_T("$(SelectPath2)"))  >= 0 ) { if( ! AskUserSelectFilePath( pDoc->GetPathName(), szSelectPath2 ) ) return FALSE; }
+	if( szArgument.Find(_T("$(SelectDir1)"))   >= 0 ) { if( ! AskUserSelectDirectory( pDoc->GetPathName(), szSelectDir1 ) ) return FALSE; }
+	if( szArgument.Find(_T("$(SelectDir2)"))   >= 0 ) { if( ! AskUserSelectDirectory( pDoc->GetPathName(), szSelectDir2 ) ) return FALSE; }
 
 	CMapStringToString clsVariables;
 	SetDefaultShellVariables(clsVariables, szPathName, szProjectPath, szLineNum, szCurrWord, szUserInput, szSelectPath1, szSelectPath2, szSelectDir1, szSelectDir2);
 
 	// replace shell variables
 	if( szCommand.GetLength() ) ReplaceShellVariables( szCommand, clsVariables );
-	TRACE1( "COMMAND EXECUTABLE: '%s'\n", szCommand );
+	TRACE1( _T("COMMAND EXECUTABLE: '%s'\n"), szCommand );
 
 	// replace program argument
 	if( szArgument.GetLength() ) ReplaceShellVariables( szArgument, clsVariables );
-	TRACE1( "COMMAND ARGUMENTS : '%s'\n", szArgument );
+	TRACE1( _T("COMMAND ARGUMENTS : '%s'\n"), szArgument );
 
 	// replace execute directory
 	if( szDirectory.GetLength() ) ReplaceShellVariables( szDirectory, clsVariables );
 	INT nLength = szDirectory.GetLength(); 
-	if( nLength > 0 && szDirectory[nLength-1] != '\\' ) szDirectory += "\\";
-	TRACE1( "COMMAND DIRECTORY : '%s'\n", szDirectory );
+	if( nLength > 0 && szDirectory[nLength-1] != '\\' ) szDirectory += _T("\\");
+	TRACE1( _T("COMMAND DIRECTORY : '%s'\n"), szDirectory );
 	
 	// execute command!!!
 	CString  szExtension = szCommand.Right(4);
 	BOOL bResult = FALSE;
 	
-	if( ! szExtension.CompareNoCase(".exe") || ! szExtension.CompareNoCase(".com") ||
-		! szExtension.CompareNoCase(".bat") || ! szExtension.CompareNoCase(".cmd") ) { // executable file
+	if( ! szExtension.CompareNoCase(_T(".exe")) || ! szExtension.CompareNoCase(_T(".com")) ||
+		! szExtension.CompareNoCase(_T(".bat")) || ! szExtension.CompareNoCase(_T(".cmd")) ) { // executable file
 		bResult = ExecuteExecutable( szCommand, szArgument, szDirectory, bCloseOnExit, bCaptureOutput );
-	} else if( ! szExtension.CompareNoCase(".hlp") ) { // windows help file
+	} else if( ! szExtension.CompareNoCase(_T(".hlp")) ) { // windows help file
 		bResult = ExecuteWinHelp( szCommand, szArgument );
-	} else if( ! szExtension.CompareNoCase(".chm") ) { // html help file
+	} else if( ! szExtension.CompareNoCase(_T(".chm")) ) { // html help file
 		bResult = ExecuteHtmlHelp( szCommand, szArgument );
 	}
 
@@ -185,24 +185,24 @@ BOOL CCedtView::SetDefaultShellVariables(CMapStringToString & clsVariables, LPCT
 										 LPCTSTR lpszLineNum, LPCTSTR lpszCurrWord, LPCTSTR lpszUserInput, 
 										 LPCTSTR lpszSelectPath1, LPCTSTR lpszSelectPath2, LPCTSTR lpszSelectDir1, LPCTSTR lpszSelectDir2)
 {
-	clsVariables.SetAt("FilePath", lpszPathName);
-	clsVariables.SetAt("FileDir", GetFileDirectory(lpszPathName));
-	clsVariables.SetAt("FileName", GetFileName(lpszPathName));
-	clsVariables.SetAt("FileTitle", GetFileTitle(lpszPathName));
+	clsVariables.SetAt(_T("FilePath"), lpszPathName);
+	clsVariables.SetAt(_T("FileDir"), GetFileDirectory(lpszPathName));
+	clsVariables.SetAt(_T("FileName"), GetFileName(lpszPathName));
+	clsVariables.SetAt(_T("FileTitle"), GetFileTitle(lpszPathName));
 
-	clsVariables.SetAt("ProjectPath", lpszProjectPath);
-	clsVariables.SetAt("ProjectDir", GetFileDirectory(lpszProjectPath));
-	clsVariables.SetAt("ProjectName", GetFileName(lpszProjectPath));
-	clsVariables.SetAt("ProjectTitle", GetFileTitle(lpszProjectPath));
+	clsVariables.SetAt(_T("ProjectPath"), lpszProjectPath);
+	clsVariables.SetAt(_T("ProjectDir"), GetFileDirectory(lpszProjectPath));
+	clsVariables.SetAt(_T("ProjectName"), GetFileName(lpszProjectPath));
+	clsVariables.SetAt(_T("ProjectTitle"), GetFileTitle(lpszProjectPath));
 
-	clsVariables.SetAt("LineNum", lpszLineNum);
-	clsVariables.SetAt("CurrWord", lpszCurrWord);
-	clsVariables.SetAt("UserInput", lpszUserInput);				
+	clsVariables.SetAt(_T("LineNum"), lpszLineNum);
+	clsVariables.SetAt(_T("CurrWord"), lpszCurrWord);
+	clsVariables.SetAt(_T("UserInput"), lpszUserInput);				
 
-	clsVariables.SetAt("SelectPath1", lpszSelectPath1);
-	clsVariables.SetAt("SelectPath2", lpszSelectPath2);
-	clsVariables.SetAt("SelectDir1", lpszSelectDir1);
-	clsVariables.SetAt("SelectDir2", lpszSelectDir2);
+	clsVariables.SetAt(_T("SelectPath1"), lpszSelectPath1);
+	clsVariables.SetAt(_T("SelectPath2"), lpszSelectPath2);
+	clsVariables.SetAt(_T("SelectDir1"), lpszSelectDir1);
+	clsVariables.SetAt(_T("SelectDir2"), lpszSelectDir2);
 
 	return TRUE;
 }
@@ -220,18 +220,18 @@ BOOL CCedtView::ParseProgramArguments(CString & szArgu, LPCTSTR lpszPath, LPCTST
 
 	INT nFound = -1;
 
-	while( (nFound = szArgu.Find("$(FilePath)"   )) >= 0 ) szArgu = szArgu.Left(nFound) + szPath + szArgu.Mid(nFound + 11);
-	while( (nFound = szArgu.Find("$(FileDir)"    )) >= 0 ) szArgu = szArgu.Left(nFound) + szDir  + szArgu.Mid(nFound + 10);
-	while( (nFound = szArgu.Find("$(FileName)"   )) >= 0 ) szArgu = szArgu.Left(nFound) + szName + szArgu.Mid(nFound + 11);
-	while( (nFound = szArgu.Find("$(FileTitle)"  )) >= 0 ) szArgu = szArgu.Left(nFound) + szTtle + szArgu.Mid(nFound + 12);
-	while( (nFound = szArgu.Find("$(LineNum)"    )) >= 0 ) szArgu = szArgu.Left(nFound) + szLine + szArgu.Mid(nFound + 10);
-	while( (nFound = szArgu.Find("$(CurrWord)"   )) >= 0 ) szArgu = szArgu.Left(nFound) + szWord + szArgu.Mid(nFound + 11);
+	while( (nFound = szArgu.Find(_T("$(FilePath)")   )) >= 0 ) szArgu = szArgu.Left(nFound) + szPath + szArgu.Mid(nFound + 11);
+	while( (nFound = szArgu.Find(_T("$(FileDir)")    )) >= 0 ) szArgu = szArgu.Left(nFound) + szDir  + szArgu.Mid(nFound + 10);
+	while( (nFound = szArgu.Find(_T("$(FileName)")   )) >= 0 ) szArgu = szArgu.Left(nFound) + szName + szArgu.Mid(nFound + 11);
+	while( (nFound = szArgu.Find(_T("$(FileTitle)")  )) >= 0 ) szArgu = szArgu.Left(nFound) + szTtle + szArgu.Mid(nFound + 12);
+	while( (nFound = szArgu.Find(_T("$(LineNum)")    )) >= 0 ) szArgu = szArgu.Left(nFound) + szLine + szArgu.Mid(nFound + 10);
+	while( (nFound = szArgu.Find(_T("$(CurrWord)")   )) >= 0 ) szArgu = szArgu.Left(nFound) + szWord + szArgu.Mid(nFound + 11);
 
-	while( (nFound = szArgu.Find("$(UserInput)"  )) >= 0 ) szArgu = szArgu.Left(nFound) + szUser + szArgu.Mid(nFound + 12);
-	while( (nFound = szArgu.Find("$(SelectPath1)")) >= 0 ) szArgu = szArgu.Left(nFound) + szSlP1 + szArgu.Mid(nFound + 14);
-	while( (nFound = szArgu.Find("$(SelectPath2)")) >= 0 ) szArgu = szArgu.Left(nFound) + szSlP2 + szArgu.Mid(nFound + 14);
-	while( (nFound = szArgu.Find("$(SelectDir1)" )) >= 0 ) szArgu = szArgu.Left(nFound) + szSlD1 + szArgu.Mid(nFound + 13);
-	while( (nFound = szArgu.Find("$(SelectDir2)" )) >= 0 ) szArgu = szArgu.Left(nFound) + szSlD2 + szArgu.Mid(nFound + 13);
+	while( (nFound = szArgu.Find(_T("$(UserInput)")  )) >= 0 ) szArgu = szArgu.Left(nFound) + szUser + szArgu.Mid(nFound + 12);
+	while( (nFound = szArgu.Find(_T("$(SelectPath1)"))) >= 0 ) szArgu = szArgu.Left(nFound) + szSlP1 + szArgu.Mid(nFound + 14);
+	while( (nFound = szArgu.Find(_T("$(SelectPath2)"))) >= 0 ) szArgu = szArgu.Left(nFound) + szSlP2 + szArgu.Mid(nFound + 14);
+	while( (nFound = szArgu.Find(_T("$(SelectDir1)") )) >= 0 ) szArgu = szArgu.Left(nFound) + szSlD1 + szArgu.Mid(nFound + 13);
+	while( (nFound = szArgu.Find(_T("$(SelectDir2)") )) >= 0 ) szArgu = szArgu.Left(nFound) + szSlD2 + szArgu.Mid(nFound + 13);
 
 	return TRUE;
 }
@@ -243,7 +243,7 @@ BOOL CCedtView::ParseExecuteDirectory(CString & szArgu, LPCTSTR lpszPath)
 	CString szDir = GetFileDirectory(lpszPath);
 
 	INT nFound = -1;
-	while( (nFound = szArgu.Find("$(FileDir)"    )) >= 0 ) szArgu = szArgu.Left(nFound) + szDir  + szArgu.Mid(nFound + 10);
+	while( (nFound = szArgu.Find(_T("$(FileDir)")    )) >= 0 ) szArgu = szArgu.Left(nFound) + szDir  + szArgu.Mid(nFound + 10);
 
 	return TRUE;
 }
@@ -254,7 +254,7 @@ BOOL CCedtView::ReplaceShellVariables(CString & szArgu, CMapStringToString & cls
 	TCHAR * pArgu = (TCHAR *)(LPCTSTR)szArgu;
 	TCHAR * pChar = pArgu;
 
-	TRACE1("BEGIN ReplaceShellVariables: %s\n", szArgu);
+	TRACE1(_T("BEGIN ReplaceShellVariables: %s\n"), szArgu);
 	while( * pChar && * pChar != '$' ) pChar++;
 
 	while( * pChar ) {
@@ -266,13 +266,13 @@ BOOL CCedtView::ReplaceShellVariables(CString & szArgu, CMapStringToString & cls
 
 		while( * pChar ) {
 			if( bEnclosed && * pChar == ')' ) { pChar++; break; }
-			if( ! bEnclosed && ! isalnum(* pChar) ) break;
+			if( ! bEnclosed && ! _istalnum(* pChar) ) break;
 			pChar++;
 		}
 
 		CString szVar0 = CString(pSave, (int)(pChar-pSave));
 		CString szVar1 = bEnclosed ? CString(pSave+2, (int)(pChar-pSave-3)) : CString(pSave+1, (int)(pChar-pSave-1));
-		TRACE1("- Variable Found: '%s'\n", szVar0);
+		TRACE1(_T("- Variable Found: '%s'\n"), szVar0);
 
 		CString szVar2 = szVar1, szExpn, szValu; INT nFound = -1;
 		if( (nFound = szVar1.Find('=')) >= 0 ) { szVar2 = szVar1.Left(nFound); szExpn = szVar1.Mid(nFound); }
@@ -282,10 +282,10 @@ BOOL CCedtView::ReplaceShellVariables(CString & szArgu, CMapStringToString & cls
 
 		BOOL bFound = clsVariables.Lookup( szVar2, szValu );
 		if( ! bFound ) szValu = getenv( szVar2 );
-		TRACE2("- Original Value: '%s' -> '%s'\n", szVar2, szValu);
+		TRACE2(_T("- Original Value: '%s' -> '%s'\n"), szVar2, szValu);
 
 		if( szExpn.GetLength() ) ExpandShellVariable( szValu, szExpn );
-		TRACE2("- Value Expanded: '%s' -> '%s'\n", szVar1, szValu);
+		TRACE2(_T("- Value Expanded: '%s' -> '%s'\n"), szVar1, szValu);
 
 		szArgu = szArgu.Left((int)(pSave-pArgu)) + szValu + szArgu.Mid((int)(pChar-pArgu));
 		pChar  = pArgu  = (TCHAR *)(LPCTSTR)szArgu;
@@ -293,7 +293,7 @@ BOOL CCedtView::ReplaceShellVariables(CString & szArgu, CMapStringToString & cls
 		while( * pChar && * pChar != '$' ) pChar++;
 	}
 
-	TRACE1("ENDOF ReplaceShellVariables: %s\n", szArgu);
+	TRACE1(_T("ENDOF ReplaceShellVariables: %s\n"), szArgu);
 	return TRUE;
 }
 
@@ -302,19 +302,19 @@ BOOL CCedtView::ExpandShellVariable(CString & szValue, LPCTSTR lpszExpand)
 	INT nLength = szValue.GetLength();
 
 	if( lpszExpand[0] == '=' ) { // assignment
-		INT nExpand = (INT)strlen(lpszExpand+1);
+		INT nExpand = (INT)_tcslen(lpszExpand+1);
 		if( ! nLength && nExpand ) szValue = lpszExpand + 1;
 	} else if( lpszExpand[0] == ':' ) { // substring
-		const TCHAR * pFound = strchr(lpszExpand+1, ',');
-		INT nFirst = atoi( lpszExpand+1 ); if( nFirst > nLength ) nFirst = nLength;
-		INT nCount = pFound ? atoi( pFound+1 ) : nLength-nFirst;
+		const TCHAR * pFound = _tcschr(lpszExpand+1, ',');
+		INT nFirst = _ttoi( lpszExpand+1 ); if( nFirst > nLength ) nFirst = nLength;
+		INT nCount = pFound ? _ttoi( pFound+1 ) : nLength-nFirst;
 		szValue = szValue.Mid(nFirst, nCount);
 	} else if( lpszExpand[0] == '#' ) { // beginning match delete
-		INT nExpand = (INT)strlen(lpszExpand+1);
+		INT nExpand = (INT)_tcslen(lpszExpand+1);
 		if( nExpand && szValue.Find(lpszExpand+1) == 0 )
 			szValue = szValue.Mid(nExpand);
 	} else if( lpszExpand[0] == '%' ) { // trailing match delete
-		INT nExpand = (INT)strlen(lpszExpand+1);
+		INT nExpand = (INT)_tcslen(lpszExpand+1);
 		if( nExpand && szValue.Find(lpszExpand+1) == nLength-nExpand )
 			szValue = szValue.Left(nLength-nExpand);
 	}
@@ -356,11 +356,11 @@ BOOL CCedtView::ExecuteExecutable(LPCTSTR lpszCommand, LPCTSTR lpszArgument, LPC
 	TCHAR szCommandLine[2048];
 	const size_t kCmdLineMax = sizeof(szCommandLine) / sizeof(TCHAR);
 	if( ! bCaptureOutput && ! bCloseOnExit ) {
-		CString szLauncher = CCedtApp::m_szInstallDirectory + "\\launch.exe";
+		CString szLauncher = CCedtApp::m_szInstallDirectory + _T("\\launch.exe");
 		CString szShortPath = GetShortPathName( lpszCommand );
-		_snprintf(szCommandLine, kCmdLineMax - 1, "\"%s\" %s %s", (LPCTSTR)szLauncher, (LPCTSTR)szShortPath, lpszArgument);
+		_sntprintf(szCommandLine, kCmdLineMax - 1, _T("\")%s\_T(" %s %s"), (LPCTSTR)szLauncher, (LPCTSTR)szShortPath, lpszArgument);
 	} else {
-		_snprintf(szCommandLine, kCmdLineMax - 1, "\"%s\" %s", lpszCommand, lpszArgument);
+		_sntprintf(szCommandLine, kCmdLineMax - 1, _T("\")%s\_T(" %s"), lpszCommand, lpszArgument);
 	}
 	szCommandLine[kCmdLineMax - 1] = '\0';   // _snprintf does not null-terminate on overflow
 
@@ -396,7 +396,7 @@ BOOL CCedtView::ExecuteExecutable(LPCTSTR lpszCommand, LPCTSTR lpszArgument, LPC
 	}
 
 	LPCTSTR lpCurrentDirectory = NULL;
-	if( strlen(lpszDirectory) ) lpCurrentDirectory = lpszDirectory;
+	if( _tcslen(lpszDirectory) ) lpCurrentDirectory = lpszDirectory;
 
 	PROCESS_INFORMATION pi; ZeroMemory( & pi, sizeof(pi) );
 	BOOL bResult = ::CreateProcess( NULL, szCommandLine, NULL, NULL, TRUE, 0, NULL, lpCurrentDirectory, & si, & pi);
@@ -454,7 +454,7 @@ void CCedtView::OnTimerCaptureOutput()
 
 		// copy input string to output buffer for local echo effect
 		if( COutputWindow::m_bLocalEcho && dwSave + dwWrite + 1 < kReadBufMax ) {
-			strcpy( szReadBuffer + dwSave, szWriteBuffer ); dwSave += dwWrite + 1;
+			_tcscpy( szReadBuffer + dwSave, szWriteBuffer ); dwSave += dwWrite + 1;
 		}
 
 		INT nArraySize = (INT)m_arrChildInputString.GetSize();

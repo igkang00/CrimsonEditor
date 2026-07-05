@@ -23,7 +23,7 @@ CFtpClient::CFtpClient()
 	m_bOpenRemoteFileToGet = FALSE;
 
 	m_nResponseCode = 0x00;
-	m_szResponseMessage = "";
+	m_szResponseMessage = _T("");
 }
 
 CFtpClient::~CFtpClient()
@@ -61,7 +61,7 @@ BOOL CFtpClient::LogOn(LPCTSTR lpszUser, LPCTSTR lpszPassword)
 {
 	CString szString;
 
-	szString.Format("USER %s\r\n", lpszUser);
+	szString.Format(_T("USER %s\r\n"), lpszUser);
 	if( ! WriteToControlChannel( szString ) ) return FALSE;
 
 	if( ! ReadFromControlChannel() ) return FALSE; // 331 Password required for xxx.
@@ -70,7 +70,7 @@ BOOL CFtpClient::LogOn(LPCTSTR lpszUser, LPCTSTR lpszPassword)
 	// check if this server does not need password...
 	if( m_nResponseCode == 230 ) return TRUE;
 
-	szString.Format("PASS %s\r\n", lpszPassword);
+	szString.Format(_T("PASS %s\r\n"), lpszPassword);
 	if( ! WriteToControlChannel( szString ) ) return FALSE;
 
 	if( ! ReadFromControlChannel() ) return FALSE; // 230 User xxx logged in.
@@ -81,7 +81,7 @@ BOOL CFtpClient::LogOn(LPCTSTR lpszUser, LPCTSTR lpszPassword)
 
 BOOL CFtpClient::LogOff()
 {
-	if( ! WriteToControlChannel("QUIT\r\n") ) return FALSE;
+	if( ! WriteToControlChannel(_T("QUIT\r\n")) ) return FALSE;
 
 	try {
 		if( ! ReadFromControlChannel() ) return FALSE; // 221 Goodbye.
@@ -97,7 +97,7 @@ BOOL CFtpClient::LogOff()
 
 BOOL CFtpClient::GetCurrentDirectory(CString & szDirName)
 {
-	if( ! WriteToControlChannel("PWD\r\n") ) return FALSE;
+	if( ! WriteToControlChannel(_T("PWD\r\n")) ) return FALSE;
 
 	if( ! ReadFromControlChannel() ) return FALSE;
 	if( m_nResponseCode < 200 || m_nResponseCode >= 300 ) return FALSE;
@@ -111,7 +111,7 @@ BOOL CFtpClient::GetCurrentDirectory(CString & szDirName)
 
 BOOL CFtpClient::SetCurrentDirectory(LPCTSTR lpszDirName)
 {
-	CString szMessage; szMessage.Format("CWD %s\r\n", lpszDirName);
+	CString szMessage; szMessage.Format(_T("CWD %s\r\n"), lpszDirName);
 	if( ! WriteToControlChannel(szMessage) ) return FALSE;
 
 	if( ! ReadFromControlChannel() ) return FALSE;
@@ -122,7 +122,7 @@ BOOL CFtpClient::SetCurrentDirectory(LPCTSTR lpszDirName)
 
 BOOL CFtpClient::SendCommand(LPCTSTR lpszCommand)
 {
-	CString szMessage; szMessage.Format("%s\r\n", lpszCommand);
+	CString szMessage; szMessage.Format(_T("%s\r\n"), lpszCommand);
 	if( ! WriteToControlChannel(szMessage) ) return FALSE;
 
 	if( ! ReadFromControlChannel() ) return FALSE;
@@ -135,7 +135,7 @@ BOOL CFtpClient::SetFileTransferType(BOOL bBinary)
 {
 	CString szMessage;
 
-	szMessage.Format(bBinary ? "TYPE I\r\n" : "TYPE A\r\n");
+	szMessage.Format(bBinary ? _T("TYPE I\r\n") : _T("TYPE A\r\n"));
 	if( ! WriteToControlChannel(szMessage) ) return FALSE;
 	if( ! ReadFromControlChannel() ) return FALSE; // 200 Type set to I
 	if( m_nResponseCode < 200 || m_nResponseCode >= 300 ) return FALSE;
@@ -147,12 +147,12 @@ BOOL CFtpClient::GetFileSize(LPCTSTR lpszRemoteFile, DWORD & dwFileSize)
 {
 	CString szMessage;
 
-	szMessage.Format("SIZE %s\r\n", lpszRemoteFile);
+	szMessage.Format(_T("SIZE %s\r\n"), lpszRemoteFile);
 	if( ! WriteToControlChannel(szMessage) ) return FALSE;
 	if( ! ReadFromControlChannel() ) return FALSE;
 	if( m_nResponseCode < 200 || m_nResponseCode >= 300 ) return FALSE;
 
-	dwFileSize = atoi(m_szResponseMessage.Mid(4));
+	dwFileSize = _ttoi(m_szResponseMessage.Mid(4));
 
 	return TRUE;
 }
@@ -161,12 +161,12 @@ BOOL CFtpClient::RenameFile(LPCTSTR lpszExisting, LPCTSTR lpszNewName)
 {
 	CString szMessage;
 
-	szMessage.Format("RNFR %s\r\n", lpszExisting);
+	szMessage.Format(_T("RNFR %s\r\n"), lpszExisting);
 	if( ! WriteToControlChannel(szMessage) ) return FALSE;
 	if( ! ReadFromControlChannel() ) return FALSE; // 350 File exists, ready for destination name.
 	if( m_nResponseCode < 300 || m_nResponseCode >= 400 ) return FALSE;
 
-	szMessage.Format("RNTO %s\r\n", lpszNewName);
+	szMessage.Format(_T("RNTO %s\r\n"), lpszNewName);
 	if( ! WriteToControlChannel(szMessage) ) return FALSE;
 	if( ! ReadFromControlChannel() ) return FALSE; // 250 RNTO command successful.
 	if( m_nResponseCode < 200 || m_nResponseCode >= 300 ) return FALSE;
@@ -176,8 +176,8 @@ BOOL CFtpClient::RenameFile(LPCTSTR lpszExisting, LPCTSTR lpszNewName)
 
 BOOL CFtpClient::ListDirectory(CStringArray & arrList, LPCTSTR lpszFilter, BOOL bPassive)
 {
-	CString szCommand = "LIST";
-	if( lpszFilter ) szCommand.Format("LIST %s", lpszFilter);
+	CString szCommand = _T("LIST");
+	if( lpszFilter ) szCommand.Format(_T("LIST %s"), lpszFilter);
 
 	if( ! EstablishDataChannel(bPassive, szCommand) ) return FALSE;
 
@@ -244,8 +244,8 @@ BOOL CFtpClient::OpenFile(BOOL bGet, LPCTSTR lpszRemoteFile, BOOL bBinary, BOOL 
 	CString szCommand;
 	if( m_bIsRemoteFileOpen ) return FALSE; // remote file is open already
 
-	if( bGet ) szCommand.Format("RETR %s", lpszRemoteFile);
-	else szCommand.Format("STOR %s", lpszRemoteFile);
+	if( bGet ) szCommand.Format(_T("RETR %s"), lpszRemoteFile);
+	else szCommand.Format(_T("STOR %s"), lpszRemoteFile);
 
 	// type set to binary
 	if( ! SetFileTransferType(bBinary) ) return FALSE;
@@ -288,26 +288,26 @@ BOOL CFtpClient::WriteFile(VOID * lpBuf, UINT nMax)
 BOOL CFtpClient::SetSocketErrorMessage(INT nErrorCode, LPCTSTR lpszDefaultErrorMessage)
 {
 	switch( nErrorCode ) {
-	case WSANOTINITIALISED: m_szResponseMessage = "A successful AfxSocketInit must occur before using this API."; break;
-	case WSAENETDOWN: m_szResponseMessage = "The Windows Sockets implementation detected that the network subsystem failed."; break;
-	case WSAEADDRINUSE: m_szResponseMessage = "The specified address is already in use."; break;
-	case WSAEINPROGRESS: m_szResponseMessage = "A blocking Windows Sockets call is in progress."; break;
-	case WSAEADDRNOTAVAIL: m_szResponseMessage = "The specified address is not available from the local machine."; break;
-	case WSAEAFNOSUPPORT: m_szResponseMessage = "Addresses in the specified family cannot be used with this socket."; break;
-	case WSAECONNREFUSED: m_szResponseMessage = "The attempt to connect was rejected."; break;
-	case WSAEDESTADDRREQ: m_szResponseMessage = "A destination address is required."; break;
-	case WSAEFAULT: m_szResponseMessage = "The nSockAddrLen argument is incorrect."; break;
-	case WSAEINVAL: m_szResponseMessage = "Invalid host address."; break;
-	case WSAEISCONN: m_szResponseMessage = "The socket is already connected."; break;
-	case WSAEMFILE: m_szResponseMessage = "No more file descriptors are available."; break;
-	case WSAENETUNREACH: m_szResponseMessage = "The network cannot be reached from this host at this time."; break;
-	case WSAENOBUFS: m_szResponseMessage = "No buffer space is available. The socket cannot be connected."; break;
-	case WSAENOTSOCK: m_szResponseMessage = "The descriptor is not a socket."; break;
-	case WSAETIMEDOUT: m_szResponseMessage = "Attempt to connect timed out without establishing a connection."; break;
-	case WSAEWOULDBLOCK: m_szResponseMessage = "The socket is marked as nonblocking and the connection cannot be completed immediately."; break;
-	case WSAEPROTONOSUPPORT: m_szResponseMessage = "The specified port is not supported."; break;
-	case WSAEPROTOTYPE: m_szResponseMessage = "The specified port is the wrong type for this socket."; break;
-	case WSAESOCKTNOSUPPORT: m_szResponseMessage = "The specified socket type is not supported in this address family."; break;
+	case WSANOTINITIALISED: m_szResponseMessage = _T("A successful AfxSocketInit must occur before using this API."); break;
+	case WSAENETDOWN: m_szResponseMessage = _T("The Windows Sockets implementation detected that the network subsystem failed."); break;
+	case WSAEADDRINUSE: m_szResponseMessage = _T("The specified address is already in use."); break;
+	case WSAEINPROGRESS: m_szResponseMessage = _T("A blocking Windows Sockets call is in progress."); break;
+	case WSAEADDRNOTAVAIL: m_szResponseMessage = _T("The specified address is not available from the local machine."); break;
+	case WSAEAFNOSUPPORT: m_szResponseMessage = _T("Addresses in the specified family cannot be used with this socket."); break;
+	case WSAECONNREFUSED: m_szResponseMessage = _T("The attempt to connect was rejected."); break;
+	case WSAEDESTADDRREQ: m_szResponseMessage = _T("A destination address is required."); break;
+	case WSAEFAULT: m_szResponseMessage = _T("The nSockAddrLen argument is incorrect."); break;
+	case WSAEINVAL: m_szResponseMessage = _T("Invalid host address."); break;
+	case WSAEISCONN: m_szResponseMessage = _T("The socket is already connected."); break;
+	case WSAEMFILE: m_szResponseMessage = _T("No more file descriptors are available."); break;
+	case WSAENETUNREACH: m_szResponseMessage = _T("The network cannot be reached from this host at this time."); break;
+	case WSAENOBUFS: m_szResponseMessage = _T("No buffer space is available. The socket cannot be connected."); break;
+	case WSAENOTSOCK: m_szResponseMessage = _T("The descriptor is not a socket."); break;
+	case WSAETIMEDOUT: m_szResponseMessage = _T("Attempt to connect timed out without establishing a connection."); break;
+	case WSAEWOULDBLOCK: m_szResponseMessage = _T("The socket is marked as nonblocking and the connection cannot be completed immediately."); break;
+	case WSAEPROTONOSUPPORT: m_szResponseMessage = _T("The specified port is not supported."); break;
+	case WSAEPROTOTYPE: m_szResponseMessage = _T("The specified port is the wrong type for this socket."); break;
+	case WSAESOCKTNOSUPPORT: m_szResponseMessage = _T("The specified socket type is not supported in this address family."); break;
 	default: m_szResponseMessage = lpszDefaultErrorMessage; break;
 	}
 	return TRUE;
@@ -323,13 +323,13 @@ BOOL CFtpClient::EstablishDataChannel(BOOL bPassive, LPCTSTR lpszCommand)
 		if( ! ListenServer(szAddress, nPortNum) ) return FALSE;
 
 		if( ! StringFromAddress( szString, szAddress, nPortNum ) ) return FALSE;
-		szMessage.Format("PORT %s\r\n", szString);
+		szMessage.Format(_T("PORT %s\r\n"), szString);
 		if( ! WriteToControlChannel(szMessage) ) return FALSE;
 
 		if( ! ReadFromControlChannel() ) return FALSE; // 200 PORT command successful.
 		if( m_nResponseCode < 200 || m_nResponseCode >= 300 ) return FALSE;
 
-		szMessage.Format("%s\r\n", lpszCommand);
+		szMessage.Format(_T("%s\r\n"), lpszCommand);
 		if( ! WriteToControlChannel(szMessage) ) return FALSE;
 
 		if( ! ReadFromControlChannel() ) return FALSE; // 150 Opening ASCII mode data connection for file list.
@@ -339,7 +339,7 @@ BOOL CFtpClient::EstablishDataChannel(BOOL bPassive, LPCTSTR lpszCommand)
 
 	} else { // passive mode
 
-		if( ! WriteToControlChannel("PASV\r\n") ) return FALSE;
+		if( ! WriteToControlChannel(_T("PASV\r\n")) ) return FALSE;
 
 		if( ! ReadFromControlChannel() ) return FALSE; // 227 Entering Passive Mode (xxx,xxx,xxx,xxx,xxx,xxx).
 		if( m_nResponseCode < 200 || m_nResponseCode >= 300 ) return FALSE;
@@ -348,7 +348,7 @@ BOOL CFtpClient::EstablishDataChannel(BOOL bPassive, LPCTSTR lpszCommand)
 		INT j = m_szResponseMessage.Find(')'); if( j < 0 ) return FALSE;
 		szString = m_szResponseMessage.Mid(i+1, (j-i)-1);
 
-		szMessage.Format("%s\r\n", lpszCommand);
+		szMessage.Format(_T("%s\r\n"), lpszCommand);
 		if( ! WriteToControlChannel(szMessage) ) return FALSE;
 
 		if( ! AddressFromString(szAddress, nPortNum, szString) ) return FALSE;
@@ -398,7 +398,7 @@ BOOL CFtpClient::StringFromAddress(CString & rString, LPCTSTR lpszAddress, INT n
 
 	INT i, len = szAddress.GetLength();
 	for( i = 0; i < len; i++ ) if( szAddress.GetAt(i) == '.' ) szAddress.SetAt(i, ',');
-	rString.Format("%s,%d,%d", szAddress, nPortNum / 256, nPortNum % 256);
+	rString.Format(_T("%s,%d,%d"), szAddress, nPortNum / 256, nPortNum % 256);
 
 	return TRUE;
 }
@@ -407,11 +407,11 @@ BOOL CFtpClient::AddressFromString(CString & rAddress, INT & rPortNum, LPCTSTR l
 {
 	INT i; CString szString = lpszString;
 	i = szString.ReverseFind(',');
-	rPortNum = atoi( szString.Mid(i+1) );
+	rPortNum = _ttoi( szString.Mid(i+1) );
 
 	szString = szString.Left(i);
 	i = szString.ReverseFind(',');
-	rPortNum += 256 * atoi( szString.Mid(i+1) );
+	rPortNum += 256 * _ttoi( szString.Mid(i+1) );
 
 	rAddress = szString.Left(i); INT len = rAddress.GetLength();
 	for( i = 0; i < len; i++ ) if( rAddress.GetAt(i) == ',' ) rAddress.SetAt(i, '.');
@@ -427,7 +427,7 @@ BOOL CFtpClient::WriteToControlChannel(LPCTSTR lpszString)
 	m_pControlWriteArchive->Flush();
 
 	// lpszString already contains linefeed
-	TRACE1("FTP-SEND: %s", lpszString);
+	TRACE1(_T("FTP-SEND: %s"), lpszString);
 
 	return TRUE;
 }
@@ -442,18 +442,18 @@ BOOL CFtpClient::ReadFromControlChannel()
 	// previous lines do not. The three digits form a code.
 	if( ! m_pControlReadArchive->ReadString(szResponseMessage) ) return FALSE;
 	m_szResponseMessage = szResponseMessage; 
-	szCode = szResponseMessage.Mid(0,3); m_nResponseCode = atoi(szCode);
+	szCode = szResponseMessage.Mid(0,3); m_nResponseCode = _ttoi(szCode);
 
 	// Codes between 100 and 199 indicate marks;
 	// codes between 200 and 399 indicate acceptance;
 	// codes between 400 and 599 indicate rejection.
-	while( szResponseMessage[3] != ' ' || szCode.Compare("100") < 0 || szCode.Compare("999") > 0 ) {
+	while( szResponseMessage[3] != ' ' || szCode.Compare(_T("100")) < 0 || szCode.Compare(_T("999")) > 0 ) {
 		if( ! m_pControlReadArchive->ReadString(szResponseMessage) ) return FALSE;
-		m_szResponseMessage += CString("\n") + szResponseMessage;
-		szCode = szResponseMessage.Mid(0,3); m_nResponseCode = atoi(szCode);
+		m_szResponseMessage += CString(_T("\n")) + szResponseMessage;
+		szCode = szResponseMessage.Mid(0,3); m_nResponseCode = _ttoi(szCode);
 	}
 
-	TRACE1("FTP-RECV: %s\n", m_szResponseMessage);
+	TRACE1(_T("FTP-RECV: %s\n"), m_szResponseMessage);
 
 	return TRUE;
 }
@@ -481,11 +481,11 @@ BOOL CFtpClient::OpenControlChannel(LPCTSTR lpszServer, INT nPortNum)
 	if( ! (m_pControlSocket = new CSocket) ) return FALSE;
 
 	if( ! m_pControlSocket->Create() ) {
-		SetSocketErrorMessage( m_pControlSocket->GetLastError(), "An error occured in creating socket object." );
+		SetSocketErrorMessage( m_pControlSocket->GetLastError(), _T("An error occured in creating socket object.") );
 		return FALSE;
 	}
 	if( ! m_pControlSocket->Connect(lpszServer, nPortNum) ) {
-		SetSocketErrorMessage( m_pControlSocket->GetLastError(), "An error occured in connecting control channel." );
+		SetSocketErrorMessage( m_pControlSocket->GetLastError(), _T("An error occured in connecting control channel.") );
 		return FALSE;
 	}
 

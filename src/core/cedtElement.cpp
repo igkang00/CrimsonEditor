@@ -21,52 +21,52 @@ static WORD _lword_temp, _hword_temp;
 
 
 CString ENCODING_TYPE_DESCRIPTION_FULL[] = {
-	/* ENCODING_TYPE_UNKNOWN */			"Unknown Encoding",
-	/* ENCODING_TYPE_ASCII */			"ASCII Encoding",
-	/* ENCODING_TYPE_UNICODE_LE */		"Unicode Encoding (Little Endian)",
-	/* ENCODING_TYPE_UNICODE_BE */		"Unicode Encoding (Big Endian)",
-	/* ENCODING_TYPE_UTF8_WBOM */		"UTF-8 Encoding (with BOM)",
-	/* ENDOCING_TYPE_UTF8_XBOM */		"UTF-8 Encoding (w/o BOM)",
+	/* ENCODING_TYPE_UNKNOWN */			_T("Unknown Encoding"),
+	/* ENCODING_TYPE_ASCII */			_T("ASCII Encoding"),
+	/* ENCODING_TYPE_UNICODE_LE */		_T("Unicode Encoding (Little Endian)"),
+	/* ENCODING_TYPE_UNICODE_BE */		_T("Unicode Encoding (Big Endian)"),
+	/* ENCODING_TYPE_UTF8_WBOM */		_T("UTF-8 Encoding (with BOM)"),
+	/* ENDOCING_TYPE_UTF8_XBOM */		_T("UTF-8 Encoding (w/o BOM)"),
 };
 
 CString ENCODING_TYPE_DESCRIPTION_SHORT[] = {
-	/* ENCODING_TYPE_UNKNOWN */			"N.A.",
-	/* ENCODING_TYPE_ASCII */			"ASCII",
-	/* ENCODING_TYPE_UNICODE_LE */		"Unicode",
-	/* ENCODING_TYPE_UNICODE_BE */		"Unicode",
-	/* ENCODING_TYPE_UTF8_WBOM */		"UTF-8",
-	/* ENCODING_TYPE_UTF8_XBOM */		"UTF-8",
+	/* ENCODING_TYPE_UNKNOWN */			_T("N.A."),
+	/* ENCODING_TYPE_ASCII */			_T("ASCII"),
+	/* ENCODING_TYPE_UNICODE_LE */		_T("Unicode"),
+	/* ENCODING_TYPE_UNICODE_BE */		_T("Unicode"),
+	/* ENCODING_TYPE_UTF8_WBOM */		_T("UTF-8"),
+	/* ENCODING_TYPE_UTF8_XBOM */		_T("UTF-8"),
 };
 
 CString FILE_FORMAT_DESCRIPTION_FULL[] = {
-	/* FILE_FORMAT_UNKNOWN */			"Unknown Format",
-	/* FILE_FORMAT_DOS     */			"DOS Format",
-	/* FILE_FORMAT_UNIX    */			"UNIX Format",
-	/* FILE_FORMAT_MAC     */			"MAC Format",
+	/* FILE_FORMAT_UNKNOWN */			_T("Unknown Format"),
+	/* FILE_FORMAT_DOS     */			_T("DOS Format"),
+	/* FILE_FORMAT_UNIX    */			_T("UNIX Format"),
+	/* FILE_FORMAT_MAC     */			_T("MAC Format"),
 };
 
 CString FILE_FORMAT_DESCRIPTION_SHORT[] = {
-	/* FILE_FORMAT_UNKNOWN */			"N.A.",
-	/* FILE_FORMAT_DOS     */			"DOS",
-	/* FILE_FORMAT_UNIX    */			"UNIX",
-	/* FILE_FORMAT_MAC     */			"MAC",
+	/* FILE_FORMAT_UNKNOWN */			_T("N.A."),
+	/* FILE_FORMAT_DOS     */			_T("DOS"),
+	/* FILE_FORMAT_UNIX    */			_T("UNIX"),
+	/* FILE_FORMAT_MAC     */			_T("MAC"),
 };
 
 
 static UCHAR _GetRangeType1(LPCTSTR lpszRange)
 {
-	if     ( ! _strnicmp(lpszRange, "GLOBAL", 6) ) return RT_GLOBAL;
-	else if( ! _strnicmp(lpszRange, "RANGE1", 6) ) return RT_RANGE1;
-	else if( ! _strnicmp(lpszRange, "RANGE2", 6) ) return RT_RANGE2;
-	else if( ! _strnicmp(lpszRange, "R1||R2", 6) ) return RT_R1ORR2;
+	if     ( ! _tcsnicmp(lpszRange, _T("GLOBAL"), 6) ) return RT_GLOBAL;
+	else if( ! _tcsnicmp(lpszRange, _T("RANGE1"), 6) ) return RT_RANGE1;
+	else if( ! _tcsnicmp(lpszRange, _T("RANGE2"), 6) ) return RT_RANGE2;
+	else if( ! _tcsnicmp(lpszRange, _T("R1||R2"), 6) ) return RT_R1ORR2;
 	return RT_GLOBAL;
 }
 
 static UCHAR _GetRangeType2(LPCTSTR lpszRange)
 {
-	if     ( ! _strnicmp(lpszRange, "GLOBAL", 6) ) return RT_GLOBAL;
-	else if( ! _strnicmp(lpszRange, "RANGE1", 6) ) return RT_RANGE1;
-	else if( ! _strnicmp(lpszRange, "RANGE2", 6) ) return RT_RANGE2;
+	if     ( ! _tcsnicmp(lpszRange, _T("GLOBAL"), 6) ) return RT_GLOBAL;
+	else if( ! _tcsnicmp(lpszRange, _T("RANGE1"), 6) ) return RT_RANGE1;
+	else if( ! _tcsnicmp(lpszRange, _T("RANGE2"), 6) ) return RT_RANGE2;
 	return RT_GLOBAL;
 }
 
@@ -87,7 +87,7 @@ BOOL DetectEncodingTypeAndFileFormat(LPCTSTR lpszPathName, UINT & nEncodingType,
 
 		DetectEncodingType(szBuffer, nCount, nEncodingType);
 		DetectFileFormat(szBuffer, nCount, nFileFormat);
-		TRACE2("DetectEncodingTypeAndFileFormat: %s, %s\n", ENCODING_TYPE_DESCRIPTION_FULL[nEncodingType], FILE_FORMAT_DESCRIPTION_FULL[nFileFormat]);
+		TRACE2(_T("DetectEncodingTypeAndFileFormat: %s, %s\n"), ENCODING_TYPE_DESCRIPTION_FULL[nEncodingType], FILE_FORMAT_DESCRIPTION_FULL[nFileFormat]);
 
 		return TRUE;
 
@@ -196,9 +196,9 @@ void CLangSpec::ResetContents()
 	m_bCaseSensitive[0] = m_bCaseSensitive[1] = m_bCaseSensitive[2] = TRUE; 
 
 	m_bVariableHighlightInString = FALSE;
-	m_szDelimiters = "(){}[]<>+-*/%=\"'~!@#$^&|\\?:;,."; // Omited '_' from default delimiters 2004.08.08
-	m_szHexaDecimalMark = m_szKeywordPrefix = m_szVariablePrefix = "";
-	m_szVariableOptionallyEnclosedBy = m_szSpecialVariableChars = "";
+	m_szDelimiters = _T("(){}[]<>+-*/%=\")'~!@#$^&|\\?:;,."; // Omited '_' from default delimiters 2004.08.08
+	m_szHexaDecimalMark = m_szKeywordPrefix = m_szVariablePrefix = _T("");
+	m_szVariableOptionallyEnclosedBy = m_szSpecialVariableChars = _T("");
 	m_chVariableQuotation = 0x00;
 
 	m_bMultiLineStringConstant = FALSE;
@@ -206,23 +206,23 @@ void CLangSpec::ResetContents()
 	m_chQuotationMark1 = m_chQuotationMark2 = m_chQuotationMark3 = 0x00;
 	m_ucMultiLineQuotationMarkRange = RT_GLOBAL;
 	m_ucQuotationMark1Range = m_ucQuotationMark2Range = m_ucQuotationMark3Range = RT_GLOBAL;
-	m_szHereDocument = "";
+	m_szHereDocument = _T("");
 
-	m_szLineComment1OnFirstPosition = m_szLineComment2OnFirstPosition = "";
-	m_szLineComment1 = m_szLineComment2 = "";
+	m_szLineComment1OnFirstPosition = m_szLineComment2OnFirstPosition = _T("");
+	m_szLineComment1 = m_szLineComment2 = _T("");
 	m_ucLineComment1Range = m_ucLineComment2Range = RT_GLOBAL;
 
-	m_szBlockComment1On = m_szBlockComment1Off = "";
-	m_szBlockComment2On = m_szBlockComment2Off = "";
+	m_szBlockComment1On = m_szBlockComment1Off = _T("");
+	m_szBlockComment2On = m_szBlockComment2Off = _T("");
 	m_ucBlockComment1Range = m_ucBlockComment2Range = RT_GLOBAL;
 
-	m_szShadowOn = m_szShadowOff = "";
-	m_szHighlightOn = m_szHighlightOff = "";
-	m_szRange1Beg = m_szRange1End = "";
-	m_szRange2Beg = m_szRange2End = "";
+	m_szShadowOn = m_szShadowOff = _T("");
+	m_szHighlightOn = m_szHighlightOff = _T("");
+	m_szRange1Beg = m_szRange1End = _T("");
+	m_szRange2Beg = m_szRange2End = _T("");
 
 	m_chIndentationOn = m_chIndentationOff = 0x00;
-	m_szPairs1 = m_szPairs2 = m_szPairs3 = "";
+	m_szPairs1 = m_szPairs2 = m_szPairs3 = _T("");
 }
 
 BOOL CLangSpec::FileLoad(LPCTSTR lpszPathName) 
@@ -237,72 +237,72 @@ BOOL CLangSpec::FileLoad(LPCTSTR lpszPathName)
 		fin.getline(szLine, 4096);
 		if( szLine[0] != '$' ) continue;
 
-		TCHAR * ptr1 = strtok(szLine, "=");
-		TCHAR * ptr2 = strtok(NULL, "\n");
+		TCHAR * ptr1 = _tcstok(szLine, _T("="));
+		TCHAR * ptr2 = _tcstok(NULL, _T("\n"));
 
-		if     ( ptr2 && ! _stricmp(ptr1, "$CASESENSITIVE") ) { m_bCaseSensitive[0] = m_bCaseSensitive[1] = m_bCaseSensitive[2] = (ptr2[0] == 'Y' || ptr2[0] == 'y') ? TRUE : FALSE; }
-		else if( ptr2 && ! _stricmp(ptr1, "$CASESENSITIVEINGLOBAL") ) { m_bCaseSensitive[0] = (ptr2[0] == 'Y' || ptr2[0] == 'y') ? TRUE : FALSE; }
-		else if( ptr2 && ! _stricmp(ptr1, "$CASESENSITIVEINRANGE1") ) { m_bCaseSensitive[1] = (ptr2[0] == 'Y' || ptr2[0] == 'y') ? TRUE : FALSE; }
-		else if( ptr2 && ! _stricmp(ptr1, "$CASESENSITIVEINRANGE2") ) { m_bCaseSensitive[2] = (ptr2[0] == 'Y' || ptr2[0] == 'y') ? TRUE : FALSE; }
+		if     ( ptr2 && ! _tcsicmp(ptr1, _T("$CASESENSITIVE")) ) { m_bCaseSensitive[0] = m_bCaseSensitive[1] = m_bCaseSensitive[2] = (ptr2[0] == 'Y' || ptr2[0] == 'y') ? TRUE : FALSE; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$CASESENSITIVEINGLOBAL")) ) { m_bCaseSensitive[0] = (ptr2[0] == 'Y' || ptr2[0] == 'y') ? TRUE : FALSE; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$CASESENSITIVEINRANGE1")) ) { m_bCaseSensitive[1] = (ptr2[0] == 'Y' || ptr2[0] == 'y') ? TRUE : FALSE; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$CASESENSITIVEINRANGE2")) ) { m_bCaseSensitive[2] = (ptr2[0] == 'Y' || ptr2[0] == 'y') ? TRUE : FALSE; }
 
-		else if( ptr2 && ! _stricmp(ptr1, "$VARIABLEHIGHLIGHTINSTRING") ) { m_bVariableHighlightInString = (ptr2[0] == 'Y' || ptr2[0] == 'y') ? TRUE : FALSE; }
-		else if( ptr2 && ! _stricmp(ptr1, "$DELIMITERS") ) { m_szDelimiters = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$HEXADECIMALMARK") ) { m_szHexaDecimalMark = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$PREFIX") ) { m_szKeywordPrefix = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$KEYWORDPREFIX") ) { m_szKeywordPrefix = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$VARIABLEPREFIX") ) { m_szVariablePrefix = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$VARIABLEENCLOSEDBY") ) { m_szVariableOptionallyEnclosedBy = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$VARIABLEOPTIONALLYENCLOSEDBY") ) { m_szVariableOptionallyEnclosedBy = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$SPECIALVARIABLECHARS") ) { m_szSpecialVariableChars = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$VARIABLEQUOTATION") ) { m_chVariableQuotation = ptr2[0]; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$VARIABLEHIGHLIGHTINSTRING")) ) { m_bVariableHighlightInString = (ptr2[0] == 'Y' || ptr2[0] == 'y') ? TRUE : FALSE; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$DELIMITERS")) ) { m_szDelimiters = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$HEXADECIMALMARK")) ) { m_szHexaDecimalMark = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$PREFIX")) ) { m_szKeywordPrefix = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$KEYWORDPREFIX")) ) { m_szKeywordPrefix = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$VARIABLEPREFIX")) ) { m_szVariablePrefix = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$VARIABLEENCLOSEDBY")) ) { m_szVariableOptionallyEnclosedBy = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$VARIABLEOPTIONALLYENCLOSEDBY")) ) { m_szVariableOptionallyEnclosedBy = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$SPECIALVARIABLECHARS")) ) { m_szSpecialVariableChars = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$VARIABLEQUOTATION")) ) { m_chVariableQuotation = ptr2[0]; }
 
-		else if( ptr2 && ! _stricmp(ptr1, "$MULTILINESTRINGCONSTANT") ) { m_bMultiLineStringConstant = (ptr2[0] == 'Y' || ptr2[0] == 'y') ? TRUE : FALSE; }
-		else if( ptr2 && ! _stricmp(ptr1, "$ESCAPECHAR") ) { m_chEscapeChar = ptr2[0]; }
-		else if( ptr2 && ! _stricmp(ptr1, "$MULTILINEQUOTATIONMARK") ) { m_chMultiLineQuotationMark = ptr2[0]; }
-		else if( ptr2 && ! _stricmp(ptr1, "$QUOTATIONMARK1") ) { m_chQuotationMark1 = ptr2[0]; }
-		else if( ptr2 && ! _stricmp(ptr1, "$QUOTATIONMARK2") ) { m_chQuotationMark2 = ptr2[0]; }
-		else if( ptr2 && ! _stricmp(ptr1, "$QUOTATIONMARK3") ) { m_chQuotationMark3 = ptr2[0]; }
-		else if( ptr2 && ! _stricmp(ptr1, "$QUOTATIONMARKRANGE") ) { m_ucMultiLineQuotationMarkRange = m_ucQuotationMark1Range = m_ucQuotationMark2Range = m_ucQuotationMark3Range = _GetRangeType1(ptr2); }
-		else if( ptr2 && ! _stricmp(ptr1, "$MULTILINEQUOTATIONMARKRANGE") ) { m_ucMultiLineQuotationMarkRange = _GetRangeType1(ptr2); }
-		else if( ptr2 && ! _stricmp(ptr1, "$QUOTATIONMARK1RANGE") ) { m_ucQuotationMark1Range = _GetRangeType1(ptr2); }
-		else if( ptr2 && ! _stricmp(ptr1, "$QUOTATIONMARK2RANGE") ) { m_ucQuotationMark2Range = _GetRangeType1(ptr2); }
-		else if( ptr2 && ! _stricmp(ptr1, "$QUOTATIONMARK3RANGE") ) { m_ucQuotationMark3Range = _GetRangeType1(ptr2); }
-		else if( ptr2 && ! _stricmp(ptr1, "$HEREDOCUMENT") ) { m_szHereDocument = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$MULTILINESTRINGCONSTANT")) ) { m_bMultiLineStringConstant = (ptr2[0] == 'Y' || ptr2[0] == 'y') ? TRUE : FALSE; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$ESCAPECHAR")) ) { m_chEscapeChar = ptr2[0]; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$MULTILINEQUOTATIONMARK")) ) { m_chMultiLineQuotationMark = ptr2[0]; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$QUOTATIONMARK1")) ) { m_chQuotationMark1 = ptr2[0]; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$QUOTATIONMARK2")) ) { m_chQuotationMark2 = ptr2[0]; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$QUOTATIONMARK3")) ) { m_chQuotationMark3 = ptr2[0]; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$QUOTATIONMARKRANGE")) ) { m_ucMultiLineQuotationMarkRange = m_ucQuotationMark1Range = m_ucQuotationMark2Range = m_ucQuotationMark3Range = _GetRangeType1(ptr2); }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$MULTILINEQUOTATIONMARKRANGE")) ) { m_ucMultiLineQuotationMarkRange = _GetRangeType1(ptr2); }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$QUOTATIONMARK1RANGE")) ) { m_ucQuotationMark1Range = _GetRangeType1(ptr2); }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$QUOTATIONMARK2RANGE")) ) { m_ucQuotationMark2Range = _GetRangeType1(ptr2); }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$QUOTATIONMARK3RANGE")) ) { m_ucQuotationMark3Range = _GetRangeType1(ptr2); }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$HEREDOCUMENT")) ) { m_szHereDocument = ptr2; }
 
-		else if( ptr2 && ! _stricmp(ptr1, "$LINECOMMENTONFIRSTPOSITION" ) ) { m_szLineComment1OnFirstPosition = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$LINECOMMENT1ONFIRSTPOSITION") ) { m_szLineComment1OnFirstPosition = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$LINECOMMENT2ONFIRSTPOSITION") ) { m_szLineComment2OnFirstPosition = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$LINECOMMENT" ) ) { m_szLineComment1 = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$LINECOMMENT1") ) { m_szLineComment1 = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$LINECOMMENT2") ) { m_szLineComment2 = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$LINECOMMENTRANGE"  ) ) { m_ucLineComment1Range = m_ucLineComment2Range = _GetRangeType1(ptr2); }
-		else if( ptr2 && ! _stricmp(ptr1, "$LINECOMMENT1RANGE"  ) ) { m_ucLineComment1Range = _GetRangeType1(ptr2); }
-		else if( ptr2 && ! _stricmp(ptr1, "$LINECOMMENT2RANGE"  ) ) { m_ucLineComment2Range = _GetRangeType1(ptr2); }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$LINECOMMENTONFIRSTPOSITION") ) ) { m_szLineComment1OnFirstPosition = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$LINECOMMENT1ONFIRSTPOSITION")) ) { m_szLineComment1OnFirstPosition = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$LINECOMMENT2ONFIRSTPOSITION")) ) { m_szLineComment2OnFirstPosition = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$LINECOMMENT") ) ) { m_szLineComment1 = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$LINECOMMENT1")) ) { m_szLineComment1 = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$LINECOMMENT2")) ) { m_szLineComment2 = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$LINECOMMENTRANGE")  ) ) { m_ucLineComment1Range = m_ucLineComment2Range = _GetRangeType1(ptr2); }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$LINECOMMENT1RANGE")  ) ) { m_ucLineComment1Range = _GetRangeType1(ptr2); }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$LINECOMMENT2RANGE")  ) ) { m_ucLineComment2Range = _GetRangeType1(ptr2); }
 
-		else if( ptr2 && ! _stricmp(ptr1, "$BLOCKCOMMENTON"  ) ) { m_szBlockComment1On  = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$BLOCKCOMMENTOFF" ) ) { m_szBlockComment1Off = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$BLOCKCOMMENT1ON" ) ) { m_szBlockComment1On  = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$BLOCKCOMMENT1OFF") ) { m_szBlockComment1Off = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$BLOCKCOMMENT2ON" ) ) { m_szBlockComment2On  = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$BLOCKCOMMENT2OFF") ) { m_szBlockComment2Off = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$BLOCKCOMMENTRANGE" ) ) { m_ucBlockComment1Range = m_ucBlockComment2Range = _GetRangeType1(ptr2); }
-		else if( ptr2 && ! _stricmp(ptr1, "$BLOCKCOMMENT1RANGE" ) ) { m_ucBlockComment1Range = _GetRangeType1(ptr2); }
-		else if( ptr2 && ! _stricmp(ptr1, "$BLOCKCOMMENT2RANGE" ) ) { m_ucBlockComment2Range = _GetRangeType1(ptr2); }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$BLOCKCOMMENTON")  ) ) { m_szBlockComment1On  = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$BLOCKCOMMENTOFF") ) ) { m_szBlockComment1Off = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$BLOCKCOMMENT1ON") ) ) { m_szBlockComment1On  = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$BLOCKCOMMENT1OFF")) ) { m_szBlockComment1Off = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$BLOCKCOMMENT2ON") ) ) { m_szBlockComment2On  = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$BLOCKCOMMENT2OFF")) ) { m_szBlockComment2Off = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$BLOCKCOMMENTRANGE") ) ) { m_ucBlockComment1Range = m_ucBlockComment2Range = _GetRangeType1(ptr2); }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$BLOCKCOMMENT1RANGE") ) ) { m_ucBlockComment1Range = _GetRangeType1(ptr2); }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$BLOCKCOMMENT2RANGE") ) ) { m_ucBlockComment2Range = _GetRangeType1(ptr2); }
 
-		else if( ptr2 && ! _stricmp(ptr1, "$SHADOWON" ) ) { m_szShadowOn  = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$SHADOWOFF") ) { m_szShadowOff = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$HIGHLIGHTON" ) ) { m_szHighlightOn  = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$HIGHLIGHTOFF") ) { m_szHighlightOff = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$RANGE1BEG") ) { m_szRange1Beg = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$RANGE1END") ) { m_szRange1End = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$RANGE2BEG") ) { m_szRange2Beg = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$RANGE2END") ) { m_szRange2End = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$SHADOWON") ) ) { m_szShadowOn  = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$SHADOWOFF")) ) { m_szShadowOff = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$HIGHLIGHTON") ) ) { m_szHighlightOn  = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$HIGHLIGHTOFF")) ) { m_szHighlightOff = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$RANGE1BEG")) ) { m_szRange1Beg = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$RANGE1END")) ) { m_szRange1End = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$RANGE2BEG")) ) { m_szRange2Beg = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$RANGE2END")) ) { m_szRange2End = ptr2; }
 
-		else if( ptr2 && ! _stricmp(ptr1, "$INDENTATIONON" ) ) { m_chIndentationOn  = ptr2[0]; }
-		else if( ptr2 && ! _stricmp(ptr1, "$INDENTATIONOFF") ) { m_chIndentationOff = ptr2[0]; }
-		else if( ptr2 && ! _stricmp(ptr1, "$PAIRS1") ) { m_szPairs1 = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$PAIRS2") ) { m_szPairs2 = ptr2; }
-		else if( ptr2 && ! _stricmp(ptr1, "$PAIRS3") ) { m_szPairs3 = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$INDENTATIONON") ) ) { m_chIndentationOn  = ptr2[0]; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$INDENTATIONOFF")) ) { m_chIndentationOff = ptr2[0]; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$PAIRS1")) ) { m_szPairs1 = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$PAIRS2")) ) { m_szPairs2 = ptr2; }
+		else if( ptr2 && ! _tcsicmp(ptr1, _T("$PAIRS3")) ) { m_szPairs3 = ptr2; }
 	}
 
 	fin.close();
@@ -325,26 +325,26 @@ BOOL CKeywords::FileLoad(LPCTSTR lpszPathName, BOOL bCaseSensitive[])
 		fin.getline(szLine, MAX_LINE_BUFFER_SIZE);
 		if( szLine[0] == '#' ) continue;
 
-		if( ! _strnicmp(szLine, "[-COMMENT", 9) ) {
+		if( ! _tcsnicmp(szLine, _T("[-COMMENT"), 9) ) {
 			ucType  = 0x00;
 			ucRange = RT_GLOBAL;
 
-		} else if( ! _strnicmp(szLine, "[#COMMENT", 9) ) {
+		} else if( ! _tcsnicmp(szLine, _T("[#COMMENT"), 9) ) {
 			ucType  = 0x00;
 			ucRange = RT_GLOBAL;
 
-		} else if( ! _strnicmp(szLine, "[KEYWORDS", 9) ) {
-			TCHAR * ptr1 = strtok(szLine, ":");
-			TCHAR * ptr2 = strtok(NULL, "\n");
+		} else if( ! _tcsnicmp(szLine, _T("[KEYWORDS"), 9) ) {
+			TCHAR * ptr1 = _tcstok(szLine, _T(":"));
+			TCHAR * ptr2 = _tcstok(NULL, _T("\n"));
 
 			ucType  = WT_KEYWORD0 + (ptr1[9] - '0');
 			ucRange = _GetRangeType2(ptr2);
 
 			bIgnoreCase = ! bCaseSensitive[ucRange];
-			bNoEmbolden = FALSE; _strupr(ptr2);
+			bNoEmbolden = FALSE; _tcsupr(ptr2);
 
-			if( strstr(ptr2, "IGNORECASE") ) bIgnoreCase = TRUE;
-			if( strstr(ptr2, "NOEMBOLDEN") ) bNoEmbolden = TRUE;
+			if( _tcsstr(ptr2, _T("IGNORECASE")) ) bIgnoreCase = TRUE;
+			if( _tcsstr(ptr2, _T("NOEMBOLDEN")) ) bNoEmbolden = TRUE;
 
 		} else if( ucType ) {
 			std::istringstream sin(szLine);
@@ -353,8 +353,8 @@ BOOL CKeywords::FileLoad(LPCTSTR lpszPathName, BOOL bCaseSensitive[])
 				sin.width(sizeof(szWord) / sizeof(TCHAR));   // bound the read to the buffer size
 				sin >> szWord;  if( szWord[0] == '\0' ) break;
 
-				if( bIgnoreCase ) { _strlwr(szWord); sprintf(szBuffer, "I:%s", szWord); }
-				else sprintf(szBuffer, "C:%s", szWord);
+				if( bIgnoreCase ) { _tcslwr(szWord); _stprintf(szBuffer, _T("I:%s"), szWord); }
+				else _stprintf(szBuffer, _T("C:%s"), szWord);
 
 				if( Lookup(szBuffer, dwValue) ) {
 					_EXTRACT_TYPES(ucTypes, dwValue); if( ucTypes[ucRange] != WT_IDENTIFIER ) continue;
@@ -385,10 +385,10 @@ BOOL CKeywords::LookupTable(UCHAR ucType[], UCHAR & ucRange, LPCTSTR lpszWord, I
 	_INITIAL_TYPES(ucTypeC, WT_IDENTIFIER);
 	_INITIAL_TYPES(ucTypeI, WT_IDENTIFIER);
 
-	strncpy(szWord, lpszWord, siLength); szWord[siLength] = '\0'; sprintf(szBuffer, "C:%s", szWord);
+	_tcsncpy(szWord, lpszWord, siLength); szWord[siLength] = '\0'; _stprintf(szBuffer, _T("C:%s"), szWord);
 	if( bFoundC = Lookup(szBuffer, dwValue) ) _EXTRACT_TYPES(ucTypeC, dwValue);
 
-	_strlwr(szWord); sprintf(szBuffer, "I:%s", szWord);
+	_tcslwr(szWord); _stprintf(szBuffer, _T("I:%s"), szWord);
 	if( bFoundI = Lookup(szBuffer, dwValue) ) _EXTRACT_TYPES(ucTypeI, dwValue);
 
 	ucType[0] = (ucTypeC[0] != WT_IDENTIFIER) ? ucTypeC[0] : ucTypeI[0];
@@ -411,7 +411,7 @@ BOOL CDictionary::FileLoad(LPCTSTR lpszPathName, CALLBACK_FUNCTION fcnCallback)
 	while( fin.good() ) {
 		fin >> std::ws; if( fin.eof() ) break;
 		fin.width(sizeof(szWord) / sizeof(TCHAR));   // bound the read to the buffer size
-		fin >> szWord; _strlwr(szWord);
+		fin >> szWord; _tcslwr(szWord);
 
 		if( ! Lookup( szWord, ucValue ) ) {
 			SetAt( szWord, ucValue = WT_IDENTIFIER );
@@ -432,8 +432,8 @@ BOOL CDictionary::LookupTable(LPCTSTR lpszWord, INT_PTR siLengthPtr)
 	if( siLengthPtr > MAX_WORD_LENGTH ) return FALSE;
 	SHORT siLength = (SHORT)siLengthPtr;
 
-	strncpy(szBuffer, lpszWord, siLength); szBuffer[siLength] = '\0';
-	_strlwr(szBuffer);
+	_tcsncpy(szBuffer, lpszWord, siLength); szBuffer[siLength] = '\0';
+	_tcslwr(szBuffer);
 
 	BOOL bFound; UCHAR ucValue = 0x00;
 	bFound = Lookup(szBuffer, ucValue);
@@ -444,9 +444,9 @@ BOOL CDictionary::LookupTable(LPCTSTR lpszWord, INT_PTR siLengthPtr)
 BOOL CDictionary::AddWord(LPCTSTR lpszWord)
 {
 	TCHAR szWord[MAX_WORD_LENGTH+1]; UCHAR ucValue;
-	if( strlen(lpszWord) > MAX_WORD_LENGTH ) return FALSE;
+	if( _tcslen(lpszWord) > MAX_WORD_LENGTH ) return FALSE;
 	
-	strcpy(szWord, lpszWord); _strlwr(szWord);
+	_tcscpy(szWord, lpszWord); _tcslwr(szWord);
 	if( ! Lookup( szWord, ucValue ) ) {
 		SetAt( szWord, ucValue = WT_IDENTIFIER );
 	} else return FALSE;
@@ -471,7 +471,7 @@ CFormatedString & CFormatedString::operator=(const CFormatedString & stringSrc) 
 	delete [] m_pWord; m_pWord = NULL; 
 	m_siWordCount = m_siSplitIndex = 0; m_bLineBreak = FALSE;
 	m_usLineInfo = m_usLineFlag = 0x00;
-	m_szHereDocumentTerminator = "";
+	m_szHereDocumentTerminator = _T("");
 	return * this;
 }
 
@@ -481,7 +481,7 @@ BOOL CMemText::FileLoad(LPCTSTR lpszPathName)
 {
 	try {
 		CFile file(lpszPathName, CFile::modeRead | CFile::typeBinary | CFile::shareDenyNone);
-		RemoveAll(); AddTail(""); // initialize contents
+		RemoveAll(); AddTail(_T("")); // initialize contents
 
 		CHAR szBuffer[FILE_READ_BUFFER_SIZE+1];
 		int i, nCount, nTotal = 0; BOOL bDelimFount = FALSE;
@@ -498,7 +498,7 @@ BOOL CMemText::FileLoad(LPCTSTR lpszPathName)
 			if( nCount >= 1 && szBuffer[nCount-1] == '\r' ) { szBuffer[nCount-1] = 0x00; nCount--; }
 
 			GetTail() += szBuffer;
-			if( bDelimFount ) AddTail("");
+			if( bDelimFount ) AddTail(_T(""));
 
 			file.Seek(nTotal, CFile::begin);
 		}
@@ -521,7 +521,7 @@ BOOL CMemText::FileSave(LPCTSTR lpszPathName)
 			CString & rString = GetNext(pos);
 			INT nLength = rString.GetLength();
 			file.Write( rString, nLength );
-			if( pos ) file.Write( "\r\n", 2 );
+			if( pos ) file.Write( _T("\r\n"), 2 );
 		}
 		file.Close();
 	} catch( CException * ex ) {
@@ -654,7 +654,7 @@ BOOL CAnalyzedText::FileLoad(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 	
 	try {
 		CFile file(lpszPathName, CFile::modeRead | CFile::typeBinary | CFile::shareDenyNone);
-		RemoveAll(); AddTail(""); // initialize contents
+		RemoveAll(); AddTail(_T("")); // initialize contents
 
 		CHAR szBuffer[FILE_READ_BUFFER_SIZE + 1]; UCHAR szWideBuffer[2 * FILE_READ_BUFFER_SIZE + 2]; 
 		INT i, nCount, nTotal = 0; BOOL bDelimFound = FALSE;
@@ -681,7 +681,7 @@ BOOL CAnalyzedText::FileLoad(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 				nCount = lstrlen( szBuffer );
 
 				GetTail() += szBuffer;
-				if( bDelimFound ) AddTail("");
+				if( bDelimFound ) AddTail(_T(""));
 
 				file.Seek(nTotal, CFile::begin);
 			}
@@ -708,7 +708,7 @@ BOOL CAnalyzedText::FileLoad(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 				nCount = lstrlen( szBuffer );
 
 				GetTail() += szBuffer;
-				if( bDelimFound ) AddTail("");
+				if( bDelimFound ) AddTail(_T(""));
 
 				file.Seek(nTotal, CFile::begin);
 			}
@@ -734,7 +734,7 @@ BOOL CAnalyzedText::FileLoad(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 				nCount = WideCharToMultiByte(CP_ACP, 0, (LPCWSTR)szWideBuffer, -1, szBuffer, FILE_READ_BUFFER_SIZE + 1, NULL, NULL);
 
 				GetTail() += szBuffer; 
-				if( bDelimFound ) AddTail("");
+				if( bDelimFound ) AddTail(_T(""));
 
 				file.Seek(nTotal, CFile::begin);
 			}
@@ -751,7 +751,7 @@ BOOL CAnalyzedText::FileLoad(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 				if( nCount >= 1 && szBuffer[nCount-1] == chKill  ) { szBuffer[nCount-1] = 0x00; nCount--; }
 
 				GetTail() += szBuffer;
-				if( bDelimFound ) AddTail("");
+				if( bDelimFound ) AddTail(_T(""));
 
 				file.Seek(nTotal, CFile::begin);
 			}
@@ -769,9 +769,9 @@ BOOL CAnalyzedText::FileLoad(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 
 BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileFormat)
 {
-	CHAR szDelim[3]; lstrcpy(szDelim, "\r\n"); INT nDelimSize = 2; // FILE_FORMAT_DOS
-	if( nFileFormat == FILE_FORMAT_UNIX ) { lstrcpy(szDelim, "\n"); nDelimSize = 1; }
-	else if( nFileFormat == FILE_FORMAT_MAC ) { lstrcpy(szDelim, "\r"); nDelimSize = 1; }
+	CHAR szDelim[3]; lstrcpy(szDelim, _T("\r\n")); INT nDelimSize = 2; // FILE_FORMAT_DOS
+	if( nFileFormat == FILE_FORMAT_UNIX ) { lstrcpy(szDelim, _T("\n")); nDelimSize = 1; }
+	else if( nFileFormat == FILE_FORMAT_MAC ) { lstrcpy(szDelim, _T("\r")); nDelimSize = 1; }
 	
 	try {
 		CFile file(lpszPathName, CFile::modeReadWrite | CFile::modeCreate | CFile::shareExclusive);
@@ -782,7 +782,7 @@ BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 
 		if( nEncodingType == ENCODING_TYPE_UNICODE_LE ) {
 			// write byte-order mark
-			file.Write("\xFF\xFE", 2); 
+			file.Write(_T("\xFF\xFE"), 2); 
 
 			szWideDelim[0] = szDelim[0];	szWideDelim[1] = 0x00; 
 			szWideDelim[2] = szDelim[1];	szWideDelim[3] = 0x00; 
@@ -804,7 +804,7 @@ BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 			}
 		} else if( nEncodingType == ENCODING_TYPE_UNICODE_BE ) {
 			// write byte-order mark
-			file.Write("\xFE\xFF", 2); 
+			file.Write(_T("\xFE\xFF"), 2); 
 
 			szWideDelim[0] = 0x00; 	szWideDelim[1] = szDelim[0];
 			szWideDelim[2] = 0x00; 	szWideDelim[3] = szDelim[1];
@@ -827,7 +827,7 @@ BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 			}
 		} else if( nEncodingType == ENCODING_TYPE_UTF8_WBOM || nEncodingType == ENCODING_TYPE_UTF8_XBOM ) {
 			// write byte-order mark when it is not ENCODING_TYPE_UTF8_XBOM
-			if( nEncodingType != ENCODING_TYPE_UTF8_XBOM ) file.Write("\xEF\xBB\xBF", 3); 
+			if( nEncodingType != ENCODING_TYPE_UTF8_XBOM ) file.Write(_T("\xEF\xBB\xBF"), 3); 
 
 			while( pos ) {
 				CAnalyzedString & rLine = GetNext(pos);
@@ -841,7 +841,7 @@ BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 
 				nCount = MultiByteToWideChar(CP_ACP, 0, rLine, -1, (LPWSTR)pWideBuffer, nBufferSize + 1);
 				nCount = WideCharToMultiByte(CP_UTF8, 0, (LPCWSTR)pWideBuffer, -1, pBuffer, 3 * (nBufferSize + 1), NULL, NULL);
-				INT nLength = (INT)strlen( pBuffer );
+				INT nLength = (INT)_tcslen( pBuffer );
 
 				file.Write( pBuffer, nLength );
 				if( pos ) file.Write( szDelim, nDelimSize );
@@ -905,8 +905,8 @@ void CUndoBuffer::GetRecentIndex(INT & nIdxX, INT & nIdxY)
 CUserCommand::CUserCommand()
 {
 	m_wVirtualKeyCode = m_wModifiers = 0x00;
-	m_szName = m_szCommand = "";
-	m_szArgument = m_szDirectory = "";
+	m_szName = m_szCommand = _T("");
+	m_szArgument = m_szDirectory = _T("");
 	m_bCloseOnExit = TRUE; m_bUseShortFileName = FALSE;
 	m_bCaptureOutput = FALSE; m_bSaveBeforeExecute = TRUE;
 }
@@ -917,11 +917,11 @@ CString CUserCommand::GetHotKeyText()
 	LPARAM lParam = nScanCode << 16;
 	TCHAR szKeyName[1024]; GetKeyNameText( (LONG)lParam, szKeyName, 1024 );
 
-	CString szHotKeyText = "";
-	if( strlen(szKeyName) ) {
-		if( m_wModifiers & HOTKEYF_CONTROL ) szHotKeyText += "Ctrl+";
-		if( m_wModifiers & HOTKEYF_ALT ) szHotKeyText += "Alt+";
-		if( m_wModifiers & HOTKEYF_SHIFT ) szHotKeyText += "Shift+";
+	CString szHotKeyText = _T("");
+	if( _tcslen(szKeyName) ) {
+		if( m_wModifiers & HOTKEYF_CONTROL ) szHotKeyText += _T("Ctrl+");
+		if( m_wModifiers & HOTKEYF_ALT ) szHotKeyText += _T("Alt+");
+		if( m_wModifiers & HOTKEYF_SHIFT ) szHotKeyText += _T("Shift+");
 		szHotKeyText += szKeyName;
 	}
 	return szHotKeyText;
@@ -992,8 +992,8 @@ BOOL CUserCommand::StreamLoad(ifstream & fin)
 void CUserCommand::DeleteContents()
 {
 	m_wVirtualKeyCode = m_wModifiers = 0x00;
-	m_szName = m_szCommand = "";
-	m_szArgument = m_szDirectory = "";
+	m_szName = m_szCommand = _T("");
+	m_szArgument = m_szDirectory = _T("");
 	m_bCloseOnExit = TRUE; m_bUseShortFileName = FALSE;
 	m_bCaptureOutput = FALSE; m_bSaveBeforeExecute = TRUE;
 }
@@ -1012,7 +1012,7 @@ void CUserCommand::CopyContents(CUserCommand & rCommand)
 CMacroBuffer::CMacroBuffer()
 {
 	m_wVirtualKeyCode = 0x00; m_wModifiers = 0x00;
-	m_szName = "";
+	m_szName = _T("");
 	m_lstAction.RemoveAll();
 	m_lstParam.RemoveAll();
 	m_lstFlags.RemoveAll();
@@ -1025,11 +1025,11 @@ CString CMacroBuffer::GetHotKeyText()
 	LPARAM lParam = nScanCode << 16;
 	TCHAR szKeyName[1024]; GetKeyNameText( (LONG)lParam, szKeyName, 1024 );
 
-	CString szHotKeyText = "";
-	if( strlen(szKeyName) ) {
-		if( m_wModifiers & HOTKEYF_CONTROL ) szHotKeyText += "Ctrl+";
-		if( m_wModifiers & HOTKEYF_ALT ) szHotKeyText += "Alt+";
-		if( m_wModifiers & HOTKEYF_SHIFT ) szHotKeyText += "Shift+";
+	CString szHotKeyText = _T("");
+	if( _tcslen(szKeyName) ) {
+		if( m_wModifiers & HOTKEYF_CONTROL ) szHotKeyText += _T("Ctrl+");
+		if( m_wModifiers & HOTKEYF_ALT ) szHotKeyText += _T("Alt+");
+		if( m_wModifiers & HOTKEYF_SHIFT ) szHotKeyText += _T("Shift+");
 		szHotKeyText += szKeyName;
 	}
 	return szHotKeyText;
@@ -1126,7 +1126,7 @@ BOOL CMacroBuffer::StreamLoad(ifstream & fin)
 void CMacroBuffer::DeleteContents()
 {
 	m_wVirtualKeyCode = m_wModifiers = 0x00;
-	m_szName = "";
+	m_szName = _T("");
 	m_lstAction.RemoveAll();
 	m_lstParam.RemoveAll();
 	m_lstFlags.RemoveAll();
@@ -1207,9 +1207,9 @@ void CFileFilter::AssignContents(LPCTSTR lpszDescription, LPCTSTR lpszExtensions
 
 void CFileFilter::DeleteContents()
 {
-	m_szDescription = "";
-	m_szExtensions = "";
-	m_szDefaultExt = "";
+	m_szDescription = _T("");
+	m_szExtensions = _T("");
+	m_szDefaultExt = _T("");
 }
 
 void CFileFilter::CopyContents(CFileFilter & rFilter)
@@ -1271,9 +1271,9 @@ void CSyntaxType::AssignContents(LPCTSTR lpszDescription, LPCTSTR lpszLangSpecFi
 
 void CSyntaxType::DeleteContents()
 {
-	m_szDescription = "";
-	m_szLangSpecFile = "";
-	m_szKeywordsFile = "";
+	m_szDescription = _T("");
+	m_szLangSpecFile = _T("");
+	m_szKeywordsFile = _T("");
 }
 
 void CSyntaxType::CopyContents(CSyntaxType & rSyntax)
@@ -1287,9 +1287,9 @@ void CSyntaxType::CopyContents(CSyntaxType & rSyntax)
 // CFtpAccount
 CFtpAccount::CFtpAccount()
 {
-	m_szDescription = m_szServerName = "";
-	m_szUserName = m_szPassword = "";
-	m_szSubDirectory = "";
+	m_szDescription = m_szServerName = _T("");
+	m_szUserName = m_szPassword = _T("");
+	m_szSubDirectory = _T("");
 
 	m_bSavePassword = m_bPassiveMode = m_bBinaryType = FALSE;
 	m_bUseWinInet = m_bPasswordVerified = FALSE;
@@ -1314,7 +1314,7 @@ BOOL CFtpAccount::StreamSave(ofstream & fout)
 	fout.write((const char *)(& nLength), sizeof(nLength));
 	fout.write((const char *)(LPCTSTR)m_szUserName, nLength);
 
-	CString szEncodedPassword = "";
+	CString szEncodedPassword = _T("");
 	if( m_bSavePassword ) szEncodedPassword = map_encode(m_szPassword);
 
 	nLength = szEncodedPassword.GetLength();
@@ -1385,10 +1385,10 @@ CString CFtpAccount::GetDisplayName()
 	CString szDisplayName;
 	if( m_szDescription.GetLength() ) {
 		if( m_szServerName.GetLength() ) {
-			if( m_szUserName.GetLength() ) szDisplayName.Format("%s [ftp://%s@%s]", m_szDescription, m_szUserName, m_szServerName);
-			else szDisplayName.Format("%s [ftp://%s]", m_szDescription, m_szServerName);
+			if( m_szUserName.GetLength() ) szDisplayName.Format(_T("%s [ftp://%s@%s]"), m_szDescription, m_szUserName, m_szServerName);
+			else szDisplayName.Format(_T("%s [ftp://%s]"), m_szDescription, m_szServerName);
 		} else szDisplayName = m_szDescription;
-	} else szDisplayName = "- Empty -";
+	} else szDisplayName = _T("- Empty -");
 	return szDisplayName;
 }
 
@@ -1396,9 +1396,9 @@ CString CFtpAccount::GetFullAccountName()
 {
 	CString szAccountName;
 	if( m_szServerName.GetLength() ) {
-		if( m_szUserName.GetLength() ) szAccountName.Format("ftp://%s@%s", m_szUserName, m_szServerName);
-		else szAccountName.Format("ftp://%s", m_szServerName);
-	} else szAccountName = "";
+		if( m_szUserName.GetLength() ) szAccountName.Format(_T("ftp://%s@%s"), m_szUserName, m_szServerName);
+		else szAccountName.Format(_T("ftp://%s"), m_szServerName);
+	} else szAccountName = _T("");
 	return szAccountName;
 }
 
@@ -1406,17 +1406,17 @@ CString CFtpAccount::GetShortAccountName()
 {
 	CString szAccountName;
 	if( m_szServerName.GetLength() ) {
-		if( m_szUserName.GetLength() ) szAccountName.Format("%s@%s", m_szUserName, m_szServerName);
-		else szAccountName.Format("%s", m_szServerName);
-	} else szAccountName = "";
+		if( m_szUserName.GetLength() ) szAccountName.Format(_T("%s@%s"), m_szUserName, m_szServerName);
+		else szAccountName.Format(_T("%s"), m_szServerName);
+	} else szAccountName = _T("");
 	return szAccountName;
 }
 
 void CFtpAccount::DeleteContents()
 {
-	m_szDescription = m_szServerName = "";
-	m_szUserName = m_szPassword = "";
-	m_szSubDirectory = "";
+	m_szDescription = m_szServerName = _T("");
+	m_szUserName = m_szPassword = _T("");
+	m_szSubDirectory = _T("");
 
 	m_bSavePassword = m_bPassiveMode = m_bBinaryType = FALSE;
 	m_bUseWinInet = m_bPasswordVerified = FALSE;

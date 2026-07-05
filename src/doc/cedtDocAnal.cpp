@@ -43,7 +43,7 @@ static void _WordFound(SHORT windex, UCHAR ucType, UCHAR ucInfo, INT_PTR siIndex
 	_words[windex].m_siIndex = (SHORT)siIndex;
 	_words[windex].m_siLength = (SHORT)siLength;
 
-//	TRACE2("Word Found: %d, %d\n", windex, siLength);
+//	TRACE2(_T("Word Found: %d, %d\n"), windex, siLength);
 }
 
 static void _WordFoundExtended(SHORT windex, UCHAR ucType[], UCHAR ucInfo, INT_PTR siIndex, INT_PTR siLength)
@@ -55,7 +55,7 @@ static void _WordFoundExtended(SHORT windex, UCHAR ucType[], UCHAR ucInfo, INT_P
 	_words[windex].m_siIndex = (SHORT)siIndex;
 	_words[windex].m_siLength = (SHORT)siLength;
 
-//	TRACE2("Word Found: %d, %d\n", windex, siLength);
+//	TRACE2(_T("Word Found: %d, %d\n"), windex, siLength);
 }
 
 static void _FinishLine(SHORT wcount, BOOL bOverflow, CAnalyzedString & rLine)
@@ -144,7 +144,7 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 				fwd += 2; 
 				_WordFound(wcount++, WT_CONSTANT, RT_GLOBAL, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
-			} else if( HRD[0] && ! _strnicmp(fwd, HRD, lenHRD) && _CHCK_SIZE(fwd, lenHRD) ) {
+			} else if( HRD[0] && ! _tcsnicmp(fwd, HRD, lenHRD) && _CHCK_SIZE(fwd, lenHRD) ) {
 				fwd += lenHRD;
 				_WordFound(wcount++, WT_HEREDOCUMENT, RT_GLOBAL, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
@@ -171,43 +171,43 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 
 
 		case 0x0300: // CHECK COMMENT DELIMITERS
-			if( C1B[0] && ! _strnicmp(fwd, C1B, lenC1B) && _CHCK_SIZE(fwd, lenC1B) ) { 
+			if( C1B[0] && ! _tcsnicmp(fwd, C1B, lenC1B) && _CHCK_SIZE(fwd, lenC1B) ) { 
 				fwd += lenC1B; 
 				_WordFound(wcount++, WT_COMMENT1ON, rngBC1, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
-			} else if( C1E[0] && ! _strnicmp(fwd, C1E, lenC1E) && _CHCK_SIZE(fwd, lenC1E) ) {
+			} else if( C1E[0] && ! _tcsnicmp(fwd, C1E, lenC1E) && _CHCK_SIZE(fwd, lenC1E) ) {
 				fwd += lenC1E; 
 				_WordFound(wcount++, WT_COMMENT1OFF, rngBC1, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
-			} else if( C2B[0] && ! _strnicmp(fwd, C2B, lenC2B) && _CHCK_SIZE(fwd, lenC2B) ) {
+			} else if( C2B[0] && ! _tcsnicmp(fwd, C2B, lenC2B) && _CHCK_SIZE(fwd, lenC2B) ) {
 				fwd += lenC2B; 
 				_WordFound(wcount++, WT_COMMENT2ON, rngBC2, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
-			} else if( C2E[0] && ! _strnicmp(fwd, C2E, lenC2E) && _CHCK_SIZE(fwd, lenC2E) ) {
+			} else if( C2E[0] && ! _tcsnicmp(fwd, C2E, lenC2E) && _CHCK_SIZE(fwd, lenC2E) ) {
 				fwd += lenC2E; 
 				_WordFound(wcount++, WT_COMMENT2OFF, rngBC2, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
-			} else if( LC1[0] && isalpha(LC1[0]) && ! _strnicmp(fwd, LC1, lenLC1) && ! isalpha(fwd[lenLC1]) && _CHCK_SIZE(fwd, lenLC1) ) {
+			} else if( LC1[0] && _istalpha(LC1[0]) && ! _tcsnicmp(fwd, LC1, lenLC1) && ! _istalpha(fwd[lenLC1]) && _CHCK_SIZE(fwd, lenLC1) ) {
 				fwd += lenLC1; 
 				_WordFound(wcount++, WT_LINECOMMENT, rngLC1, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
-			} else if( LC1[0] && ! isalpha(LC1[0]) && ! _strnicmp(fwd, LC1, lenLC1) && _CHCK_SIZE(fwd, lenLC1) ) {
+			} else if( LC1[0] && ! _istalpha(LC1[0]) && ! _tcsnicmp(fwd, LC1, lenLC1) && _CHCK_SIZE(fwd, lenLC1) ) {
 				fwd += lenLC1; 
 				_WordFound(wcount++, WT_LINECOMMENT, rngLC1, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
-			} else if( LC2[0] && isalpha(LC2[0]) && ! _strnicmp(fwd, LC2, lenLC2) && ! isalpha(fwd[lenLC2]) && _CHCK_SIZE(fwd, lenLC2) ) {
+			} else if( LC2[0] && _istalpha(LC2[0]) && ! _tcsnicmp(fwd, LC2, lenLC2) && ! _istalpha(fwd[lenLC2]) && _CHCK_SIZE(fwd, lenLC2) ) {
 				fwd += lenLC2; 
 				_WordFound(wcount++, WT_LINECOMMENT, rngLC2, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
-			} else if( LC2[0] && ! isalpha(LC2[0]) && ! _strnicmp(fwd, LC2, lenLC2) && _CHCK_SIZE(fwd, lenLC2) ) {
+			} else if( LC2[0] && ! _istalpha(LC2[0]) && ! _tcsnicmp(fwd, LC2, lenLC2) && _CHCK_SIZE(fwd, lenLC2) ) {
 				fwd += lenLC2; 
 				_WordFound(wcount++, WT_LINECOMMENT, rngLC2, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
-			} else if( LF1[0] && fwd == str && ! _strnicmp(fwd, LF1, lenLF1) && _CHCK_SIZE(fwd, lenLF1) ) {
+			} else if( LF1[0] && fwd == str && ! _tcsnicmp(fwd, LF1, lenLF1) && _CHCK_SIZE(fwd, lenLF1) ) {
 				fwd += lenLF1; 
 				_WordFound(wcount++, WT_LINECOMMENT, rngLC1, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
-			} else if( LF2[0] && fwd == str && ! _strnicmp(fwd, LF2, lenLF2) && _CHCK_SIZE(fwd, lenLF2) ) {
+			} else if( LF2[0] && fwd == str && ! _tcsnicmp(fwd, LF2, lenLF2) && _CHCK_SIZE(fwd, lenLF2) ) {
 				fwd += lenLF2; 
 				_WordFound(wcount++, WT_LINECOMMENT, rngLC2, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
@@ -217,35 +217,35 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 			break;
 
 		case 0x0350: // CHECK VARIOUS DELIMITERS
-			if( HLB[0] && ! _strnicmp(fwd, HLB, lenHLB) && _CHCK_SIZE(fwd, lenHLB) ) {
+			if( HLB[0] && ! _tcsnicmp(fwd, HLB, lenHLB) && _CHCK_SIZE(fwd, lenHLB) ) {
 				fwd += lenHLB; 
 				_WordFound(wcount++, WT_HIGHLIGHTON, RT_GLOBAL, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
-			} else if( HLE[0] && ! _strnicmp(fwd, HLE, lenHLE) && _CHCK_SIZE(fwd, lenHLE) ) {
+			} else if( HLE[0] && ! _tcsnicmp(fwd, HLE, lenHLE) && _CHCK_SIZE(fwd, lenHLE) ) {
 				fwd += lenHLE; 
 				_WordFound(wcount++, WT_HIGHLIGHTOFF, RT_GLOBAL, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
-			} else if( SDB[0] && ! _strnicmp(fwd, SDB, lenSDB) && _CHCK_SIZE(fwd, lenSDB) ) {
+			} else if( SDB[0] && ! _tcsnicmp(fwd, SDB, lenSDB) && _CHCK_SIZE(fwd, lenSDB) ) {
 				fwd += lenSDB; 
 				_WordFound(wcount++, WT_SHADOWON, RT_GLOBAL, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
-			} else if( SDE[0] && ! _strnicmp(fwd, SDE, lenSDE) && _CHCK_SIZE(fwd, lenSDE) ) {
+			} else if( SDE[0] && ! _tcsnicmp(fwd, SDE, lenSDE) && _CHCK_SIZE(fwd, lenSDE) ) {
 				fwd += lenSDE; 
 				_WordFound(wcount++, WT_SHADOWOFF, RT_GLOBAL, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
-			} else if( R2B[0] && ! _strnicmp(fwd, R2B, lenR2B) && _CHCK_SIZE(fwd, lenR2B) ) {
+			} else if( R2B[0] && ! _tcsnicmp(fwd, R2B, lenR2B) && _CHCK_SIZE(fwd, lenR2B) ) {
 				fwd += lenR2B; 
 				_WordFound(wcount++, WT_RANGE2BEG, RT_GLOBAL, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
-			} else if( R2E[0] && ! _strnicmp(fwd, R2E, lenR2E) && _CHCK_SIZE(fwd, lenR2E) ) {
+			} else if( R2E[0] && ! _tcsnicmp(fwd, R2E, lenR2E) && _CHCK_SIZE(fwd, lenR2E) ) {
 				fwd += lenR2E; 
 				_WordFound(wcount++, WT_RANGE2END, RT_GLOBAL, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
-			} else if( R1B[0] && ! _strnicmp(fwd, R1B, lenR1B) && _CHCK_SIZE(fwd, lenR1B) ) {
+			} else if( R1B[0] && ! _tcsnicmp(fwd, R1B, lenR1B) && _CHCK_SIZE(fwd, lenR1B) ) {
 				fwd += lenR1B; 
 				_WordFound(wcount++, WT_RANGE1BEG, RT_GLOBAL, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
-			} else if( R1E[0] && ! _strnicmp(fwd, R1E, lenR1E) && _CHCK_SIZE(fwd, lenR1E) ) {
+			} else if( R1E[0] && ! _tcsnicmp(fwd, R1E, lenR1E) && _CHCK_SIZE(fwd, lenR1E) ) {
 				fwd += lenR1E; 
 				_WordFound(wcount++, WT_RANGE1END, RT_GLOBAL, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
@@ -256,12 +256,12 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 
 
 		case 0x0400: // CHECK HEXADECIMAL & DECIMAL NUMBERS AND FLOATING POINT NUMBERS
-			if( HEX[0] && ! _strnicmp(fwd, HEX, lenHEX) && _CHCK_SIZE(fwd, lenHEX) ) {
-				fwd += lenHEX; while( * fwd && isxdigit(* fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
+			if( HEX[0] && ! _tcsnicmp(fwd, HEX, lenHEX) && _CHCK_SIZE(fwd, lenHEX) ) {
+				fwd += lenHEX; while( * fwd && _istxdigit(* fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
 				_WordFound(wcount++, WT_CONSTANT, RT_GLOBAL, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
-			} else if( isdigit(* fwd) && _CHCK_SIZE(fwd, 1) ) {
-				fwd++; while( * fwd && (isdigit(* fwd) || * fwd == '.') && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
+			} else if( _istdigit(* fwd) && _CHCK_SIZE(fwd, 1) ) {
+				fwd++; while( * fwd && (_istdigit(* fwd) || * fwd == '.') && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
 				_JUMP_ADDR(0x0401);
 			} else {
 				_ROLL_BACK(bPRE ? 0x0500 : (bVAR ? 0x0600 : 0x0700));
@@ -279,8 +279,8 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 			break;
 
 		case 0x0402:
-			if( * fwd && (* fwd == '+' || * fwd == '-' || isdigit(* fwd)) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) {
-				fwd++; while( * fwd && (isdigit(* fwd)) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
+			if( * fwd && (* fwd == '+' || * fwd == '-' || _istdigit(* fwd)) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) {
+				fwd++; while( * fwd && (_istdigit(* fwd)) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
 				_WordFound(wcount++, WT_CONSTANT, RT_GLOBAL, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
 			} else {
@@ -291,7 +291,7 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 
 
 		case 0x0500: // CHECK KEYWORD BEGINNING WITH PREFIX
-			if( PRE[0] && strchr(PRE, * fwd) && _CHCK_SIZE(fwd, 1) ) {
+			if( PRE[0] && _tcschr(PRE, * fwd) && _CHCK_SIZE(fwd, 1) ) {
 				fwd++; 
 				_JUMP_ADDR(0x0501);
 			} else {
@@ -303,11 +303,11 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 			if( bKEY && _pKEY->LookupTable(type, info, beg, fwd-beg) ) {
 				_WordFoundExtended(wcount++, type, info, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
-			} else if( * fwd && strchr( PRE, * fwd ) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) {
+			} else if( * fwd && _tcschr( PRE, * fwd ) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) {
 				fwd++;
 				_JUMP_ADDR(0x0501);
 			} else {
-				while( * fwd && ! isspace(* fwd) && ! strchr(DEL, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
+				while( * fwd && ! _istspace(* fwd) && ! _tcschr(DEL, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
 				_JUMP_ADDR(0x0502);
 			}
 			break;
@@ -323,11 +323,11 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 
 
 		case 0x0600: // CHECK VARIABLE BEGINING WITH PREFIX
-			if( VAR[0] && strchr(VAR, * fwd) && _CHCK_SIZE(fwd, 1) ) {
+			if( VAR[0] && _tcschr(VAR, * fwd) && _CHCK_SIZE(fwd, 1) ) {
 				fwd++;
 				_JUMP_ADDR(0x0601);
 			} else if( VQU && * fwd == VQU && _CHCK_SIZE(fwd, 1) ) {
-				fwd++; while( * fwd && ! isspace(* fwd) && * fwd != VQU && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
+				fwd++; while( * fwd && ! _istspace(* fwd) && * fwd != VQU && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
 				_JUMP_ADDR(0x0604);
 			} else {
 				_ROLL_BACK(0x0700);
@@ -336,13 +336,13 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 
 		case 0x0601:
 			if( * fwd && VEB[0] && * fwd == VEB[0] && _CHCK_SIZE(fwd, 1) ) {
-				fwd++; while( * fwd && ! isspace(* fwd) && ! strchr(VEB, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
+				fwd++; while( * fwd && ! _istspace(* fwd) && ! _tcschr(VEB, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
 				_JUMP_ADDR(0x0602);
-			} else if( * fwd && SVC[0] && strchr(SVC, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) {
-				fwd++; while( * fwd && strchr(SVC, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
+			} else if( * fwd && SVC[0] && _tcschr(SVC, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) {
+				fwd++; while( * fwd && _tcschr(SVC, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
 				_JUMP_ADDR(0x0603);
-			} else if( * fwd && ! isspace(* fwd) && ! strchr(DEL, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) {
-				fwd++; while( * fwd && ! isspace(* fwd) && ! strchr(DEL, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
+			} else if( * fwd && ! _istspace(* fwd) && ! _tcschr(DEL, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) {
+				fwd++; while( * fwd && ! _istspace(* fwd) && ! _tcschr(DEL, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
 				_WordFound(wcount++, WT_VARIABLE, RT_GLOBAL, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
 			} else {
@@ -361,8 +361,8 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 			break;
 
 		case 0x0603:
-			if( * fwd && ! isspace(* fwd) && ! strchr(DEL, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) {
-				fwd++; while( * fwd && ! isspace(* fwd) && ! strchr(DEL, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
+			if( * fwd && ! _istspace(* fwd) && ! _tcschr(DEL, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) {
+				fwd++; while( * fwd && ! _istspace(* fwd) && ! _tcschr(DEL, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
 				_WordFound(wcount++, WT_VARIABLE, RT_GLOBAL, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
 			} else {
@@ -383,8 +383,8 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 
 
 		case 0x0700: // CHECK IDENTIFIER
-			if( ! strchr(DEL, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) {
-				fwd++; while( * fwd && ! isspace(* fwd) && ! strchr(DEL, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
+			if( ! _tcschr(DEL, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) {
+				fwd++; while( * fwd && ! _istspace(* fwd) && ! _tcschr(DEL, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
 				_JUMP_ADDR(0x0701);
 			} else {
 				_ROLL_BACK(0x0800);
@@ -406,7 +406,7 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 
 
 		case 0x0800: // CHECK DELIMITERS
-			if( isprint(* fwd) && strchr(DEL, * fwd) && _CHCK_SIZE(fwd, 1) ) {
+			if( isprint(* fwd) && _tcschr(DEL, * fwd) && _CHCK_SIZE(fwd, 1) ) {
 				fwd++;
 				_WordFound(wcount++, WT_DELIMITER, RT_GLOBAL, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
@@ -430,8 +430,8 @@ INT CCedtDoc::GetCharType(TCHAR nChar)
 	DEL = m_clsLangSpec.m_szDelimiters;
 
 	if( bDBCS && IsDBCSLeadByte(nChar)  ) return CH_CHARACTER;
-	else if( isspace(nChar) || ! nChar  ) return CH_WHITESPACE;
-	else if( isprint(nChar) && strchr(DEL, nChar) ) return CH_DELIMITER;
+	else if( _istspace(nChar) || ! nChar  ) return CH_WHITESPACE;
+	else if( isprint(nChar) && _tcschr(DEL, nChar) ) return CH_DELIMITER;
 	else return CH_CHARACTER;
 }
 
@@ -467,11 +467,11 @@ void CCedtDoc::AnalyzeText(INT nIndex, INT nCount)
 	rngLC1 = m_clsLangSpec.m_ucLineComment1Range;			rngLC2 = m_clsLangSpec.m_ucLineComment2Range;
 	rngBC1 = m_clsLangSpec.m_ucBlockComment1Range;			rngBC2 = m_clsLangSpec.m_ucBlockComment2Range;
 
-	lenHEX = (INT)strlen(HEX);		lenHRD = (INT)strlen(HRD);
-	lenLF1 = (INT)strlen(LF1);		lenLF2 = (INT)strlen(LF2);		lenLC1 = (INT)strlen(LC1);		lenLC2 = (INT)strlen(LC2);
-	lenC1B = (INT)strlen(C1B);		lenC1E = (INT)strlen(C1E);		lenC2B = (INT)strlen(C2B);		lenC2E = (INT)strlen(C2E);
-	lenSDB = (INT)strlen(SDB);		lenSDE = (INT)strlen(SDE);		lenHLB = (INT)strlen(HLB);		lenHLE = (INT)strlen(HLE);
-	lenR1B = (INT)strlen(R1B);		lenR1E = (INT)strlen(R1E);		lenR2B = (INT)strlen(R2B);		lenR2E = (INT)strlen(R2E);
+	lenHEX = (INT)_tcslen(HEX);		lenHRD = (INT)_tcslen(HRD);
+	lenLF1 = (INT)_tcslen(LF1);		lenLF2 = (INT)_tcslen(LF2);		lenLC1 = (INT)_tcslen(LC1);		lenLC2 = (INT)_tcslen(LC2);
+	lenC1B = (INT)_tcslen(C1B);		lenC1E = (INT)_tcslen(C1E);		lenC2B = (INT)_tcslen(C2B);		lenC2E = (INT)_tcslen(C2E);
+	lenSDB = (INT)_tcslen(SDB);		lenSDE = (INT)_tcslen(SDE);		lenHLB = (INT)_tcslen(HLB);		lenHLE = (INT)_tcslen(HLE);
+	lenR1B = (INT)_tcslen(R1B);		lenR1E = (INT)_tcslen(R1E);		lenR2B = (INT)_tcslen(R2B);		lenR2E = (INT)_tcslen(R2E);
 
 	// global language options
 	bKEY = (BOOL)m_clsKeywords.GetCount();
@@ -489,7 +489,7 @@ void CCedtDoc::AnalyzeText(INT nIndex, INT nCount)
 
 	if( nCount > 1000 ) {
 		pWait = new CWaitCursor;
-		pMainFrame->BeginProgress("Analyzing...");
+		pMainFrame->BeginProgress(_T("Analyzing..."));
 	}
 
 	POSITION pos = m_clsAnalyzedText.FindIndex( nIndex );

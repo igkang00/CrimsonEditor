@@ -70,12 +70,12 @@
 
 namespace EVAL {
 	TCHAR szErrorMessage[][64] = {
-		"successful",
-		"internal error",
-		"wrong syntax",
-		"variable not defined",
-		"function not defined",
-		"function argument count",
+		_T("successful"),
+		_T("internal error"),
+		_T("wrong syntax"),
+		_T("variable not defined"),
+		_T("function not defined"),
+		_T("function argument count"),
 	};
 
 	CMap<CString, LPCTSTR, double, double> hashVariables;
@@ -122,7 +122,7 @@ TCHAR * EVAL::Evaluate(TCHAR * pExpr, double * pValue, INT * pError)
 	pExpr = EvalExpression( pExpr, pValue, pError );
 
 	if( * pError == EVAL_ERROR_SUCCESSFUL && * pExpr != '\0' ) * pError = EVAL_ERROR_WRONG_SYNTAX;
-	if( * pError == EVAL_ERROR_SUCCESSFUL ) hashVariables.SetAt("ans", * pValue);
+	if( * pError == EVAL_ERROR_SUCCESSFUL ) hashVariables.SetAt(_T("ans"), * pValue);
 
 	return pExpr;
 }
@@ -136,81 +136,81 @@ void EVAL::Initialize()
 {
 	hashVariables.InitHashTable(30);
 
-	hashVariables.SetAt("ans",			0.0);
-	hashVariables.SetAt("pi",			EVAL_VARIABLE_PI);
+	hashVariables.SetAt(_T("ans"),			0.0);
+	hashVariables.SetAt(_T("pi"),			EVAL_VARIABLE_PI);
 
-	hashVariables.SetAt("annual",		FRE_ANNUAL);
-	hashVariables.SetAt("semiannual",	FRE_SEMIANNUAL);
-	hashVariables.SetAt("quarterly",	FRE_QUARTERLY);
-	hashVariables.SetAt("bimonthly",	FRE_BIMONTHLY);
-	hashVariables.SetAt("monthly",		FRE_MONTHLY);
+	hashVariables.SetAt(_T("annual"),		FRE_ANNUAL);
+	hashVariables.SetAt(_T("semiannual"),	FRE_SEMIANNUAL);
+	hashVariables.SetAt(_T("quarterly"),	FRE_QUARTERLY);
+	hashVariables.SetAt(_T("bimonthly"),	FRE_BIMONTHLY);
+	hashVariables.SetAt(_T("monthly"),		FRE_MONTHLY);
 
-	hashVariables.SetAt("actact",		DCB_ACTACT);
-	hashVariables.SetAt("act360",		DCB_ACT360);
-	hashVariables.SetAt("act365",		DCB_ACT365);
-	hashVariables.SetAt("30360",		DCB_30360);
-	hashVariables.SetAt("30e360",		DCB_30E360);
-	hashVariables.SetAt("nl365",		DCB_NL365);
+	hashVariables.SetAt(_T("actact"),		DCB_ACTACT);
+	hashVariables.SetAt(_T("act360"),		DCB_ACT360);
+	hashVariables.SetAt(_T("act365"),		DCB_ACT365);
+	hashVariables.SetAt(_T("30360"),		DCB_30360);
+	hashVariables.SetAt(_T("30e360"),		DCB_30E360);
+	hashVariables.SetAt(_T("nl365"),		DCB_NL365);
 
-	hashVariables.SetAt("actual",		EMR_ACTUAL);
-	hashVariables.SetAt("endofmonth",	EMR_ENDOFMONTH);
-	hashVariables.SetAt("sunday",		HDC_SUNDAY);
-	hashVariables.SetAt("sunsat",		HDC_SUNSAT);
+	hashVariables.SetAt(_T("actual"),		EMR_ACTUAL);
+	hashVariables.SetAt(_T("endofmonth"),	EMR_ENDOFMONTH);
+	hashVariables.SetAt(_T("sunday"),		HDC_SUNDAY);
+	hashVariables.SetAt(_T("sunsat"),		HDC_SUNSAT);
 
 	hashFunctions.InitHashTable(100);
 
-	hashFunctions.SetAt("abs",			EVAL_FUNCTION_ABS);
-	hashFunctions.SetAt("fabs",			EVAL_FUNCTION_ABS);
-	hashFunctions.SetAt("mod",			EVAL_FUNCTION_MOD);
-	hashFunctions.SetAt("fmod",			EVAL_FUNCTION_MOD);
-	hashFunctions.SetAt("ceil",			EVAL_FUNCTION_CEIL);
-	hashFunctions.SetAt("floor",		EVAL_FUNCTION_FLOOR);
-	hashFunctions.SetAt("round",		EVAL_FUNCTION_ROUND);
-	hashFunctions.SetAt("min",			EVAL_FUNCTION_MIN);
-	hashFunctions.SetAt("max",			EVAL_FUNCTION_MAX);
+	hashFunctions.SetAt(_T("abs"),			EVAL_FUNCTION_ABS);
+	hashFunctions.SetAt(_T("fabs"),			EVAL_FUNCTION_ABS);
+	hashFunctions.SetAt(_T("mod"),			EVAL_FUNCTION_MOD);
+	hashFunctions.SetAt(_T("fmod"),			EVAL_FUNCTION_MOD);
+	hashFunctions.SetAt(_T("ceil"),			EVAL_FUNCTION_CEIL);
+	hashFunctions.SetAt(_T("floor"),		EVAL_FUNCTION_FLOOR);
+	hashFunctions.SetAt(_T("round"),		EVAL_FUNCTION_ROUND);
+	hashFunctions.SetAt(_T("min"),			EVAL_FUNCTION_MIN);
+	hashFunctions.SetAt(_T("max"),			EVAL_FUNCTION_MAX);
 
-	hashFunctions.SetAt("acos",			EVAL_FUNCTION_ACOS);
-	hashFunctions.SetAt("asin",			EVAL_FUNCTION_ASIN);
-	hashFunctions.SetAt("atan",			EVAL_FUNCTION_ATAN);
-	hashFunctions.SetAt("atan2",		EVAL_FUNCTION_ATAN2);
-	hashFunctions.SetAt("cos",			EVAL_FUNCTION_COS);
-	hashFunctions.SetAt("sin",			EVAL_FUNCTION_SIN);
-	hashFunctions.SetAt("tan",			EVAL_FUNCTION_TAN);
-	hashFunctions.SetAt("cosh",			EVAL_FUNCTION_COSH);
-	hashFunctions.SetAt("sinh",			EVAL_FUNCTION_SINH);
-	hashFunctions.SetAt("tanh",			EVAL_FUNCTION_TANH);
+	hashFunctions.SetAt(_T("acos"),			EVAL_FUNCTION_ACOS);
+	hashFunctions.SetAt(_T("asin"),			EVAL_FUNCTION_ASIN);
+	hashFunctions.SetAt(_T("atan"),			EVAL_FUNCTION_ATAN);
+	hashFunctions.SetAt(_T("atan2"),		EVAL_FUNCTION_ATAN2);
+	hashFunctions.SetAt(_T("cos"),			EVAL_FUNCTION_COS);
+	hashFunctions.SetAt(_T("sin"),			EVAL_FUNCTION_SIN);
+	hashFunctions.SetAt(_T("tan"),			EVAL_FUNCTION_TAN);
+	hashFunctions.SetAt(_T("cosh"),			EVAL_FUNCTION_COSH);
+	hashFunctions.SetAt(_T("sinh"),			EVAL_FUNCTION_SINH);
+	hashFunctions.SetAt(_T("tanh"),			EVAL_FUNCTION_TANH);
 
-	hashFunctions.SetAt("exp",			EVAL_FUNCTION_EXP);
-	hashFunctions.SetAt("log",			EVAL_FUNCTION_LOG);
-	hashFunctions.SetAt("log10",		EVAL_FUNCTION_LOG10);
-	hashFunctions.SetAt("pow",			EVAL_FUNCTION_POW);
-	hashFunctions.SetAt("sqr",			EVAL_FUNCTION_SQR);
-	hashFunctions.SetAt("sqrt",			EVAL_FUNCTION_SQRT);
+	hashFunctions.SetAt(_T("exp"),			EVAL_FUNCTION_EXP);
+	hashFunctions.SetAt(_T("log"),			EVAL_FUNCTION_LOG);
+	hashFunctions.SetAt(_T("log10"),		EVAL_FUNCTION_LOG10);
+	hashFunctions.SetAt(_T("pow"),			EVAL_FUNCTION_POW);
+	hashFunctions.SetAt(_T("sqr"),			EVAL_FUNCTION_SQR);
+	hashFunctions.SetAt(_T("sqrt"),			EVAL_FUNCTION_SQRT);
 
-	hashFunctions.SetAt("today",		EVAL_FUNCTION_TODAY);
-	hashFunctions.SetAt("yeardays",		EVAL_FUNCTION_YEARDAYS);
-	hashFunctions.SetAt("monthdays",	EVAL_FUNCTION_MONTHDAYS);
-	hashFunctions.SetAt("date2days",	EVAL_FUNCTION_DATE2DAYS);
-	hashFunctions.SetAt("days2date",	EVAL_FUNCTION_DAYS2DATE);
-	hashFunctions.SetAt("eomday",		EVAL_FUNCTION_EOMDAY);
-	hashFunctions.SetAt("eomdate",		EVAL_FUNCTION_EOMDATE);
-	hashFunctions.SetAt("weekday",		EVAL_FUNCTION_WEEKDAY);
+	hashFunctions.SetAt(_T("today"),		EVAL_FUNCTION_TODAY);
+	hashFunctions.SetAt(_T("yeardays"),		EVAL_FUNCTION_YEARDAYS);
+	hashFunctions.SetAt(_T("monthdays"),	EVAL_FUNCTION_MONTHDAYS);
+	hashFunctions.SetAt(_T("date2days"),	EVAL_FUNCTION_DATE2DAYS);
+	hashFunctions.SetAt(_T("days2date"),	EVAL_FUNCTION_DAYS2DATE);
+	hashFunctions.SetAt(_T("eomday"),		EVAL_FUNCTION_EOMDAY);
+	hashFunctions.SetAt(_T("eomdate"),		EVAL_FUNCTION_EOMDATE);
+	hashFunctions.SetAt(_T("weekday"),		EVAL_FUNCTION_WEEKDAY);
 
-	hashFunctions.SetAt("isbizdate",	EVAL_FUNCTION_ISBIZDATE);
-	hashFunctions.SetAt("nbizdate",		EVAL_FUNCTION_NBIZDATE);
-	hashFunctions.SetAt("pbizdate",		EVAL_FUNCTION_PBIZDATE);
-	hashFunctions.SetAt("adddays",		EVAL_FUNCTION_ADDDAYS);
-	hashFunctions.SetAt("addmonths",	EVAL_FUNCTION_ADDMONTHS);
-	hashFunctions.SetAt("addterms",		EVAL_FUNCTION_ADDTERMS);
+	hashFunctions.SetAt(_T("isbizdate"),	EVAL_FUNCTION_ISBIZDATE);
+	hashFunctions.SetAt(_T("nbizdate"),		EVAL_FUNCTION_NBIZDATE);
+	hashFunctions.SetAt(_T("pbizdate"),		EVAL_FUNCTION_PBIZDATE);
+	hashFunctions.SetAt(_T("adddays"),		EVAL_FUNCTION_ADDDAYS);
+	hashFunctions.SetAt(_T("addmonths"),	EVAL_FUNCTION_ADDMONTHS);
+	hashFunctions.SetAt(_T("addterms"),		EVAL_FUNCTION_ADDTERMS);
 
-	hashFunctions.SetAt("days360",		EVAL_FUNCTION_DAYS360);
-	hashFunctions.SetAt("days365",		EVAL_FUNCTION_DAYS365);
-	hashFunctions.SetAt("daysact",		EVAL_FUNCTION_DAYSACT);
-	hashFunctions.SetAt("daysbet",		EVAL_FUNCTION_DAYSBET);
-	hashFunctions.SetAt("monthsbet",	EVAL_FUNCTION_MONTHSBET);
-	hashFunctions.SetAt("termsbet",		EVAL_FUNCTION_TERMSBET);
-	hashFunctions.SetAt("termfrac",		EVAL_FUNCTION_TERMFRAC);
-	hashFunctions.SetAt("yearfrac",		EVAL_FUNCTION_YEARFRAC);
+	hashFunctions.SetAt(_T("days360"),		EVAL_FUNCTION_DAYS360);
+	hashFunctions.SetAt(_T("days365"),		EVAL_FUNCTION_DAYS365);
+	hashFunctions.SetAt(_T("daysact"),		EVAL_FUNCTION_DAYSACT);
+	hashFunctions.SetAt(_T("daysbet"),		EVAL_FUNCTION_DAYSBET);
+	hashFunctions.SetAt(_T("monthsbet"),	EVAL_FUNCTION_MONTHSBET);
+	hashFunctions.SetAt(_T("termsbet"),		EVAL_FUNCTION_TERMSBET);
+	hashFunctions.SetAt(_T("termfrac"),		EVAL_FUNCTION_TERMFRAC);
+	hashFunctions.SetAt(_T("yearfrac"),		EVAL_FUNCTION_YEARFRAC);
 }
 
 TCHAR * EVAL::EvalExpression(TCHAR * pExpr, double * pValue, INT * pError)
@@ -289,10 +289,10 @@ TCHAR * EVAL::EvalFactor(TCHAR * pExpr, double * pValue, INT * pError)
 	EVAL_EAT_WHITE( pExpr );
 
 	if     ( * pExpr == '\0'  ) return pExpr;
-	else if( isdigit(* pExpr) ) return EvalConstant( pExpr, pValue, pError );
+	else if( _istdigit(* pExpr) ) return EvalConstant( pExpr, pValue, pError );
 	else if( * pExpr == '('   ) return EvalParentheses( pExpr, pValue, pError );
 	else if( * pExpr == '$'   ) return EvalVariable( pExpr, pValue, pError );
-	else if( isalpha(* pExpr) ) return EvalFunction( pExpr, pValue, pError );
+	else if( _istalpha(* pExpr) ) return EvalFunction( pExpr, pValue, pError );
 	else   /* other cases    */ { * pError = EVAL_ERROR_WRONG_SYNTAX; return pExpr; }
 }
 
@@ -301,13 +301,13 @@ TCHAR * EVAL::EvalConstant(TCHAR * pExpr, double * pValue, INT * pError)
 	EVAL_EAT_WHITE( pExpr );
 
 	TCHAR * pEnd = pExpr;
-	while( isdigit(* pEnd) || * pEnd == '.' ) pEnd++;
+	while( _istdigit(* pEnd) || * pEnd == '.' ) pEnd++;
 
 	TCHAR szNum[2048]; INT nLen = (INT)(pEnd - pExpr);
-	if( nLen > 0 ) { strncpy( szNum, pExpr, nLen ); szNum[nLen] = '\0'; }
+	if( nLen > 0 ) { _tcsncpy( szNum, pExpr, nLen ); szNum[nLen] = '\0'; }
 	else { * pError = EVAL_ERROR_WRONG_SYNTAX; return pExpr; }
 
-	* pValue = atof( szNum );
+	* pValue = _tstof( szNum );
 	pExpr = pEnd;
 
 	return pExpr;
@@ -337,10 +337,10 @@ TCHAR * EVAL::EvalVariable(TCHAR * pExpr, double * pValue, INT * pError)
 	else { * pError = EVAL_ERROR_INTERNAL; return pExpr; }
 
 	TCHAR * pEnd = pExpr;
-	while( isalnum(* pEnd) ) pEnd++;
+	while( _istalnum(* pEnd) ) pEnd++;
 
 	TCHAR szVar[2048]; INT nLen = (INT)(pEnd - pExpr);
-	if( nLen > 0 ) { strncpy( szVar, pExpr, nLen ); szVar[nLen] = '\0'; _strlwr(szVar); }
+	if( nLen > 0 ) { _tcsncpy( szVar, pExpr, nLen ); szVar[nLen] = '\0'; _tcslwr(szVar); }
 	else { * pError = EVAL_ERROR_WRONG_SYNTAX; return pExpr; }
 
 	double dValue;
@@ -355,10 +355,10 @@ TCHAR * EVAL::EvalFunction(TCHAR * pExpr, double * pValue, INT * pError)
 	EVAL_EAT_WHITE( pExpr );
 
 	TCHAR * pEnd = pExpr;
-	while( isalnum(* pEnd) ) pEnd++;
+	while( _istalnum(* pEnd) ) pEnd++;
 
 	TCHAR szFun[2048]; INT nLen = (INT)(pEnd - pExpr);
-	if( nLen > 0 ) { strncpy( szFun, pExpr, nLen ); szFun[nLen] = '\0'; _strlwr(szFun); }
+	if( nLen > 0 ) { _tcsncpy( szFun, pExpr, nLen ); szFun[nLen] = '\0'; _tcslwr(szFun); }
 	else { * pError = EVAL_ERROR_WRONG_SYNTAX; return pExpr; }
 
 	INT nFunction;

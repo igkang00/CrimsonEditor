@@ -87,35 +87,35 @@ int CFindInFilesDialog::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	if( CDialog::OnCreate(lpCreateStruct) == -1 ) return -1;
 	
-	TRACE0("CFindInFilesDialog::OnCreate\n");
+	TRACE0(_T("CFindInFilesDialog::OnCreate\n"));
 	m_lstButtonImage.Create(IDB_GENERAL_BUTTONS, 9, 0, RGB(255, 0, 255));
 
 	// load find preferences from profile
 	CWinApp * pApp = AfxGetApp(); ASSERT( pApp );
 
-	m_bWholeWord = pApp->GetProfileInt( REGKEY_SEARCH_DIALOG, "WholeWord", FALSE );
-	m_bMatchCase = pApp->GetProfileInt( REGKEY_SEARCH_DIALOG, "MatchCase", FALSE );
-	m_bRegularExpression = pApp->GetProfileInt( REGKEY_SEARCH_DIALOG, "RegularExpression", FALSE );
-	m_bLookInSubfolders = pApp->GetProfileInt( REGKEY_SEARCH_DIALOG, "LookInSubfolders", FALSE );
+	m_bWholeWord = pApp->GetProfileInt( REGKEY_SEARCH_DIALOG, _T("WholeWord"), FALSE );
+	m_bMatchCase = pApp->GetProfileInt( REGKEY_SEARCH_DIALOG, _T("MatchCase"), FALSE );
+	m_bRegularExpression = pApp->GetProfileInt( REGKEY_SEARCH_DIALOG, _T("RegularExpression"), FALSE );
+	m_bLookInSubfolders = pApp->GetProfileInt( REGKEY_SEARCH_DIALOG, _T("LookInSubfolders"), FALSE );
 
 	m_lstFindString.RemoveAll();
-	INT nCount = pApp->GetProfileInt( REGKEY_SEARCH_DIALOG, "FindStringCount", 0 );
+	INT nCount = pApp->GetProfileInt( REGKEY_SEARCH_DIALOG, _T("FindStringCount"), 0 );
 
 	for( INT i = 0; i < nCount; i++ ) {
-		CString szEntry; szEntry.Format( "FindString%d", i );
-		CString szFindString = pApp->GetProfileString( REGKEY_SEARCH_DIALOG, szEntry, "" );
+		CString szEntry; szEntry.Format( _T("FindString%d"), i );
+		CString szFindString = pApp->GetProfileString( REGKEY_SEARCH_DIALOG, szEntry, _T("") );
 		m_lstFindString.AddTail( szFindString );
 	}
 
 	// load last used file type
-	m_szFileType = pApp->GetProfileString( REGKEY_SEARCH_DIALOG, "FIF_FileType", "");
+	m_szFileType = pApp->GetProfileString( REGKEY_SEARCH_DIALOG, _T("FIF_FileType"), _T(""));
 
 	m_lstFolder.RemoveAll();
-	INT nCoun3 = pApp->GetProfileInt( REGKEY_SEARCH_DIALOG, "FIF_FolderCount", 0 );
+	INT nCoun3 = pApp->GetProfileInt( REGKEY_SEARCH_DIALOG, _T("FIF_FolderCount"), 0 );
 
 	for( INT k = 0; k < nCoun3; k++ ) {
-		CString szEntry; szEntry.Format( "FIF_Folder%d", k );
-		CString szFolder = pApp->GetProfileString( REGKEY_SEARCH_DIALOG, szEntry, "" );
+		CString szEntry; szEntry.Format( _T("FIF_Folder%d"), k );
+		CString szFolder = pApp->GetProfileString( REGKEY_SEARCH_DIALOG, szEntry, _T("") );
 		m_lstFolder.AddTail( szFolder );
 	}
 	
@@ -126,36 +126,36 @@ void CFindInFilesDialog::OnDestroy()
 {
 	CDialog::OnDestroy();
 	
-	TRACE0("CFindInFilesDialog::OnDestroy\n");
+	TRACE0(_T("CFindInFilesDialog::OnDestroy\n"));
 	m_lstButtonImage.Detach();
 
 	// save find preferences to profile
 	CWinApp * pApp = AfxGetApp(); ASSERT( pApp );
 
-	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, "WholeWord", m_bWholeWord );
-	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, "MatchCase", m_bMatchCase );
-	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, "RegularExpression", m_bRegularExpression );
-	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, "LookInSubfolders", m_bLookInSubfolders );
+	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, _T("WholeWord"), m_bWholeWord );
+	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, _T("MatchCase"), m_bMatchCase );
+	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, _T("RegularExpression"), m_bRegularExpression );
+	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, _T("LookInSubfolders"), m_bLookInSubfolders );
 
 	INT nCount = (INT)m_lstFindString.GetCount();
-	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, "FindStringCount", nCount );
+	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, _T("FindStringCount"), nCount );
 
 	POSITION pos = m_lstFindString.GetHeadPosition();
 	for( INT i = 0; i < nCount; i++ ) {
-		CString szEntry; szEntry.Format( "FindString%d", i );
+		CString szEntry; szEntry.Format( _T("FindString%d"), i );
 		CString szFindString = m_lstFindString.GetNext( pos );
 		pApp->WriteProfileString( REGKEY_SEARCH_DIALOG, szEntry, szFindString );
 	}
 
 	// save last used file type
-	pApp->WriteProfileString( REGKEY_SEARCH_DIALOG, "FIF_FileType", m_szFileType );
+	pApp->WriteProfileString( REGKEY_SEARCH_DIALOG, _T("FIF_FileType"), m_szFileType );
 
 	INT nCoun3 = (INT)m_lstFolder.GetCount();
-	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, "FIF_FolderCount", nCoun3 );
+	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, _T("FIF_FolderCount"), nCoun3 );
 
 	POSITION po3 = m_lstFolder.GetHeadPosition();
 	for( INT k = 0; k < nCoun3; k++ ) {
-		CString szEntry; szEntry.Format( "FIF_Folder%d", k );
+		CString szEntry; szEntry.Format( _T("FIF_Folder%d"), k );
 		CString szFolder = m_lstFolder.GetNext( po3 );
 		pApp->WriteProfileString( REGKEY_SEARCH_DIALOG, szEntry, szFolder );
 	}
@@ -164,7 +164,7 @@ void CFindInFilesDialog::OnDestroy()
 BOOL CFindInFilesDialog::OnInitDialog() 
 {
 	CDialog::OnInitDialog();
-	TRACE0("CFindInFilesDialog::OnInitDialog\n");
+	TRACE0(_T("CFindInFilesDialog::OnInitDialog\n"));
 
 	m_btnFindString.SetIcon( m_lstButtonImage.ExtractIcon(2) );
 	
@@ -179,7 +179,7 @@ BOOL CFindInFilesDialog::OnInitDialog()
 	POSITION po2 = m_lstFileType.GetHeadPosition();
 	while( po2 ) m_cmbFileType.AddString( m_lstFileType.GetNext(po2) );
 
-	if( ! m_szFileType.GetLength() ) m_szFileType = "*.*";
+	if( ! m_szFileType.GetLength() ) m_szFileType = _T("*.*");
 	m_cmbFileType.SetWindowText( m_szFileType );
 
 	POSITION po3 = m_lstFolder.GetHeadPosition();
@@ -298,80 +298,80 @@ void CFindInFilesDialog::ReplaceFindSelection(LPCTSTR lpszString, INT nIncrement
 
 void CFindInFilesDialog::OnFindTextTabChar() 
 {
-	ReplaceFindSelection( "\\t", 2 );
+	ReplaceFindSelection( _T("\\t"), 2 );
 }
 
 void CFindInFilesDialog::OnFindTextAnyChar() 
 {
-	ReplaceFindSelection( ".", 1 );
+	ReplaceFindSelection( _T("."), 1 );
 }
 
 void CFindInFilesDialog::OnFindTextBeginOfLine() 
 {
-	ReplaceFindSelection( "^", 1 );
+	ReplaceFindSelection( _T("^"), 1 );
 }
 
 void CFindInFilesDialog::OnFindTextEndOfLine() 
 {
-	ReplaceFindSelection( "$", 1 );
+	ReplaceFindSelection( _T("$"), 1 );
 }
 
 void CFindInFilesDialog::OnFindTextZeroOrMore() 
 {
-	ReplaceFindSelection( "*", 1 );
+	ReplaceFindSelection( _T("*"), 1 );
 }
 
 void CFindInFilesDialog::OnFindTextOneOrMore() 
 {
-	ReplaceFindSelection( "+", 1 );
+	ReplaceFindSelection( _T("+"), 1 );
 }
 
 void CFindInFilesDialog::OnFindTextZeroOrOne() 
 {
-	ReplaceFindSelection( "?", 1 );
+	ReplaceFindSelection( _T("?"), 1 );
 }
 
 void CFindInFilesDialog::OnFindTextOr() 
 {
-	ReplaceFindSelection( "|", 1 );
+	ReplaceFindSelection( _T("|"), 1 );
 }
 
 void CFindInFilesDialog::OnFindTextInRange() 
 {
-	ReplaceFindSelection( "[]", 1 );
+	ReplaceFindSelection( _T("[]"), 1 );
 }
 
 void CFindInFilesDialog::OnFindTextNotInRange() 
 {
-	ReplaceFindSelection( "[^]", 2 );
+	ReplaceFindSelection( _T("[^]"), 2 );
 }
 
 void CFindInFilesDialog::OnFindTextWhiteSpace() 
 {
-	ReplaceFindSelection( "\\s", 2 );
+	ReplaceFindSelection( _T("\\s"), 2 );
 }
 
 void CFindInFilesDialog::OnFindTextAlnumChar() 
 {
-	ReplaceFindSelection( "\\w", 2 );
+	ReplaceFindSelection( _T("\\w"), 2 );
 }
 
 void CFindInFilesDialog::OnFindTextAlphaChar() 
 {
-	ReplaceFindSelection( "\\a", 2 );
+	ReplaceFindSelection( _T("\\a"), 2 );
 }
 
 void CFindInFilesDialog::OnFindTextDecDigit() 
 {
-	ReplaceFindSelection( "\\d", 2 );
+	ReplaceFindSelection( _T("\\d"), 2 );
 }
 
 void CFindInFilesDialog::OnFindTextHexDigit() 
 {
-	ReplaceFindSelection( "\\h", 2 );
+	ReplaceFindSelection( _T("\\h"), 2 );
 }
 
 void CFindInFilesDialog::OnFindTextTaggedExp() 
 {
-	ReplaceFindSelection( "()", 1 );
+	ReplaceFindSelection( _T("()"), 1 );
 }

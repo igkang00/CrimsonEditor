@@ -26,7 +26,7 @@ BOOL SetRegKeyValue(HKEY hRoot, LPCTSTR lpszRegPath, LPCTSTR lpszValName, LPCTST
 	DWORD dwType, dwDisposition; TCHAR szBuf[MAX_PATH]; HKEY hKey;
 	dwType = REG_SZ; szBuf[0] = '\0';
 	if( RegCreateKeyEx(hRoot, lpszRegPath, 0, szBuf, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, & hKey, & dwDisposition) != ERROR_SUCCESS ) return FALSE;
-	if( RegSetValueEx(hKey, lpszValName, 0, dwType, (const BYTE *)lpszValue, (DWORD)(strlen(lpszValue)+1)) != ERROR_SUCCESS ) return FALSE;
+	if( RegSetValueEx(hKey, lpszValName, 0, dwType, (const BYTE *)lpszValue, (DWORD)(_tcslen(lpszValue)+1)) != ERROR_SUCCESS ) return FALSE;
 	if( RegCloseKey(hKey) != ERROR_SUCCESS ) return FALSE;
 	return TRUE;
 }
@@ -49,32 +49,32 @@ BOOL DeleteRegValue(HKEY hRoot, LPCTSTR lpszRegPath, LPCTSTR lpszValName)
 BOOL RegisterInProcServer(LPCTSTR lpszClsID, LPCTSTR lpszProgID, LPCTSTR lpszServerPath)
 {
 	CString szRegPath;
-	szRegPath.Format("CLSID\\%s", lpszClsID);
-	if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath, "", lpszProgID) ) return FALSE;
-	szRegPath.Format("CLSID\\%s\\InProcServer32", lpszClsID);
-	if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath, "", lpszServerPath) ) return FALSE;
-	if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath, "ThreadingModel", "Apartment") ) return FALSE;
-	szRegPath.Format("CLSID\\%s\\ProgID", lpszClsID);
-	if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath, "", lpszProgID) ) return FALSE;
-	szRegPath.Format("%s", lpszProgID);
-	if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath, "", lpszProgID) ) return FALSE;
-	szRegPath.Format("%s\\CLSID", lpszProgID);
-	if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath, "", lpszClsID) ) return FALSE;
+	szRegPath.Format(_T("CLSID\\%s"), lpszClsID);
+	if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath, _T(""), lpszProgID) ) return FALSE;
+	szRegPath.Format(_T("CLSID\\%s\\InProcServer32"), lpszClsID);
+	if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath, _T(""), lpszServerPath) ) return FALSE;
+	if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath, _T("ThreadingModel"), _T("Apartment")) ) return FALSE;
+	szRegPath.Format(_T("CLSID\\%s\\ProgID"), lpszClsID);
+	if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath, _T(""), lpszProgID) ) return FALSE;
+	szRegPath.Format(_T("%s"), lpszProgID);
+	if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath, _T(""), lpszProgID) ) return FALSE;
+	szRegPath.Format(_T("%s\\CLSID"), lpszProgID);
+	if( ! SetRegKeyValue(HKEY_CLASSES_ROOT, szRegPath, _T(""), lpszClsID) ) return FALSE;
 	return TRUE;
 }
 
 BOOL UnregisterInProcServer(LPCTSTR lpszClsID, LPCTSTR lpszProgID)
 {
 	CString szRegPath;
-	szRegPath.Format("%s\\CLSID", lpszProgID);
+	szRegPath.Format(_T("%s\\CLSID"), lpszProgID);
 	if( ! DeleteRegKey(HKEY_CLASSES_ROOT, szRegPath) ) return FALSE;
-	szRegPath.Format("%s", lpszProgID);
+	szRegPath.Format(_T("%s"), lpszProgID);
 	if( ! DeleteRegKey(HKEY_CLASSES_ROOT, szRegPath) ) return FALSE;
-	szRegPath.Format("CLSID\\%s\\ProgID", lpszClsID);
+	szRegPath.Format(_T("CLSID\\%s\\ProgID"), lpszClsID);
 	if( ! DeleteRegKey(HKEY_CLASSES_ROOT, szRegPath) ) return FALSE;
-	szRegPath.Format("CLSID\\%s\\InProcServer32", lpszClsID);
+	szRegPath.Format(_T("CLSID\\%s\\InProcServer32"), lpszClsID);
 	if( ! DeleteRegKey(HKEY_CLASSES_ROOT, szRegPath) ) return FALSE;
-	szRegPath.Format("CLSID\\%s", lpszClsID);
+	szRegPath.Format(_T("CLSID\\%s"), lpszClsID);
 	if( ! DeleteRegKey(HKEY_CLASSES_ROOT, szRegPath) ) return FALSE;
 	return TRUE;
 }

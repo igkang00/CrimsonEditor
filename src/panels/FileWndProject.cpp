@@ -15,7 +15,7 @@ BOOL CFileWindow::InitProjectWorkspace()
 	EnableAllProjectButtons(FALSE);
 
 	CString szItemText; szItemText.LoadString(IDS_MENU_NO_PROJECT_AVAILABLE);
-	if( ! InsertProjectTreeItem(TVI_ROOT, szItemText, PROJECT_ITEM_PROJECT, 0, "") ) return FALSE;
+	if( ! InsertProjectTreeItem(TVI_ROOT, szItemText, PROJECT_ITEM_PROJECT, 0, _T("")) ) return FALSE;
 
 	EnableAllProjectButtons(FALSE);
 	return TRUE;
@@ -40,7 +40,7 @@ BOOL CFileWindow::SaveProjectWorkspace(LPCTSTR lpszPathName)
 	CString szContents;
 
 	// save project
-	szContents.Format("<project version=\"%s\">", STRING_PROJECTFILEVER);
+	szContents.Format(_T("<project version=\")%s\_T(">"), STRING_PROJECTFILEVER);
 	fout << szContents << endl;
 
 	HTREEITEM hRoot = m_treProjectTree.GetRootItem();
@@ -50,10 +50,10 @@ BOOL CFileWindow::SaveProjectWorkspace(LPCTSTR lpszPathName)
 		hChild = m_treProjectTree.GetNextSiblingItem( hChild );
 	}
 
-	fout << "</project>" << endl << endl;
+	fout << _T("</project>") << endl << endl;
 
 	// save workspace
-	szContents.Format("<workspace version=\"%s\">", STRING_PROJECTFILEVER);
+	szContents.Format(_T("<workspace version=\")%s\_T(">"), STRING_PROJECTFILEVER);
 	fout << szContents << endl;
 
 	CMainFrame * pFrame = (CMainFrame *)AfxGetMainWnd();
@@ -63,7 +63,7 @@ BOOL CFileWindow::SaveProjectWorkspace(LPCTSTR lpszPathName)
 		if( ! SaveWorkspaceItem(fout, 1, pChild) ) { fout.close(); return FALSE; }
 	}
 
-	fout << "</workspace>" << endl << endl;
+	fout << _T("</workspace>") << endl << endl;
 
 	fout.close(); return TRUE;
 }
@@ -80,17 +80,17 @@ BOOL CFileWindow::OpenProjectWorkspace(LPCTSTR lpszPathName)
 	fin.width(kProjectTokenBufSize); fin >> szText; // get first token
 
 	// load project
-	if( ! _stricmp(szText, "<project") ) {
+	if( ! _tcsicmp(szText, _T("<project")) ) {
 		fin.getline(szText, 4096, '>'); // get attributes
 		if( ! ParseItemAttribute( szText, mapAttr ) ) { fin.close(); return FALSE; }
 
-		CString szVersion; BOOL bLookup = mapAttr.Lookup("version", szVersion);
+		CString szVersion; BOOL bLookup = mapAttr.Lookup(_T("version"), szVersion);
 		if( ! bLookup ) { AfxMessageBox(IDS_ERR_WRONG_PRJ_FILE); fin.close(); return FALSE; }
 
 		HTREEITEM hItem = InsertProjectTreeItem(TVI_ROOT, GetFileName(lpszPathName), PROJECT_ITEM_PROJECT, 0, lpszPathName);
 		fin.width(kProjectTokenBufSize); fin >> szText; // get next token
 
-		while( _stricmp(szText, "</project>") ) {
+		while( _tcsicmp(szText, _T("</project>")) ) {
 			if( ! LoadProjectItem(fin, szText, hItem) ) { fin.close(); return FALSE; }
 		}
 		fin.width(kProjectTokenBufSize); fin >> szText; // get next token
@@ -102,17 +102,17 @@ BOOL CFileWindow::OpenProjectWorkspace(LPCTSTR lpszPathName)
 	} else { AfxMessageBox(IDS_ERR_WRONG_PRJ_FILE); fin.close(); return FALSE; }
 
 	// load workspace
-	if( ! _stricmp(szText, "<workspace") ) {
+	if( ! _tcsicmp(szText, _T("<workspace")) ) {
 		fin.getline(szText, 4096, '>'); // get attributes
 		if( ! ParseItemAttribute( szText, mapAttr ) ) { fin.close(); return FALSE; }
 
-		CString szVersion; BOOL bLookup = mapAttr.Lookup("version", szVersion);
+		CString szVersion; BOOL bLookup = mapAttr.Lookup(_T("version"), szVersion);
 		if( ! bLookup ) { AfxMessageBox(IDS_ERR_WRONG_PRJ_FILE); fin.close(); return FALSE; }
 
 		CCedtApp * pApp = (CCedtApp *)AfxGetApp();
 		fin.width(kProjectTokenBufSize); fin >> szText; // get next token
 
-		while( _stricmp(szText, "</workspace>") ) {
+		while( _tcsicmp(szText, _T("</workspace>")) ) {
 			if( ! LoadWorkspaceItem(fin, szText, pApp) ) { fin.close(); return FALSE; }
 		}
 		fin.width(kProjectTokenBufSize); fin >> szText; // get next token
@@ -131,7 +131,7 @@ BOOL CFileWindow::SaveRegularWorkspace(LPCTSTR lpszPathName)
 	CString szContents;
 
 	// save workspace
-	szContents.Format("<workspace version=\"%s\">", STRING_PROJECTFILEVER);
+	szContents.Format(_T("<workspace version=\")%s\_T(">"), STRING_PROJECTFILEVER);
 	fout << szContents << endl;
 
 	CMainFrame * pFrame = (CMainFrame *)AfxGetMainWnd();
@@ -141,7 +141,7 @@ BOOL CFileWindow::SaveRegularWorkspace(LPCTSTR lpszPathName)
 		if( ! SaveWorkspaceItem(fout, 1, pChild) ) { fout.close(); return FALSE; }
 	}
 
-	fout << "</workspace>" << endl << endl;
+	fout << _T("</workspace>") << endl << endl;
 
 	fout.close(); return TRUE;
 }
@@ -153,7 +153,7 @@ BOOL CFileWindow::OpenRegularWorkspace(LPCTSTR lpszPathName)
 
 	// init project workspace
 	CString szItemText; szItemText.LoadString(IDS_MENU_NO_PROJECT_AVAILABLE);
-	if( ! InsertProjectTreeItem(TVI_ROOT, szItemText, PROJECT_ITEM_PROJECT, 0, "") ) return FALSE;
+	if( ! InsertProjectTreeItem(TVI_ROOT, szItemText, PROJECT_ITEM_PROJECT, 0, _T("")) ) return FALSE;
 
 	// open file to load regular workspace
 	ifstream fin(lpszPathName, ios::in);
@@ -162,17 +162,17 @@ BOOL CFileWindow::OpenRegularWorkspace(LPCTSTR lpszPathName)
 	fin.width(kProjectTokenBufSize); fin >> szText; // get first token
 
 	// load workspace
-	if( ! _stricmp(szText, "<workspace") ) {
+	if( ! _tcsicmp(szText, _T("<workspace")) ) {
 		fin.getline(szText, 4096, '>'); // get attributes
 		if( ! ParseItemAttribute( szText, mapAttr ) ) { fin.close(); return FALSE; }
 
-		CString szVersion; BOOL bLookup = mapAttr.Lookup("version", szVersion);
+		CString szVersion; BOOL bLookup = mapAttr.Lookup(_T("version"), szVersion);
 		if( ! bLookup ) { AfxMessageBox(IDS_ERR_WRONG_PRJ_FILE); fin.close(); return FALSE; }
 
 		CCedtApp * pApp = (CCedtApp *)AfxGetApp();
 		fin.width(kProjectTokenBufSize); fin >> szText; // get next token
 
-		while( _stricmp(szText, "</workspace>") ) {
+		while( _tcsicmp(szText, _T("</workspace>")) ) {
 			if( ! LoadWorkspaceItem(fin, szText, pApp) ) { fin.close(); return FALSE; }
 		}
 		fin.width(kProjectTokenBufSize); fin >> szText; // get next token
@@ -257,7 +257,7 @@ BOOL CFileWindow::IsSelectedProjectItemRoot()
 CString CFileWindow::GetSelectedProjectItemText()
 {
 	HTREEITEM hItem = m_treProjectTree.GetSelectedItem();
-	if( ! hItem ) { AfxMessageBox(IDS_ERR_NO_PRJ_ITEM_SELECTED); return ""; }
+	if( ! hItem ) { AfxMessageBox(IDS_ERR_NO_PRJ_ITEM_SELECTED); return _T(""); }
 	return m_treProjectTree.GetItemText(hItem);
 }
 
@@ -326,10 +326,10 @@ BOOL CFileWindow::SaveProjectItem(ostream & os, INT nLevel, HTREEITEM hItem)
 {
 	INT nImage, nSelectedImage; m_treProjectTree.GetItemImage( hItem, nImage, nSelectedImage );
 	CString szContents, szIndent('\t', nLevel), szText = m_treProjectTree.GetItemText( hItem );
-	CString szExpanded = (m_treProjectTree.GetItemState(hItem, TVIS_EXPANDED) & TVIS_EXPANDED) ? "yes" : "no";
+	CString szExpanded = (m_treProjectTree.GetItemState(hItem, TVIS_EXPANDED) & TVIS_EXPANDED) ? _T("yes") : _T("no");
 
 	if( nImage == PROJECT_ITEM_CATEGORY ) {
-		szContents.Format("<category name=\"%s\" expanded=\"%s\">", szText, szExpanded);
+		szContents.Format(_T("<category name=\")%s\_T(" expanded=\")%s\_T(">"), szText, szExpanded);
 		os << szIndent << szContents << endl;
 
 		HTREEITEM hChild = m_treProjectTree.GetChildItem( hItem );
@@ -338,11 +338,11 @@ BOOL CFileWindow::SaveProjectItem(ostream & os, INT nLevel, HTREEITEM hItem)
 			hChild = m_treProjectTree.GetNextSiblingItem( hChild );
 		}
 
-		os << szIndent << "</category>" << endl;
+		os << szIndent << _T("</category>") << endl;
 
 	} else if( nImage == PROJECT_ITEM_LOCAL_FILE ) {
 		CString szPath = GetProjectItemPathName( hItem );
-		szContents.Format("<localfile path=\"%s\" />", szPath);
+		szContents.Format(_T("<localfile path=\")%s\_T(" />"), szPath);
 
 		os << szIndent << szContents << endl;
 
@@ -351,7 +351,7 @@ BOOL CFileWindow::SaveProjectItem(ostream & os, INT nLevel, HTREEITEM hItem)
 		INT nAccount = lpInfo->nFtpAccount;
 		CString szPath = lpInfo->szPathName;
 
-		szContents.Format("<remotefile account=\"%d\" path=\"%s\" />", nAccount, szPath);
+		szContents.Format(_T("<remotefile account=\")%d\_T(" path=\")%s\_T(" />"), nAccount, szPath);
 
 		os << szIndent << szContents << endl;
 
@@ -364,50 +364,50 @@ BOOL CFileWindow::LoadProjectItem(istream & is, TCHAR szText[], HTREEITEM hParen
 {
 	CMapStringToString mapAttr; 
 
-	if( ! _stricmp(szText, "<category") ) {
+	if( ! _tcsicmp(szText, _T("<category")) ) {
 		is.getline(szText, 4096, '>'); // get attributes
 		if( ! ParseItemAttribute( szText, mapAttr ) ) return FALSE;
 
-		CString szName; BOOL bLookup = mapAttr.Lookup("name", szName);
+		CString szName; BOOL bLookup = mapAttr.Lookup(_T("name"), szName);
 		if( ! bLookup ) { AfxMessageBox(IDS_ERR_WRONG_PRJ_FILE); return FALSE; }
 
-		CString szExpanded; bLookup = mapAttr.Lookup("expanded", szExpanded);
-		if( ! bLookup ) { szExpanded = "no"; }
+		CString szExpanded; bLookup = mapAttr.Lookup(_T("expanded"), szExpanded);
+		if( ! bLookup ) { szExpanded = _T("no"); }
 
-		HTREEITEM hItem = InsertProjectTreeItem(hParent, szName, PROJECT_ITEM_CATEGORY, 0, "");
+		HTREEITEM hItem = InsertProjectTreeItem(hParent, szName, PROJECT_ITEM_CATEGORY, 0, _T(""));
 		is.width(kProjectTokenBufSize); is >> szText; // get next token
 
-		while( _stricmp(szText, "</category>") ) {
+		while( _tcsicmp(szText, _T("</category>")) ) {
 			if( ! LoadProjectItem(is, szText, hItem) ) return FALSE;
 		}
 		is.width(kProjectTokenBufSize); is >> szText; // get next token
 
 		// expand category item if it is checked
-		if( ! szExpanded.Compare("yes") ) m_treProjectTree.Expand( hItem, TVE_EXPAND );
+		if( ! szExpanded.Compare(_T("yes")) ) m_treProjectTree.Expand( hItem, TVE_EXPAND );
 
-	} else if( ! _stricmp(szText, "<localfile") ) {
+	} else if( ! _tcsicmp(szText, _T("<localfile")) ) {
 		is.getline(szText, 4096, '>'); // get attributes
-		INT nLen = (INT)strlen(szText); if( szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
+		INT nLen = (INT)_tcslen(szText); if( szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
 		if( ! ParseItemAttribute( szText, mapAttr ) ) return FALSE;
 
-		CString szPath; BOOL bLookup = mapAttr.Lookup("path", szPath);
+		CString szPath; BOOL bLookup = mapAttr.Lookup(_T("path"), szPath);
 		if( ! bLookup ) { AfxMessageBox(IDS_ERR_WRONG_PRJ_FILE); return FALSE; }
 
 		HTREEITEM hItem = InsertProjectTreeItem(hParent, GetFileName(szPath), PROJECT_ITEM_LOCAL_FILE, 0, szPath);
 		is.width(kProjectTokenBufSize); is >> szText; // get next token
 
-	} else if( ! _stricmp(szText, "<remotefile") ) {
+	} else if( ! _tcsicmp(szText, _T("<remotefile")) ) {
 		is.getline(szText, 4096, '>'); // get attributes
-		INT nLen = (INT)strlen(szText); if( szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
+		INT nLen = (INT)_tcslen(szText); if( szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
 		if( ! ParseItemAttribute( szText, mapAttr ) ) return FALSE;
 
-		CString szAccount; BOOL bLookup = mapAttr.Lookup("account", szAccount);
+		CString szAccount; BOOL bLookup = mapAttr.Lookup(_T("account"), szAccount);
 		if( ! bLookup ) { AfxMessageBox(IDS_ERR_WRONG_PRJ_FILE); return FALSE; }
 
-		CString szPath; bLookup = mapAttr.Lookup("path", szPath);
+		CString szPath; bLookup = mapAttr.Lookup(_T("path"), szPath);
 		if( ! bLookup ) { AfxMessageBox(IDS_ERR_WRONG_PRJ_FILE); return FALSE; }
 
-		HTREEITEM hItem = InsertProjectTreeItem(hParent, GetFileName(szPath), PROJECT_ITEM_REMOTE_FILE, atoi(szAccount), szPath);
+		HTREEITEM hItem = InsertProjectTreeItem(hParent, GetFileName(szPath), PROJECT_ITEM_REMOTE_FILE, _ttoi(szAccount), szPath);
 		is.width(kProjectTokenBufSize); is >> szText; // get next token
 
 	} else { // not recognized item
@@ -433,7 +433,7 @@ BOOL CFileWindow::SaveWorkspaceItem(ostream & os, INT nLevel, CMDIChildWnd * pCh
 		INT nLineNum = pView->GetCurrentLineNumber();
 		WINDOWPLACEMENT wndpl; pChild->GetWindowPlacement( & wndpl );
 
-		szContents.Format("<remotefile account=\"%d\" path=\"%s\" linenum=\"%d\" placement=\"%d:%d:%d:%d:%d:%d:%d:%d:%d:%d\" />",
+		szContents.Format(_T("<remotefile account=\")%d\_T(" path=\")%s\_T(" linenum=\")%d\_T(" placement=\")%d:%d:%d:%d:%d:%d:%d:%d:%d:%d\_T(" />"),
 			nAccount, szPath, nLineNum, (INT)wndpl.flags, (INT)wndpl.showCmd, 
 			wndpl.ptMinPosition.x, wndpl.ptMinPosition.y, 
 			wndpl.ptMaxPosition.x, wndpl.ptMaxPosition.y,
@@ -450,7 +450,7 @@ BOOL CFileWindow::SaveWorkspaceItem(ostream & os, INT nLevel, CMDIChildWnd * pCh
 
 		WINDOWPLACEMENT wndpl; pChild->GetWindowPlacement( & wndpl );
 
-		szContents.Format("<localfile path=\"%s\" linenum=\"%d\" placement=\"%d:%d:%d:%d:%d:%d:%d:%d:%d:%d\" />", 
+		szContents.Format(_T("<localfile path=\")%s\_T(" linenum=\")%d\_T(" placement=\")%d:%d:%d:%d:%d:%d:%d:%d:%d:%d\_T(" />"), 
 			szPath, nLineNum, (INT)wndpl.flags, (INT)wndpl.showCmd, 
 			wndpl.ptMinPosition.x, wndpl.ptMinPosition.y, 
 			wndpl.ptMaxPosition.x, wndpl.ptMaxPosition.y,
@@ -468,75 +468,75 @@ BOOL CFileWindow::LoadWorkspaceItem(istream & is, TCHAR szText[], CWinApp * pApp
 	CCedtApp * pCedtApp = (CCedtApp *)pApp;
 	CMapStringToString mapAttr;
 
-	if( ! _stricmp(szText, "<remotefile") ) {
+	if( ! _tcsicmp(szText, _T("<remotefile")) ) {
 		is.getline(szText, 4096, '>'); // get attributes
-		INT nLen = (INT)strlen(szText); if( szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
+		INT nLen = (INT)_tcslen(szText); if( szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
 		if( ! ParseItemAttribute( szText, mapAttr ) ) return FALSE;
 
-		CString szAccount; BOOL bLookup = mapAttr.Lookup("account", szAccount);
+		CString szAccount; BOOL bLookup = mapAttr.Lookup(_T("account"), szAccount);
 		if( ! bLookup ) { AfxMessageBox(IDS_ERR_WRONG_PRJ_FILE); return FALSE; }
 
-		CString szPath; bLookup = mapAttr.Lookup("path", szPath);
+		CString szPath; bLookup = mapAttr.Lookup(_T("path"), szPath);
 		if( ! bLookup ) { AfxMessageBox(IDS_ERR_WRONG_PRJ_FILE); return FALSE; }
 
-		CString szLineNum; bLookup = mapAttr.Lookup("linenum", szLineNum);
+		CString szLineNum; bLookup = mapAttr.Lookup(_T("linenum"), szLineNum);
 		if( ! bLookup ) { AfxMessageBox(IDS_ERR_WRONG_PRJ_FILE); return FALSE; }
 
-		CString szPlacement; bLookup = mapAttr.Lookup("placement", szPlacement);
-		if( ! bLookup ) { szPlacement = ""; }
+		CString szPlacement; bLookup = mapAttr.Lookup(_T("placement"), szPlacement);
+		if( ! bLookup ) { szPlacement = _T(""); }
 
 		WINDOWPLACEMENT * pwndpl = NULL;
 		if( szPlacement.GetLength() ) {
 			WINDOWPLACEMENT wndpl; wndpl.length = sizeof(wndpl);
 			INT nFound = 0; pwndpl = & wndpl;
 
-			wndpl.flags = atoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
-			wndpl.showCmd = atoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
-			wndpl.ptMinPosition.x = atoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
-			wndpl.ptMinPosition.y = atoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
-			wndpl.ptMaxPosition.x = atoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
-			wndpl.ptMaxPosition.y = atoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
-			wndpl.rcNormalPosition.left = atoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
-			wndpl.rcNormalPosition.top = atoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
-			wndpl.rcNormalPosition.right = atoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
-			wndpl.rcNormalPosition.bottom = atoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
+			wndpl.flags = _ttoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
+			wndpl.showCmd = _ttoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
+			wndpl.ptMinPosition.x = _ttoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
+			wndpl.ptMinPosition.y = _ttoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
+			wndpl.ptMaxPosition.x = _ttoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
+			wndpl.ptMaxPosition.y = _ttoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
+			wndpl.rcNormalPosition.left = _ttoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
+			wndpl.rcNormalPosition.top = _ttoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
+			wndpl.rcNormalPosition.right = _ttoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
+			wndpl.rcNormalPosition.bottom = _ttoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
 		}
 
-		pCedtApp->SpawnRemoteDocumentFile(atoi(szAccount), szPath, atoi(szLineNum), pwndpl);
+		pCedtApp->SpawnRemoteDocumentFile(_ttoi(szAccount), szPath, _ttoi(szLineNum), pwndpl);
 		is.width(kProjectTokenBufSize); is >> szText; // get next token
 
-	} else if( ! _stricmp(szText, "<localfile") ) {
+	} else if( ! _tcsicmp(szText, _T("<localfile")) ) {
 		is.getline(szText, 4096, '>'); // get attributes
-		INT nLen = (INT)strlen(szText); if( szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
+		INT nLen = (INT)_tcslen(szText); if( szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
 		if( ! ParseItemAttribute( szText, mapAttr ) ) return FALSE;
 
-		CString szPath; BOOL bLookup = mapAttr.Lookup("path", szPath);
+		CString szPath; BOOL bLookup = mapAttr.Lookup(_T("path"), szPath);
 		if( ! bLookup ) { AfxMessageBox(IDS_ERR_WRONG_PRJ_FILE); return FALSE; }
 
-		CString szLineNum; bLookup = mapAttr.Lookup("linenum", szLineNum);
+		CString szLineNum; bLookup = mapAttr.Lookup(_T("linenum"), szLineNum);
 		if( ! bLookup ) { AfxMessageBox(IDS_ERR_WRONG_PRJ_FILE); return FALSE; }
 
-		CString szPlacement; bLookup = mapAttr.Lookup("placement", szPlacement);
-		if( ! bLookup ) { szPlacement = ""; }
+		CString szPlacement; bLookup = mapAttr.Lookup(_T("placement"), szPlacement);
+		if( ! bLookup ) { szPlacement = _T(""); }
 
 		WINDOWPLACEMENT * pwndpl = NULL;
 		if( szPlacement.GetLength() ) {
 			WINDOWPLACEMENT wndpl; wndpl.length = sizeof(wndpl);
 			INT nFound = 0; pwndpl = & wndpl;
 
-			wndpl.flags = atoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
-			wndpl.showCmd = atoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
-			wndpl.ptMinPosition.x = atoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
-			wndpl.ptMinPosition.y = atoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
-			wndpl.ptMaxPosition.x = atoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
-			wndpl.ptMaxPosition.y = atoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
-			wndpl.rcNormalPosition.left = atoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
-			wndpl.rcNormalPosition.top = atoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
-			wndpl.rcNormalPosition.right = atoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
-			wndpl.rcNormalPosition.bottom = atoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
+			wndpl.flags = _ttoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
+			wndpl.showCmd = _ttoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
+			wndpl.ptMinPosition.x = _ttoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
+			wndpl.ptMinPosition.y = _ttoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
+			wndpl.ptMaxPosition.x = _ttoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
+			wndpl.ptMaxPosition.y = _ttoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
+			wndpl.rcNormalPosition.left = _ttoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
+			wndpl.rcNormalPosition.top = _ttoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
+			wndpl.rcNormalPosition.right = _ttoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
+			wndpl.rcNormalPosition.bottom = _ttoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
 		}
 
-		pCedtApp->SpawnDocumentFile(szPath, atoi(szLineNum), pwndpl);
+		pCedtApp->SpawnDocumentFile(szPath, _ttoi(szLineNum), pwndpl);
 		is.width(kProjectTokenBufSize); is >> szText; // get next token
 
 	} else { // not recognized item
@@ -553,18 +553,18 @@ BOOL CFileWindow::ParseItemAttribute(LPCTSTR lpszText, CMapStringToString & mapA
 	CString szAttrName, szAttrValue;
 
 	mapAttr.RemoveAll();
-	while( * pEnd && isspace(* pEnd) ) pEnd++;
+	while( * pEnd && _istspace(* pEnd) ) pEnd++;
 
 	while( * pEnd ) {
-		pBeg = pEnd; while( * pEnd && ! isspace(* pEnd) && * pEnd != '=' ) pEnd++;
+		pBeg = pEnd; while( * pEnd && ! _istspace(* pEnd) && * pEnd != '=' ) pEnd++;
 		szAttrName = CString(pBeg, (int)(pEnd-pBeg));
 
-		while( * pEnd && isspace(* pEnd) ) pEnd++;
+		while( * pEnd && _istspace(* pEnd) ) pEnd++;
 
 		if( * pEnd == '=' ) { pEnd++; } 
 		else { AfxMessageBox(IDS_ERR_PARSE_PRJ_ATTR); return FALSE; }
 
-		while( * pEnd && isspace(* pEnd) ) pEnd++;
+		while( * pEnd && _istspace(* pEnd) ) pEnd++;
 
 		if( * pEnd == '"' ) { pEnd++; } 
 		else { AfxMessageBox(IDS_ERR_PARSE_PRJ_ATTR); return FALSE; }
@@ -576,7 +576,7 @@ BOOL CFileWindow::ParseItemAttribute(LPCTSTR lpszText, CMapStringToString & mapA
 		else { AfxMessageBox(IDS_ERR_PARSE_PRJ_ATTR); return FALSE; }
 
 		mapAttr.SetAt( szAttrName, szAttrValue );
-		while( * pEnd && isspace(* pEnd) ) pEnd++;
+		while( * pEnd && _istspace(* pEnd) ) pEnd++;
 	}
 
 	return TRUE;
@@ -587,7 +587,7 @@ BOOL CFileWindow::AddCategoryToProject(HTREEITEM hParent, LPCTSTR lpszCategory, 
 	HTREEITEM hFound = FindProjectTreeChildItem(hParent, lpszCategory);
 	if( hFound ) { AfxMessageBox(IDS_ERR_DUPLICATE_PRJ_ITEM); return FALSE; }
 
-	HTREEITEM hInsert = InsertProjectTreeItem(hParent, lpszCategory, PROJECT_ITEM_CATEGORY, 0, "");
+	HTREEITEM hInsert = InsertProjectTreeItem(hParent, lpszCategory, PROJECT_ITEM_CATEGORY, 0, _T(""));
 	if( ! hInsert ) { AfxMessageBox(IDS_ERR_INSERT_PRJ_ITEM); return FALSE; }
 
 	// expand parent category item
@@ -629,7 +629,7 @@ BOOL CFileWindow::AddLocalDirectoryToProject(HTREEITEM hParent, LPCTSTR lpszPath
 	HTREEITEM hFound = FindProjectTreeChildItem(hParent, GetFileName(lpszPathName));
 	if( hFound ) { AfxMessageBox(IDS_ERR_DUPLICATE_PRJ_ITEM); return FALSE; }
 
-	HTREEITEM hInsert = InsertProjectTreeItem(hParent, GetFileName(lpszPathName), PROJECT_ITEM_CATEGORY, 0, "");
+	HTREEITEM hInsert = InsertProjectTreeItem(hParent, GetFileName(lpszPathName), PROJECT_ITEM_CATEGORY, 0, _T(""));
 	if( ! hInsert ) { AfxMessageBox(IDS_ERR_INSERT_PRJ_ITEM); return FALSE; }
 
 	// expand parent category item
@@ -637,8 +637,8 @@ BOOL CFileWindow::AddLocalDirectoryToProject(HTREEITEM hParent, LPCTSTR lpszPath
 
 	// looking for sub items to add to project
 	CString szPath = lpszPathName; INT nLength = szPath.GetLength();
-	if( szPath[nLength-1] == '\\' ) szPath += "*.*";
-	else szPath += "\\*.*";
+	if( szPath[nLength-1] == '\\' ) szPath += _T("*.*");
+	else szPath += _T("\\*.*");
 
 	CFileFind find; BOOL bFound = find.FindFile(szPath);
 
@@ -658,7 +658,7 @@ BOOL CFileWindow::AddProjectCategoryToProject(HTREEITEM hParent, LPPROJECTITEMIN
 	HTREEITEM hFound = FindProjectTreeChildItem(hParent, lpInfo->szText);
 	if( hFound ) { AfxMessageBox(IDS_ERR_DUPLICATE_PRJ_ITEM); return FALSE; }
 
-	HTREEITEM hInsert = InsertProjectTreeItem(hParent, lpInfo->szText, PROJECT_ITEM_CATEGORY, 0, "");
+	HTREEITEM hInsert = InsertProjectTreeItem(hParent, lpInfo->szText, PROJECT_ITEM_CATEGORY, 0, _T(""));
 	if( ! hInsert ) { AfxMessageBox(IDS_ERR_INSERT_PRJ_ITEM); return FALSE; }
 
 	// expand parent category item
@@ -687,7 +687,7 @@ LPPROJECTITEMINFO CFileWindow::GetProjectItemInfo(HTREEITEM hItem)
 
 CString CFileWindow::GetProjectItemPathName(HTREEITEM hItem)
 {
-	if( ! hItem ) return "";
+	if( ! hItem ) return _T("");
 	LPPROJECTITEMINFO lpInfo = GetProjectItemInfo(hItem);
 	return lpInfo->szPathName;
 }
@@ -709,7 +709,7 @@ INT CALLBACK CFileWindow::CompareProjectItem(LPARAM lParam1, LPARAM lParam2, LPA
 	LPPROJECTITEMINFO lpInfo2 = (LPPROJECTITEMINFO)lParam2;
 
 	if( lpInfo1->nItemType == lpInfo2->nItemType ) {
-		return _stricmp(lpInfo1->szText, lpInfo2->szText);
+		return _tcsicmp(lpInfo1->szText, lpInfo2->szText);
 	} else return (lpInfo1->nItemType - lpInfo2->nItemType);
 }
 
@@ -831,18 +831,18 @@ void CFileWindow::OnRclickProjectTree(NMHDR* pNMHDR, LRESULT* pResult)
 		if( ! IsSelectedProjectItemRoot() ) {
 			switch( nImage ) {
 			case PROJECT_ITEM_LOCAL_FILE:
-				pMenu = GetSubMenuByText( & context, "PRJ_LOCAL"    ); break;
+				pMenu = GetSubMenuByText( & context, _T("PRJ_LOCAL")    ); break;
 			case PROJECT_ITEM_REMOTE_FILE:
-				pMenu = GetSubMenuByText( & context, "PRJ_REMOTE"   ); break;
+				pMenu = GetSubMenuByText( & context, _T("PRJ_REMOTE")   ); break;
 			case PROJECT_ITEM_CATEGORY:
-				pMenu = GetSubMenuByText( & context, "PRJ_CATEGORY" ); break;
+				pMenu = GetSubMenuByText( & context, _T("PRJ_CATEGORY") ); break;
 			default: // this should not occur !!!
-				pMenu = GetSubMenuByText( & context, "PRJ_NULL"     ); break;
+				pMenu = GetSubMenuByText( & context, _T("PRJ_NULL")     ); break;
 			}
 		} else if( pApp->IsProjectLoaded() ) {
-			pMenu = GetSubMenuByText( & context, "PRJ_ROOT1" );
-		} else pMenu = GetSubMenuByText( & context, "PRJ_ROOT0" );
-	} else pMenu = GetSubMenuByText( & context, "PRJ_NULL" );
+			pMenu = GetSubMenuByText( & context, _T("PRJ_ROOT1") );
+		} else pMenu = GetSubMenuByText( & context, _T("PRJ_ROOT0") );
+	} else pMenu = GetSubMenuByText( & context, _T("PRJ_NULL") );
 
 	UINT nFlags = TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RIGHTBUTTON;
 	pMenu->TrackPopupMenu(nFlags, point.x, point.y, AfxGetMainWnd());
@@ -1103,7 +1103,7 @@ BOOL CFileWindow::ExecuteProjectItem(LPPROJECTITEMINFO lpInfo)
 	if( ! VerifyFilePath( szPath ) ) return FALSE;
 
 	CWnd * pWnd = AfxGetMainWnd(); if( ! pWnd ) return FALSE;
-	HINSTANCE hResult = ::ShellExecute(NULL, "open", szPath, NULL, NULL, SW_SHOWNORMAL);
+	HINSTANCE hResult = ::ShellExecute(NULL, _T("open"), szPath, NULL, NULL, SW_SHOWNORMAL);
 	return ((INT_PTR)hResult > 32) ? TRUE : FALSE;
 }
 

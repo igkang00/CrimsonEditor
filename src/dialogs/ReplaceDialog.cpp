@@ -103,31 +103,31 @@ int CReplaceDialog::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	if( CDialog::OnCreate(lpCreateStruct) == -1 ) return -1;
 	
-	TRACE0("CReplaceDialog::OnCreate\n");
+	TRACE0(_T("CReplaceDialog::OnCreate\n"));
 	m_lstButtonImage.Create(IDB_GENERAL_BUTTONS, 9, 0, RGB(255, 0, 255));
 	
 	// load replace preferences from profile
 	CWinApp * pApp = AfxGetApp(); ASSERT( pApp );
 
-	m_bWholeWord = pApp->GetProfileInt( REGKEY_SEARCH_DIALOG, "WholeWord", FALSE );
-	m_bMatchCase = pApp->GetProfileInt( REGKEY_SEARCH_DIALOG, "MatchCase", FALSE );
-	m_bRegularExpression = pApp->GetProfileInt( REGKEY_SEARCH_DIALOG, "RegularExpression", FALSE );
+	m_bWholeWord = pApp->GetProfileInt( REGKEY_SEARCH_DIALOG, _T("WholeWord"), FALSE );
+	m_bMatchCase = pApp->GetProfileInt( REGKEY_SEARCH_DIALOG, _T("MatchCase"), FALSE );
+	m_bRegularExpression = pApp->GetProfileInt( REGKEY_SEARCH_DIALOG, _T("RegularExpression"), FALSE );
 	
 	m_lstFindString.RemoveAll();
-	INT nCount = pApp->GetProfileInt( REGKEY_SEARCH_DIALOG, "FindStringCount", 0 );
+	INT nCount = pApp->GetProfileInt( REGKEY_SEARCH_DIALOG, _T("FindStringCount"), 0 );
 
 	for( INT i = 0; i < nCount; i++ ) {
-		CString szEntry; szEntry.Format( "FindString%d", i );
-		CString szFindString = pApp->GetProfileString( REGKEY_SEARCH_DIALOG, szEntry, "" );
+		CString szEntry; szEntry.Format( _T("FindString%d"), i );
+		CString szFindString = pApp->GetProfileString( REGKEY_SEARCH_DIALOG, szEntry, _T("") );
 		m_lstFindString.AddTail( szFindString );
 	}
 	
 	m_lstReplaceString.RemoveAll();
-	INT nCoun2 = pApp->GetProfileInt( REGKEY_SEARCH_DIALOG, "ReplaceStringCount", 0 );
+	INT nCoun2 = pApp->GetProfileInt( REGKEY_SEARCH_DIALOG, _T("ReplaceStringCount"), 0 );
 
 	for( INT j = 0; j < nCoun2; j++ ) {
-		CString szEntry; szEntry.Format( "ReplaceString%d", j );
-		CString szReplaceString = pApp->GetProfileString( REGKEY_SEARCH_DIALOG, szEntry, "" );
+		CString szEntry; szEntry.Format( _T("ReplaceString%d"), j );
+		CString szReplaceString = pApp->GetProfileString( REGKEY_SEARCH_DIALOG, szEntry, _T("") );
 		m_lstReplaceString.AddTail( szReplaceString );
 	}
 
@@ -138,32 +138,32 @@ void CReplaceDialog::OnDestroy()
 {
 	CDialog::OnDestroy();
 	
-	TRACE0("CReplaceDialog::OnDestroy\n");
+	TRACE0(_T("CReplaceDialog::OnDestroy\n"));
 	m_lstButtonImage.Detach();
 
 	// save find preferences to profile
 	CWinApp * pApp = AfxGetApp(); ASSERT( pApp );
 
-	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, "WholeWord", m_bWholeWord );
-	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, "MatchCase", m_bMatchCase );
-	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, "RegularExpression", m_bRegularExpression );
+	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, _T("WholeWord"), m_bWholeWord );
+	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, _T("MatchCase"), m_bMatchCase );
+	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, _T("RegularExpression"), m_bRegularExpression );
 
 	INT nCount = (INT)m_lstFindString.GetCount();
-	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, "FindStringCount", nCount );
+	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, _T("FindStringCount"), nCount );
 
 	POSITION pos = m_lstFindString.GetHeadPosition();
 	for( INT i = 0; i < nCount; i++ ) {
-		CString szEntry; szEntry.Format( "FindString%d", i );
+		CString szEntry; szEntry.Format( _T("FindString%d"), i );
 		CString szFindString = m_lstFindString.GetNext( pos );
 		pApp->WriteProfileString( REGKEY_SEARCH_DIALOG, szEntry, szFindString );
 	}
 
 	INT nCoun2 = (INT)m_lstReplaceString.GetCount();
-	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, "ReplaceStringCount", nCoun2 );
+	pApp->WriteProfileInt( REGKEY_SEARCH_DIALOG, _T("ReplaceStringCount"), nCoun2 );
 
 	POSITION po2 = m_lstReplaceString.GetHeadPosition();
 	for( INT j = 0; j < nCoun2; j++ ) {
-		CString szEntry; szEntry.Format( "ReplaceString%d", j );
+		CString szEntry; szEntry.Format( _T("ReplaceString%d"), j );
 		CString szReplaceString = m_lstReplaceString.GetNext( po2 );
 		pApp->WriteProfileString( REGKEY_SEARCH_DIALOG, szEntry, szReplaceString );
 	}
@@ -172,7 +172,7 @@ void CReplaceDialog::OnDestroy()
 BOOL CReplaceDialog::OnInitDialog() 
 {
 	CDialog::OnInitDialog();
-	TRACE0("CReplaceDialog::OnInitDialog\n");
+	TRACE0(_T("CReplaceDialog::OnInitDialog\n"));
 
 	m_btnFindString.SetIcon( m_lstButtonImage.ExtractIcon(2) );
 	m_btnReplaceString.SetIcon( m_lstButtonImage.ExtractIcon(2) );
@@ -358,136 +358,136 @@ void CReplaceDialog::ReplaceReplaceSelection(LPCTSTR lpszString, INT nIncrement)
 
 void CReplaceDialog::OnFindTextTabChar() 
 {
-	ReplaceFindSelection( "\\t", 2 );
+	ReplaceFindSelection( _T("\\t"), 2 );
 }
 
 void CReplaceDialog::OnFindTextAnyChar() 
 {
-	ReplaceFindSelection( ".", 1 );
+	ReplaceFindSelection( _T("."), 1 );
 }
 
 void CReplaceDialog::OnFindTextBeginOfLine() 
 {
-	ReplaceFindSelection( "^", 1 );
+	ReplaceFindSelection( _T("^"), 1 );
 }
 
 void CReplaceDialog::OnFindTextEndOfLine() 
 {
-	ReplaceFindSelection( "$", 1 );
+	ReplaceFindSelection( _T("$"), 1 );
 }
 
 void CReplaceDialog::OnFindTextZeroOrMore() 
 {
-	ReplaceFindSelection( "*", 1 );
+	ReplaceFindSelection( _T("*"), 1 );
 }
 
 void CReplaceDialog::OnFindTextOneOrMore() 
 {
-	ReplaceFindSelection( "+", 1 );
+	ReplaceFindSelection( _T("+"), 1 );
 }
 
 void CReplaceDialog::OnFindTextZeroOrOne() 
 {
-	ReplaceFindSelection( "?", 1 );
+	ReplaceFindSelection( _T("?"), 1 );
 }
 
 void CReplaceDialog::OnFindTextOr() 
 {
-	ReplaceFindSelection( "|", 1 );
+	ReplaceFindSelection( _T("|"), 1 );
 }
 
 void CReplaceDialog::OnFindTextInRange() 
 {
-	ReplaceFindSelection( "[]", 1 );
+	ReplaceFindSelection( _T("[]"), 1 );
 }
 
 void CReplaceDialog::OnFindTextNotInRange() 
 {
-	ReplaceFindSelection( "[^]", 2 );
+	ReplaceFindSelection( _T("[^]"), 2 );
 }
 
 void CReplaceDialog::OnFindTextWhiteSpace() 
 {
-	ReplaceFindSelection( "\\s", 2 );
+	ReplaceFindSelection( _T("\\s"), 2 );
 }
 
 void CReplaceDialog::OnFindTextAlnumChar() 
 {
-	ReplaceFindSelection( "\\w", 2 );
+	ReplaceFindSelection( _T("\\w"), 2 );
 }
 
 void CReplaceDialog::OnFindTextAlphaChar() 
 {
-	ReplaceFindSelection( "\\a", 2 );
+	ReplaceFindSelection( _T("\\a"), 2 );
 }
 
 void CReplaceDialog::OnFindTextDecDigit() 
 {
-	ReplaceFindSelection( "\\d", 2 );
+	ReplaceFindSelection( _T("\\d"), 2 );
 }
 
 void CReplaceDialog::OnFindTextHexDigit() 
 {
-	ReplaceFindSelection( "\\h", 2 );
+	ReplaceFindSelection( _T("\\h"), 2 );
 }
 
 void CReplaceDialog::OnFindTextTaggedExp() 
 {
-	ReplaceFindSelection( "()", 1 );
+	ReplaceFindSelection( _T("()"), 1 );
 }
 
 
 void CReplaceDialog::OnReplaceTextTabChar() 
 {
-	ReplaceReplaceSelection( "\\t", 2 );
+	ReplaceReplaceSelection( _T("\\t"), 2 );
 }
 
 void CReplaceDialog::OnReplaceTextTaggedExp0() 
 {
-	ReplaceReplaceSelection( "\\0", 2 );
+	ReplaceReplaceSelection( _T("\\0"), 2 );
 }
 
 void CReplaceDialog::OnReplaceTextTaggedExp1() 
 {
-	ReplaceReplaceSelection( "\\1", 2 );
+	ReplaceReplaceSelection( _T("\\1"), 2 );
 }
 
 void CReplaceDialog::OnReplaceTextTaggedExp2() 
 {
-	ReplaceReplaceSelection( "\\2", 2 );
+	ReplaceReplaceSelection( _T("\\2"), 2 );
 }
 
 void CReplaceDialog::OnReplaceTextTaggedExp3() 
 {
-	ReplaceReplaceSelection( "\\3", 2 );
+	ReplaceReplaceSelection( _T("\\3"), 2 );
 }
 
 void CReplaceDialog::OnReplaceTextTaggedExp4() 
 {
-	ReplaceReplaceSelection( "\\4", 2 );
+	ReplaceReplaceSelection( _T("\\4"), 2 );
 }
 
 void CReplaceDialog::OnReplaceTextTaggedExp5() 
 {
-	ReplaceReplaceSelection( "\\5", 2 );
+	ReplaceReplaceSelection( _T("\\5"), 2 );
 }
 
 void CReplaceDialog::OnReplaceTextTaggedExp6() 
 {
-	ReplaceReplaceSelection( "\\6", 2 );
+	ReplaceReplaceSelection( _T("\\6"), 2 );
 }
 
 void CReplaceDialog::OnReplaceTextTaggedExp7() 
 {
-	ReplaceReplaceSelection( "\\7", 2 );
+	ReplaceReplaceSelection( _T("\\7"), 2 );
 }
 
 void CReplaceDialog::OnReplaceTextTaggedExp8() 
 {
-	ReplaceReplaceSelection( "\\8", 2 );
+	ReplaceReplaceSelection( _T("\\8"), 2 );
 }
 
 void CReplaceDialog::OnReplaceTextTaggedExp9() 
 {
-	ReplaceReplaceSelection( "\\9", 2 );
+	ReplaceReplaceSelection( _T("\\9"), 2 );
 }

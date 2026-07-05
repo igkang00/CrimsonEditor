@@ -223,12 +223,12 @@ CCedtApp::CCedtApp()
 {
 	m_bPostOpenDocument = FALSE;
 	m_nPostOpenFtpAccount = -1;
-	m_szPostOpenPathName = "";
+	m_szPostOpenPathName = _T("");
 	m_nPostOpenLineNum = 0;
 
-	m_szPrevWorkspacePathName = "";
+	m_szPrevWorkspacePathName = _T("");
 	m_bProjectLoaded = FALSE;
-	m_szProjectPathName = "";
+	m_szProjectPathName = _T("");
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -252,11 +252,11 @@ BOOL CCedtApp::InitInstance()
 	// get current working directory
 	TCHAR szTemp[MAX_PATH]; GetCurrentDirectory(MAX_PATH, szTemp);
 	m_szLoadingDirectory = ChopDirectory(szTemp);
-	TRACE1("LoadingDirectory: \"%s\"\n", m_szLoadingDirectory);
+	TRACE1(_T("LoadingDirectory: \")%s\_T("\n"), m_szLoadingDirectory);
 
 	// Resolve the install directory.
 	//
-	//   1. HKLM\Software\Crimson System\Crimson Editor  ("InstallDir")
+	//   1. HKLM\Software\Crimson System\Crimson Editor  (_T("InstallDir"))
 	//      — the installer writes this once at install time. It is the
 	//        machine-wide source of truth and the only thing external
 	//        components (e.g. the shell extension) need to look at.
@@ -268,23 +268,23 @@ BOOL CCedtApp::InitInstance()
 	//        are followed automatically.
 	//
 	// We intentionally do NOT cache this in HKCU. The old design cached
-	// it as the default value of an "Install Directory" subkey under
+	// it as the default value of an _T("Install Directory") subkey under
 	// HKCU, but that turned a machine property into a per-user one,
 	// went stale whenever the EXE moved, and forced every external
 	// reader (ShellExt etc.) to know the cache layout. With the cache
 	// gone, lookup is one read with a deterministic fallback.
-	if( ! GetRegKeyValue(HKEY_LOCAL_MACHINE, REGPATH_INSTALL_DIRECTORY, "InstallDir", m_szInstallDirectory) ) {
+	if( ! GetRegKeyValue(HKEY_LOCAL_MACHINE, REGPATH_INSTALL_DIRECTORY, _T("InstallDir"), m_szInstallDirectory) ) {
 		TCHAR szExePath[MAX_PATH];
 		GetModuleFileName(NULL, szExePath, MAX_PATH);
 		m_szInstallDirectory = GetFileDirectory(szExePath);
 	}
-	TRACE1("InstallDirectory: \"%s\"\n", m_szInstallDirectory);
+	TRACE1(_T("InstallDirectory: \")%s\_T("\n"), m_szInstallDirectory);
 
 	// get application data directory
 	TCHAR szTmp2[MAX_PATH]; m_szAppDataDirectory = m_szInstallDirectory;
 	BOOL bResul2 = SHGetSpecialFolderPath(NULL, szTmp2, CSIDL_APPDATA, TRUE);
-	if( bResul2 ) m_szAppDataDirectory.Format("%s\\Crimson Editor", szTmp2);
-	TRACE1("AppDataDirectory: \"%s\"\n", m_szAppDataDirectory);
+	if( bResul2 ) m_szAppDataDirectory.Format(_T("%s\\Crimson Editor"), szTmp2);
+	TRACE1(_T("AppDataDirectory: \")%s\_T("\n"), m_szAppDataDirectory);
 
 
 	// load multi-instance flag
@@ -301,11 +301,11 @@ BOOL CCedtApp::InitInstance()
 		CMutex mutex(FALSE, MUTEX_NAME_CMDLINE);
 		CSingleLock lock( & mutex ); lock.Lock();
 
-		BOOL quote = ( strlen(m_lpCmdLine) && VerifyFilePath(m_lpCmdLine) );
+		BOOL quote = ( _tcslen(m_lpCmdLine) && VerifyFilePath(m_lpCmdLine) );
 
-		ofstream fout(m_szAppDataDirectory + "\\cmdline.txt", ios::out | ios::app);
-		fout << "/D:\"" << m_szLoadingDirectory << "\"";
-		fout << (quote ? " \"" : " ") << m_lpCmdLine << (quote ? "\"" : "") << endl;
+		ofstream fout(m_szAppDataDirectory + _T("\\cmdline.txt"), ios::out | ios::app);
+		fout << _T("/D:\")_T(" << m_szLoadingDirectory << ")\_T("");
+		fout << (quote ? _T(" \")_T(" : ") _T(") << m_lpCmdLine << (quote ? ")\_T("") : _T("")) << endl;
 		fout.close(); 
 
 		lock.Unlock();
@@ -342,12 +342,12 @@ BOOL CCedtApp::InitInstance()
 
 	// load user configuration
 	{
-		CString szAppConf     = m_szAppDataDirectory   + "\\" STRING_CONFFILENAME;
-		CString szInstallConf = m_szInstallDirectory   + "\\" STRING_CONFFILENAME;
+		CString szAppConf     = m_szAppDataDirectory   + _T("\\") STRING_CONFFILENAME;
+		CString szInstallConf = m_szInstallDirectory   + _T("\\") STRING_CONFFILENAME;
 		if( ! LoadUserConfiguration(szAppConf) ) {
 			if( ! LoadUserConfiguration(szInstallConf) ) {
-				// Distinguish "file missing" (clean first run) from
-				// "file present but failed to load" (truly corrupted).
+				// Distinguish _T("file missing") (clean first run) from
+				// _T("file present but failed to load") (truly corrupted).
 				BOOL bAppExisted     = (GetFileAttributes(szAppConf)     != INVALID_FILE_ATTRIBUTES);
 				BOOL bInstallExisted = (GetFileAttributes(szInstallConf) != INVALID_FILE_ATTRIBUTES);
 				if( bAppExisted || bInstallExisted ) {
@@ -360,18 +360,18 @@ BOOL CCedtApp::InitInstance()
 	}
 
 	// load color settings
-	if( ! LoadColorScheme(m_szAppDataDirectory + "\\cedt.color") ) {
-		if( ! LoadColorScheme(m_szInstallDirectory + "\\cedt.color") ) 
+	if( ! LoadColorScheme(m_szAppDataDirectory + _T("\\cedt.color")) ) {
+		if( ! LoadColorScheme(m_szInstallDirectory + _T("\\cedt.color")) ) 
 			SetPredefinedColorScheme(COLOR_SCHEME_DEFAULT);
-		SaveColorScheme(m_szAppDataDirectory + "\\cedt.color");
+		SaveColorScheme(m_szAppDataDirectory + _T("\\cedt.color"));
 	}
 
 	// load FTP account information
-	LoadFtpAccountInfo(m_szAppDataDirectory + "\\cedt.ftp");
+	LoadFtpAccountInfo(m_szAppDataDirectory + _T("\\cedt.ftp"));
 
 	// load command & macro
-	LoadUserCommands(m_szAppDataDirectory + "\\cedt.tools");
-	LoadMacroBuffers(m_szAppDataDirectory + "\\cedt.macro");
+	LoadUserCommands(m_szAppDataDirectory + _T("\\cedt.tools"));
+	LoadMacroBuffers(m_szAppDataDirectory + _T("\\cedt.macro"));
 
 //	SetRegistryKey(STRING_COMPANYNAME); // Change the registry key under which our settings are stored.
 	LoadStdProfileSettings(8); // Load standard INI file options (including MRU)
@@ -429,7 +429,7 @@ BOOL CCedtApp::InitInstance()
 	pFileWindow->InitProjectWorkspace();
 
 	// Load prev workspace pathname
-	m_szPrevWorkspacePathName = "";
+	m_szPrevWorkspacePathName = _T("");
 	LoadWorkspaceFilePath(REGKEY_LAST_WORKSPACE);
 
 	// Load window placement & bar state
@@ -446,8 +446,8 @@ BOOL CCedtApp::InitInstance()
 	if( bReloadLastWorkingFiles ) ReloadLastWorkingFiles();
 
 	// Parse command line for standard shell commands, DDE, file open
-	if( strlen(m_lpCmdLine) && VerifyFilePath(m_lpCmdLine) ) {
-		TRACE1("CmdLine: %s\n", m_lpCmdLine);
+	if( _tcslen(m_lpCmdLine) && VerifyFilePath(m_lpCmdLine) ) {
+		TRACE1(_T("CmdLine: %s\n"), m_lpCmdLine);
 		OpenDocumentFile( GetLongPathName(m_lpCmdLine) );
 	} else {
 		CCmdLine cmdLine(__argc, __argv);
@@ -463,7 +463,7 @@ BOOL CCedtApp::InitInstance()
 int CCedtApp::ExitInstance() 
 {
 	// User configuration is saved when mainframe is closed and whenever there is a change
-	// SaveUserConfiguration(m_szAppDataDirectory + "\\" STRING_CONFFILENAME);
+	// SaveUserConfiguration(m_szAppDataDirectory + _T("\\") STRING_CONFFILENAME);
 
 	// Uninitialize HtmlHelp if it was initialized
 	if( m_bHtmlHelpInitialized ) {
@@ -484,14 +484,14 @@ void CCedtApp::OnAnotherInstance()
 	CMutex mutex(FALSE, MUTEX_NAME_CMDLINE);
 	CSingleLock lock( & mutex ); lock.Lock();
 
-	ifstream fin(m_szAppDataDirectory + "\\cmdline.txt", ios::in);
+	ifstream fin(m_szAppDataDirectory + _T("\\cmdline.txt"), ios::in);
 	while( fin.good() ) {
 		fin.getline(szBuffer, 4096);
-		if( strlen(szBuffer) ) arrCmdLine.Add(szBuffer);
+		if( _tcslen(szBuffer) ) arrCmdLine.Add(szBuffer);
 	}
 	fin.close();
 
-	ofstream fout(m_szAppDataDirectory + "\\cmdline.txt", ios::out );
+	ofstream fout(m_szAppDataDirectory + _T("\\cmdline.txt"), ios::out );
 	fout.close();
 
 	lock.Unlock();

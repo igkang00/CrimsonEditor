@@ -74,16 +74,16 @@ BOOL CPreferenceDialog::LoadPrintSettings()
 {
 	CString str;
 
-	str.Format("%d", CCedtView::m_rectPageMargin.left / 10);
+	str.Format(_T("%d"), CCedtView::m_rectPageMargin.left / 10);
 	m_edtPageMarginLeft.SetWindowText( str );
 
-	str.Format("%d", CCedtView::m_rectPageMargin.right / 10);
+	str.Format(_T("%d"), CCedtView::m_rectPageMargin.right / 10);
 	m_edtPageMarginRight.SetWindowText( str );
 
-	str.Format("%d", CCedtView::m_rectPageMargin.top / 10);
+	str.Format(_T("%d"), CCedtView::m_rectPageMargin.top / 10);
 	m_edtPageMarginTop.SetWindowText( str );
 
-	str.Format("%d", CCedtView::m_rectPageMargin.bottom / 10);
+	str.Format(_T("%d"), CCedtView::m_rectPageMargin.bottom / 10);
 	m_edtPageMarginBottom.SetWindowText( str );
 
 	m_chkPrintHeader.SetCheck( CCedtView::m_bPrintHeader ? 1 : 0 );
@@ -118,16 +118,16 @@ BOOL CPreferenceDialog::SavePrintSettings()
 {
 	TCHAR buf[1024];
 
-	m_edtPageMarginLeft.GetWindowText(buf, 1024); CCedtView::m_rectPageMargin.left = 10 * atoi(buf);
+	m_edtPageMarginLeft.GetWindowText(buf, 1024); CCedtView::m_rectPageMargin.left = 10 * _ttoi(buf);
 	ASSURE_BOUND_VALUE(CCedtView::m_rectPageMargin.left, 0, 1000);
 
-	m_edtPageMarginRight.GetWindowText(buf, 1024); CCedtView::m_rectPageMargin.right = 10 * atoi(buf);
+	m_edtPageMarginRight.GetWindowText(buf, 1024); CCedtView::m_rectPageMargin.right = 10 * _ttoi(buf);
 	ASSURE_BOUND_VALUE(CCedtView::m_rectPageMargin.right, 0, 1000);
 
-	m_edtPageMarginTop.GetWindowText(buf, 1024); CCedtView::m_rectPageMargin.top = 10 * atoi(buf);
+	m_edtPageMarginTop.GetWindowText(buf, 1024); CCedtView::m_rectPageMargin.top = 10 * _ttoi(buf);
 	ASSURE_BOUND_VALUE(CCedtView::m_rectPageMargin.top, 0, 1000);
 
-	m_edtPageMarginBottom.GetWindowText(buf, 1024); CCedtView::m_rectPageMargin.bottom = 10 * atoi(buf);
+	m_edtPageMarginBottom.GetWindowText(buf, 1024); CCedtView::m_rectPageMargin.bottom = 10 * _ttoi(buf);
 	ASSURE_BOUND_VALUE(CCedtView::m_rectPageMargin.bottom, 0, 1000);
 
 	CCedtView::m_bPrintHeader = m_chkPrintHeader.GetCheck();
@@ -240,45 +240,45 @@ void CPreferenceDialog::OnPrintFooter2Menu()
 	pMenu->TrackPopupMenu(nFlags, point.x, point.y, this);
 }
 
-void CPreferenceDialog::OnPrintHeader0FilePath() { m_edtPrintHeader0.ReplaceSel("$(FilePath)"); }
-void CPreferenceDialog::OnPrintHeader0FileName() { m_edtPrintHeader0.ReplaceSel("$(FileName)"); }
-void CPreferenceDialog::OnPrintHeader0PageNumber() { m_edtPrintHeader0.ReplaceSel("$(PageNumber)"); }
-void CPreferenceDialog::OnPrintHeader0TotalPage() { m_edtPrintHeader0.ReplaceSel("$(TotalPage)"); }
-void CPreferenceDialog::OnPrintHeader0CurrentDate() { m_edtPrintHeader0.ReplaceSel("$(CurrDate)"); }
-void CPreferenceDialog::OnPrintHeader0CurrentTime() { m_edtPrintHeader0.ReplaceSel("$(CurrTime)"); }
+void CPreferenceDialog::OnPrintHeader0FilePath() { m_edtPrintHeader0.ReplaceSel(_T("$(FilePath)")); }
+void CPreferenceDialog::OnPrintHeader0FileName() { m_edtPrintHeader0.ReplaceSel(_T("$(FileName)")); }
+void CPreferenceDialog::OnPrintHeader0PageNumber() { m_edtPrintHeader0.ReplaceSel(_T("$(PageNumber)")); }
+void CPreferenceDialog::OnPrintHeader0TotalPage() { m_edtPrintHeader0.ReplaceSel(_T("$(TotalPage)")); }
+void CPreferenceDialog::OnPrintHeader0CurrentDate() { m_edtPrintHeader0.ReplaceSel(_T("$(CurrDate)")); }
+void CPreferenceDialog::OnPrintHeader0CurrentTime() { m_edtPrintHeader0.ReplaceSel(_T("$(CurrTime)")); }
 
-void CPreferenceDialog::OnPrintHeader1FilePath() { m_edtPrintHeader1.ReplaceSel("$(FilePath)"); }
-void CPreferenceDialog::OnPrintHeader1FileName() { m_edtPrintHeader1.ReplaceSel("$(FileName)"); }
-void CPreferenceDialog::OnPrintHeader1PageNumber() { m_edtPrintHeader1.ReplaceSel("$(PageNumber)"); }
-void CPreferenceDialog::OnPrintHeader1TotalPage() { m_edtPrintHeader1.ReplaceSel("$(TotalPage)"); }
-void CPreferenceDialog::OnPrintHeader1CurrentDate() { m_edtPrintHeader1.ReplaceSel("$(CurrDate)"); }
-void CPreferenceDialog::OnPrintHeader1CurrentTime() { m_edtPrintHeader1.ReplaceSel("$(CurrTime)"); }
+void CPreferenceDialog::OnPrintHeader1FilePath() { m_edtPrintHeader1.ReplaceSel(_T("$(FilePath)")); }
+void CPreferenceDialog::OnPrintHeader1FileName() { m_edtPrintHeader1.ReplaceSel(_T("$(FileName)")); }
+void CPreferenceDialog::OnPrintHeader1PageNumber() { m_edtPrintHeader1.ReplaceSel(_T("$(PageNumber)")); }
+void CPreferenceDialog::OnPrintHeader1TotalPage() { m_edtPrintHeader1.ReplaceSel(_T("$(TotalPage)")); }
+void CPreferenceDialog::OnPrintHeader1CurrentDate() { m_edtPrintHeader1.ReplaceSel(_T("$(CurrDate)")); }
+void CPreferenceDialog::OnPrintHeader1CurrentTime() { m_edtPrintHeader1.ReplaceSel(_T("$(CurrTime)")); }
 
-void CPreferenceDialog::OnPrintHeader2FilePath() { m_edtPrintHeader2.ReplaceSel("$(FilePath)"); }
-void CPreferenceDialog::OnPrintHeader2FileName() { m_edtPrintHeader2.ReplaceSel("$(FileName)"); }
-void CPreferenceDialog::OnPrintHeader2PageNumber() { m_edtPrintHeader2.ReplaceSel("$(PageNumber)"); }
-void CPreferenceDialog::OnPrintHeader2TotalPage() { m_edtPrintHeader2.ReplaceSel("$(TotalPage)"); }
-void CPreferenceDialog::OnPrintHeader2CurrentDate() { m_edtPrintHeader2.ReplaceSel("$(CurrDate)"); }
-void CPreferenceDialog::OnPrintHeader2CurrentTime() { m_edtPrintHeader2.ReplaceSel("$(CurrTime)"); }
+void CPreferenceDialog::OnPrintHeader2FilePath() { m_edtPrintHeader2.ReplaceSel(_T("$(FilePath)")); }
+void CPreferenceDialog::OnPrintHeader2FileName() { m_edtPrintHeader2.ReplaceSel(_T("$(FileName)")); }
+void CPreferenceDialog::OnPrintHeader2PageNumber() { m_edtPrintHeader2.ReplaceSel(_T("$(PageNumber)")); }
+void CPreferenceDialog::OnPrintHeader2TotalPage() { m_edtPrintHeader2.ReplaceSel(_T("$(TotalPage)")); }
+void CPreferenceDialog::OnPrintHeader2CurrentDate() { m_edtPrintHeader2.ReplaceSel(_T("$(CurrDate)")); }
+void CPreferenceDialog::OnPrintHeader2CurrentTime() { m_edtPrintHeader2.ReplaceSel(_T("$(CurrTime)")); }
 
-void CPreferenceDialog::OnPrintFooter0FilePath() { m_edtPrintFooter0.ReplaceSel("$(FilePath)"); }
-void CPreferenceDialog::OnPrintFooter0FileName() { m_edtPrintFooter0.ReplaceSel("$(FileName)"); }
-void CPreferenceDialog::OnPrintFooter0PageNumber() { m_edtPrintFooter0.ReplaceSel("$(PageNumber)"); }
-void CPreferenceDialog::OnPrintFooter0TotalPage() { m_edtPrintFooter0.ReplaceSel("$(TotalPage)"); }
-void CPreferenceDialog::OnPrintFooter0CurrentDate() { m_edtPrintFooter0.ReplaceSel("$(CurrDate)"); }
-void CPreferenceDialog::OnPrintFooter0CurrentTime() { m_edtPrintFooter0.ReplaceSel("$(CurrTime)"); }
+void CPreferenceDialog::OnPrintFooter0FilePath() { m_edtPrintFooter0.ReplaceSel(_T("$(FilePath)")); }
+void CPreferenceDialog::OnPrintFooter0FileName() { m_edtPrintFooter0.ReplaceSel(_T("$(FileName)")); }
+void CPreferenceDialog::OnPrintFooter0PageNumber() { m_edtPrintFooter0.ReplaceSel(_T("$(PageNumber)")); }
+void CPreferenceDialog::OnPrintFooter0TotalPage() { m_edtPrintFooter0.ReplaceSel(_T("$(TotalPage)")); }
+void CPreferenceDialog::OnPrintFooter0CurrentDate() { m_edtPrintFooter0.ReplaceSel(_T("$(CurrDate)")); }
+void CPreferenceDialog::OnPrintFooter0CurrentTime() { m_edtPrintFooter0.ReplaceSel(_T("$(CurrTime)")); }
 
-void CPreferenceDialog::OnPrintFooter1FilePath() { m_edtPrintFooter1.ReplaceSel("$(FilePath)"); }
-void CPreferenceDialog::OnPrintFooter1FileName() { m_edtPrintFooter1.ReplaceSel("$(FileName)"); }
-void CPreferenceDialog::OnPrintFooter1PageNumber() { m_edtPrintFooter1.ReplaceSel("$(PageNumber)"); }
-void CPreferenceDialog::OnPrintFooter1TotalPage() { m_edtPrintFooter1.ReplaceSel("$(TotalPage)"); }
-void CPreferenceDialog::OnPrintFooter1CurrentDate() { m_edtPrintFooter1.ReplaceSel("$(CurrDate)"); }
-void CPreferenceDialog::OnPrintFooter1CurrentTime() { m_edtPrintFooter1.ReplaceSel("$(CurrTime)"); }
+void CPreferenceDialog::OnPrintFooter1FilePath() { m_edtPrintFooter1.ReplaceSel(_T("$(FilePath)")); }
+void CPreferenceDialog::OnPrintFooter1FileName() { m_edtPrintFooter1.ReplaceSel(_T("$(FileName)")); }
+void CPreferenceDialog::OnPrintFooter1PageNumber() { m_edtPrintFooter1.ReplaceSel(_T("$(PageNumber)")); }
+void CPreferenceDialog::OnPrintFooter1TotalPage() { m_edtPrintFooter1.ReplaceSel(_T("$(TotalPage)")); }
+void CPreferenceDialog::OnPrintFooter1CurrentDate() { m_edtPrintFooter1.ReplaceSel(_T("$(CurrDate)")); }
+void CPreferenceDialog::OnPrintFooter1CurrentTime() { m_edtPrintFooter1.ReplaceSel(_T("$(CurrTime)")); }
 
-void CPreferenceDialog::OnPrintFooter2FilePath() { m_edtPrintFooter2.ReplaceSel("$(FilePath)"); }
-void CPreferenceDialog::OnPrintFooter2FileName() { m_edtPrintFooter2.ReplaceSel("$(FileName)"); }
-void CPreferenceDialog::OnPrintFooter2PageNumber() { m_edtPrintFooter2.ReplaceSel("$(PageNumber)"); }
-void CPreferenceDialog::OnPrintFooter2TotalPage() { m_edtPrintFooter2.ReplaceSel("$(TotalPage)"); }
-void CPreferenceDialog::OnPrintFooter2CurrentDate() { m_edtPrintFooter2.ReplaceSel("$(CurrDate)"); }
-void CPreferenceDialog::OnPrintFooter2CurrentTime() { m_edtPrintFooter2.ReplaceSel("$(CurrTime)"); }
+void CPreferenceDialog::OnPrintFooter2FilePath() { m_edtPrintFooter2.ReplaceSel(_T("$(FilePath)")); }
+void CPreferenceDialog::OnPrintFooter2FileName() { m_edtPrintFooter2.ReplaceSel(_T("$(FileName)")); }
+void CPreferenceDialog::OnPrintFooter2PageNumber() { m_edtPrintFooter2.ReplaceSel(_T("$(PageNumber)")); }
+void CPreferenceDialog::OnPrintFooter2TotalPage() { m_edtPrintFooter2.ReplaceSel(_T("$(TotalPage)")); }
+void CPreferenceDialog::OnPrintFooter2CurrentDate() { m_edtPrintFooter2.ReplaceSel(_T("$(CurrDate)")); }
+void CPreferenceDialog::OnPrintFooter2CurrentTime() { m_edtPrintFooter2.ReplaceSel(_T("$(CurrTime)")); }
 

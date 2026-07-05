@@ -69,7 +69,7 @@ BOOL CPreferenceDialog::LoadUserCommands()
 	for(INT i = 0; i < 11; i++) {
 		m_clsUserCommand[i].CopyContents(CCedtView::m_clsUserCommand[i]);
 		if( i > 0 ) {
-			m_lstCommandList.InsertItem(i-1, "");
+			m_lstCommandList.InsertItem(i-1, _T(""));
 			DispCommandText(i-1);
 		}
 	}
@@ -94,8 +94,8 @@ BOOL CPreferenceDialog::FileLoadUserCommands(LPCTSTR lpszPathName)
 	ifstream fin(lpszPathName, ios::in | ios::binary);
 	if( ! fin.is_open() ) return FALSE;
 
-	TCHAR szBuffer[2048]; INT nLength = (INT)strlen(STRING_USERTOOLSVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
-	if( strcmp(szBuffer, STRING_USERTOOLSVER) ) { fin.close(); return FALSE; }
+	TCHAR szBuffer[2048]; INT nLength = (INT)_tcslen(STRING_USERTOOLSVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
+	if( _tcscmp(szBuffer, STRING_USERTOOLSVER) ) { fin.close(); return FALSE; }
 
 	for(INT i = 0; i < 11; i++) {
 		if( ! m_clsUserCommand[i].StreamLoad(fin) ) { fin.close(); return FALSE; }
@@ -110,7 +110,7 @@ BOOL CPreferenceDialog::FileSaveUserCommands(LPCTSTR lpszPathName)
 	ofstream fout(lpszPathName, ios::out | ios::binary);
 	if( ! fout.is_open() ) return FALSE;
 
-	INT nLength = (INT)strlen(STRING_USERTOOLSVER);
+	INT nLength = (INT)_tcslen(STRING_USERTOOLSVER);
 	fout.write((const char *)STRING_USERTOOLSVER, nLength);
 
 	for( INT i = 0; i < 11; i++ ) {
@@ -132,14 +132,14 @@ CString CPreferenceDialog::GetCommandName(INT nCommand)
 {
 	CUserCommand & rCommand = m_clsUserCommand[nCommand];
 	if( rCommand.m_szName.GetLength() ) return rCommand.m_szName;
-	else return "- Empty -";
+	else return _T("- Empty -");
 }
 
 CString CPreferenceDialog::GetCommandHotKeyText(INT nCommand)
 {
 	CUserCommand & rCommand = m_clsUserCommand[nCommand];
 	CString szHotKeyText = rCommand.GetHotKeyText();
-	if( ! szHotKeyText.GetLength() ) szHotKeyText.Format("Ctrl+%d", nCommand % 10);
+	if( ! szHotKeyText.GetLength() ) szHotKeyText.Format(_T("Ctrl+%d"), nCommand % 10);
 	return szHotKeyText;
 }
 
@@ -173,7 +173,7 @@ void CPreferenceDialog::OnCommandLoadTools()
 	CFileDialog dlg(TRUE, NULL, NULL, dwFlags, szFilter);
 
 	CString szTitle; szTitle.LoadString(IDS_DLG_LOAD_USER_TOOLS);
-	CString szInitialDirectory = CCedtApp::m_szInstallDirectory + "\\tools";
+	CString szInitialDirectory = CCedtApp::m_szInstallDirectory + _T("\\tools");
 
 	TCHAR szCurrentDirectory[MAX_PATH];
 	GetCurrentDirectory( MAX_PATH, szCurrentDirectory );
@@ -191,10 +191,10 @@ void CPreferenceDialog::OnCommandSaveTools()
 {
 	DWORD dwFlags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
 	CString szFilter; szFilter.LoadString(IDS_FILTER_USER_TOOL);
-	CFileDialog dlg(FALSE, ".tools", NULL, dwFlags, szFilter);
+	CFileDialog dlg(FALSE, _T(".tools"), NULL, dwFlags, szFilter);
 
 	CString szTitle; szTitle.LoadString(IDS_DLG_SAVE_USER_TOOLS);
-	CString szInitialDirectory = CCedtApp::m_szInstallDirectory + "\\tools";
+	CString szInitialDirectory = CCedtApp::m_szInstallDirectory + _T("\\tools");
 
 	TCHAR szCurrentDirectory[MAX_PATH];
 	GetCurrentDirectory( MAX_PATH, szCurrentDirectory );
@@ -373,26 +373,26 @@ void CPreferenceDialog::OnCommandDirectoryMenu()
 	pMenu->TrackPopupMenu(nFlags, point.x, point.y, this);
 }
 
-void CPreferenceDialog::OnCmdArgFilePath()		{ m_edtCommandArgument.ReplaceSel("$(FilePath)"); }
-void CPreferenceDialog::OnCmdArgFileDir()		{ m_edtCommandArgument.ReplaceSel("$(FileDir)"); }
-void CPreferenceDialog::OnCmdArgFileName()		{ m_edtCommandArgument.ReplaceSel("$(FileName)"); }
-void CPreferenceDialog::OnCmdArgFileTitle()		{ m_edtCommandArgument.ReplaceSel("$(FileTitle)"); }
+void CPreferenceDialog::OnCmdArgFilePath()		{ m_edtCommandArgument.ReplaceSel(_T("$(FilePath)")); }
+void CPreferenceDialog::OnCmdArgFileDir()		{ m_edtCommandArgument.ReplaceSel(_T("$(FileDir)")); }
+void CPreferenceDialog::OnCmdArgFileName()		{ m_edtCommandArgument.ReplaceSel(_T("$(FileName)")); }
+void CPreferenceDialog::OnCmdArgFileTitle()		{ m_edtCommandArgument.ReplaceSel(_T("$(FileTitle)")); }
 
-void CPreferenceDialog::OnCmdArgProjectPath()	{ m_edtCommandArgument.ReplaceSel("$(ProjectPath)"); } 
-void CPreferenceDialog::OnCmdArgProjectDir()	{ m_edtCommandArgument.ReplaceSel("$(ProjectDir)"); }
-void CPreferenceDialog::OnCmdArgProjectTitle()	{ m_edtCommandArgument.ReplaceSel("$(ProjectTitle)"); }
+void CPreferenceDialog::OnCmdArgProjectPath()	{ m_edtCommandArgument.ReplaceSel(_T("$(ProjectPath)")); } 
+void CPreferenceDialog::OnCmdArgProjectDir()	{ m_edtCommandArgument.ReplaceSel(_T("$(ProjectDir)")); }
+void CPreferenceDialog::OnCmdArgProjectTitle()	{ m_edtCommandArgument.ReplaceSel(_T("$(ProjectTitle)")); }
 
-void CPreferenceDialog::OnCmdArgLineNumber()	{ m_edtCommandArgument.ReplaceSel("$(LineNum)"); }
-void CPreferenceDialog::OnCmdArgCurrentWord()	{ m_edtCommandArgument.ReplaceSel("$(CurrWord)"); }
+void CPreferenceDialog::OnCmdArgLineNumber()	{ m_edtCommandArgument.ReplaceSel(_T("$(LineNum)")); }
+void CPreferenceDialog::OnCmdArgCurrentWord()	{ m_edtCommandArgument.ReplaceSel(_T("$(CurrWord)")); }
 
-void CPreferenceDialog::OnCmdArgUserInput()		{ m_edtCommandArgument.ReplaceSel("$(UserInput)"); }
-void CPreferenceDialog::OnCmdArgSelectPath1()	{ m_edtCommandArgument.ReplaceSel("$(SelectPath1)"); }
-void CPreferenceDialog::OnCmdArgSelectPath2()	{ m_edtCommandArgument.ReplaceSel("$(SelectPath2)"); }
-void CPreferenceDialog::OnCmdArgSelectDir1()	{ m_edtCommandArgument.ReplaceSel("$(SelectDir1)"); }
-void CPreferenceDialog::OnCmdArgSelectDir2()	{ m_edtCommandArgument.ReplaceSel("$(SelectDir2)"); }
+void CPreferenceDialog::OnCmdArgUserInput()		{ m_edtCommandArgument.ReplaceSel(_T("$(UserInput)")); }
+void CPreferenceDialog::OnCmdArgSelectPath1()	{ m_edtCommandArgument.ReplaceSel(_T("$(SelectPath1)")); }
+void CPreferenceDialog::OnCmdArgSelectPath2()	{ m_edtCommandArgument.ReplaceSel(_T("$(SelectPath2)")); }
+void CPreferenceDialog::OnCmdArgSelectDir1()	{ m_edtCommandArgument.ReplaceSel(_T("$(SelectDir1)")); }
+void CPreferenceDialog::OnCmdArgSelectDir2()	{ m_edtCommandArgument.ReplaceSel(_T("$(SelectDir2)")); }
 
-void CPreferenceDialog::OnCmdDirFileDir()		{ m_edtCommandDirectory.SetWindowText("$(FileDir)"); }
-void CPreferenceDialog::OnCmdDirProjectDir()	{ m_edtCommandDirectory.SetWindowText("$(ProjectDir)"); }
+void CPreferenceDialog::OnCmdDirFileDir()		{ m_edtCommandDirectory.SetWindowText(_T("$(FileDir)")); }
+void CPreferenceDialog::OnCmdDirProjectDir()	{ m_edtCommandDirectory.SetWindowText(_T("$(ProjectDir)")); }
 void CPreferenceDialog::OnCmdDirBrowse() 
 {
 	CString szText( (LPCTSTR)IDS_CHOOSE_DIRECTORY );

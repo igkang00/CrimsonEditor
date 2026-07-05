@@ -4,11 +4,11 @@
 
 BOOL ParseFileFilter(CStringArray & arrDescription, CStringArray & arrExtension, LPCTSTR lpszFilter)
 {
-	TCHAR szFilter[4096]; strcpy( szFilter, lpszFilter );
-	if( szFilter[strlen(szFilter)-1] != '|' ) strcat( szFilter, "|" );
+	TCHAR szFilter[4096]; _tcscpy( szFilter, lpszFilter );
+	if( szFilter[_tcslen(szFilter)-1] != '|' ) _tcscat( szFilter, _T("|") );
 
 	arrDescription.RemoveAll(); arrExtension.RemoveAll();
-	TCHAR * pFilter = szFilter; INT nLen = (INT)strlen(szFilter);
+	TCHAR * pFilter = szFilter; INT nLen = (INT)_tcslen(szFilter);
 	BOOL bDescription = TRUE; CString szDescription;
 
 	for(INT i = 0; i < nLen; i++) {
@@ -19,14 +19,14 @@ BOOL ParseFileFilter(CStringArray & arrDescription, CStringArray & arrExtension,
 				szDescription = pFilter;
 				bDescription = FALSE;
 			} else {
-				if( strlen(szDescription) && strlen(pFilter) ) {
+				if( _tcslen(szDescription) && _tcslen(pFilter) ) {
 					arrDescription.Add( szDescription );
 					arrExtension.Add( pFilter ); 
 				}
 				bDescription = TRUE;
 			}
 
-			pFilter += (INT)strlen(pFilter) + 1;
+			pFilter += (INT)_tcslen(pFilter) + 1;
 		}
 	}
 
@@ -35,28 +35,28 @@ BOOL ParseFileFilter(CStringArray & arrDescription, CStringArray & arrExtension,
 
 BOOL MatchFileFilter(LPCTSTR lpszPath, LPCTSTR lpszFilter)
 {
-	// Allocate on the heap to fit any filter length plus the trailing ";\0".
+	// Allocate on the heap to fit any filter length plus the trailing _T(";\0").
 	// The previous 256-byte stack buffer would overrun on long user-defined
 	// filters (no upper bound exists on the filter input).
 	INT nFilterLen = lstrlen(lpszFilter);
 	TCHAR * szFilter = new TCHAR[nFilterLen + 2];
-	strcpy( szFilter, lpszFilter );
-	if( nFilterLen == 0 || szFilter[nFilterLen - 1] != ';' ) strcat( szFilter, ";" );
+	_tcscpy( szFilter, lpszFilter );
+	if( nFilterLen == 0 || szFilter[nFilterLen - 1] != ';' ) _tcscat( szFilter, _T(";") );
 
-	TCHAR * pFilter = szFilter; INT nLen = (INT)strlen(szFilter);
+	TCHAR * pFilter = szFilter; INT nLen = (INT)_tcslen(szFilter);
 	BOOL bMatch = FALSE;
 
 	for(INT i = 0; i < nLen; i++) {
 		if( szFilter[i] == ';' ) {
 			szFilter[i] = '\0';
-			INT nFilter = (INT)strlen( pFilter );
-			INT nPath = (INT)strlen( lpszPath );
+			INT nFilter = (INT)_tcslen( pFilter );
+			INT nPath = (INT)_tcslen( lpszPath );
 
-			if( ! strcmp(pFilter, "*.*") ) { bMatch = TRUE; break; }
-			if( ! strncmp(pFilter, "*.", 2) && (nPath >= nFilter-1)
-				&& ! _stricmp(pFilter+1, lpszPath+nPath-(nFilter-1)) ) { bMatch = TRUE; break; }
+			if( ! _tcscmp(pFilter, _T("*.*")) ) { bMatch = TRUE; break; }
+			if( ! _tcsncmp(pFilter, _T("*."), 2) && (nPath >= nFilter-1)
+				&& ! _tcsicmp(pFilter+1, lpszPath+nPath-(nFilter-1)) ) { bMatch = TRUE; break; }
 
-			pFilter += (INT)strlen(pFilter) + 1;
+			pFilter += (INT)_tcslen(pFilter) + 1;
 		}
 	}
 
@@ -100,11 +100,11 @@ BOOL FindAllFilePath(CStringArray & arrPath, LPCTSTR lpszPath)
 
 CString QuotePathName(LPCTSTR lpszPathName)
 {
-	INT nLen = (INT)strlen(lpszPathName);
+	INT nLen = (INT)_tcslen(lpszPathName);
 	CString szPathName;
 
-	if( nLen >= 2 && lpszPathName[0] == '\"' && lpszPathName[nLen-1] == '\"' ) szPathName = lpszPathName;
-	else szPathName.Format("\"%s\"", lpszPathName);
+	if( nLen >= 2 && lpszPathName[0] == '\_T("' && lpszPathName[nLen-1] == '\")' ) szPathName = lpszPathName;
+	else szPathName.Format(_T("\")%s\_T(""), lpszPathName);
 
 	return szPathName;
 }
@@ -112,7 +112,7 @@ CString QuotePathName(LPCTSTR lpszPathName)
 
 CString ChopDirectory(LPCTSTR lpszDirectory)
 {
-	INT nLen = (INT)strlen(lpszDirectory);
+	INT nLen = (INT)_tcslen(lpszDirectory);
 	CString szDirectory = lpszDirectory;  
 
 	if( nLen >= 1 && lpszDirectory[nLen-1] == '\\' ) return szDirectory.Mid(0, nLen-1);
@@ -124,8 +124,8 @@ CString RemotePathToLocalPath(LPCTSTR lpszPathName)
 {
 	CString szPathName = lpszPathName;
 
-	szPathName.Replace( "%", "%25" );	szPathName.Replace( '/', '\\'  );
-	szPathName.Replace( "*", "%2A" );	szPathName.Replace( "?", "%3F" );
+	szPathName.Replace( _T("%"), _T("%25") );	szPathName.Replace( '/', '\\'  );
+	szPathName.Replace( _T("*"), _T("%2A") );	szPathName.Replace( _T("?"), _T("%3F") );
 
 	return szPathName;
 }
@@ -135,8 +135,8 @@ CString LocalPathToRemotePath(LPCTSTR lpszPathName)
 {
 	CString szPathName = lpszPathName;
 
-	szPathName.Replace( "%2A", "*" );	szPathName.Replace( "%3F", "?" );
-	szPathName.Replace( "%25", "%" );	szPathName.Replace( '\\' , '/' );
+	szPathName.Replace( _T("%2A"), _T("*") );	szPathName.Replace( _T("%3F"), _T("?") );
+	szPathName.Replace( _T("%25"), _T("%") );	szPathName.Replace( '\\' , '/' );
 
 	return szPathName;
 }
@@ -145,7 +145,7 @@ CString LocalPathToRemotePath(LPCTSTR lpszPathName)
 CString GetFileDirectory(LPCTSTR lpszPath)
 {
 	CString szTemp = lpszPath; 
-	INT nLen = szTemp.GetLength(); if( ! nLen ) return "";
+	INT nLen = szTemp.GetLength(); if( ! nLen ) return _T("");
 	if( szTemp[nLen-1] == '\\' ) szTemp.SetAt(nLen-1, '\0');
 	if( szTemp[nLen-1] == '/'  ) szTemp.SetAt(nLen-1, '\0');
 
@@ -153,13 +153,13 @@ CString GetFileDirectory(LPCTSTR lpszPath)
 	if( nPos <  0 ) nPos = szTemp.ReverseFind( '/' );
 
 	if( nPos >= 0 ) return szTemp.Mid( 0, nPos );
-	return "";
+	return _T("");
 }
 
 CString GetFileName(LPCTSTR lpszPath)
 {
 	CString szTemp = lpszPath; 
-	INT nLen = szTemp.GetLength(); if( ! nLen ) return "";
+	INT nLen = szTemp.GetLength(); if( ! nLen ) return _T("");
 	if( szTemp[nLen-1] == '\\' ) szTemp.SetAt(nLen-1, '\0');
 	if( szTemp[nLen-1] == '/'  ) szTemp.SetAt(nLen-1, '\0');
 
@@ -183,7 +183,7 @@ CString GetFileExtension(LPCTSTR lpszPath)
 	CString szTemp = GetFileName(lpszPath);
 	INT nPos = szTemp.ReverseFind( '.' );
 	if( nPos >= 0 ) return szTemp.Mid( nPos );
-	else return "";
+	else return _T("");
 }
 
 CString GetShortPathName(LPCTSTR lpszPath)
@@ -229,19 +229,19 @@ CString GetLongPathName(LPCTSTR lpszPath)
 		if( nFwd < nLen && szPath[nFwd] == '\\' ) { bDir = TRUE; nIdx = nFwd+1; }
 		else { bDir = FALSE; nIdx = nFwd; }
 
-		if( ! szFile.Compare("." ) ) {
+		if( ! szFile.Compare(_T(".") ) ) {
 			// do nothing
-		} else if( ! szFile.Compare("..") ) {
+		} else if( ! szFile.Compare(_T("..")) ) {
 			INT nPre = szLongPath.GetLength() - 2; // skip last backslash
 			while( nPre >= 0 && szLongPath[nPre] != '\\' ) nPre--;
-			szLongPath = szLongPath.Left(nPre) + "\\";
+			szLongPath = szLongPath.Left(nPre) + _T("\\");
 		} else {
 			hFind = FindFirstFile( szTemp, & findData );
 			if( hFind == INVALID_HANDLE_VALUE ) return szPath;
 			FindClose( hFind );
 
 			szLongPath += findData.cFileName;
-			if( bDir ) szLongPath += "\\";
+			if( bDir ) szLongPath += _T("\\");
 		}
 	}
 

@@ -24,29 +24,29 @@ BOOL CFileWindow::InitLocalDriveList(LPCTSTR lpszInitialDriveName)
 
 			if( GetVolumeInformation(pDrive, szVolumeName, sizeof(szVolumeName), & dwSerialNumber,
 				& dwMaxComponentLength, & dwFileSystemFlags, szFileSystemName, sizeof(szFileSystemName)) ) {
-				szDriveName.Format("[%c:] %s", toupper(pDrive[0]), szVolumeName);
+				szDriveName.Format(_T("[%c:] %s"), toupper(pDrive[0]), szVolumeName);
 			} else if( nType == DRIVE_FIXED ) {
-				szDriveName.Format("[%c:] Local Drive", toupper(pDrive[0]));
+				szDriveName.Format(_T("[%c:] Local Drive"), toupper(pDrive[0]));
 			} else if( nType == DRIVE_RAMDISK ) {
-				szDriveName.Format("[%c:] RAM Disk", toupper(pDrive[0]));
+				szDriveName.Format(_T("[%c:] RAM Disk"), toupper(pDrive[0]));
 			} else if( nType == DRIVE_REMOTE ) {
-				szDriveName.Format("[%c:] Network Drive", toupper(pDrive[0]));
+				szDriveName.Format(_T("[%c:] Network Drive"), toupper(pDrive[0]));
 			}
 		} else { // other types of drive takes time to GetVolumeInformation()
 			switch( nType ) {
 			case DRIVE_CDROM: 
-				szDriveName.Format("[%c:] CD-ROM", toupper(pDrive[0])); break;
+				szDriveName.Format(_T("[%c:] CD-ROM"), toupper(pDrive[0])); break;
 			case DRIVE_REMOVABLE: 
-				szDriveName.Format("[%c:] Removable", toupper(pDrive[0])); break;
+				szDriveName.Format(_T("[%c:] Removable"), toupper(pDrive[0])); break;
 			default: 
-				szDriveName.Format("[%c:] Unknown Type", toupper(pDrive[0])); break;
+				szDriveName.Format(_T("[%c:] Unknown Type"), toupper(pDrive[0])); break;
 			}
 		}
 
 		m_cmbLocalDrive.AddString( szDriveName );
 		m_arrLocalDrive.Add( szDriveName.Mid(1, 2) );
 
-		pDrive += strlen(pDrive) + 1;
+		pDrive += _tcslen(pDrive) + 1;
 	}
 
 	// register Desktop directory to drive list
@@ -116,7 +116,7 @@ BOOL CFileWindow::SetBrowsingDirectory(LPCTSTR lpszDirectory)
 	INT nCount = (INT)m_arrLocalDrive.GetSize();
 	for( INT i = nCount-1; i >= 0; i-- ) { // search in reverse order
 		CString & szLocalDrive = m_arrLocalDrive[i];
-		if( ! _strnicmp(szLocalDrive, lpszDirectory, szLocalDrive.GetLength()) ) { szDriveName = szLocalDrive; break; }
+		if( ! _tcsnicmp(szLocalDrive, lpszDirectory, szLocalDrive.GetLength()) ) { szDriveName = szLocalDrive; break; }
 	}
 	BOOL bRemake = szDriveName.CompareNoCase( m_szPrevDriveName );
 
@@ -144,7 +144,7 @@ BOOL CFileWindow::IsSelectedDirectoryItemRoot()
 CString CFileWindow::GetSelectedDirectoryItemText()
 {
 	HTREEITEM hItem = m_treDirectoryTree.GetSelectedItem();
-	if( ! hItem ) return "";
+	if( ! hItem ) return _T("");
 	return m_treDirectoryTree.GetItemText(hItem);
 }
 
@@ -254,7 +254,7 @@ BOOL CFileWindow::CreateNewFolderInSelectedDirectoryItem()
 	}
 
 	if( CreateNewFolderInDirectory(szPath, szFolderName) ) {
-		CString szTemp; szTemp.Format("%s\\%s", szPath, szFolderName);
+		CString szTemp; szTemp.Format(_T("%s\\%s"), szPath, szFolderName);
 		HTREEITEM hInsert = InsertDirectoryTreeItem(hItem, szTemp);
 		m_treDirectoryTree.Expand(hItem, TVE_EXPAND);
 
@@ -277,7 +277,7 @@ BOOL CFileWindow::CreateNewDocumentInSelectedDirectoryItem()
 	}
 
 	if( CreateNewDocumentInDirectory(szPath, szFileName) ) {
-		CString szTemp; szTemp.Format("%s\\%s", szPath, szFileName);
+		CString szTemp; szTemp.Format(_T("%s\\%s"), szPath, szFileName);
 		HTREEITEM hInsert = InsertDirectoryTreeItem(hItem, szTemp);
 		m_treDirectoryTree.Expand(hItem, TVE_EXPAND);
 
@@ -335,7 +335,7 @@ BOOL CFileWindow::SelectLocalDriveList(LPCTSTR lpszDriveName)
 CString CFileWindow::GetActiveLocalDriveName()
 {
 	INT nDrive = m_cmbLocalDrive.GetCurSel();
-	if( nDrive == CB_ERR ) return "C:";
+	if( nDrive == CB_ERR ) return _T("C:");
 
 //	CString szDrive; m_cmbLocalDrive.GetLBText(nDrive, szDrive);
 //	return szDrive.Mid(1, 2);
@@ -353,7 +353,7 @@ INT CFileWindow::GetActiveFileFilterIndex()
 CString CFileWindow::GetActiveFileFilterString()
 {
 	INT nFilter = m_cmbFileFilter.GetCurSel();
-	if( nFilter == CB_ERR ) return "*.*";
+	if( nFilter == CB_ERR ) return _T("*.*");
 	return m_arrFilterExtensions.GetAt(nFilter);
 }
 
@@ -361,8 +361,8 @@ CString CFileWindow::GetActiveFileFilterString()
 BOOL CFileWindow::DirectoryHasChildren(LPCTSTR lpszPath)
 {
 	CString szPath = lpszPath; INT nLength = szPath.GetLength();
-	if( szPath[nLength-1] == '\\' ) szPath += "*.*";
-	else szPath += "\\*.*";
+	if( szPath[nLength-1] == '\\' ) szPath += _T("*.*");
+	else szPath += _T("\\*.*");
 
 	CString szFilter = GetActiveFileFilterString();
 	CFileFind find; BOOL bFound = find.FindFile(szPath);
@@ -381,19 +381,19 @@ BOOL CFileWindow::DirectoryHasChildren(LPCTSTR lpszPath)
 CString CFileWindow::GetDirectoryItemPathName(HTREEITEM hItem)
 {
 	HTREEITEM hRoot = m_treDirectoryTree.GetRootItem();
-	CString szTemp, szReturn = "";
+	CString szTemp, szReturn = _T("");
 
 	while( hItem ) {
 		if( hItem == hRoot ) szTemp = GetActiveLocalDriveName();
 		else szTemp = m_treDirectoryTree.GetItemText( hItem );
 
 		if( ! szReturn.GetLength() ) szReturn = szTemp;
-		else szReturn = szTemp + "\\" + szReturn;
+		else szReturn = szTemp + _T("\\") + szReturn;
 
 		hItem = m_treDirectoryTree.GetParentItem( hItem );
 	}
 
-	TRACE1("GetDirectoryItemPathName: %s\n", szReturn);
+	TRACE1(_T("GetDirectoryItemPathName: %s\n"), szReturn);
 	return szReturn;
 }
 
@@ -416,15 +416,15 @@ BOOL CFileWindow::RemakeDirectoryTreeRoot(LPCTSTR lpszDriveName)
 BOOL CFileWindow::ExpandDirectoryTreePath(LPCTSTR lpszPathName)
 {
 	TCHAR szPathName[MAX_PATH]; lstrcpyn( szPathName, lpszPathName, MAX_PATH - 1 );  // leave 1 byte for trailing '\\'
-	if( szPathName[strlen(szPathName)-1] != '\\' ) strcat( szPathName, "\\" );
+	if( szPathName[_tcslen(szPathName)-1] != '\\' ) _tcscat( szPathName, _T("\\") );
 
 	HTREEITEM hItem = m_treDirectoryTree.GetRootItem();
 	CString szRoot = GetActiveLocalDriveName();
 
-	if( _strnicmp(szPathName, szRoot, szRoot.GetLength()) ) return FALSE;
+	if( _tcsnicmp(szPathName, szRoot, szRoot.GetLength()) ) return FALSE;
 	TCHAR * pText = szPathName + szRoot.GetLength() + 1;
 
-	INT nLen = (INT)strlen(szPathName);
+	INT nLen = (INT)_tcslen(szPathName);
 	for(INT i = szRoot.GetLength() + 1; i < nLen; i++) {
 		if( szPathName[i] == '\\' ) {
 			szPathName[i] = '\0';
@@ -441,7 +441,7 @@ BOOL CFileWindow::ExpandDirectoryTreePath(LPCTSTR lpszPathName)
 				m_treDirectoryTree.Expand(hItem, TVE_EXPAND);
 			}
 
-			pText += strlen(pText) + 1;
+			pText += _tcslen(pText) + 1;
 		}
 	}
 
@@ -458,7 +458,7 @@ BOOL CFileWindow::RefreshDirectoryItem(HTREEITEM hItem)
 	if( ! hItem ) return FALSE;
 
 	CString szTest = GetDirectoryItemPathName(hItem);
-	CString szFind = "";
+	CString szFind = _T("");
 
 	if( hItem == m_treDirectoryTree.GetRootItem() ) /* skip test for root item */ ;
 	else if( ! VerifyPathName(szTest) ) hItem = m_treDirectoryTree.GetParentItem(hItem);
@@ -473,7 +473,7 @@ BOOL CFileWindow::RefreshDirectoryItem(HTREEITEM hItem)
 		m_treDirectoryTree.Expand(hItem, TVE_EXPAND);
 	} else {
 		DeleteDirectoryTreeChildren(hItem);
-		if( DirectoryHasChildren(szPath) ) m_treDirectoryTree.InsertItem("NULL", hItem);
+		if( DirectoryHasChildren(szPath) ) m_treDirectoryTree.InsertItem(_T("NULL"), hItem);
 	}
 
 	if( szFind.GetLength() ) {
@@ -522,8 +522,8 @@ HTREEITEM CFileWindow::DeleteDirectoryTreeChildren(HTREEITEM hParent)
 HTREEITEM CFileWindow::InsertDirectoryTreeChildren(HTREEITEM hParent, LPCTSTR lpszPath)
 {
 	CString szPath = lpszPath; INT nLength = szPath.GetLength();
-	if( szPath[nLength-1] == '\\' ) szPath += "*.*";
-	else szPath += "\\*.*";
+	if( szPath[nLength-1] == '\\' ) szPath += _T("*.*");
+	else szPath += _T("\\*.*");
 
 	CSortStringArray arrDirectories, arrFiles;
 	INT i, nSize;
@@ -543,7 +543,7 @@ HTREEITEM CFileWindow::InsertDirectoryTreeChildren(HTREEITEM hParent, LPCTSTR lp
 	for(i = 0; i < nSize; i++) {
 		szPath = arrDirectories.GetAt(i);
 		HTREEITEM hItem = InsertDirectoryTreeItem(hParent, szPath);
-		if( DirectoryHasChildren(szPath) ) m_treDirectoryTree.InsertItem("NULL", hItem);
+		if( DirectoryHasChildren(szPath) ) m_treDirectoryTree.InsertItem(_T("NULL"), hItem);
 	}
 
 	arrFiles.Sort(); nSize = (INT)arrFiles.GetSize();
@@ -558,7 +558,7 @@ HTREEITEM CFileWindow::InsertDirectoryTreeChildren(HTREEITEM hParent, LPCTSTR lp
 
 HTREEITEM CFileWindow::InsertDirectoryTreeRoot(LPCTSTR lpszPath)
 {
-	TCHAR szTemp[MAX_PATH]; lstrcpyn(szTemp, lpszPath, MAX_PATH - 1); INT nLen = (INT)strlen(szTemp);  // leave 1 byte for trailing '\\'
+	TCHAR szTemp[MAX_PATH]; lstrcpyn(szTemp, lpszPath, MAX_PATH - 1); INT nLen = (INT)_tcslen(szTemp);  // leave 1 byte for trailing '\\'
 	if( nLen > 0 && szTemp[nLen-1] != '\\' ) { szTemp[nLen] = '\\'; nLen++; szTemp[nLen] = '\0'; }
 
 	SHFILEINFO shFinfo; // INT iIcon, iIconSel;
@@ -570,7 +570,7 @@ HTREEITEM CFileWindow::InsertDirectoryTreeRoot(LPCTSTR lpszPath)
 
 HTREEITEM CFileWindow::InsertDirectoryTreeItem(HTREEITEM hParent, LPCTSTR lpszPath)
 {
-	TCHAR szTemp[MAX_PATH]; lstrcpyn(szTemp, lpszPath, MAX_PATH - 1); INT nLen = (INT)strlen(szTemp);  // leave 1 byte for trailing '\\'
+	TCHAR szTemp[MAX_PATH]; lstrcpyn(szTemp, lpszPath, MAX_PATH - 1); INT nLen = (INT)_tcslen(szTemp);  // leave 1 byte for trailing '\\'
 	if( nLen > 0 && szTemp[nLen-1] != '\\' ) { szTemp[nLen] = '\\'; nLen++; szTemp[nLen] = '\0'; }
 
 	SHFILEINFO shFinfo; // INT iIcon, iIconSel;
@@ -708,10 +708,10 @@ void CFileWindow::OnRclickDirectoryTree(NMHDR* pNMHDR, LRESULT* pResult)
 		if( ! IsSelectedDirectoryItemRoot() ) {
 			CString szPathName = GetDirectoryItemPathName(hItem);
 			if( VerifyFilePath(szPathName) ) {
-				pMenu = GetSubMenuByText( & context, "DIR_FILE" );
-			} else pMenu = GetSubMenuByText( & context, "DIR_FOLDER" );
-		} else pMenu = GetSubMenuByText( & context, "DIR_ROOT" );
-	} else pMenu = GetSubMenuByText( & context, "DIR_NULL" );
+				pMenu = GetSubMenuByText( & context, _T("DIR_FILE") );
+			} else pMenu = GetSubMenuByText( & context, _T("DIR_FOLDER") );
+		} else pMenu = GetSubMenuByText( & context, _T("DIR_ROOT") );
+	} else pMenu = GetSubMenuByText( & context, _T("DIR_NULL") );
 
 	UINT nFlags = TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RIGHTBUTTON;
 	pMenu->TrackPopupMenu(nFlags, point.x, point.y, AfxGetMainWnd());
@@ -783,17 +783,17 @@ void CFileWindow::OnBegindragDirectoryTree(NMHDR* pNMHDR, LRESULT* pResult)
 	if( eff == DROPEFFECT_MOVE ) {
 		// item has been moved - delete tree item
 		m_treDirectoryTree.DeleteItem( hItem );
-		TRACE0("Item has been moved by DROPEFFECT_MOVE\n");
+		TRACE0(_T("Item has been moved by DROPEFFECT_MOVE\n"));
 	} else if( eff == DROPEFFECT_NONE ) {
 		// check if item has been moved
 		if( ! VerifyPathName( szPathName ) ) {
 			// item has been moved - delete tree item
 			m_treDirectoryTree.DeleteItem( hItem );
-			TRACE0("Item has been moved by DROPEFFECT_NONE\n");
+			TRACE0(_T("Item has been moved by DROPEFFECT_NONE\n"));
 		} else {
 			// drag and drop has been canceled
 			::GlobalFree(hMemory);
-			TRACE0("Drag and Drop has been canceled\n");
+			TRACE0(_T("Drag and Drop has been canceled\n"));
 		}
 	}
 
@@ -913,10 +913,10 @@ BOOL CFileWindow::SetAsCurrentDirectory(LPCTSTR lpszPathName)
 	CString szDirName, szPathName = lpszPathName;
 	if( ! VerifyFilePath(szPathName) ) {
 		szDirName = szPathName;
-		return ::SetCurrentDirectory(szDirName + "\\");
+		return ::SetCurrentDirectory(szDirName + _T("\\"));
 	} else {
 		szDirName = GetFileDirectory(szPathName);
-		return ::SetCurrentDirectory(szDirName + "\\");
+		return ::SetCurrentDirectory(szDirName + _T("\\"));
 	}
 }
 
@@ -944,7 +944,7 @@ BOOL CFileWindow::ExecuteDirectoryItem(LPCTSTR lpszPathName)
 	if( ! VerifyFilePath( szPath ) ) return FALSE;
 
 	CWnd * pWnd = AfxGetMainWnd(); if( ! pWnd ) return FALSE;
-	HINSTANCE hResult = ::ShellExecute(NULL, "open", szPath, NULL, NULL, SW_SHOWNORMAL);
+	HINSTANCE hResult = ::ShellExecute(NULL, _T("open"), szPath, NULL, NULL, SW_SHOWNORMAL);
 	return ((INT_PTR)hResult > 32) ? TRUE : FALSE;
 }
 
@@ -954,7 +954,7 @@ BOOL CFileWindow::ExploreDirectoryItem(LPCTSTR lpszPathName)
 	if( VerifyFilePath(szPath) ) return FALSE;
 
 	CWnd * pWnd = AfxGetMainWnd(); if( ! pWnd ) return FALSE;
-	HINSTANCE hResult = ::ShellExecute(NULL, "open", szPath, NULL, NULL, SW_SHOWNORMAL);
+	HINSTANCE hResult = ::ShellExecute(NULL, _T("open"), szPath, NULL, NULL, SW_SHOWNORMAL);
 	return ((INT_PTR)hResult > 32) ? TRUE : FALSE;
 }
 
@@ -964,7 +964,7 @@ BOOL CFileWindow::FindInDirectoryItem(LPCTSTR lpszPathName)
 	if( VerifyFilePath(szPath) ) return FALSE;
 
 	CWnd * pWnd = AfxGetMainWnd(); if( ! pWnd ) return FALSE;
-	HINSTANCE hResult = ::ShellExecute(NULL, "find", szPath, NULL, NULL, SW_SHOWNORMAL);
+	HINSTANCE hResult = ::ShellExecute(NULL, _T("find"), szPath, NULL, NULL, SW_SHOWNORMAL);
 	return ((INT_PTR)hResult > 32) ? TRUE : FALSE;
 }
 
@@ -1031,7 +1031,7 @@ BOOL CFileWindow::DeleteDirectoryItem(LPCTSTR lpszPathName)
 BOOL CFileWindow::RenameDirectoryItem(LPCTSTR lpszPathName, LPCTSTR lpszNewName)
 {
 	TCHAR szFrom[MAX_PATH]; memset(szFrom, 0x00, sizeof(szFrom)); lstrcpyn(szFrom, lpszPathName, MAX_PATH);
-	TCHAR szDest[MAX_PATH]; memset(szDest, 0x00, sizeof(szDest)); lstrcpyn(szDest, GetFileDirectory(szFrom) + "\\" + lpszNewName, MAX_PATH);
+	TCHAR szDest[MAX_PATH]; memset(szDest, 0x00, sizeof(szDest)); lstrcpyn(szDest, GetFileDirectory(szFrom) + _T("\\") + lpszNewName, MAX_PATH);
 	CWnd * pWnd = AfxGetMainWnd();
 
 	SHFILEOPSTRUCT fo; memset( & fo, 0x00, sizeof(SHFILEOPSTRUCT) );
@@ -1048,11 +1048,11 @@ BOOL CFileWindow::CreateNewFolderInDirectory(LPCTSTR lpszPathName, CString & szF
 	CString szTemp; INT nIncrement = 2;
 
 	szFolderName.LoadString(IDS_NAME_NEW_FOLDER);
-	szTemp.Format("%s\\%s", lpszPathName, szFolderName);
+	szTemp.Format(_T("%s\\%s"), lpszPathName, szFolderName);
 
 	while( VerifyPathName(szTemp) ) {
 		szFolderName.Format(IDS_NAME_NEW_FOLDER2, nIncrement++);
-		szTemp.Format("%s\\%s", lpszPathName, szFolderName);
+		szTemp.Format(_T("%s\\%s"), lpszPathName, szFolderName);
 	}
 
 	return CreateDirectory( szTemp, NULL );
@@ -1063,11 +1063,11 @@ BOOL CFileWindow::CreateNewDocumentInDirectory(LPCTSTR lpszPathName, CString & s
 	CString szTemp; INT nIncrement = 2;
 
 	szFileName.LoadString(IDS_NAME_NEW_DOCUMENT);
-	szTemp.Format("%s\\%s", lpszPathName, szFileName);
+	szTemp.Format(_T("%s\\%s"), lpszPathName, szFileName);
 
 	while( VerifyPathName(szTemp) ) {
 		szFileName.Format(IDS_NAME_NEW_DOCUMENT2, nIncrement++);
-		szTemp.Format("%s\\%s", lpszPathName, szFileName);
+		szTemp.Format(_T("%s\\%s"), lpszPathName, szFileName);
 	}
 
 	HANDLE hFile = CreateFile( szTemp, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL );

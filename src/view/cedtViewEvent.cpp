@@ -672,16 +672,16 @@ void CCedtView::EventReplayMacro(INT nMacro, INT nTimes, BOOL bMacro)
 
 BOOL CCedtView::EventFindString(LPCTSTR lpszFindString, UINT nOptions, BOOL bMacro)
 {
-	if( ! strlen(lpszFindString) ) return FALSE;
+	if( ! _tcslen(lpszFindString) ) return FALSE;
 
 	if( SEARCH_REG_EXP(nOptions) ) { // compile regular expression
-		CString szExpression = lpszFindString; 			szExpression.Replace( "\\\\", "\x1B" );
-		szExpression.Replace( "\\s" , "[ \t\r\n]" );	szExpression.Replace( "\\S" , "[^ \t\r\n]" );
-		szExpression.Replace( "\\w" , "[A-Za-z0-9]" );	szExpression.Replace( "\\W" , "[^A-Za-z0-9]" );
-		szExpression.Replace( "\\a" , "[A-Za-z]" );		szExpression.Replace( "\\A" , "[^A-Za-z]" );
-		szExpression.Replace( "\\d" , "[0-9]" );		szExpression.Replace( "\\D" , "[^0-9]" );
-		szExpression.Replace( "\\h" , "[A-Fa-f0-9]" );	szExpression.Replace( "\\H" , "[^A-Fa-f0-9]" );
-		szExpression.Replace( "\\t" , "\t" );			szExpression.Replace( "\x1B", "\\\\" );
+		CString szExpression = lpszFindString; 			szExpression.Replace( _T("\\\\"), _T("\x1B") );
+		szExpression.Replace( _T("\\s") , _T("[ \t\r\n]") );	szExpression.Replace( _T("\\S") , _T("[^ \t\r\n]") );
+		szExpression.Replace( _T("\\w") , _T("[A-Za-z0-9]") );	szExpression.Replace( _T("\\W") , _T("[^A-Za-z0-9]") );
+		szExpression.Replace( _T("\\a") , _T("[A-Za-z]") );		szExpression.Replace( _T("\\A") , _T("[^A-Za-z]") );
+		szExpression.Replace( _T("\\d") , _T("[0-9]") );		szExpression.Replace( _T("\\D") , _T("[^0-9]") );
+		szExpression.Replace( _T("\\h") , _T("[A-Fa-f0-9]") );	szExpression.Replace( _T("\\H") , _T("[^A-Fa-f0-9]") );
+		szExpression.Replace( _T("\\t") , _T("\t") );			szExpression.Replace( _T("\x1B"), _T("\\\\") );
 
 		if( ! SEARCH_MATCH_CASE(nOptions) ) szExpression.MakeLower();
 		if( ! m_clsRegExp.RegComp( szExpression ) ) return FALSE;
@@ -696,16 +696,16 @@ BOOL CCedtView::EventFindString(LPCTSTR lpszFindString, UINT nOptions, BOOL bMac
 
 BOOL CCedtView::EventReplaceString(LPCTSTR lpszFindString, LPCTSTR lpszReplaceString, UINT nOptions, BOOL bMacro)
 {
-	if( ! strlen(lpszFindString) ) return FALSE;
+	if( ! _tcslen(lpszFindString) ) return FALSE;
 
 	if( SEARCH_REG_EXP(nOptions) ) { // compile regular expression
-		CString szExpression = lpszFindString; 			szExpression.Replace( "\\\\", "\x1B" );
-		szExpression.Replace( "\\s" , "[ \t\r\n]" );	szExpression.Replace( "\\S" , "[^ \t\r\n]" );
-		szExpression.Replace( "\\w" , "[A-Za-z0-9]" );	szExpression.Replace( "\\W" , "[^A-Za-z0-9]" );
-		szExpression.Replace( "\\a" , "[A-Za-z]" );		szExpression.Replace( "\\A" , "[^A-Za-z]" );
-		szExpression.Replace( "\\d" , "[0-9]" );		szExpression.Replace( "\\D" , "[^0-9]" );
-		szExpression.Replace( "\\h" , "[A-Fa-f0-9]" );	szExpression.Replace( "\\H" , "[^A-Fa-f0-9]" );
-		szExpression.Replace( "\\t" , "\t" );			szExpression.Replace( "\x1B", "\\\\" );
+		CString szExpression = lpszFindString; 			szExpression.Replace( _T("\\\\"), _T("\x1B") );
+		szExpression.Replace( _T("\\s") , _T("[ \t\r\n]") );	szExpression.Replace( _T("\\S") , _T("[^ \t\r\n]") );
+		szExpression.Replace( _T("\\w") , _T("[A-Za-z0-9]") );	szExpression.Replace( _T("\\W") , _T("[^A-Za-z0-9]") );
+		szExpression.Replace( _T("\\a") , _T("[A-Za-z]") );		szExpression.Replace( _T("\\A") , _T("[^A-Za-z]") );
+		szExpression.Replace( _T("\\d") , _T("[0-9]") );		szExpression.Replace( _T("\\D") , _T("[^0-9]") );
+		szExpression.Replace( _T("\\h") , _T("[A-Fa-f0-9]") );	szExpression.Replace( _T("\\H") , _T("[^A-Fa-f0-9]") );
+		szExpression.Replace( _T("\\t") , _T("\t") );			szExpression.Replace( _T("\x1B"), _T("\\\\") );
 
 		if( ! SEARCH_MATCH_CASE(nOptions) ) szExpression.MakeLower();
 		if( ! m_clsRegExp.RegComp( szExpression ) ) return FALSE;

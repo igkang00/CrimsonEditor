@@ -86,13 +86,13 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if ( ! m_wndToolBar.CreateEx(this, TBSTYLE_FLAT, WS_CHILD | WS_VISIBLE | CBRS_TOP
 		 /* | CBRS_GRIPPER */ | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC) ||
 		 ! m_wndToolBar.LoadToolBar(IDR_MAINFRAME) ) {
-		TRACE0("Failed to create toolbar\n");
+		TRACE0(_T("Failed to create toolbar\n"));
 		return -1;      // fail to create
 	}
 
 	if ( ! m_wndStatusBar.Create(this) ||
 		 ! m_wndStatusBar.SetIndicators(indicators0, sizeof(indicators0)/sizeof(UINT)) ) {
-		TRACE0("Failed to create status bar\n");
+		TRACE0(_T("Failed to create status bar\n"));
 		return -1;      // fail to create
 	}
 
@@ -110,12 +110,12 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	// modern white chrome). Must run after DockControlBar so the toolbar's
 	// parent is the actual CDockBar and not the main frame.
 	if (CWnd* pDockBar = m_wndToolBar.GetParent()) {
-		::SetWindowTheme(pDockBar->GetSafeHwnd(), L"", L"");
+		::SetWindowTheme(pDockBar->GetSafeHwnd(), L"_T(", L")");
 	}
 
 	// File Selector
 	if ( ! m_wndFileTab.Create(this) ) {
-		TRACE0("Failed to create file tab\n");
+		TRACE0(_T("Failed to create file tab\n"));
 		return -1;
 	}
 
@@ -126,7 +126,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	// File Window
 	if ( ! m_wndFileWindow.Create(this, CSize(200, 480), ID_FILE_WINDOW, WS_CHILD | CBRS_LEFT) ) {
-		TRACE0("Failed to create file window\n");
+		TRACE0(_T("Failed to create file window\n"));
 		return -1;
 	}
 
@@ -137,7 +137,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	// Output Window
 	if ( ! m_wndOutputWindow.Create(this, CSize(640, 100), ID_OUTPUT_WINDOW, WS_CHILD | CBRS_BOTTOM) ) {
-		TRACE0("Failed to create output window\n");
+		TRACE0(_T("Failed to create output window\n"));
 		return -1;
 	}
 
@@ -239,7 +239,7 @@ void CMainFrame::OnClose()
 		SaveBarState(REGKEY_BAR_STATE);
 		SaveWindowPlacement(REGKEY_WINDOW_PLACEMENT);
 
-		CCedtApp::SaveUserConfiguration(CCedtApp::m_szAppDataDirectory + "\\" STRING_CONFFILENAME);
+		CCedtApp::SaveUserConfiguration(CCedtApp::m_szAppDataDirectory + _T("\\") STRING_CONFFILENAME);
 
 		CCedtApp * pApp = (CCedtApp *)AfxGetApp(); // get application pointer
 		pApp->SaveBrowsingDirectory(REGKEY_BROWSING_DIRECTORY);
@@ -354,7 +354,7 @@ BOOL CMainFrame::PreTranslateMessage(MSG* pMsg)
 // drag and drop
 DROPEFFECT CMainFrame::OnDragEnter(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point)
 {
-	TRACE0("CMainFrame::OnDragEnter\n");
+	TRACE0(_T("CMainFrame::OnDragEnter\n"));
 
 	if( pDataObject->IsDataAvailable(CF_TEXT) ) {
 		// set drag object type
@@ -388,7 +388,7 @@ DROPEFFECT CMainFrame::OnDragEnter(COleDataObject* pDataObject, DWORD dwKeyState
 
 DROPEFFECT CMainFrame::OnDragOver(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point)
 {
-//	TRACE0("CMainFrame::OnDragOver\n");
+//	TRACE0(_T("CMainFrame::OnDragOver\n"));
 
 	if( m_nDragObjectType == DRAG_OBJECT_TEXT ) {
 		CRect rect; GetClientRect( & rect );
@@ -410,12 +410,12 @@ DROPEFFECT CMainFrame::OnDragOver(COleDataObject* pDataObject, DWORD dwKeyState,
 
 void CMainFrame::OnDragLeave()
 {
-	TRACE0("CMainFrame::OnDragLeave\n");
+	TRACE0(_T("CMainFrame::OnDragLeave\n"));
 }
 
 BOOL CMainFrame::OnDrop(COleDataObject* pDataObject, DROPEFFECT dropEffect, CPoint point)
 {
-	TRACE0("CMainFrame::OnDrop\n");
+	TRACE0(_T("CMainFrame::OnDrop\n"));
 
 	if( pDataObject->IsDataAvailable(CF_TEXT) ) {
 
@@ -612,39 +612,39 @@ BOOL CMainFrame::SaveWindowPlacement(LPCTSTR lpszProfileName)
 
 	WINDOWPLACEMENT wndpl; wndpl.length = sizeof(wndpl);
 	GetWindowPlacement( & wndpl );
-	pApp->WriteProfileInt(lpszProfileName, "flags", (INT)wndpl.flags);
-	pApp->WriteProfileInt(lpszProfileName, "showCmd", (INT)wndpl.showCmd);
-	pApp->WriteProfileInt(lpszProfileName, "minX", wndpl.ptMinPosition.x);
-	pApp->WriteProfileInt(lpszProfileName, "minY", wndpl.ptMinPosition.y);
-	pApp->WriteProfileInt(lpszProfileName, "maxX", wndpl.ptMaxPosition.x);
-	pApp->WriteProfileInt(lpszProfileName, "maxY", wndpl.ptMaxPosition.y);
-	pApp->WriteProfileInt(lpszProfileName, "left", wndpl.rcNormalPosition.left);
-	pApp->WriteProfileInt(lpszProfileName, "top", wndpl.rcNormalPosition.top);
-	pApp->WriteProfileInt(lpszProfileName, "right", wndpl.rcNormalPosition.right);
-	pApp->WriteProfileInt(lpszProfileName, "bottom", wndpl.rcNormalPosition.bottom);
+	pApp->WriteProfileInt(lpszProfileName, _T("flags"), (INT)wndpl.flags);
+	pApp->WriteProfileInt(lpszProfileName, _T("showCmd"), (INT)wndpl.showCmd);
+	pApp->WriteProfileInt(lpszProfileName, _T("minX"), wndpl.ptMinPosition.x);
+	pApp->WriteProfileInt(lpszProfileName, _T("minY"), wndpl.ptMinPosition.y);
+	pApp->WriteProfileInt(lpszProfileName, _T("maxX"), wndpl.ptMaxPosition.x);
+	pApp->WriteProfileInt(lpszProfileName, _T("maxY"), wndpl.ptMaxPosition.y);
+	pApp->WriteProfileInt(lpszProfileName, _T("left"), wndpl.rcNormalPosition.left);
+	pApp->WriteProfileInt(lpszProfileName, _T("top"), wndpl.rcNormalPosition.top);
+	pApp->WriteProfileInt(lpszProfileName, _T("right"), wndpl.rcNormalPosition.right);
+	pApp->WriteProfileInt(lpszProfileName, _T("bottom"), wndpl.rcNormalPosition.bottom);
 
 	SIZE szHorz, szVert, szFloat;
 	szHorz = m_wndFileWindow.GetHorzSize();
-	pApp->WriteProfileInt(lpszProfileName, "auxhcx", szHorz.cx);
-	pApp->WriteProfileInt(lpszProfileName, "auxhcy", szHorz.cy);
+	pApp->WriteProfileInt(lpszProfileName, _T("auxhcx"), szHorz.cx);
+	pApp->WriteProfileInt(lpszProfileName, _T("auxhcy"), szHorz.cy);
 	szVert = m_wndFileWindow.GetVertSize();
-	pApp->WriteProfileInt(lpszProfileName, "auxvcx", szVert.cx);
-	pApp->WriteProfileInt(lpszProfileName, "auxvcy", szVert.cy);
+	pApp->WriteProfileInt(lpszProfileName, _T("auxvcx"), szVert.cx);
+	pApp->WriteProfileInt(lpszProfileName, _T("auxvcy"), szVert.cy);
 	szFloat = m_wndFileWindow.GetFloatSize();
-	pApp->WriteProfileInt(lpszProfileName, "auxfcx", szFloat.cx);
-	pApp->WriteProfileInt(lpszProfileName, "auxfcy", szFloat.cy);
+	pApp->WriteProfileInt(lpszProfileName, _T("auxfcx"), szFloat.cx);
+	pApp->WriteProfileInt(lpszProfileName, _T("auxfcy"), szFloat.cy);
 
 	szHorz = m_wndOutputWindow.GetHorzSize();
-	pApp->WriteProfileInt(lpszProfileName, "outhcx", szHorz.cx);
-	pApp->WriteProfileInt(lpszProfileName, "outhcy", szHorz.cy);
+	pApp->WriteProfileInt(lpszProfileName, _T("outhcx"), szHorz.cx);
+	pApp->WriteProfileInt(lpszProfileName, _T("outhcy"), szHorz.cy);
 	szVert = m_wndOutputWindow.GetVertSize();
-	pApp->WriteProfileInt(lpszProfileName, "outvcx", szVert.cx);
-	pApp->WriteProfileInt(lpszProfileName, "outvcy", szVert.cy);
+	pApp->WriteProfileInt(lpszProfileName, _T("outvcx"), szVert.cx);
+	pApp->WriteProfileInt(lpszProfileName, _T("outvcy"), szVert.cy);
 	szFloat = m_wndOutputWindow.GetFloatSize();
-	pApp->WriteProfileInt(lpszProfileName, "outfcx", szFloat.cx);
-	pApp->WriteProfileInt(lpszProfileName, "outfcy", szFloat.cy);
+	pApp->WriteProfileInt(lpszProfileName, _T("outfcx"), szFloat.cx);
+	pApp->WriteProfileInt(lpszProfileName, _T("outfcy"), szFloat.cy);
 
-	pApp->WriteProfileInt(lpszProfileName, "saved", 1);
+	pApp->WriteProfileInt(lpszProfileName, _T("saved"), 1);
 
 	return TRUE;
 }
@@ -653,40 +653,40 @@ BOOL CMainFrame::LoadWindowPlacement(LPCTSTR lpszProfileName)
 {
 	CCedtApp * pApp = (CCedtApp *)AfxGetApp();
 
-	if( ! pApp->GetProfileInt(lpszProfileName, "saved", 0) ) return FALSE;
+	if( ! pApp->GetProfileInt(lpszProfileName, _T("saved"), 0) ) return FALSE;
 
 	SIZE szHorz, szVert, szFloat;
-	szHorz.cx = pApp->GetProfileInt(lpszProfileName, "auxhcx", 200);
-	szHorz.cy = pApp->GetProfileInt(lpszProfileName, "auxhcy", 480);
+	szHorz.cx = pApp->GetProfileInt(lpszProfileName, _T("auxhcx"), 200);
+	szHorz.cy = pApp->GetProfileInt(lpszProfileName, _T("auxhcy"), 480);
 	m_wndFileWindow.SetHorzSize(szHorz);
-	szVert.cx = pApp->GetProfileInt(lpszProfileName, "auxvcx", 200);
-	szVert.cy = pApp->GetProfileInt(lpszProfileName, "auxvcy", 480);
+	szVert.cx = pApp->GetProfileInt(lpszProfileName, _T("auxvcx"), 200);
+	szVert.cy = pApp->GetProfileInt(lpszProfileName, _T("auxvcy"), 480);
 	m_wndFileWindow.SetVertSize(szVert);
-	szFloat.cx = pApp->GetProfileInt(lpszProfileName, "auxfcx", 200);
-	szFloat.cy = pApp->GetProfileInt(lpszProfileName, "auxfcy", 480);
+	szFloat.cx = pApp->GetProfileInt(lpszProfileName, _T("auxfcx"), 200);
+	szFloat.cy = pApp->GetProfileInt(lpszProfileName, _T("auxfcy"), 480);
 	m_wndFileWindow.SetFloatSize(szFloat);
 
-	szHorz.cx = pApp->GetProfileInt(lpszProfileName, "outhcx", 640);
-	szHorz.cy = pApp->GetProfileInt(lpszProfileName, "outhcy",  80);
+	szHorz.cx = pApp->GetProfileInt(lpszProfileName, _T("outhcx"), 640);
+	szHorz.cy = pApp->GetProfileInt(lpszProfileName, _T("outhcy"),  80);
 	m_wndOutputWindow.SetHorzSize(szHorz);
-	szVert.cx = pApp->GetProfileInt(lpszProfileName, "outvcx", 640);
-	szVert.cy = pApp->GetProfileInt(lpszProfileName, "outvcy",  80);
+	szVert.cx = pApp->GetProfileInt(lpszProfileName, _T("outvcx"), 640);
+	szVert.cy = pApp->GetProfileInt(lpszProfileName, _T("outvcy"),  80);
 	m_wndOutputWindow.SetVertSize(szVert);
-	szFloat.cx = pApp->GetProfileInt(lpszProfileName, "outfcx", 640);
-	szFloat.cy = pApp->GetProfileInt(lpszProfileName, "outfcy",  80);
+	szFloat.cx = pApp->GetProfileInt(lpszProfileName, _T("outfcx"), 640);
+	szFloat.cy = pApp->GetProfileInt(lpszProfileName, _T("outfcy"),  80);
 	m_wndOutputWindow.SetFloatSize(szFloat);
 
 	WINDOWPLACEMENT wndpl; wndpl.length = sizeof(wndpl);
-	wndpl.flags = pApp->GetProfileInt(lpszProfileName, "flags", 0);
-	wndpl.showCmd = pApp->GetProfileInt(lpszProfileName, "showCmd", 0);
-	wndpl.ptMinPosition.x = pApp->GetProfileInt(lpszProfileName, "minX", 0);
-	wndpl.ptMinPosition.y = pApp->GetProfileInt(lpszProfileName, "minY", 0);
-	wndpl.ptMaxPosition.x = pApp->GetProfileInt(lpszProfileName, "maxX", 0);
-	wndpl.ptMaxPosition.y = pApp->GetProfileInt(lpszProfileName, "maxY", 0);
-	wndpl.rcNormalPosition.left = pApp->GetProfileInt(lpszProfileName, "left", 0);
-	wndpl.rcNormalPosition.top = pApp->GetProfileInt(lpszProfileName, "top", 0);
-	wndpl.rcNormalPosition.right = pApp->GetProfileInt(lpszProfileName, "right", 0);
-	wndpl.rcNormalPosition.bottom = pApp->GetProfileInt(lpszProfileName, "bottom", 0);
+	wndpl.flags = pApp->GetProfileInt(lpszProfileName, _T("flags"), 0);
+	wndpl.showCmd = pApp->GetProfileInt(lpszProfileName, _T("showCmd"), 0);
+	wndpl.ptMinPosition.x = pApp->GetProfileInt(lpszProfileName, _T("minX"), 0);
+	wndpl.ptMinPosition.y = pApp->GetProfileInt(lpszProfileName, _T("minY"), 0);
+	wndpl.ptMaxPosition.x = pApp->GetProfileInt(lpszProfileName, _T("maxX"), 0);
+	wndpl.ptMaxPosition.y = pApp->GetProfileInt(lpszProfileName, _T("maxY"), 0);
+	wndpl.rcNormalPosition.left = pApp->GetProfileInt(lpszProfileName, _T("left"), 0);
+	wndpl.rcNormalPosition.top = pApp->GetProfileInt(lpszProfileName, _T("top"), 0);
+	wndpl.rcNormalPosition.right = pApp->GetProfileInt(lpszProfileName, _T("right"), 0);
+	wndpl.rcNormalPosition.bottom = pApp->GetProfileInt(lpszProfileName, _T("bottom"), 0);
 	SetWindowPlacement( & wndpl );
 
 	return TRUE;
@@ -698,10 +698,10 @@ void CMainFrame::SetCaretPositionInfo(INT nLine, INT nCol, INT nMax)
 {
 	if( m_bPrintPreviewMode ) return;
 
-	CString szPaneText; szPaneText.Format("Ln %d,  Ch %d", nLine, nCol);
+	CString szPaneText; szPaneText.Format(_T("Ln %d,  Ch %d"), nLine, nCol);
 	m_wndStatusBar.SetPaneText(1, szPaneText);
 
-	szPaneText.Format("%d", nMax);
+	szPaneText.Format(_T("%d"), nMax);
 	m_wndStatusBar.SetPaneText(2, szPaneText);
 }
 
@@ -710,7 +710,7 @@ void CMainFrame::SetFileStatusInfo(INT nEncodingType, INT nFileFormat, BOOL bRea
 	if( m_bPrintPreviewMode ) return;
 
 	CString szPaneText = ENCODING_TYPE_DESCRIPTION_SHORT[nEncodingType];
-	szPaneText += ", ";
+	szPaneText += _T(", ");
 	szPaneText += FILE_FORMAT_DESCRIPTION_SHORT[nFileFormat];
 
 	m_wndStatusBar.SetPaneText(3, szPaneText);
