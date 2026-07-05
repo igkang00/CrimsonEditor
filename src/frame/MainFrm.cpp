@@ -3,6 +3,8 @@
 
 #include "stdafx.h"
 #include "cedtHeader.h"
+#include <uxtheme.h>
+#pragma comment(lib, "uxtheme.lib")
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -99,6 +101,17 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	DockControlBar(&m_wndToolBar);
 	szText.LoadString(IDS_TOOL_TOOLBAR);
 	m_wndToolBar.SetWindowText(szText);
+
+	// Kill the visual-style theme on the dock bar that the toolbar sits in
+	// so it paints its background with COLOR_BTNFACE (the classic grey)
+	// instead of the modern near-white the visual style would use. That
+	// matches the toolbar's own grey background — the two share one strip.
+	// The title bar and menu bar keep their theme (they render as the
+	// modern white chrome). Must run after DockControlBar so the toolbar's
+	// parent is the actual CDockBar and not the main frame.
+	if (CWnd* pDockBar = m_wndToolBar.GetParent()) {
+		::SetWindowTheme(pDockBar->GetSafeHwnd(), L"", L"");
+	}
 
 	// File Selector
 	if ( ! m_wndFileTab.Create(this) ) {
