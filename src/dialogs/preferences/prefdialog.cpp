@@ -621,7 +621,11 @@ void CPreferenceDialog::InitAllPrefPages()
 	m_hItemTools = InsertCategoryItem( IDS_PREF_CATEGORY_TOOLS, TVI_ROOT, PREF_CATEGORY_TOOLS );
 	m_hItemCommands = InsertCategoryItem( IDS_PREF_CATEGORY_COMMANDS, m_hItemTools, PREF_CATEGORY_COMMANDS );
 	m_hItemMacros = InsertCategoryItem( IDS_PREF_CATEGORY_MACROS, m_hItemTools, PREF_CATEGORY_MACROS );
-	m_hItemOutput = InsertCategoryItem( IDS_PREF_CATEGORY_OUTPUT, m_hItemTools, PREF_CATEGORY_OUTPUT );
+	// Output page has no UI (PrefDialogOutput.cpp is a stub carried over
+	// from the original 3.71 source). Keep the category hidden so users
+	// don't see a blank page. To surface it later, restore the InsertCategoryItem
+	// call and fill in the Init/Size/Show/Load/Save Output* functions.
+	m_hItemOutput = NULL;
 
 	// init each page
 	InitGeneralPage();			InitVisualPage();			InitFontsPage();
