@@ -6,39 +6,68 @@ The end state of this branch is: every string CString/API touches is UTF-16, the
 
 ---
 
-## Actual progress
+## Status board
 
-| Phase | Status | Commit(s) | Delta |
-| --- | --- | --- | --- |
-| 0 — Environment check | ✅ done | `0a3bb12` | MFC Unicode libs / HtmlHelp.h dual A/W verified |
-| 1 — Build system flip | ✅ done | `0054644` | 2,521 first-compile errors |
-| 2a — Bulk mechanical | ✅ done | `202cee2` | 22 hotspot files, → 653 errors |
-| 2b step 1 — RegExp + TRACE self-wrap | ✅ done | `73e6748` | → 369 errors |
-| 2b step 2 — `#define` literals | ✅ done | `ff1056a` | → 288 errors |
-| 2b step 3 — compile clean | ✅ done | `038c6c7` | → **0 errors**, cedt_tests 55/60 |
-| 3.1 — CRegExp bytecode fix | ✅ done | `c5f045b` | `OPERAND(p) = p + 3`, cedt_tests **60/60** |
-| 3.2 — File I/O: drop CP_ACP round-trip | ✅ done | `c5f045b` | em dash / smart quotes / CJK finally render |
-| 3.3 — em dash rendering | ✅ verified | — | UTF-8 (BOM) load + save-as round-trip pass; screenshot in commit trailer |
-| 3.4 — IME composition | ✅ verified | (pending) | `ImmGetCompositionString` narrow → wide buffer; DBCS branches guarded by `#ifdef _UNICODE` |
-| 3.5 — Config compat + wchar_t builtin | ✅ done | (pending) | Magic strings 3.80 → 3.90; `TreatWChar_tAsBuiltInType=true`; `_WRITE_WIDE_STR` / `_READ_WIDE_STR` helpers for every `StreamSave` / `StreamLoad` in `cedtElement.cpp` |
-| 3.6 — Project file streaming (WIP) | ⚠️ open | (pending) | `wofstream << CString` still emits pointer addresses; applied `.GetString()` cast at every call site, needs runtime verification |
-| 3.7 — Docs + release 3.90 | ⏳ pending | — | this file + README.md + version bump + installer |
+Done / verified are the phases below where every task is checked. WIP has the concrete work remaining. Skip the plan tables when reading; the phase sections below have the actual detail.
 
-### Bugs found during Phase 3
+### Done (compiles, ships, runtime-verified)
 
-1. **CRegExp: `OPERAND(p) = (TCHAR*)((short*)(p+1)+1)`** resolves to `p+3` under MBCS but `p+2` under `_UNICODE` — `regnode()` always reserves 3 TCHAR slots so every operand read landed one TCHAR early. Fix: `OPERAND(p) = p + 3` for both widths. This one line was the entire regex breakage.
+| Phase | Commit | Outcome |
+| --- | --- | --- |
+| 0 — Environment check | `0a3bb12` | MFC Unicode libs / HtmlHelp.h dual A/W verified |
+| 1 — Build system flip | `0054644` | 2,521 first-compile errors |
+| 2a — Bulk mechanical fixes | `202cee2` | 22 hotspot files → 653 errors |
+| 2b step 1 — RegExp + TRACE self-wrap | `73e6748` | → 369 errors |
+| 2b step 2 — `#define` literals | `ff1056a` | → 288 errors |
+| 2b step 3 — compile clean | `038c6c7` | **0 errors**, cedt_tests 55/60 |
+| 3.1 — CRegExp bytecode fix | `c5f045b` | `OPERAND(p) = p + 3`, cedt_tests **60/60** |
+| 3.2 — File I/O: drop CP_ACP round-trip | `c5f045b` | em dash / smart quotes / CJK survive load |
+| 3.3 — em dash rendering | verified in-session | UTF-8 (BOM) load + save-as round-trip, screenshot |
+| 3.4 — IME composition | `d004fb8` | `ImmGetCompositionString` wide buffer + DBCS branches `#ifdef`-guarded; 한글 IME 입력 정상 확인 |
+| 3.5 — Config compat + wchar_t builtin | `d004fb8` | Magic strings 3.80 → 3.90, `TreatWChar_tAsBuiltInType=true`, `_WRITE_WIDE_STR` / `_READ_WIDE_STR` helpers across every `StreamSave`/`StreamLoad` in `cedtElement.cpp` |
+| 3.6 — Project file XML round-trip | verified in-session | `test.prj` saved and reloaded as pure XML text; no more `wofstream << CString → pointer address` |
+| 3.7 — Warnings clean + GetHotKeyText UB | `f050cff` | 18 C4244 warnings → 0 (DBCS branches `#ifdef`-guarded); `TCHAR szKeyName[1024]` uninit stack bug fixed in `GetHotKeyText` for both `CUserCommand` and `CMacroBuffer` — Tools/Macros menu items now render cleanly |
+| 3.8 — Version bump | `912a117` | `STRING_PROJECTFILEVER` / installer.iss / `.rc` files / README all 3.83 → 3.90 |
+
+### WIP (not yet done)
+
+| Phase | Remaining task | Where |
+| --- | --- | --- |
+| 3.8 — Release 3.90 | installer built (`dist/cedt-390-setup.exe`, 25.8 MB) but **not yet installed / smoke-tested** on a clean box. `main` merge, `v3.90` tag, GitHub Release entry all pending user go-ahead. | `scripts/build_installer.ps1` output; release script TBD |
+| 4 — Extended smoke grid | most of the "manual smoke test grid" from the old Phase 5 plan hasn't been walked through end to end. See checklist below. | manual |
+| 5 — UI resource + filesystem verification | `.rc` LoadString round-trip, `launch.exe` wide arg passing, ShellExt.dll interop, CF_UNICODETEXT clipboard round-trip — none touched yet | manual + code |
+| 6 — Documentation | `docs/configuration.md` still describes 3.83-era config; README roadmap checkbox not flipped; no release-note entry | `docs/`, `README.md` |
+
+### Extended smoke grid (still to walk)
+
+Everything on this list is *not* yet run against the 3.90 build. Some items are trivially covered by earlier phase verification (marked ✓); the rest is real hands-on work.
+
+- ✓ Load UTF-8 (with BOM) file with em dash → edit → save → reload
+- [ ] Load ASCII source file → edit → save → byte-diff against original (no change on disk)
+- [ ] Load CP949 source file → add ASCII text → save → verify still CP949
+- [ ] Load UTF-8 (no BOM) file with em dash → edit → save → em dash still there
+- [ ] Load UTF-16 LE file → edit → save → round-trips as UTF-16 LE
+- [ ] Filename with characters outside CP949 (Chinese hanzi via SMB, "測試.txt") — file dialog can show and open
+- ✓ IME 한글 입력 (compose, backspace mid-composition, commit)
+- [ ] Find / Replace with 한글 search term
+- [ ] Regex search with Unicode-only pattern (e.g. `[぀-ゟ]+`)
+- [ ] Multi-cursor / column select over CJK text
+- [ ] Large file (10 MB, 100 MB) load + scroll — verify no regression from doubled `wchar_t` buffer size
+- [ ] Clipboard round-trip: copy CJK from another Unicode app (VS Code, Notepad), paste into Crimson, save
+- [ ] Command-line launch: `cedt_kr.exe "path with 한글 characters.txt"` — file loads with the right encoding
+- [ ] Reopen last workspace at startup, project with paths outside CP949
+- [ ] `launch.exe` / shell-execute tool with wide-char argument
+- [ ] Right-click "Edit with Crimson Editor" (ShellExt.dll) on a CJK-named file
+
+### Bugs found during the migration (annotated)
+
+1. **CRegExp: `OPERAND(p) = (TCHAR*)((short*)(p+1)+1)`** resolves to `p+3` under MBCS but `p+2` under `_UNICODE` — `regnode()` always reserves 3 TCHAR slots so every operand read landed one TCHAR early. Fix: `OPERAND(p) = p + 3` for both widths. This one line was the entire regex breakage (5 of 5 failing tests were regex).
 2. **File I/O CP_ACP round-trip** — the pre-Unicode UTF-8 load path was `UTF-8 → wide → CP_ACP → narrow → CString`. The CP_ACP step silently mapped every non-ANSI code point to `?`. Rewrote every encoding path in `cedtElement.cpp::FileLoad` / `FileSave` to append `(LPCWSTR)szWideBuffer` directly.
-3. **`ImmGetCompositionString` with narrow buffer** — under `_UNICODE`, this API is the W variant and writes UTF-16 into the given buffer, returning the length in bytes. The pre-Unicode call used a `CHAR buf[1024]` and assigned it to a wide `CString`, which routed through CP_ACP and mangled every Korean composition. Switched to `TCHAR buf[512]` (same 1024 bytes) and divided the returned byte count by `sizeof(TCHAR)`.
+3. **`ImmGetCompositionString` with narrow buffer** — under `_UNICODE`, this API is the W variant and writes UTF-16 into the given buffer, returning the length in bytes. The pre-Unicode call used a `CHAR buf[1024]` and assigned it to a wide `CString`, which routed through CP_ACP and mangled every Korean composition.
 4. **StreamSave / StreamLoad width bug** — `nLength = m_szXxx.GetLength()` is a *character* count, but `fout.write(ptr, nLength)` writes *bytes*. Under Unicode every stored string was chopped in half. Wrapped every site in `cedtElement.cpp` with `_WRITE_WIDE_STR` / `_READ_WIDE_STR` helpers that multiply by `sizeof(TCHAR)` at the byte boundary.
 5. **`wofstream << CString` writing pointer addresses** — with `TreatWChar_tAsBuiltInType=false`, `wchar_t` is `unsigned short`, and the standard `basic_ostream<wchar_t>::operator<<(const wchar_t*)` overload doesn't match the CString → LPCTSTR conversion — the compiler falls back to `operator<<(const void*)` and prints the pointer. Fix: flip the setting to `true` project-wide, then add explicit `.GetString()` at every `<<` site to be robust regardless.
 6. **Config file magic string read/write with `_tcslen`** — `_tcslen("Configuration 3.90 x64")` is 22 (chars), but the buffer was read as bytes, so the compare always failed and the user got a "config file corrupted" popup on every start. Rewrote every magic-string site (`cedtAppConf.cpp`) to use `CStringA` — one byte per char on disk, matches Save side that was already narrow.
-
-### Deferred to next branch
-
-- **C4244 (TCHAR → BYTE) warnings** in `cedtDocAnal.cpp` — 18 unique sites, all inside `IsDBCSLeadByte()` calls that are dead code under `_UNICODE` (guarded by `g_bDoubleByteCharacterSet` which we now force to FALSE). Cast to `(BYTE)` or wrap the whole DBCS block in `#ifndef _UNICODE`.
-- **Manual smoke test grid** (Phase 5 in the original plan) — large-file scroll, column select over CJK, regex with Unicode pattern, filename dialog outside CP949.
-- **Release 3.90 installer** — bump `STRING_PROJECTFILEVER`, cut the installer, tag, push.
-- **Runtime verification of `FileWndProject` fix** — the `.GetString()` cast is applied but not yet confirmed on a fresh save/load round-trip.
+7. **`GetHotKeyText` uninitialized-stack UB** — `TCHAR szKeyName[1024]` declared but never initialized; `GetKeyNameText` returns 0 for the default (`m_wVirtualKeyCode = 0`) case without touching the buffer, and the code then trusted `_tcslen(szKeyName)` as the "did it work?" check. The pre-Unicode build happened to see zero-filled stack on this path; Unicode doesn't, so every "Empty" Tools/Macros menu row rendered `- Empty -\t<garbage wchars>`. Fix: check the API return value; on `<= 0`, return empty.
 
 ---
 
@@ -56,7 +85,11 @@ The end state of this branch is: every string CString/API touches is UTF-16, the
 
 ---
 
-## Environment check (Phase 0 — done)
+## Original plan (kept for reference)
+
+The following is the plan as written at branch start. It's kept verbatim so a future reader can compare the plan to what actually happened. See the *Status board* above for the real state.
+
+### Environment check (Phase 0 — done)
 
 | Component | Status |
 | --- | --- |
@@ -67,18 +100,13 @@ The end state of this branch is: every string CString/API touches is UTF-16, the
 | Bundled `HtmlHelp.h` (1999-vintage) | ✅ ships **both** `HtmlHelpA` and `HtmlHelpW` prototypes with a `#ifdef UNICODE` macro routing to the right one. No wrapper needed. Structure fields are already `LPCTSTR` throughout (one stray `LPCSTR pszCatName` in the info-type-enum struct, which we don't use) |
 | Test project (`cedt_tests`) built with GoogleTest through vcpkg | ✅ vcpkg manifest tolerant of either charset, gtest itself doesn't care |
 
----
+### Phase 1 — Build-system flip + first compile attempt
 
-## Phase plan
-
-### Phase 1 — Build-system flip + first compile attempt (done)
-
-1. ✅ `cedt.vcxproj`:
+1. `cedt.vcxproj`:
     - `<CharacterSet>MultiByte</CharacterSet>` → `Unicode` in both `Release-KR|Release-US` and `Debug-KR|Debug-US` Configuration groups.
     - `<PreprocessorDefinitions>` — `_MBCS` → `_UNICODE;UNICODE` in both Release and Debug ItemDefinitionGroups.
-2. ✅ `tests/cedt_tests.vcxproj` — same treatment (CharacterSet × 2, PreprocessorDefinitions × 2).
-3. ✅ `tools/launch/launch.vcxproj` — same treatment. (`tools/shellext/shellext.vcxproj` was already Unicode.)
-4. ✅ Verification: `_MBCS` / `MultiByte` count is `0` across all three projects; `_UNICODE` / `Unicode` count matches the expected number of ClCompile blocks.
+2. `tests/cedt_tests.vcxproj` — same treatment.
+3. `tools/launch/launch.vcxproj` — same treatment. (`tools/shellext/shellext.vcxproj` was already Unicode.)
 
 **First Debug-KR|x64 rebuild produced 2,521 errors** — as expected. Distribution:
 
@@ -89,34 +117,14 @@ The end state of this branch is: every string CString/API touches is UTF-16, the
 | `C2440` | 55 (2%) | plain `=` assignment `char*` ↔ `TCHAR*` | retype variable, or wrap literal |
 | `C2678` | 20 (<1%) | `std::istream::operator>>` on a `char` when the sink is now `wchar_t` | use `std::wistringstream` / `std::wifstream` (or bridge through a narrow string on the IO side) |
 | `C2660` | 1 | `MultiByteToWideChar` called with 5 args instead of 6 | manual fix in `XPTabCtrl.cpp:422` |
-| `C1003` | 3 | "too many errors in one file, stopping" | not real errors, just cl.exe giving up early — the actual count is larger than 2,521 |
-
-Nothing surprising. The overwhelming majority (99%) is one class of problem: a string literal or a `char`-typed variable being handed to an API that is now `TCHAR`-typed. All addressable by the two Phase 2 patterns (wrap the literal with `_T()`; retype the variable). The three exotic codes are one-off targeted fixes.
-
-The `C1003` note means we're not seeing every error yet — `cl.exe` stops after 100 in a single translation unit. Phase 2 fixes will make more errors visible in later passes. This is normal; we knew going in.
-
-Raw log is at `%TEMP%\cedt-unicode-first.log` for anyone who wants the individual sites.
+| `C1003` | 3 | "too many errors in one file, stopping" | not real errors — the actual count is larger than 2,521 |
 
 ### Phase 2 — Mechanical fixes (bulk-scriptable)
 
-Groupable into a small number of patterns, each of which can be handled by a targeted find/replace:
-
-1. **String literals**: `"..."` used in `TCHAR`-taking context → wrap with `_T("...")`.
-    - Don't blindly wrap every literal — a literal passed to a socket API stays `char`.
-    - Two-pass approach: compile errors identify which literals need wrapping; a script edits those specific sites.
+1. **String literals**: `"..."` used in `TCHAR`-taking context → wrap with `_T("...")`. Don't blindly wrap every literal — a literal passed to a socket API stays `char`.
 2. **Explicit char types**: `char szBuf[N]` used with `TCHAR`-family APIs → `TCHAR szBuf[N]`.
-    - Or `WCHAR szBuf[N]` where already Unicode-specific.
-3. **String function calls**:
-    - `strlen` → `_tcslen`
-    - `strcpy` / `strcpy_s` → `_tcscpy` / `_tcscpy_s`
-    - `strcmp` / `stricmp` / `_stricmp` → `_tcscmp` / `_tcsicmp`
-    - `strcat` → `_tcscat`
-    - `sprintf` / `_snprintf` → `_stprintf` / `_sntprintf`
-    - `atoi` / `atol` → `_ttoi` / `_ttol`
-    - `strncpy`, `strchr`, `strstr`, `strtok` → their `_tcs*` equivalents
-    - Some of this migration is already partly done from the x64 port (the codebase already uses `_tcslen` in several places) — audit remaining `str*` calls.
+3. **String function calls**: `strlen`→`_tcslen`, `strcpy`→`_tcscpy`, `strcmp`→`_tcscmp`, `sprintf`→`_stprintf`, `atoi`→`_ttoi`, and friends.
 4. **Char literals passed to APIs**: `'A'` sometimes → `_T('A')` when compared against `TCHAR`.
-5. Recompile. Expect a much smaller residual error set.
 
 ### Phase 3 — File I/O logic (the actual behavior change)
 
@@ -129,69 +137,39 @@ WideCharToMultiByte(CP_ACP,  0, szWideBuffer, -1, szBuffer, ...);   // step 2 �
 
 Step 2 exists because the document's in-memory buffer is `char*`. Once the app is `_UNICODE`, the in-memory buffer is `wchar_t*` and step 2 goes away entirely — the file's UTF-8 bytes reach the buffer as their original code points and no CP949 downgrade happens.
 
-Tasks:
-
-1. Change `CFormatedText` / `CAnalyzedString` / `CUndoBuffer` etc. internal storage to `wchar_t`-based (`CStringW` / `CList<wchar_t>` — whatever the current shape is, mirrored in wide).
-2. Rewrite load functions in `cedtElement.cpp` for each encoding:
-    - ASCII → wide via `MultiByteToWideChar(CP_ACP, ...)` (or `CP_1252`)
-    - UTF-8 (with or without BOM) → wide via `MultiByteToWideChar(CP_UTF8, ...)` (drop the second conversion)
-    - UTF-16 LE/BE → memcpy (with byte-swap for BE) into `wchar_t`
-3. Rewrite save functions symmetrically: wide → target encoding on the way out.
-4. Preserve the BOM handling that's already there.
-5. Test round-trip: load `em dash → save → reload` and check the character survives.
-
 ### Phase 4 — IME / character input
 
-Windows Unicode-mode IME behavior is different from MBCS:
-
-- `WM_IME_CHAR` fires once per full character (UTF-16 code unit), not once per byte. Existing MBCS logic that expects two `WM_IME_CHAR` events (lead byte + trail byte) for a Korean syllable needs to collapse to one.
-- `ImmGetCompositionStringA` → `ImmGetCompositionStringW` — the `A`/`W` selection is via the same `TCHAR` macro that `_UNICODE` flips. Free change.
-- `IsDBCSLeadByte` — no longer needed anywhere in the code path; every occurrence should be removed. Grep + delete.
-- `g_bDoubleByteCharacterSet` global (see `src/view/cedtView.cpp`) — decide whether to keep it (for legacy files stored in MBCS that the user is editing) or retire it. Probably retire — Unicode-in-buffer means no DBCS.
-
-Tasks:
-
-1. Rewrite `WM_IME_CHAR` / `WM_CHAR` handlers in `src/view/cedtView.cpp` and `src/view/cedtViewEditCompose.cpp` for the Unicode path.
-2. Delete DBCS lead-byte tracking and the `cLeadByte` state variable.
-3. Retire `g_bDoubleByteCharacterSet` (or keep as `TRUE` shim if there's non-obvious downstream usage — check).
-4. Test hard: Korean IME on/off cycles, Alt+space language toggle, composition cancel, backspace during composition.
+- `WM_IME_CHAR` fires once per full character (UTF-16 code unit), not once per byte.
+- `ImmGetCompositionStringA` → `ImmGetCompositionStringW` — the `A`/`W` selection is via the same `TCHAR` macro that `_UNICODE` flips.
+- `IsDBCSLeadByte` — no longer needed anywhere in the code path.
+- `g_bDoubleByteCharacterSet` global — retire under `_UNICODE` (force FALSE).
 
 ### Phase 5 — Test pass
 
-1. `cedt_tests` — 60 tests must still be green. Any that hard-coded MBCS byte counts (e.g., "한글 = 2 bytes") need updating to code-unit counts.
-2. Manual smoke test grid:
-    - Load an ASCII source file → edit → save. No change on disk.
-    - Load a CP949 source file → edit (add ASCII) → save. Verify still CP949.
-    - Load a UTF-8 (no BOM) source file with em dash → edit → save. **Em dash survives** (the whole point).
-    - Load a UTF-16 LE file → edit → save. Round-trips.
-    - Open a file whose *filename* contains characters outside CP949 (e.g., Chinese hanzi via SMB share). Currently the file dialog can't even show it; after Unicode it should.
-    - IME test: type 한글 sentence via IME, backspace mid-composition, save, reload, characters still there.
-    - Find / Replace with 한글 search term.
-    - Regex search with a Unicode pattern.
-    - Multi-cursor / column select over CJK text.
-    - Big file (10 MB, 100 MB) load + scroll — check no regression from doubled buffer size.
+1. `cedt_tests` — 60 tests must still be green.
+2. Manual smoke test grid — see the *Extended smoke grid* checklist in the Status board.
 
 ### Phase 6 — UI resources + filesystem
 
-1. `.rc` files (`cedt_kr.rc`, `cedt_us.rc`) — the `LANGUAGE` directives stay; strings encoded as-is in the RC file are already correctly interpreted by `LoadString` in Unicode mode as long as `CODEPAGE_UTF8` is not misapplied. Verify.
-2. File dialog wrappers — verify the `TCHAR`-based path types survive round-trip.
-3. Registry keys — the settings we own live at `HKLM\Software\Crimson System\Crimson Editor` and `HKCU\Software\Crimson System\Crimson Editor\...`. `RegSetValueExW` accepts `REG_SZ` as UTF-16 natively; the string routing macros handle this automatically.
-4. Command line: `_tmain` / `CommandLineToArgvW` — verify the launcher's argument passing handles wide correctly (`tools/launch/launch.exe` might need a small fix).
-5. Shell integration: `ShellExt.dll` is already Unicode. Sanity-check the interop.
-6. Clipboard: `CF_UNICODETEXT` — should Just Work once the app is Unicode.
+1. `.rc` files — verify `LoadString` round-trip.
+2. File dialog wrappers — verify wide path round-trip.
+3. Registry — `RegSetValueExW` accepts `REG_SZ` as UTF-16 natively.
+4. Command line: `_tmain` / `CommandLineToArgvW` — verify `launch.exe` argument passing.
+5. Shell integration: `ShellExt.dll` interop sanity check.
+6. Clipboard: `CF_UNICODETEXT` round-trip.
 
 ### Phase 7 — Docs + release
 
-1. Update this planning doc with what actually happened, per phase.
-2. `README.md` — flip the roadmap checkbox `[x] Unicode build`, add a short note in "Compatibility" that filenames and file contents now support the full Unicode range.
-3. `docs/configuration.md` — reflect the config-format bump (magic strings changed, old configs auto-reset once on first launch).
-4. Add a note in the release entry about what's expected to change for a Korean user: previously-broken characters (em dash, thin dash, quote marks, math symbols) will now display and round-trip.
+1. Update this planning doc with what actually happened.
+2. `README.md` — flip the roadmap checkbox `[x] Unicode build`.
+3. `docs/configuration.md` — reflect the config-format bump.
+4. Add a release-note entry for Korean users about what previously-broken characters now work.
 5. Version bump 3.83 → 3.90.
 6. Merge back to `main`, tag `v3.90`, cut the installer.
 
 ---
 
-## Risks
+## Risks (as identified at branch start)
 
 | Risk | Mitigation |
 | --- | --- |
@@ -199,7 +177,7 @@ Tasks:
 | IME regression under Korean composition | The hardest to catch statically. Reserve real hands-on testing at Phase 4. Compare-recording video of "before" vs "after" IME behavior on the same input. |
 | File loaded in encoding X, saved in encoding Y silently, because the encoding detector or save path has a bug specific to the new Unicode buffer type | Automated round-trip tests: for each encoding, load a canned file, save to `tmp`, byte-diff against source. Any diff is a regression. |
 | The bundled `HtmlHelp.h`'s `HtmlHelp()` prototype takes `LPCSTR` even in Unicode builds (it's a very old header) | Wrap the call in a `#ifdef _UNICODE` bridge that converts the URL string. One-line fix. |
-| Old `cedt.conf` from 3.83 → 3.90 upgrade fails badly instead of quietly resetting | Bump `STRING_CONFIGURATIONVER` to `"Configuration 3.90 x64 Unicode"` or similar. Load path already treats mismatch as "start clean" — verified during x64 work. |
+| Old `cedt.conf` from 3.83 → 3.90 upgrade fails badly instead of quietly resetting | Bump `STRING_CONFIGURATIONVER` to `"Configuration 3.90 x64"`. Load path already treats mismatch as "start clean" — verified during x64 work. |
 | Someone's project file references filename encoded in CP949 that's not representable outside it | Would need a per-project migration. Given the small user base and rarity of the failure mode, ship a release note pointing to a workaround (re-open the file by hand). |
 | `g_bDoubleByteCharacterSet` used somewhere non-obvious (e.g., a syntax highlighting rule) | grep every reference before deleting the global. Keep as `#define g_bDoubleByteCharacterSet FALSE` shim if in doubt. |
 | Performance regression on large files due to doubled buffer size | 64-bit x64 process address space makes this practically irrelevant. Confirmed once during test pass. |
