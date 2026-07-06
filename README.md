@@ -10,7 +10,7 @@ A freeware source-code editor for Windows, originally written between 1999 and 2
 
 The current release ships an x64 installer for Windows 10 and 11.
 
-- **[Download cedt-383-setup.exe](https://github.com/igkang00/CrimsonEditor/releases/latest)** (≈ 26 MB) — from the GitHub Releases page
+- **[Download cedt-390-setup.exe](https://github.com/igkang00/CrimsonEditor/releases/latest)** (≈ 26 MB) — from the GitHub Releases page
 
 Run the installer and accept the UAC prompt. It installs to `Program Files\Crimson Editor`, bundles the Visual C++ x64 runtime, and optionally adds an "Edit with Crimson Editor" entry to the Explorer right-click menu.
 
@@ -49,7 +49,7 @@ msbuild cedt.sln /p:Configuration=Debug-US   /p:Platform=x64
 .\scripts\build_installer.ps1
 ```
 
-Build artifacts land in `build\x64\<Configuration>\` (e.g. `build\x64\Release-KR\cedt_kr.exe`); the installer lands in `dist\cedt-383-setup.exe`. Both `build\` and `dist\` are gitignored.
+Build artifacts land in `build\x64\<Configuration>\` (e.g. `build\x64\Release-KR\cedt_kr.exe`); the installer lands in `dist\cedt-390-setup.exe`. Both `build\` and `dist\` are gitignored.
 
 ### Prerequisites
 
@@ -120,7 +120,8 @@ For the full source breakdown — every `.cpp` and what it does, the MFC class d
 - [x] **64-bit migration** — shipped in v3.81
 - [x] **Inno Setup installer** — replaces the legacy NSIS installer, bundles VC++ x64 redist
 - [x] **Unit tests for the "medium" group** — `CSortStringArray`, `CMemText`, `CUndoBuffer`, `CKeywords`, `CDictionary`, `CLangSpec`, `CAnalyzedString`
-- [ ] **Unicode build** — currently MBCS-only. The Korean IME handling ([cedtViewEditCompose.cpp](src/view/cedtViewEditCompose.cpp)) and `char`/`TCHAR` assumptions across the codebase need a pass
+- [x] **Unicode build** — shipped in v3.90. Internal representation is UTF-16, file I/O keeps the on-disk encoding (UTF-8 with or without BOM, UTF-16 LE/BE, CP949/CP1252). Characters outside the ANSI code page (em dash, smart quotes, box drawing, CJK characters not in CP949) now display and round-trip through save/load. Filenames with characters outside the ANSI code page open. Korean IME composition rewritten for the wide-char path
+- [ ] **Large-file loading performance** — a 10 MB file loads in ~10 s and a 100 MB file in ~2 min under the current syntax analyzer / word-wrap formatter. The Unicode migration didn't change the algorithm; the doubled buffer size roughly doubled the wall-clock cost. A future pass should skip full re-analysis on load, batch the formatter across visible lines only, and consider streaming for files above a threshold
 - [ ] **High-DPI awareness** — the app currently ships **DPI-unaware** on purpose (see *Known issues* below); making it DPI-aware requires modernizing the legacy dialogs and toolbar first
 - [ ] **GitHub Actions CI** — automatically build the four configurations and run `cedt_tests` on every push
 - [ ] **Integration tests (L2)** — exercise `CCedtDoc` and other CWinApp-dependent code without showing real windows. Requires extracting a `cedt_core` static library; see [docs/testing.md](docs/testing.md)
@@ -129,6 +130,36 @@ For the full source breakdown — every `.cpp` and what it does, the MFC class d
 ---
 
 ## Known issues
+
+### Large-file loading is slow
+
+Loading a text file walks the whole document through the syntax analyzer
+(`src/doc/cedtDocAnal.cpp`) and then through the word-wrap formatter
+(`src/view/cedtViewFormat.cpp`) before the editor becomes interactive.
+On the current build:
+
+- **10 MB**: ~10 s
+- **100 MB**: ~2 min
+
+The editor is fully responsive once the load finishes. The migration to
+Unicode (v3.90) doubled the in-memory buffer size (1 byte → 2 bytes per
+character), which roughly doubled these numbers from the v3.83 baseline
+but did not change the algorithm. Beyond 100 MB the analyzer starts
+holding uncomfortably large chunks of memory in a single pass.
+
+Directions for a future pass:
+
+1. Skip full document re-analysis on load — analyze incrementally as the
+   caret first visits each line, or as syntax highlighting first paints
+   it.
+2. Batch the formatter across the visible viewport plus a small over-
+   scroll window instead of the whole document.
+3. For files above a threshold (~50 MB), stream from disk and hold only
+   the current viewport ± a page in memory.
+
+For now, if you regularly edit files >10 MB, running the Release-KR /
+Release-US build (not the Debug configuration) roughly halves the load
+time.
 
 ### High-DPI displays (display scaling > 100%)
 
