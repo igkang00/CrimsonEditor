@@ -939,17 +939,22 @@ CUserCommand::CUserCommand()
 
 CString CUserCommand::GetHotKeyText()
 {
+	// GetKeyNameText returns 0 when the scan code is invalid (default
+	// m_wVirtualKeyCode = 0 hits this path). The pre-Unicode code left
+	// szKeyName uninitialized and trusted _tcslen — which happened to
+	// return 0 on MBCS stack patterns but returns garbage under Unicode.
+	// Trust the API's return value instead.
 	UINT nScanCode = MapVirtualKey( m_wVirtualKeyCode, 0 );
 	LPARAM lParam = nScanCode << 16;
-	TCHAR szKeyName[1024]; GetKeyNameText( (LONG)lParam, szKeyName, 1024 );
+	TCHAR szKeyName[1024];
+	INT nLen = GetKeyNameText( (LONG)lParam, szKeyName, 1024 );
+	if( nLen <= 0 ) return _T("");
 
-	CString szHotKeyText = _T("");
-	if( _tcslen(szKeyName) ) {
-		if( m_wModifiers & HOTKEYF_CONTROL ) szHotKeyText += _T("Ctrl+");
-		if( m_wModifiers & HOTKEYF_ALT ) szHotKeyText += _T("Alt+");
-		if( m_wModifiers & HOTKEYF_SHIFT ) szHotKeyText += _T("Shift+");
-		szHotKeyText += szKeyName;
-	}
+	CString szHotKeyText;
+	if( m_wModifiers & HOTKEYF_CONTROL ) szHotKeyText += _T("Ctrl+");
+	if( m_wModifiers & HOTKEYF_ALT ) szHotKeyText += _T("Alt+");
+	if( m_wModifiers & HOTKEYF_SHIFT ) szHotKeyText += _T("Shift+");
+	szHotKeyText += szKeyName;
 	return szHotKeyText;
 }
 
@@ -1047,17 +1052,18 @@ CMacroBuffer::CMacroBuffer()
 
 CString CMacroBuffer::GetHotKeyText()
 {
+	// Same uninitialized-szKeyName bug as CUserCommand::GetHotKeyText.
 	UINT nScanCode = MapVirtualKey( m_wVirtualKeyCode, 0 );
 	LPARAM lParam = nScanCode << 16;
-	TCHAR szKeyName[1024]; GetKeyNameText( (LONG)lParam, szKeyName, 1024 );
+	TCHAR szKeyName[1024];
+	INT nLen = GetKeyNameText( (LONG)lParam, szKeyName, 1024 );
+	if( nLen <= 0 ) return _T("");
 
-	CString szHotKeyText = _T("");
-	if( _tcslen(szKeyName) ) {
-		if( m_wModifiers & HOTKEYF_CONTROL ) szHotKeyText += _T("Ctrl+");
-		if( m_wModifiers & HOTKEYF_ALT ) szHotKeyText += _T("Alt+");
-		if( m_wModifiers & HOTKEYF_SHIFT ) szHotKeyText += _T("Shift+");
-		szHotKeyText += szKeyName;
-	}
+	CString szHotKeyText;
+	if( m_wModifiers & HOTKEYF_CONTROL ) szHotKeyText += _T("Ctrl+");
+	if( m_wModifiers & HOTKEYF_ALT ) szHotKeyText += _T("Alt+");
+	if( m_wModifiers & HOTKEYF_SHIFT ) szHotKeyText += _T("Shift+");
+	szHotKeyText += szKeyName;
 	return szHotKeyText;
 }
 

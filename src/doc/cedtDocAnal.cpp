@@ -92,7 +92,16 @@ static void _FinishLine(SHORT wcount, BOOL bOverflow, CAnalyzedString & rLine)
 #define _ROLL_BACK(addr)		{ fwd = beg; state = (addr); }
 #define _JUMP_ADDR(addr)		{            state = (addr); }
 
-#define _CHCK_DBCS(ptr)			( bDBC && IsDBCSLeadByte(* ptr) )
+// Under _UNICODE the buffer is UTF-16 and `bDBC` is forced FALSE at
+// startup (see cedtapp.cpp), so the DBCS lead-byte branches are dead
+// code. Collapse the macro to a compile-time 0 so the optimizer strips
+// them without emitting C4244 (TCHAR → BYTE truncation) warnings on
+// the IsDBCSLeadByte call site.
+#ifdef _UNICODE
+#	define _CHCK_DBCS(ptr)		( 0 )
+#else
+#	define _CHCK_DBCS(ptr)		( bDBC && IsDBCSLeadByte(* ptr) )
+#endif
 #define _CHCK_SIZE(ptr, len)	( ptr - str < MAX_STRING_LENGTH - (len) )
 
 static void _AnalyzeLine(CAnalyzedString & rLine) 
@@ -129,11 +138,14 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 
 
 		case 0x0100: // CHECK DOUBLE BYTE CHARACTERS
+#ifndef _UNICODE
 			if( bDBC && IsDBCSLeadByte(* fwd) && * (fwd+1) && _CHCK_SIZE(fwd, 2) ) {
 				fwd += 2;
 				_WordFound(wcount++, WT_DBCHAR, RT_GLOBAL, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
-			} else {
+			} else
+#endif
+			{
 				_ROLL_BACK(bQUO ? 0x0200 : (bCOM ? 0x0300 : (bRNG ? 0x0350 : 0x0400)));
 			}
 			break;
@@ -426,11 +438,13 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 
 INT CCedtDoc::GetCharType(TCHAR nChar)
 {
-	BOOL bDBCS = g_bDoubleByteCharacterSet;
 	DEL = m_clsLangSpec.m_szDelimiters;
 
-	if( bDBCS && IsDBCSLeadByte(nChar)  ) return CH_CHARACTER;
-	else if( _istspace(nChar) || ! nChar  ) return CH_WHITESPACE;
+#ifndef _UNICODE
+	BOOL bDBCS = g_bDoubleByteCharacterSet;
+	if( bDBCS && IsDBCSLeadByte(nChar) ) return CH_CHARACTER;
+#endif
+	if     ( _istspace(nChar) || ! nChar  ) return CH_WHITESPACE;
 	else if( isprint(nChar) && _tcschr(DEL, nChar) ) return CH_DELIMITER;
 	else return CH_CHARACTER;
 }
