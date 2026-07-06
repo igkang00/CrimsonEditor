@@ -418,7 +418,7 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 
 
 		case 0x0800: // CHECK DELIMITERS
-			if( isprint(* fwd) && _tcschr(DEL, * fwd) && _CHCK_SIZE(fwd, 1) ) {
+			if( _istprint(* fwd) && _tcschr(DEL, * fwd) && _CHCK_SIZE(fwd, 1) ) {
 				fwd++;
 				_WordFound(wcount++, WT_DELIMITER, RT_GLOBAL, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
@@ -445,7 +445,7 @@ INT CCedtDoc::GetCharType(TCHAR nChar)
 	if( bDBCS && IsDBCSLeadByte(nChar) ) return CH_CHARACTER;
 #endif
 	if     ( _istspace(nChar) || ! nChar  ) return CH_WHITESPACE;
-	else if( isprint(nChar) && _tcschr(DEL, nChar) ) return CH_DELIMITER;
+	else if( _istprint(nChar) && _tcschr(DEL, nChar) ) return CH_DELIMITER;
 	else return CH_CHARACTER;
 }
 

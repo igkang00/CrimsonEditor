@@ -24,22 +24,22 @@ BOOL CFileWindow::InitLocalDriveList(LPCTSTR lpszInitialDriveName)
 
 			if( GetVolumeInformation(pDrive, szVolumeName, sizeof(szVolumeName), & dwSerialNumber,
 				& dwMaxComponentLength, & dwFileSystemFlags, szFileSystemName, sizeof(szFileSystemName)) ) {
-				szDriveName.Format(_T("[%c:] %s"), toupper(pDrive[0]), szVolumeName);
+				szDriveName.Format(_T("[%c:] %s"), _totupper(pDrive[0]), szVolumeName);
 			} else if( nType == DRIVE_FIXED ) {
-				szDriveName.Format(_T("[%c:] Local Drive"), toupper(pDrive[0]));
+				szDriveName.Format(_T("[%c:] Local Drive"), _totupper(pDrive[0]));
 			} else if( nType == DRIVE_RAMDISK ) {
-				szDriveName.Format(_T("[%c:] RAM Disk"), toupper(pDrive[0]));
+				szDriveName.Format(_T("[%c:] RAM Disk"), _totupper(pDrive[0]));
 			} else if( nType == DRIVE_REMOTE ) {
-				szDriveName.Format(_T("[%c:] Network Drive"), toupper(pDrive[0]));
+				szDriveName.Format(_T("[%c:] Network Drive"), _totupper(pDrive[0]));
 			}
 		} else { // other types of drive takes time to GetVolumeInformation()
 			switch( nType ) {
 			case DRIVE_CDROM: 
-				szDriveName.Format(_T("[%c:] CD-ROM"), toupper(pDrive[0])); break;
+				szDriveName.Format(_T("[%c:] CD-ROM"), _totupper(pDrive[0])); break;
 			case DRIVE_REMOVABLE: 
-				szDriveName.Format(_T("[%c:] Removable"), toupper(pDrive[0])); break;
+				szDriveName.Format(_T("[%c:] Removable"), _totupper(pDrive[0])); break;
 			default: 
-				szDriveName.Format(_T("[%c:] Unknown Type"), toupper(pDrive[0])); break;
+				szDriveName.Format(_T("[%c:] Unknown Type"), _totupper(pDrive[0])); break;
 			}
 		}
 

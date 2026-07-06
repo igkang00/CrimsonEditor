@@ -471,12 +471,12 @@ static BOOL ParseRemoteFileListItem(CString & szMode, DWORD & dwSize, CString & 
 	TCHAR * BEG = (TCHAR *)lpszItem, * FWD = (TCHAR *)lpszItem;
 
 	// extract file mode
-	while( * FWD && ! isspace(* FWD) ) FWD++;
+	while( * FWD && ! _istspace(* FWD) ) FWD++;
 	if( FWD == BEG ) return FALSE;
 	szMode = CString(BEG, (int)(FWD-BEG));
 
 	// skip spaces
-	while( * FWD && isspace(* FWD) ) FWD++;
+	while( * FWD && _istspace(* FWD) ) FWD++;
 	if( * FWD == '\0' ) return FALSE;
 
 	// advance pointer
@@ -485,11 +485,11 @@ static BOOL ParseRemoteFileListItem(CString & szMode, DWORD & dwSize, CString & 
 	// skip block size, file owner, file group
 	for(INT i = 0; i < 3; i++) {
 		// skip something
-		while( * FWD && ! isspace(* FWD) ) FWD++;
+		while( * FWD && ! _istspace(* FWD) ) FWD++;
 		if( * FWD == '\0' ) return FALSE;
 
 		// skip spaces
-		while( * FWD && isspace(* FWD) ) FWD++;
+		while( * FWD && _istspace(* FWD) ) FWD++;
 		if( * FWD == '\0' ) return FALSE;
 	}
 
@@ -497,12 +497,12 @@ static BOOL ParseRemoteFileListItem(CString & szMode, DWORD & dwSize, CString & 
 	BEG = FWD;
 
 	// extract file size
-	while( * FWD && ! isspace(* FWD) ) FWD++;
+	while( * FWD && ! _istspace(* FWD) ) FWD++;
 	if( FWD == BEG ) return FALSE;
 	dwSize = _ttoi(BEG);
 
 	// skip spaces
-	while( * FWD && isspace(* FWD) ) FWD++;
+	while( * FWD && _istspace(* FWD) ) FWD++;
 	if( * FWD == '\0' ) return FALSE;
 
 	// advance pointer
@@ -518,16 +518,16 @@ static BOOL ParseRemoteFileListItem(CString & szMode, DWORD & dwSize, CString & 
 	szTime = CString(BEG, (int)(FWD-BEG));
 
 /*	// extract file creation time
-	while( * FWD && ! isspace(* FWD) ) FWD++;
+	while( * FWD && ! _istspace(* FWD) ) FWD++;
 	if( FWD == BEG ) return FALSE;
 	szTime = CString(BEG, (int)(FWD-BEG));*/
 
 	// skip spaces
-	while( * FWD && isspace(* FWD) ) FWD++;
+	while( * FWD && _istspace(* FWD) ) FWD++;
 	if( * FWD == '\0' ) return FALSE;
 
 	// skip spaces
-	while( * FWD && isspace(* FWD) ) FWD++;
+	while( * FWD && _istspace(* FWD) ) FWD++;
 	if( * FWD == '\0' ) return FALSE;
 
 	// advance pointer

@@ -12,8 +12,8 @@ void MakeInvertCase(CString & rString)
 	for(INT i = 0; i < nLen; i++) {
 		INT ch = rString[i];
 		if( _istalpha(ch) ) {
-			if( _istupper(ch) ) rString.SetAt(i, tolower(ch));
-			else rString.SetAt(i, toupper(ch));
+			if( _istupper(ch) ) rString.SetAt(i, _totlower(ch));
+			else rString.SetAt(i, _totupper(ch));
 		}
 	}
 }
@@ -24,8 +24,8 @@ void MakeCapitalize(CString & rString)
 	for(INT i = 0; i < nLen; i++) {
 		INT ch = rString[i];
 		if( _istalpha(ch) ) {
-			if( bAlpha ) rString.SetAt(i, tolower(ch));
-			else rString.SetAt(i, toupper(ch));
+			if( bAlpha ) rString.SetAt(i, _totlower(ch));
+			else rString.SetAt(i, _totupper(ch));
 			bAlpha = TRUE;
 		} else bAlpha = FALSE;
 	}
