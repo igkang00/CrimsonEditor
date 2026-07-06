@@ -142,7 +142,10 @@ BOOL DetectEncodingType(LPVOID lpContents, INT nLength, UINT & nEncodingType)
 	//   1110xxxx + 10xxxxxx*2                    (3 bytes)
 	//   11110xxx + 10xxxxxx*3                    (4 bytes)
 	// A standalone continuation byte (10xxxxxx) or a leading byte in the
-	// 11111xxx range means the file is not UTF-8.
+	// 11111xxx range means the file is not UTF-8 but still has bytes above
+	// 0x7F, so it is a legacy MBCS/ANSI file — classified as
+	// ENCODING_TYPE_ASCII (see the two branches below), never UNKNOWN. Only a
+	// file with no non-ASCII byte at all stays UNKNOWN.
 	//
 	// A file that reaches the end of the sample with at least one fully-
 	// validated multi-byte sequence and zero rule violations is treated as
@@ -165,7 +168,13 @@ BOOL DetectEncodingType(LPVOID lpContents, INT nLength, UINT & nEncodingType)
 		if     ( (b & 0xE0) == 0xC0 ) nContinuation = 1; // 110xxxxx
 		else if( (b & 0xF0) == 0xE0 ) nContinuation = 2; // 1110xxxx
 		else if( (b & 0xF8) == 0xF0 ) nContinuation = 3; // 11110xxx
-		else { nEncodingType = ENCODING_TYPE_UNKNOWN; return FALSE; }
+		// A byte above 0x7F that is not a valid UTF-8 lead byte (a bare
+		// continuation byte, or an 11111xxx byte) means this is a legacy
+		// MBCS/ANSI file (CP949 on a Korean host), not UTF-8. Classify it as
+		// ANSI — NOT UNKNOWN — so the caller does not replace UNKNOWN with the
+		// default encoding (UTF-8 w/o BOM since v3.90) and decode every CP949
+		// byte as broken UTF-8.
+		else { nEncodingType = ENCODING_TYPE_ASCII; return TRUE; }
 
 		// If the multi-byte sequence is cut off at the sample boundary, be
 		// conservative and stop scanning — don't commit either way based on
@@ -174,8 +183,10 @@ BOOL DetectEncodingType(LPVOID lpContents, INT nLength, UINT & nEncodingType)
 
 		for( INT k = 1; k <= nContinuation; k++ ) {
 			if( (lpBuffer[i + k] & 0xC0) != 0x80 ) {
-				nEncodingType = ENCODING_TYPE_UNKNOWN;
-				return FALSE;
+				// UTF-8 lead byte without its continuation byte(s): again a
+				// legacy MBCS/ANSI file, so commit to ANSI (see above).
+				nEncodingType = ENCODING_TYPE_ASCII;
+				return TRUE;
 			}
 		}
 		bHasValidatedNonAscii = TRUE;
