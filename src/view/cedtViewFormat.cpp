@@ -37,13 +37,63 @@ static INT _GetLeadingSpaceWidth(CAnalyzedString & rLine, CDC * pDC)
 	return nPosition;
 }
 
+// East Asian Width classifier: return 2 for full-width (CJK ideographs,
+// Hangul syllables, Hiragana/Katakana, fullwidth Latin, etc.), 1 for
+// everything else. Under MBCS this was implicit — CP949 stored CJK as
+// two bytes, and the code counted bytes, so the layout math happened
+// to line up with the two-column glyph. Under Unicode every CJK char
+// is a single wchar_t, so the layout code has to look at the code
+// point to know it renders wide.
+//
+// Ranges follow Unicode's East Asian Width property (categories W and
+// F), covering everything a Korean / Japanese / Chinese user is
+// realistically going to type in source. Ambiguous (A) is treated as
+// narrow — same behavior a Western monospace font gives.
+static inline INT _CharColumnWidth(TCHAR c)
+{
+#ifdef _UNICODE
+	unsigned int u = (unsigned int)(unsigned short)c;
+	if( u < 0x0080 ) return 1;                     // ASCII fast path
+	if( (u >= 0x1100 && u <= 0x115F) ||            // Hangul Jamo
+	    (u >= 0x2E80 && u <= 0x303E) ||            // CJK Radicals, Kangxi
+	    (u >= 0x3041 && u <= 0x33FF) ||            // Hiragana/Katakana/CJK Symbols
+	    (u >= 0x3400 && u <= 0x4DBF) ||            // CJK Unified Ext A
+	    (u >= 0x4E00 && u <= 0x9FFF) ||            // CJK Unified
+	    (u >= 0xA000 && u <= 0xA4CF) ||            // Yi
+	    (u >= 0xAC00 && u <= 0xD7A3) ||            // Hangul Syllables
+	    (u >= 0xF900 && u <= 0xFAFF) ||            // CJK Compat Ideographs
+	    (u >= 0xFE30 && u <= 0xFE4F) ||            // CJK Compat Forms
+	    (u >= 0xFF00 && u <= 0xFF60) ||            // Fullwidth Latin/punct
+	    (u >= 0xFFE0 && u <= 0xFFE6) ) {           // Fullwidth signs
+		return 2;
+	}
+#else
+	(void)c;
+#endif
+	return 1;
+}
+
+static BOOL _HasWideChar(LPCTSTR pWord, SHORT siLength)
+{
+	for(SHORT i = 0; i < siLength; i++) if( _CharColumnWidth(pWord[i]) > 1 ) return TRUE;
+	return FALSE;
+}
+
 static INT _GetWordWidth(LPCTSTR pWord, SHORT siLength, INT nPosition, UCHAR cType, CDC * pDC)
 {
 	if( cType == WT_TAB ) {
 		return ((nPosition + _nSpaceWidth - _nTabMargin) / _nTabWidth + 1) * _nTabWidth - nPosition;
-	} else if( cType == WT_SPACE || _bFixedPitch ) {
+	} else if( cType == WT_SPACE ) {
+		return _nSpaceWidth * siLength;
+	} else if( _bFixedPitch && ! _HasWideChar(pWord, siLength) ) {
+		// Pure ASCII in a fixed-pitch font: fast path, no GDI round-trip.
 		return _nSpaceWidth * siLength;
 	} else {
+		// Any CJK char forces the GDI path even when the base font is
+		// declared fixed-pitch, because Windows font-linking renders
+		// missing CJK glyphs from a fallback font whose actual pixel
+		// width does NOT necessarily equal 2 × _nSpaceWidth. Only
+		// GetTextExtent knows the real width the renderer will produce.
 		CSize size = pDC->GetTextExtent(pWord, siLength);
 		return (SHORT)size.cx;
 	}
@@ -51,14 +101,23 @@ static INT _GetWordWidth(LPCTSTR pWord, SHORT siLength, INT nPosition, UCHAR cTy
 
 static SHORT _GetWordIndex(LPCTSTR pWord, SHORT siLength, INT nWidth, CDC * pDC)
 {
-	SHORT siIndex; CSize size;
+	SHORT siIndex = 0; CSize size;
 
-	for(SHORT i = 0; i <= siLength; i++) {
-		if( _bFixedPitch ) size.cx = _nSpaceWidth * i;
-		else size = pDC->GetTextExtent(pWord, i);
-
-		if( size.cx <= nWidth ) siIndex = i;
-		else break;
+	if( _bFixedPitch && ! _HasWideChar(pWord, siLength) ) {
+		// Pure ASCII fast path — every char is exactly _nSpaceWidth.
+		for(SHORT i = 0; i <= siLength; i++) {
+			if( _nSpaceWidth * i <= nWidth ) siIndex = i;
+			else break;
+		}
+	} else {
+		// Word contains CJK (or the font is variable-pitch). Ask GDI
+		// for the real prefix widths so the split lands on a glyph
+		// boundary that matches what will be drawn.
+		for(SHORT i = 0; i <= siLength; i++) {
+			size = pDC->GetTextExtent(pWord, i);
+			if( size.cx <= nWidth ) siIndex = i;
+			else break;
+		}
 	}
 
 	return siIndex;
