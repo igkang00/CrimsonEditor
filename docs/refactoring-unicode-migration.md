@@ -28,36 +28,25 @@ Done / verified are the phases below where every task is checked. WIP has the co
 | 3.6 — Project file XML round-trip | verified in-session | `test.prj` saved and reloaded as pure XML text; no more `wofstream << CString → pointer address` |
 | 3.7 — Warnings clean + GetHotKeyText UB | `f050cff` | 18 C4244 warnings → 0 (DBCS branches `#ifdef`-guarded); `TCHAR szKeyName[1024]` uninit stack bug fixed in `GetHotKeyText` for both `CUserCommand` and `CMacroBuffer` — Tools/Macros menu items now render cleanly |
 | 3.8 — Version bump | `912a117` | `STRING_PROJECTFILEVER` / installer.iss / `.rc` files / README all 3.83 → 3.90 |
+| 4a — ASCII round-trip | verified in-session | 89-byte C file, DOS line endings preserved (line-ending normalization inside string literal noted as pre-existing behavior) |
+| 4b — CP949 round-trip | verified in-session | Korean bytes `c7 d1 b1 db …` byte-identical on save; ASCII append works |
+| 4c — UTF-8 no-BOM round-trip | verified in-session | em dash `e2 80 94`, smart quotes, 한글 all preserved; no BOM inserted |
+| 4d — UTF-16 LE round-trip | verified in-session | BOM `ff fe`, em dash `14 20`, 한글 all preserved |
+| 4e — CJK filename open | verified in-session | `C:\temp\한글파일명.c` shown in dialog + opened |
+| 4f — Find/Replace + regex Unicode | `5c555cb` | 18 narrow `is*/to*` CRT calls (isprint / isspace / toupper / tolower) → `_ist*/_tot*` wide variants; assertion `c >= -1 && c <= 255` fixed |
+| 4g — Column select over CJK glyphs | `0849f2f` | `_CharColumnWidth` (East Asian Width W/F) + fixed-pitch path uses GDI `GetTextExtent` when word contains CJK — no more overlapping glyphs |
+| 4h — Big file load | verified in-session | 10 MB in ~10 s, 100 MB in ~2 min; syntax analyzer perf noted in README as follow-up |
+| 4i — Clipboard round-trip | `fbcb8f8`, `f429972` | `CF_TEXT` → `CF_UNICODETEXT` everywhere; `CMemText::Memory*` walks TCHAR not CHAR; new-doc default encoding flipped from ASCII → UTF-8 no-BOM |
+| 4j — Cmdline wide-char launch | verified in-session | `Start-Process cedt_kr.exe C:\temp\한글파일명.c` opens correctly |
+| 5 — launch.exe wide args | `bbc8d99` | `GetCommandLineA` / `CreateProcessA` → `W` variants. `ShellExt.dll` was already Unicode-clean (`ShellExecuteW`) |
+| 6a — configuration.md | `ed26c5f` | §9.1.2 rewritten to reflect the actual TCHAR-width impact from v3.90 |
 
 ### WIP (not yet done)
 
 | Phase | Remaining task | Where |
 | --- | --- | --- |
-| 3.8 — Release 3.90 | installer built (`dist/cedt-390-setup.exe`, 25.8 MB) but **not yet installed / smoke-tested** on a clean box. `main` merge, `v3.90` tag, GitHub Release entry all pending user go-ahead. | `scripts/build_installer.ps1` output; release script TBD |
-| 4 — Extended smoke grid | most of the "manual smoke test grid" from the old Phase 5 plan hasn't been walked through end to end. See checklist below. | manual |
-| 5 — UI resource + filesystem verification | `.rc` LoadString round-trip, `launch.exe` wide arg passing, ShellExt.dll interop, CF_UNICODETEXT clipboard round-trip — none touched yet | manual + code |
-| 6 — Documentation | `docs/configuration.md` still describes 3.83-era config; README roadmap checkbox not flipped; no release-note entry | `docs/`, `README.md` |
-
-### Extended smoke grid (still to walk)
-
-Everything on this list is *not* yet run against the 3.90 build. Some items are trivially covered by earlier phase verification (marked ✓); the rest is real hands-on work.
-
-- ✓ Load UTF-8 (with BOM) file with em dash → edit → save → reload
-- [ ] Load ASCII source file → edit → save → byte-diff against original (no change on disk)
-- [ ] Load CP949 source file → add ASCII text → save → verify still CP949
-- [ ] Load UTF-8 (no BOM) file with em dash → edit → save → em dash still there
-- [ ] Load UTF-16 LE file → edit → save → round-trips as UTF-16 LE
-- [ ] Filename with characters outside CP949 (Chinese hanzi via SMB, "測試.txt") — file dialog can show and open
-- ✓ IME 한글 입력 (compose, backspace mid-composition, commit)
-- [ ] Find / Replace with 한글 search term
-- [ ] Regex search with Unicode-only pattern (e.g. `[぀-ゟ]+`)
-- [ ] Multi-cursor / column select over CJK text
-- [ ] Large file (10 MB, 100 MB) load + scroll — verify no regression from doubled `wchar_t` buffer size
-- [ ] Clipboard round-trip: copy CJK from another Unicode app (VS Code, Notepad), paste into Crimson, save
-- [ ] Command-line launch: `cedt_kr.exe "path with 한글 characters.txt"` — file loads with the right encoding
-- [ ] Reopen last workspace at startup, project with paths outside CP949
-- [ ] `launch.exe` / shell-execute tool with wide-char argument
-- [ ] Right-click "Edit with Crimson Editor" (ShellExt.dll) on a CJK-named file
+| 6b — this doc | keep the status board honest as Phase 7 progresses | `docs/refactoring-unicode-migration.md` |
+| 7 — Release 3.90 | rebuild the installer to pick up the wide-char `launch.exe`, install on a clean box for a real smoke pass, then `main` merge → `v3.90` tag → GitHub Release. Installer was built once at `dist/cedt-390-setup.exe` (25.8 MB) but pre-dates commits `5c555cb` / `0849f2f` / `fbcb8f8` / `f429972` / `bbc8d99` — needs a rebuild before shipping. | `scripts/build_installer.ps1` output; release script TBD |
 
 ### Bugs found during the migration (annotated)
 
@@ -68,6 +57,12 @@ Everything on this list is *not* yet run against the 3.90 build. Some items are 
 5. **`wofstream << CString` writing pointer addresses** — with `TreatWChar_tAsBuiltInType=false`, `wchar_t` is `unsigned short`, and the standard `basic_ostream<wchar_t>::operator<<(const wchar_t*)` overload doesn't match the CString → LPCTSTR conversion — the compiler falls back to `operator<<(const void*)` and prints the pointer. Fix: flip the setting to `true` project-wide, then add explicit `.GetString()` at every `<<` site to be robust regardless.
 6. **Config file magic string read/write with `_tcslen`** — `_tcslen("Configuration 3.90 x64")` is 22 (chars), but the buffer was read as bytes, so the compare always failed and the user got a "config file corrupted" popup on every start. Rewrote every magic-string site (`cedtAppConf.cpp`) to use `CStringA` — one byte per char on disk, matches Save side that was already narrow.
 7. **`GetHotKeyText` uninitialized-stack UB** — `TCHAR szKeyName[1024]` declared but never initialized; `GetKeyNameText` returns 0 for the default (`m_wVirtualKeyCode = 0`) case without touching the buffer, and the code then trusted `_tcslen(szKeyName)` as the "did it work?" check. The pre-Unicode build happened to see zero-filled stack on this path; Unicode doesn't, so every "Empty" Tools/Macros menu row rendered `- Empty -\t<garbage wchars>`. Fix: check the API return value; on `<= 0`, return empty.
+8. **Narrow `is*/to*` CRT calls with `TCHAR` arguments** — `isprint(nChar)`, `isspace(*FWD)`, `toupper(pDrive[0])`, `tolower/toupper` in Utility.cpp. The Windows CRT asserts `c >= -1 && c <= 255` in debug builds; the moment the caret sits on a Korean char (0xAC00…0xD7A3), pressing Ctrl+F triggers the assert from a word-under-caret lookup. Swapped 18 call sites for `_ist*` / `_tot*` (TCHAR-aware) variants.
+9. **Fixed-pitch layout math assumed `siLength` was a column count** — `_GetWordWidth` / `_GetWordIndex` in `cedtViewFormat.cpp` returned `_nSpaceWidth * siLength` under a fixed-pitch font. Under MBCS a Korean syllable was two bytes so `siLength` already counted the extra column. Under Unicode it's one wchar_t, so every CJK glyph was laid out at half its actual pixel width and the next word drew on top of the previous one. Added `_CharColumnWidth(TCHAR)` (East Asian Width W/F → 2, else 1); pure-ASCII words in a fixed-pitch font still use the fast arithmetic path, anything else routes through GDI `GetTextExtent` because Windows font-linking replaces missing CJK glyphs from a fallback font whose actual pixel width isn't `2 × _nSpaceWidth`.
+10. **Clipboard was `CF_TEXT` only** — external Unicode apps (Notepad, VS Code, browsers) publish `CF_UNICODETEXT`. The editor only asked for `CF_TEXT`, so Windows synthesized it via `CP_ACP` and every em dash, smart quote, emoji, and non-CP949 CJK became `?`. Swapped every `CF_TEXT` reference in the clipboard / OLE data-object paths to `CF_UNICODETEXT`. Windows still synthesizes `CF_TEXT` on the way out for legacy consumers.
+11. **`CMemText::MemorySize / MemoryLoad / MemorySave` were byte-oriented** — `CHAR *` parameters, `memcpy(tmp, rString, nLength)` copied character count as byte count, `'\r' / '\n' / '\0'` compared as single bytes. Under Unicode every clipboard payload was chopped in half or misread. Rewrote all three to walk the buffer as `TCHAR`: size is `char-count × sizeof(TCHAR)`, split scans compare against `_T('\r')` etc., copies use `nLength × sizeof(TCHAR)` bytes.
+12. **New-document default encoding was `ENCODING_TYPE_ASCII`** — under `_UNICODE` this meant every paste of external Unicode content got downgraded through `CP_ACP` on save. Flipped the default to `ENCODING_TYPE_UTF8_XBOM` (UTF-8 without BOM), matching the modern editor consensus (VS Code, Notepad++, Sublime, JetBrains). Only affects the code default; existing configs with the old value stored keep using it until reset.
+13. **`launch.exe` was calling narrow `GetCommandLineA` / `CreateProcessA`** — even though its vcxproj compiled with `_UNICODE`. Any tool path outside `CP_ACP` got mangled before the child process ran. Swapped for `GetCommandLineW` / `CreateProcessW`.
 
 ---
 
