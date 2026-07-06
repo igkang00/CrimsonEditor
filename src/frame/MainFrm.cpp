@@ -356,7 +356,7 @@ DROPEFFECT CMainFrame::OnDragEnter(COleDataObject* pDataObject, DWORD dwKeyState
 {
 	TRACE0("CMainFrame::OnDragEnter\n");
 
-	if( pDataObject->IsDataAvailable(CF_TEXT) ) {
+	if( pDataObject->IsDataAvailable(CF_UNICODETEXT) ) {
 		// set drag object type
 		m_nDragObjectType = DRAG_OBJECT_TEXT;
 
@@ -417,10 +417,10 @@ BOOL CMainFrame::OnDrop(COleDataObject* pDataObject, DROPEFFECT dropEffect, CPoi
 {
 	TRACE0("CMainFrame::OnDrop\n");
 
-	if( pDataObject->IsDataAvailable(CF_TEXT) ) {
+	if( pDataObject->IsDataAvailable(CF_UNICODETEXT) ) {
 
 		if( dropEffect == DROPEFFECT_COPY || dropEffect == DROPEFFECT_MOVE ) {
-			HGLOBAL hMemory = pDataObject->GetGlobalData(CF_TEXT);
+			HGLOBAL hMemory = pDataObject->GetGlobalData(CF_UNICODETEXT);
 			if( ! hMemory ) return FALSE;
 
 			if( ! CCedtView::GetGlobalMemoryText(hMemory, CCedtApp::m_clsMemText) ) return FALSE;

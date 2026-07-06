@@ -942,8 +942,8 @@ void CCedtView::OnLButtonDown(UINT nFlags, CPoint point)
 		Block.MemorySave((char *)pMemory, size); 
 		::GlobalUnlock(hMemory);
 
-		FORMATETC etc = { CF_TEXT, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
-		m_oleDataSource.CacheGlobalData(CF_TEXT, hMemory, & etc);
+		FORMATETC etc = { CF_UNICODETEXT, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+		m_oleDataSource.CacheGlobalData(CF_UNICODETEXT, hMemory, & etc);
 
 		m_bDragDataSource = TRUE; m_bDragDropOccured = FALSE;
 		TRACE0("Before DoDragDrop\n");
@@ -1141,7 +1141,7 @@ DROPEFFECT CCedtView::OnDragEnter(COleDataObject* pDataObject, DWORD dwKeyState,
 {
 	TRACE0("CCedtView::OnDragEnter\n");
 
-	if( pDataObject->IsDataAvailable(CF_TEXT) ) {
+	if( pDataObject->IsDataAvailable(CF_UNICODETEXT) ) {
 		CMainFrame * pFrame = (CMainFrame *)AfxGetMainWnd(); ASSERT( pFrame );
 		CChildFrame * pChild = (CChildFrame *)GetParentFrame(); ASSERT( pChild );
 
@@ -1245,7 +1245,7 @@ BOOL CCedtView::OnDrop(COleDataObject* pDataObject, DROPEFFECT dropEffect, CPoin
 	TRACE0("CCedtView::OnDrop\n");
 	m_bDragDropOccured = TRUE;
 
-	if( pDataObject->IsDataAvailable(CF_TEXT) ) {
+	if( pDataObject->IsDataAvailable(CF_UNICODETEXT) ) {
 		// set drag position from mouse pointer
 		SetDragPosFromMouse(point);
 
@@ -1256,10 +1256,10 @@ BOOL CCedtView::OnDrop(COleDataObject* pDataObject, DROPEFFECT dropEffect, CPoin
 		/*	Drag and Drop action will be executed when DoDragDrop() is finished */
 			return TRUE;
 		} else if( dropEffect == DROPEFFECT_COPY ) {
-			HGLOBAL hMemory = pDataObject->GetGlobalData(CF_TEXT);
+			HGLOBAL hMemory = pDataObject->GetGlobalData(CF_UNICODETEXT);
 			OnDropPaste(hMemory); ::GlobalFree(hMemory); return TRUE;
 		} else if( dropEffect == DROPEFFECT_MOVE ) {
-			HGLOBAL hMemory = pDataObject->GetGlobalData(CF_TEXT);
+			HGLOBAL hMemory = pDataObject->GetGlobalData(CF_UNICODETEXT);
 			OnDropPaste(hMemory); ::GlobalFree(hMemory); return TRUE;
 		} else return FALSE;
 

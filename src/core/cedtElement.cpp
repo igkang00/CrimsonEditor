@@ -621,37 +621,50 @@ void CMemText::MakeEqualLength()
 
 INT CMemText::MemorySize()
 {
-	INT size = 0;
+	// Return byte size (not TCHAR count) so callers that use this to
+	// GlobalAlloc a clipboard block get the right size under both
+	// Unicode (2 bytes/char) and MBCS (1 byte/char) builds.
+	INT count = 0;
 	POSITION pos = GetHeadPosition();
 	while( pos ) {
 		CString & rString = GetNext( pos );
-		size += rString.GetLength() + 2;
+		count += rString.GetLength() + 2;
 	}
-	return size;
+	return count * (INT)sizeof(TCHAR);
 }
 
 void CMemText::MemoryLoad(CHAR * pMem, INT size)
 {
-	RemoveAll(); CHAR * beg, * fwd = pMem;
-	while( fwd - pMem < size ) {
+	// `size` and `pMem` are byte-oriented; the actual content is TCHAR.
+	// Under Unicode we walk one TCHAR at a time and compare against
+	// _T('\r') / _T('\n') / _T('\0') — the pre-Unicode code assumed
+	// sizeof(TCHAR)==1 so it split every other byte as a delimiter.
+	RemoveAll();
+	TCHAR * base = (TCHAR *)pMem;
+	INT total = size / (INT)sizeof(TCHAR);
+	TCHAR * beg, * fwd = base;
+	while( fwd - base < total ) {
 		beg = fwd;
-		while( fwd - pMem < size && * fwd != '\r' && * fwd != '\n' && * fwd != '\0' ) fwd++;
-		AddTail( CString(beg, (int)(fwd-beg)) );
-		if( * fwd != '\0' ) { if(* fwd == '\r') fwd++; if(* fwd == '\n') fwd++; }
+		while( fwd - base < total && * fwd != _T('\r') && * fwd != _T('\n') && * fwd != _T('\0') ) fwd++;
+		AddTail( CString(beg, (int)(fwd - beg)) );
+		if( * fwd != _T('\0') ) { if(* fwd == _T('\r')) fwd++; if(* fwd == _T('\n')) fwd++; }
 		else break;
 	}
 }
 
 void CMemText::MemorySave(CHAR * pMem, INT size)
 {
-	CHAR * tmp = pMem; POSITION pos = GetHeadPosition();
+	// Byte pointer in, but the payload is TCHAR-aligned. Copy each
+	// string's TCHARs directly and place TCHAR-sized delimiters.
+	TCHAR * tmp = (TCHAR *)pMem; POSITION pos = GetHeadPosition();
 	while( pos ) {
 		CString & rString = GetNext(pos);
 		INT nLength = rString.GetLength();
-		memcpy(tmp, rString, nLength); tmp += nLength;
-		if( pos ) { * tmp++ = '\r'; * tmp++ = '\n'; }
-		else { * tmp++ = '\0'; * tmp++ = '\0'; }
+		memcpy(tmp, (LPCTSTR)rString, nLength * sizeof(TCHAR)); tmp += nLength;
+		if( pos ) { * tmp++ = _T('\r'); * tmp++ = _T('\n'); }
+		else { * tmp++ = _T('\0'); * tmp++ = _T('\0'); }
 	}
+	(void)size;
 }
 
 

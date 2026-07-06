@@ -10,7 +10,7 @@ void CCedtView::SetClipboardData(CMemText & rBlock)
 	::EmptyClipboard();
 
 	HGLOBAL hMemory = SetGlobalMemoryText( rBlock );
-	::SetClipboardData(CF_TEXT, hMemory);
+	::SetClipboardData(CF_UNICODETEXT, hMemory);
 	::CloseClipboard();
 }
 
@@ -18,7 +18,7 @@ BOOL CCedtView::GetClipboardData(CMemText & rBlock)
 {
 	CWnd * pWnd = AfxGetMainWnd();
 	::OpenClipboard( pWnd->m_hWnd );
-	HGLOBAL hMemory = ::GetClipboardData(CF_TEXT);
+	HGLOBAL hMemory = ::GetClipboardData(CF_UNICODETEXT);
 
 	if( ! GetGlobalMemoryText( hMemory, rBlock ) ) { ::CloseClipboard(); return FALSE; }
 	::CloseClipboard();
@@ -29,7 +29,7 @@ BOOL CCedtView::HasClipboardData()
 {
 	CWnd * pWnd = AfxGetMainWnd();
 	::OpenClipboard( pWnd->m_hWnd );
-	HGLOBAL hMemory = ::GetClipboardData(CF_TEXT);
+	HGLOBAL hMemory = ::GetClipboardData(CF_UNICODETEXT);
 
 	::CloseClipboard();
 	return hMemory ? TRUE : FALSE;
@@ -37,7 +37,7 @@ BOOL CCedtView::HasClipboardData()
 
 BOOL CCedtView::GetOleDataObjectData(COleDataObject * pDataObject, CMemText & rBlock)
 {
-	HGLOBAL hMemory = pDataObject->GetGlobalData(CF_TEXT);
+	HGLOBAL hMemory = pDataObject->GetGlobalData(CF_UNICODETEXT);
 	return GetGlobalMemoryText( hMemory, rBlock );
 }
 
