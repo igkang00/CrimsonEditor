@@ -15,23 +15,25 @@
 
 int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
-	// GetCommandLineA returns the raw, exactly-as-typed command line
-	// with our own argv[0] (possibly quoted) at the front. Skip it.
-	LPSTR p = GetCommandLineA();
-	if (*p == '"') {
+	// GetCommandLineW gives the raw, exactly-as-typed command line as
+	// UTF-16, with our own argv[0] (possibly quoted) at the front. Use
+	// the W variant so tool paths with Chinese / Japanese / emoji or any
+	// character outside the current ANSI code page survive.
+	LPWSTR p = GetCommandLineW();
+	if (*p == L'"') {
 		++p;
-		while (*p && *p != '"') ++p;
-		if (*p == '"') ++p;
+		while (*p && *p != L'"') ++p;
+		if (*p == L'"') ++p;
 	} else {
-		while (*p && *p != ' ' && *p != '\t') ++p;
+		while (*p && *p != L' ' && *p != L'\t') ++p;
 	}
-	while (*p == ' ' || *p == '\t') ++p;
+	while (*p == L' ' || *p == L'\t') ++p;
 
 	if (!*p) return 1;   // No command was given.
 
-	STARTUPINFOA si = { sizeof(si) };
+	STARTUPINFOW si = { sizeof(si) };
 	PROCESS_INFORMATION pi = { 0 };
-	if (!CreateProcessA(NULL, p, NULL, NULL,
+	if (!CreateProcessW(NULL, p, NULL, NULL,
 	                    FALSE,                 // do NOT inherit our handles
 	                    CREATE_NEW_CONSOLE,    // give the tool its own window
 	                    NULL, NULL,
