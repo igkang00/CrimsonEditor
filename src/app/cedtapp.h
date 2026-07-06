@@ -18,7 +18,6 @@
 
 extern UINT g_uClipbrdFormatProjectItem;
 extern UINT g_uClipbrdFormatFileTabItem;
-extern BOOL g_bDoubleByteCharacterSet;
 
 
 /////////////////////////////////////////////////////////////////////////////

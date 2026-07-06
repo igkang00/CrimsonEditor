@@ -1289,10 +1289,9 @@ void CCedtView::OnTimer(UINT_PTR nIDEvent)
 	CView::OnTimer(nIDEvent);
 }
 
-BOOL CCedtView::PreTranslateMessage(MSG* pMsg) 
+BOOL CCedtView::PreTranslateMessage(MSG* pMsg)
 {
 	static CString szCompositionString;
-	static TCHAR szByte[3], cLeadByte = 0x00;
 	static UINT nChar, nFlags;
 
 	// translate message for command hot key
@@ -1321,12 +1320,7 @@ BOOL CCedtView::PreTranslateMessage(MSG* pMsg)
 			OnImeCompositionEnd(FALSE);
 		}
 
-		if( g_bDoubleByteCharacterSet && cLeadByte ) {
-			szByte[0] = cLeadByte; szByte[1] = (TCHAR)pMsg->wParam; szByte[2] = '\0'; cLeadByte = 0x00;
-			TRACE1("DBCHAR: [%s]\n", szByte); OnDBCharKeyDown( szByte[0], szByte[1] );
-		} else if( g_bDoubleByteCharacterSet && IsDBCSLeadByte( (BYTE)pMsg->wParam ) ) {
-			cLeadByte = (TCHAR)pMsg->wParam;
-		} else if( pMsg->wParam == 0x0D ) {
+		if( pMsg->wParam == 0x0D ) {
 			OnEditReturn();
 		} else if( pMsg->wParam == 0x1B ) {
 			OnEditEscape();
@@ -1342,15 +1336,9 @@ BOOL CCedtView::PreTranslateMessage(MSG* pMsg)
 			OnImeCompositionEnd(FALSE);
 		}
 
-#ifdef _UNICODE
 		// wParam is a single UTF-16 code unit; feed it through the normal
-		// character path. The old DBCS pair split fabricated two garbage
-		// wchar_t's from the low/high halves.
+		// character path (identical to WM_CHAR under _UNICODE).
 		OnCharKeyDown( (UINT)pMsg->wParam );
-#else
-		szByte[0] = (TCHAR) pMsg->wParam & 0xFF; szByte[1] = (TCHAR) pMsg->wParam >> 8; szByte[2] = '\0';
-		TRACE1("DBCHAR: [%s]\n", szByte); OnDBCharKeyDown( szByte[0], szByte[1] );
-#endif
 
 		return TRUE;
 
