@@ -108,6 +108,11 @@ Name: "exe_us"; Description: "Crimson Editor (English)"; Types: us custom
 [Tasks]
 Name: "desktopicon";      Description: "{cm:CreateDesktopIcon}";                                                  GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 Name: "shellcontextmenu"; Description: "Add 'Edit with Crimson Editor' to Explorer's right-click menu";          GroupDescription: "Shell integration:"
+; D2Coding is the recommended default editor font (see cedtAppConf.cpp
+; SetDefaultConfiguration, screen font slot 0). Checked by default so the
+; out-of-the-box default font renders correctly; users who don't want it can
+; uncheck, in which case they can switch to the Consolas fallback (slot 1).
+Name: "installd2coding";  Description: "Install the D2Coding coding font (recommended default; SIL OFL 1.1)"; GroupDescription: "Fonts:"
 
 
 [Files]
@@ -144,6 +149,14 @@ Source: "runtime\tools\*";                              DestDir: "{app}\tools"; 
 ; [Run], deleted afterwards. build_installer.ps1 downloads this into
 ; dist\redist\ before invoking ISCC.
 Source: "dist\redist\vc_redist.x64.exe";                DestDir: "{tmp}"; Flags: deleteafterinstall
+
+; D2Coding coding font — optional (see the installd2coding task). Registered
+; into the system Fonts folder via FontInstall. onlyifdoesntexist leaves any
+; version the user already installed untouched; uninsneveruninstall keeps the
+; shared font in place on uninstall (other programs may rely on it). The OFL
+; license text ships alongside the app as required by SIL OFL 1.1.
+Source: "runtime\fonts\D2Coding.ttf";  DestDir: "{autofonts}"; FontInstall: "D2Coding"; Flags: onlyifdoesntexist uninsneveruninstall; Tasks: installd2coding
+Source: "runtime\fonts\OFL.txt";       DestDir: "{app}\fonts";                          Flags: ignoreversion;                       Tasks: installd2coding
 
 
 [Icons]

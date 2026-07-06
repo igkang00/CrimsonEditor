@@ -566,17 +566,13 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "&Encoding Type"
         BEGIN
-            MENUITEM "&ASCII Encoding",             ID_DOCU_ENCODING_ASCII
-            MENUITEM "&Unicode Encoding (Little Endian)", 
-                                                    ID_DOCU_ENCODING_UNICODE_LE
-
-            MENUITEM "U&nicode Encoding (Big Endian)", 
-                                                    ID_DOCU_ENCODING_UNICODE_BE
-
-            MENUITEM "U&TF-8 Encoding (with BOM)",  ID_DOCU_ENCODING_UTF8_WBOM
-
-            MENUITEM "UTF-&8 Encoding (w/o BOM)",   ID_DOCU_ENCODING_UTF8_XBOM
-
+            MENUITEM "&UTF-8 (w/o BOM)",            ID_DOCU_ENCODING_UTF8_XBOM
+            MENUITEM "UTF-&8 (with BOM)",           ID_DOCU_ENCODING_UTF8_WBOM
+            MENUITEM SEPARATOR
+            MENUITEM "UTF-16 (&Little Endian)",     ID_DOCU_ENCODING_UNICODE_LE
+            MENUITEM "UTF-16 (&Big Endian)",        ID_DOCU_ENCODING_UNICODE_BE
+            MENUITEM SEPARATOR
+            MENUITEM "&ANSI (System Code Page)",    ID_DOCU_ENCODING_ASCII
         END
         POPUP "&File Format"
         BEGIN
@@ -3167,15 +3163,15 @@ BEGIN
     ID_DOCU_FORMAT_DOS      "Set the active document to the DOS file format\nDOS Format"
     ID_DOCU_FORMAT_UNIX     "Set the active document to the Unix file format\nUnix Format"
     ID_DOCU_FORMAT_MAC      "Set the active document to the Mac file format\nMac Format"
-    ID_DOCU_ENCODING_ASCII  "Set the active document to ASCII encoding\nASCII Encoding"
-    ID_DOCU_ENCODING_UNICODE_LE 
-                            "Set the active document to Unicode encoding (little endian)\nUnicode Encoding (Little Endian)"
-    ID_DOCU_ENCODING_UNICODE_BE 
-                            "Set the active document to Unicode encoding (big endian)\nUnicode Encoding (Big Endian)"
-    ID_DOCU_ENCODING_UTF8_WBOM 
-                            "Set the active document to UTF-8 encoding with byte order mark\nUTF-8 Encoding (with BOM)"
-    ID_DOCU_ENCODING_UTF8_XBOM 
-                            "Set the active document to UTF-8 encoding without byte order mark\nUTF-8 Encoding (w/o BOM)"
+    ID_DOCU_ENCODING_ASCII  "Save as the system's ANSI code page - CP1252 on English Windows, CP949 on Korean. Legacy; non-ANSI characters are lost.\nANSI (system code page)"
+    ID_DOCU_ENCODING_UNICODE_LE
+                            "Save as Unicode UTF-16 (little-endian). Every code point preserved; ~2x the byte size of UTF-8 for Latin text.\nUnicode UTF-16 (Little Endian)"
+    ID_DOCU_ENCODING_UNICODE_BE
+                            "Save as Unicode UTF-16 (big-endian). Rare on Windows; use for interop with big-endian systems.\nUnicode UTF-16 (Big Endian)"
+    ID_DOCU_ENCODING_UTF8_WBOM
+                            "Save as UTF-8 with byte-order mark. Best for tools that autodetect from BOM but reject files without it.\nUTF-8 (with BOM)"
+    ID_DOCU_ENCODING_UTF8_XBOM
+                            "Save as UTF-8 without byte-order mark. Modern default; every Unicode code point preserved; interoperates cleanly with Git and Unix tooling.\nUTF-8 (w/o BOM)"
     ID_DOCU_LOCK            "Lock the active document from changes\nLock Document"
     ID_DOCU_SUMMARY         "Show the active document summary\nDocument Summary"
     ID_DOCU_PROPERTIES      "Show the active document properties\nDocument Properties"

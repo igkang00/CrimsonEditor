@@ -30,20 +30,29 @@ static UCHAR _uchar_temp;
 static WORD _lword_temp, _hword_temp;
 
 
+// ENCODING_TYPE_ASCII is a legacy label — the disk bytes go through the
+// system's ANSI code page (CP1252 on English Windows, CP949 on Korean),
+// so pure-ASCII files look identical but anything above 0x7F is really
+// ANSI/MBCS. The user-visible strings say "ANSI" so the menu, status
+// bar, and document-summary dialog agree; the enum name stays for
+// binary compatibility with existing cedt_kr.conf / cedt_us.conf files.
 CString ENCODING_TYPE_DESCRIPTION_FULL[] = {
 	/* ENCODING_TYPE_UNKNOWN */			_T("Unknown Encoding"),
-	/* ENCODING_TYPE_ASCII */			_T("ASCII Encoding"),
-	/* ENCODING_TYPE_UNICODE_LE */		_T("Unicode Encoding (Little Endian)"),
-	/* ENCODING_TYPE_UNICODE_BE */		_T("Unicode Encoding (Big Endian)"),
-	/* ENCODING_TYPE_UTF8_WBOM */		_T("UTF-8 Encoding (with BOM)"),
-	/* ENDOCING_TYPE_UTF8_XBOM */		_T("UTF-8 Encoding (w/o BOM)"),
+	/* ENCODING_TYPE_ASCII */			_T("ANSI (system code page)"),
+	/* ENCODING_TYPE_UNICODE_LE */		_T("UTF-16 (Little Endian)"),
+	/* ENCODING_TYPE_UNICODE_BE */		_T("UTF-16 (Big Endian)"),
+	/* ENCODING_TYPE_UTF8_WBOM */		_T("UTF-8 (with BOM)"),
+	/* ENDOCING_TYPE_UTF8_XBOM */		_T("UTF-8 (w/o BOM)"),
 };
 
+// The status bar pane is narrow, so keep these to the family name
+// (ANSI / UTF-8 / UTF-16). BOM presence and byte order are already
+// visible in the menu and in the document summary dialog.
 CString ENCODING_TYPE_DESCRIPTION_SHORT[] = {
 	/* ENCODING_TYPE_UNKNOWN */			_T("N.A."),
-	/* ENCODING_TYPE_ASCII */			_T("ASCII"),
-	/* ENCODING_TYPE_UNICODE_LE */		_T("Unicode"),
-	/* ENCODING_TYPE_UNICODE_BE */		_T("Unicode"),
+	/* ENCODING_TYPE_ASCII */			_T("ANSI"),
+	/* ENCODING_TYPE_UNICODE_LE */		_T("UTF-16"),
+	/* ENCODING_TYPE_UNICODE_BE */		_T("UTF-16"),
 	/* ENCODING_TYPE_UTF8_WBOM */		_T("UTF-8"),
 	/* ENCODING_TYPE_UTF8_XBOM */		_T("UTF-8"),
 };

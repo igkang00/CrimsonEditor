@@ -558,17 +558,13 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "인코딩 형식(&E)"
         BEGIN
-            MENUITEM "&ASCII 인코딩",               ID_DOCU_ENCODING_ASCII
-            MENUITEM "&Unicode 인코딩 (Little Endian)", 
-                                                    ID_DOCU_ENCODING_UNICODE_LE
-
-            MENUITEM "U&nicode 인코딩 (Big Endian)", 
-                                                    ID_DOCU_ENCODING_UNICODE_BE
-
-            MENUITEM "U&TF-8 인코딩 (with BOM)",    ID_DOCU_ENCODING_UTF8_WBOM
-
-            MENUITEM "UTF-&8 인코딩 (w/o BOM)",     ID_DOCU_ENCODING_UTF8_XBOM
-
+            MENUITEM "&UTF-8 (w/o BOM)",            ID_DOCU_ENCODING_UTF8_XBOM
+            MENUITEM "UTF-&8 (with BOM)",           ID_DOCU_ENCODING_UTF8_WBOM
+            MENUITEM SEPARATOR
+            MENUITEM "UTF-16 (&Little Endian)",     ID_DOCU_ENCODING_UNICODE_LE
+            MENUITEM "UTF-16 (&Big Endian)",        ID_DOCU_ENCODING_UNICODE_BE
+            MENUITEM SEPARATOR
+            MENUITEM "&ANSI (시스템 코드 페이지)",   ID_DOCU_ENCODING_ASCII
         END
         POPUP "파일 형식(&F)"
         BEGIN
@@ -3151,15 +3147,15 @@ BEGIN
     ID_DOCU_FORMAT_DOS      "현재 문서를 DOS 파일 형식으로 설정합니다\nDOS 형식"
     ID_DOCU_FORMAT_UNIX     "현재 문서를 Unix 파일 형식으로 설정합니다\nUnix 형식"
     ID_DOCU_FORMAT_MAC      "현재 문서를 Mac 파일 형식으로 설정합니다\nMac 형식"
-    ID_DOCU_ENCODING_ASCII  "현재 문서를 ASCII 인코딩 형식으로 설정합니다\nASCII 인코딩"
-    ID_DOCU_ENCODING_UNICODE_LE 
-                            "현재 문서를 Unicode 인코딩 형식으로 설정합니다 (Little Endian)\nUnicode 인코딩 (Little Endian)"
-    ID_DOCU_ENCODING_UNICODE_BE 
-                            "현재 문서를 Unicode 인코딩 형식으로 설정합니다 (Big Endian)\nUnicode 인코딩 (Big Endian)"
-    ID_DOCU_ENCODING_UTF8_WBOM 
-                            "현재 문서를 UTF-8 인코딩 형식으로 설정합니다 (with BOM)\nUTF-8 인코딩 (with BOM)"
-    ID_DOCU_ENCODING_UTF8_XBOM 
-                            "현재 문서를 UTF-8 인코딩 형식으로 설정합니다 (w/o BOM)\nUTF-8 인코딩 (w/o BOM)"
+    ID_DOCU_ENCODING_ASCII  "현재 문서를 시스템 ANSI 코드 페이지로 저장합니다 (한국어 Windows는 CP949, 영어 Windows는 CP1252). 레거시 방식이며 ANSI 범위를 벗어난 문자는 손실됩니다.\nANSI (시스템 코드 페이지)"
+    ID_DOCU_ENCODING_UNICODE_LE
+                            "현재 문서를 Unicode UTF-16 (Little Endian)으로 저장합니다. 모든 코드 포인트가 보존되며, Latin 텍스트 기준 UTF-8의 약 2배 크기입니다.\nUnicode UTF-16 (Little Endian)"
+    ID_DOCU_ENCODING_UNICODE_BE
+                            "현재 문서를 Unicode UTF-16 (Big Endian)으로 저장합니다. Windows에서는 드물며, 빅엔디안 시스템과의 호환용입니다.\nUnicode UTF-16 (Big Endian)"
+    ID_DOCU_ENCODING_UTF8_WBOM
+                            "현재 문서를 UTF-8 (BOM 포함)으로 저장합니다. BOM으로 인코딩을 자동 감지하지만 BOM이 없으면 인식하지 못하는 도구에 적합합니다.\nUTF-8 (with BOM)"
+    ID_DOCU_ENCODING_UTF8_XBOM
+                            "현재 문서를 UTF-8 (BOM 없음)으로 저장합니다. 현대 기본값으로, 모든 Unicode 코드 포인트가 보존되며 Git 및 Unix 도구와 깔끔하게 호환됩니다.\nUTF-8 (w/o BOM)"
     ID_DOCU_LOCK            "현재 문서를 수정하지 못하도록 잠금니다\n문서 잠금"
     ID_DOCU_SUMMARY         "현재 문서의 요약을 보여줍니다\n문서 요약"
     ID_DOCU_PROPERTIES      "현재 문서의 등록 정보를 보여줍니다\n등록 정보"

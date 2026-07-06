@@ -337,39 +337,60 @@ BOOL CCedtApp::SaveColorScheme(LPCTSTR lpszPathName)
 void CCedtApp::SetDefaultConfiguration()
 {
 	memset(CCedtView::m_lfScreen, 0x00, sizeof(CCedtView::m_lfScreen));
-	_tcscpy(CCedtView::m_lfScreen[0].lfFaceName, _T("Courier New"));
-	_tcscpy(CCedtView::m_lfScreen[1].lfFaceName, _T("FixedSys"));
-	_tcscpy(CCedtView::m_lfScreen[2].lfFaceName, _T("Verdana"));
-	_tcscpy(CCedtView::m_lfScreen[3].lfFaceName, _T("Arial"));
-	_tcscpy(CCedtView::m_lfScreen[4].lfFaceName, _T("Lucida Console"));
-	_tcscpy(CCedtView::m_lfScreen[5].lfFaceName, _T("Terminal"));
-	CCedtView::m_lfScreen[0].lfHeight = 100;	CCedtView::m_lfScreen[1].lfHeight = 90;
+	// Screen font slot 0 is the active default; slots 1-5 are user-selectable
+	// alternates. Slot 0 is Consolas because it ships with every supported
+	// Windows (Vista+), so the default always renders even when the optional
+	// D2Coding bundle was skipped or the font was later uninstalled. Slot 1 is
+	// D2Coding (bundled, SIL OFL 1.1): Hangul/Latin cells align 2:1, ideal for
+	// Korean coding. Slot 2 is Cascadia Mono (Microsoft's modern coding font,
+	// bundled with Windows 11 / Terminal / VS 2022). Legacy bitmap faces
+	// (FixedSys, Terminal) were dropped as unfit for a Unicode editor; the
+	// remaining slots keep classic fixed-pitch fallbacks plus one proportional.
+	_tcscpy(CCedtView::m_lfScreen[0].lfFaceName, _T("Consolas"));
+	_tcscpy(CCedtView::m_lfScreen[1].lfFaceName, _T("D2Coding"));
+	_tcscpy(CCedtView::m_lfScreen[2].lfFaceName, _T("Cascadia Mono"));
+	_tcscpy(CCedtView::m_lfScreen[3].lfFaceName, _T("Lucida Console"));
+	_tcscpy(CCedtView::m_lfScreen[4].lfFaceName, _T("Courier New"));
+	_tcscpy(CCedtView::m_lfScreen[5].lfFaceName, _T("Verdana"));
+	CCedtView::m_lfScreen[0].lfHeight = 100;	CCedtView::m_lfScreen[1].lfHeight = 100;
 	CCedtView::m_lfScreen[2].lfHeight = 100;	CCedtView::m_lfScreen[3].lfHeight = 100;
 	CCedtView::m_lfScreen[4].lfHeight = 100;	CCedtView::m_lfScreen[5].lfHeight = 100;
 	CCedtView::m_lfScreen[0].lfCharSet = CCedtView::m_lfScreen[1].lfCharSet = DEFAULT_CHARSET;
 	CCedtView::m_lfScreen[2].lfCharSet = CCedtView::m_lfScreen[3].lfCharSet = DEFAULT_CHARSET;
 	CCedtView::m_lfScreen[4].lfCharSet = CCedtView::m_lfScreen[5].lfCharSet = DEFAULT_CHARSET;
+	// slots 0-4 fixed-pitch (0x31 = FIXED_PITCH | FF_MODERN); slot 5 (Verdana)
+	// is proportional (0x22 = VARIABLE_PITCH | FF_SWISS).
 	CCedtView::m_lfScreen[0].lfPitchAndFamily = CCedtView::m_lfScreen[1].lfPitchAndFamily = 0x31;
-	CCedtView::m_lfScreen[2].lfPitchAndFamily = CCedtView::m_lfScreen[3].lfPitchAndFamily = 0x22;
-	CCedtView::m_lfScreen[4].lfPitchAndFamily = CCedtView::m_lfScreen[5].lfPitchAndFamily = 0x31;
+	CCedtView::m_lfScreen[2].lfPitchAndFamily = CCedtView::m_lfScreen[3].lfPitchAndFamily = 0x31;
+	CCedtView::m_lfScreen[4].lfPitchAndFamily = 0x31;
+	CCedtView::m_lfScreen[5].lfPitchAndFamily = 0x22;
 	CCedtView::m_nCurrentScreenFont = 0;
 
+	// Printer fonts mirror the screen defaults so printouts are WYSIWYG:
+	// Consolas active, D2Coding for Korean 2:1 alignment, then classic
+	// fixed-pitch fallbacks. Printing source code is a fixed-pitch job, so the
+	// old proportional entries (Verdana/Arial) were dropped.
 	memset(CCedtView::m_lfPrinter, 0x00, sizeof(CCedtView::m_lfPrinter));
-	_tcscpy(CCedtView::m_lfPrinter[0].lfFaceName, _T("Courier New"));
-	_tcscpy(CCedtView::m_lfPrinter[1].lfFaceName, _T("Verdana"));
-	_tcscpy(CCedtView::m_lfPrinter[2].lfFaceName, _T("Arial"));
-	_tcscpy(CCedtView::m_lfPrinter[3].lfFaceName, _T("Lucida Console"));
+	_tcscpy(CCedtView::m_lfPrinter[0].lfFaceName, _T("Consolas"));
+	_tcscpy(CCedtView::m_lfPrinter[1].lfFaceName, _T("D2Coding"));
+	_tcscpy(CCedtView::m_lfPrinter[2].lfFaceName, _T("Lucida Console"));
+	_tcscpy(CCedtView::m_lfPrinter[3].lfFaceName, _T("Courier New"));
 	CCedtView::m_lfPrinter[0].lfHeight = 100;	CCedtView::m_lfPrinter[1].lfHeight = 100;
 	CCedtView::m_lfPrinter[2].lfHeight = 100;	CCedtView::m_lfPrinter[3].lfHeight = 100;
 	CCedtView::m_lfPrinter[0].lfCharSet = CCedtView::m_lfPrinter[1].lfCharSet = DEFAULT_CHARSET;
 	CCedtView::m_lfPrinter[2].lfCharSet = CCedtView::m_lfPrinter[3].lfCharSet = DEFAULT_CHARSET;
-	CCedtView::m_lfPrinter[0].lfPitchAndFamily = CCedtView::m_lfPrinter[3].lfPitchAndFamily = 0x31;
-	CCedtView::m_lfPrinter[1].lfPitchAndFamily = CCedtView::m_lfPrinter[2].lfPitchAndFamily = 0x22;
+	CCedtView::m_lfPrinter[0].lfPitchAndFamily = CCedtView::m_lfPrinter[1].lfPitchAndFamily = 0x31;
+	CCedtView::m_lfPrinter[2].lfPitchAndFamily = CCedtView::m_lfPrinter[3].lfPitchAndFamily = 0x31;
 	CCedtView::m_nCurrentPrinterFont = 0;
 
+	// Miscellaneous fonts are functional roles, not a preset list: slot 0 is
+	// the column-(block-)select mode font, slot 1 is the Output window font.
+	// Both need an always-present fixed-pitch face, so both use Consolas; the
+	// column-select math already routes CJK through GDI GetTextExtent, so
+	// font-linked Hangul stays aligned even without D2Coding installed.
 	memset(CCedtView::m_lfMiscel, 0x00, sizeof(CCedtView::m_lfMiscel));
-	_tcscpy(CCedtView::m_lfMiscel[0].lfFaceName, _T("Courier New"));
-	_tcscpy(CCedtView::m_lfMiscel[1].lfFaceName, _T("Courier New"));
+	_tcscpy(CCedtView::m_lfMiscel[0].lfFaceName, _T("Consolas"));
+	_tcscpy(CCedtView::m_lfMiscel[1].lfFaceName, _T("Consolas"));
 	CCedtView::m_lfMiscel[0].lfHeight = 100;	CCedtView::m_lfMiscel[1].lfHeight = 100;
 	CCedtView::m_lfMiscel[0].lfCharSet = CCedtView::m_lfMiscel[1].lfCharSet = DEFAULT_CHARSET;
 	CCedtView::m_lfMiscel[0].lfPitchAndFamily = CCedtView::m_lfMiscel[1].lfPitchAndFamily = 0x31;
