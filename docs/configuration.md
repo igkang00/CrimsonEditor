@@ -303,9 +303,11 @@ Items left for future work, originally surfaced while documenting the loading-an
 
 Suggested fix: keep version-tagged loader branches (`LoadUserConfiguration_v1`, `_v2`, ...) and an in-memory upgrade step, so a version bump preserves what it can.
 
-#### 9.1.2 32 → 64 bit transition will break `cedt.conf`
+#### 9.1.2 Binary layout depends on `TCHAR` width and pointer width
 
-Most fields are written via raw `fread((char*)&member, sizeof(member), ...)` against types like `LONG` whose widths differ across platforms. The README's TODO item "Review Unicode build" already lives in this area — worth scheduling them together.
+Most fields are written via raw `fread((char*)&member, sizeof(member), ...)`. That means the on-disk layout is a function of both the platform pointer width (settled in v3.81 with the x64 port) and the `TCHAR` width. When the Unicode migration (v3.90) flipped `TCHAR` from `char` to `wchar_t`, every string field on disk went from one byte per character to two — so the `STRING_CONFIGURATIONVER` / `COLORSETTINGSVER` / `FTPACCOUNTVER` / `USERTOOLSVER` / `USERMACROVER` magic strings were bumped from `3.80` to `3.90` in one step to force a clean reset. See [refactoring-unicode-migration.md](refactoring-unicode-migration.md) for the story.
+
+A proper schema-migration story (see §9.1.1) would still let a future toolset change preserve the user's settings across the transition.
 
 #### 9.1.3 Disk I/O on every View-menu toggle
 
