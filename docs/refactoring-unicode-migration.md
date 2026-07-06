@@ -40,13 +40,17 @@ Done / verified are the phases below where every task is checked. WIP has the co
 | 4j — Cmdline wide-char launch | verified in-session | `Start-Process cedt_kr.exe C:\temp\한글파일명.c` opens correctly |
 | 5 — launch.exe wide args | `bbc8d99` | `GetCommandLineA` / `CreateProcessA` → `W` variants. `ShellExt.dll` was already Unicode-clean (`ShellExecuteW`) |
 | 6a — configuration.md | `ed26c5f` | §9.1.2 rewritten to reflect the actual TCHAR-width impact from v3.90 |
+| 6b — this doc | this commit | status board caught up through the installer rebuild; release mechanics deferred |
+| 7a — Installer rebuild for 3.90 | 2026-07-06 17:31 | `dist\cedt-390-setup.exe` (25.85 MB) rebuilt end-to-end via `scripts\build_installer.ps1` after every Phase 4 / 5 fix landed; supersedes the earlier same-named artifact from Phase 3.8 |
 
-### WIP (not yet done)
+### Deferred (not yet done)
 
-| Phase | Remaining task | Where |
+The branch is compile-clean, cedt_tests 60/60, and every extended-smoke-grid item has passed in-session. The remaining work is release mechanics — deliberately paused until a full manual feature walk-through of the Unicode build has been done end-to-end from the user side. That walk-through is not tracked in this document.
+
+| Phase | Task | Notes |
 | --- | --- | --- |
-| 6b — this doc | keep the status board honest as Phase 7 progresses | `docs/refactoring-unicode-migration.md` |
-| 7 — Release 3.90 | rebuild the installer to pick up the wide-char `launch.exe`, install on a clean box for a real smoke pass, then `main` merge → `v3.90` tag → GitHub Release. Installer was built once at `dist/cedt-390-setup.exe` (25.8 MB) but pre-dates commits `5c555cb` / `0849f2f` / `fbcb8f8` / `f429972` / `bbc8d99` — needs a rebuild before shipping. | `scripts/build_installer.ps1` output; release script TBD |
+| 7b — Clean-box installer smoke | Install `dist\cedt-390-setup.exe` on a machine (or user account) with no prior Crimson state and walk the fresh-install path: first launch, default encoding, Preferences round-trip, project save+reload, tool execution, ShellExt registration | Standing in place of a per-user smoke script — the extended smoke grid above covered the runtime paths but not the installer / uninstaller / first-run |
+| 7c — Ship | Merge `feat/unicode-migration` back into `main`, tag `v3.90`, publish a GitHub Release with `cedt-390-setup.exe` attached and a release-note entry that spells out what changed for a Korean user (em dash, smart quotes, CJK outside CP949, filenames outside CP949, IME, CF_UNICODETEXT clipboard, config reset on first launch) | Do this only after 7b passes |
 
 ### Bugs found during the migration (annotated)
 
