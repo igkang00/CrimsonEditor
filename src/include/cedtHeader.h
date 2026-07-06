@@ -5,7 +5,7 @@
 
 
 #define STRING_COMPANYNAME					_T("Crimson System")
-#define STRING_PROJECTFILEVER				_T("Crimson Editor 3.83")
+#define STRING_PROJECTFILEVER				_T("Crimson Editor 3.90")
 
 // Bumped to 3.90 for the MBCS → UTF-16 migration: struct strings on disk
 // are now written as CP_ACP bytes for backward-compatible layout, but the

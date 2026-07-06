@@ -163,6 +163,6 @@ scaling** because the legacy UI predates high-DPI:
 
 ---
 
-- **Version**: 3.83
+- **Version**: 3.90
 - **Copyright**: © 1999–2026 Ingyu Kang
 - **License**: see [LICENSE](LICENSE)
