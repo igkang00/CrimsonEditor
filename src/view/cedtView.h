@@ -386,7 +386,6 @@ public: // *** cedtViewMapAdv.cpp ***
 protected: // *** cedtViewHndrEdit.cpp ***
 	void OnMoveKeyDown(UINT nChar, UINT nFlags);
 	void OnCharKeyDown(UINT nChar);
-	void OnDBCharKeyDown(UINT nCH1, UINT nCH2);
 
 	void OnImeCompositionStart();
 	void OnImeCompositionEnd(BOOL bRedraw = TRUE);

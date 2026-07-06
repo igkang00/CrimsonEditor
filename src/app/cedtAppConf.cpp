@@ -132,7 +132,6 @@ BOOL CCedtApp::SetPredefinedColorScheme(INT nScheme)
 		CCedtView::m_crTextColor[WT_VARIABLE]		= CR_DEFAULT_VARIABLE;
 		CCedtView::m_crTextColor[WT_IDENTIFIER]		= CR_DEFAULT_WORD;
 		CCedtView::m_crTextColor[WT_WRONGWORD]		= CR_DEFAULT_WORD;
-		CCedtView::m_crTextColor[WT_DBCHAR]			= CR_DEFAULT_WORD;
 		CCedtView::m_crTextColor[WT_GRAPH]			= CR_DEFAULT_WORD;
 		CCedtView::m_crTextColor[WT_RETURN]			= CR_DEFAULT_DELIMITER;
 		CCedtView::m_crTextColor[WT_TAB]			= CR_DEFAULT_DELIMITER;
@@ -167,7 +166,6 @@ BOOL CCedtApp::SetPredefinedColorScheme(INT nScheme)
 		CCedtView::m_crTextColor[WT_VARIABLE]		= CR_SIMPLIFIED_VARIABLE;
 		CCedtView::m_crTextColor[WT_IDENTIFIER]		= CR_SIMPLIFIED_WORD;
 		CCedtView::m_crTextColor[WT_WRONGWORD]		= CR_SIMPLIFIED_WORD;
-		CCedtView::m_crTextColor[WT_DBCHAR]			= CR_SIMPLIFIED_WORD;
 		CCedtView::m_crTextColor[WT_GRAPH]			= CR_SIMPLIFIED_WORD;
 		CCedtView::m_crTextColor[WT_RETURN]			= CR_SIMPLIFIED_DELIMITER;
 		CCedtView::m_crTextColor[WT_TAB]			= CR_SIMPLIFIED_DELIMITER;
@@ -202,7 +200,6 @@ BOOL CCedtApp::SetPredefinedColorScheme(INT nScheme)
 		CCedtView::m_crTextColor[WT_VARIABLE]		= CR_REVERSED_VARIABLE;
 		CCedtView::m_crTextColor[WT_IDENTIFIER]		= CR_REVERSED_WORD;
 		CCedtView::m_crTextColor[WT_WRONGWORD]		= CR_REVERSED_WORD;
-		CCedtView::m_crTextColor[WT_DBCHAR]			= CR_REVERSED_WORD;
 		CCedtView::m_crTextColor[WT_GRAPH]			= CR_REVERSED_WORD;
 		CCedtView::m_crTextColor[WT_RETURN]			= CR_REVERSED_DELIMITER;
 		CCedtView::m_crTextColor[WT_TAB]			= CR_REVERSED_DELIMITER;
@@ -237,7 +234,6 @@ BOOL CCedtApp::SetPredefinedColorScheme(INT nScheme)
 		CCedtView::m_crTextColor[WT_VARIABLE]		= CR_LIGHTGRAY_VARIABLE;
 		CCedtView::m_crTextColor[WT_IDENTIFIER]		= CR_LIGHTGRAY_WORD;
 		CCedtView::m_crTextColor[WT_WRONGWORD]		= CR_LIGHTGRAY_WORD;
-		CCedtView::m_crTextColor[WT_DBCHAR]			= CR_LIGHTGRAY_WORD;
 		CCedtView::m_crTextColor[WT_GRAPH]			= CR_LIGHTGRAY_WORD;
 		CCedtView::m_crTextColor[WT_RETURN]			= CR_LIGHTGRAY_DELIMITER;
 		CCedtView::m_crTextColor[WT_TAB]			= CR_LIGHTGRAY_DELIMITER;
@@ -272,7 +268,6 @@ BOOL CCedtApp::SetPredefinedColorScheme(INT nScheme)
 		CCedtView::m_crTextColor[WT_VARIABLE]		= CR_DARKBLUE_VARIABLE;
 		CCedtView::m_crTextColor[WT_IDENTIFIER]		= CR_DARKBLUE_WORD;
 		CCedtView::m_crTextColor[WT_WRONGWORD]		= CR_DARKBLUE_WORD;
-		CCedtView::m_crTextColor[WT_DBCHAR]			= CR_DARKBLUE_WORD;
 		CCedtView::m_crTextColor[WT_GRAPH]			= CR_DARKBLUE_WORD;
 		CCedtView::m_crTextColor[WT_RETURN]			= CR_DARKBLUE_DELIMITER;
 		CCedtView::m_crTextColor[WT_TAB]			= CR_DARKBLUE_DELIMITER;

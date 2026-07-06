@@ -176,7 +176,6 @@ INT CCedtView::GetIdxXFromPosX(CFormatedString & rLine, FORMATEDWORD & rWord, IN
 {
 	if( rWord.m_nPosition + rWord.m_nWidth <= nPosX ) return rWord.m_siIndex + rWord.m_siLength;
 	if( IS_SINGLE(rWord) || rWord.m_nPosition >= nPosX ) return rWord.m_siIndex;
-	if( IS_DBCHAR(rWord) ) return bAdjust ? rWord.m_siIndex : rWord.m_siIndex + (nPosX - rWord.m_nPosition) / GetAveCharWidth();
 	return rWord.m_siIndex + GetWordIndex((LPCTSTR)rLine + rWord.m_siIndex, rWord.m_siLength, nPosX - rWord.m_nPosition);
 }
 
@@ -214,7 +213,6 @@ INT CCedtView::GetPosXFromIdxX(CFormatedString & rLine, FORMATEDWORD & rWord, IN
 {
 	if( rWord.m_siIndex + rWord.m_siLength <= nIdxX ) return rWord.m_nPosition + rWord.m_nWidth;
 	if( IS_SINGLE(rWord) || rWord.m_siIndex >= nIdxX ) return rWord.m_nPosition;
-	if( IS_DBCHAR(rWord) ) return bAdjust ? rWord.m_nPosition : rWord.m_nPosition + (nIdxX - rWord.m_siIndex) * GetAveCharWidth();
 	return rWord.m_nPosition + GetWordWidth((LPCTSTR)rLine + rWord.m_siIndex, nIdxX - rWord.m_siIndex, rWord.m_nPosition, rWord.m_ucType[0]);
 }
 

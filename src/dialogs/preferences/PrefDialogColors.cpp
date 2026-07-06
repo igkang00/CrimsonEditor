@@ -150,7 +150,6 @@ BOOL CPreferenceDialog::SetPredefinedColorScheme(INT nScheme)
 		m_crTextColor[WT_VARIABLE]		= CR_DEFAULT_VARIABLE;
 		m_crTextColor[WT_IDENTIFIER]	= CR_DEFAULT_WORD;
 		m_crTextColor[WT_WRONGWORD]		= CR_DEFAULT_WORD;
-		m_crTextColor[WT_DBCHAR]		= CR_DEFAULT_WORD;
 		m_crTextColor[WT_GRAPH]			= CR_DEFAULT_WORD;
 		m_crTextColor[WT_RETURN]		= CR_DEFAULT_DELIMITER;
 		m_crTextColor[WT_TAB]			= CR_DEFAULT_DELIMITER;
@@ -185,7 +184,6 @@ BOOL CPreferenceDialog::SetPredefinedColorScheme(INT nScheme)
 		m_crTextColor[WT_VARIABLE]		= CR_SIMPLIFIED_VARIABLE;
 		m_crTextColor[WT_IDENTIFIER]	= CR_SIMPLIFIED_WORD;
 		m_crTextColor[WT_WRONGWORD]		= CR_SIMPLIFIED_WORD;
-		m_crTextColor[WT_DBCHAR]		= CR_SIMPLIFIED_WORD;
 		m_crTextColor[WT_GRAPH]			= CR_SIMPLIFIED_WORD;
 		m_crTextColor[WT_RETURN]		= CR_SIMPLIFIED_DELIMITER;
 		m_crTextColor[WT_TAB]			= CR_SIMPLIFIED_DELIMITER;
@@ -220,7 +218,6 @@ BOOL CPreferenceDialog::SetPredefinedColorScheme(INT nScheme)
 		m_crTextColor[WT_VARIABLE]		= CR_REVERSED_VARIABLE;
 		m_crTextColor[WT_IDENTIFIER]	= CR_REVERSED_WORD;
 		m_crTextColor[WT_WRONGWORD]		= CR_REVERSED_WORD;
-		m_crTextColor[WT_DBCHAR]		= CR_REVERSED_WORD;
 		m_crTextColor[WT_GRAPH]			= CR_REVERSED_WORD;
 		m_crTextColor[WT_RETURN]		= CR_REVERSED_DELIMITER;
 		m_crTextColor[WT_TAB]			= CR_REVERSED_DELIMITER;
@@ -255,7 +252,6 @@ BOOL CPreferenceDialog::SetPredefinedColorScheme(INT nScheme)
 		m_crTextColor[WT_VARIABLE]		= CR_LIGHTGRAY_VARIABLE;
 		m_crTextColor[WT_IDENTIFIER]	= CR_LIGHTGRAY_WORD;
 		m_crTextColor[WT_WRONGWORD]		= CR_LIGHTGRAY_WORD;
-		m_crTextColor[WT_DBCHAR]		= CR_LIGHTGRAY_WORD;
 		m_crTextColor[WT_GRAPH]			= CR_LIGHTGRAY_WORD;
 		m_crTextColor[WT_RETURN]		= CR_LIGHTGRAY_DELIMITER;
 		m_crTextColor[WT_TAB]			= CR_LIGHTGRAY_DELIMITER;
@@ -290,7 +286,6 @@ BOOL CPreferenceDialog::SetPredefinedColorScheme(INT nScheme)
 		m_crTextColor[WT_VARIABLE]		= CR_DARKBLUE_VARIABLE;
 		m_crTextColor[WT_IDENTIFIER]	= CR_DARKBLUE_WORD;
 		m_crTextColor[WT_WRONGWORD]		= CR_DARKBLUE_WORD;
-		m_crTextColor[WT_DBCHAR]		= CR_DARKBLUE_WORD;
 		m_crTextColor[WT_GRAPH]			= CR_DARKBLUE_WORD;
 		m_crTextColor[WT_RETURN]		= CR_DARKBLUE_DELIMITER;
 		m_crTextColor[WT_TAB]			= CR_DARKBLUE_DELIMITER;
@@ -388,7 +383,7 @@ void CPreferenceDialog::OnWordColor()
 	CColorDialog dlg(m_crTextColor[WT_IDENTIFIER]);
 	if( dlg.DoModal() == IDOK ) {
 		m_crTextColor[WT_IDENTIFIER] = m_crTextColor[WT_WRONGWORD] = dlg.GetColor();
-		m_crTextColor[WT_DBCHAR] = m_crTextColor[WT_GRAPH] = dlg.GetColor();
+		m_crTextColor[WT_GRAPH] = dlg.GetColor();
 		InvalidateColorButtons();
 	}
 }

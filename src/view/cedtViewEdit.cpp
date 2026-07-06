@@ -12,13 +12,7 @@ void CCedtView::ActionInsertChar(UINT nChar)
 	INT nLstX = GetLastIdxX( rString );
 
 	if( nIdxX < nLstX && m_bOverwriteMode ) {
-		FORMATEDWORD & rWord = GetWordFromIdxX( rLine, nIdxX );
-		if( IS_DBCHAR(rWord) ) {
-			DeleteString(nIdxX, nIdxY, 2);
-			InsertChar(nIdxX, nIdxY, ' ');
-		} else {
-			DeleteChar(nIdxX, nIdxY);
-		}
+		DeleteChar(nIdxX, nIdxY);
 	} else if( nIdxX > nLstX ) {
 		CString szInsert(' ', nIdxX - nLstX );
 		InsertString(nLstX, nIdxY, szInsert);
@@ -67,13 +61,7 @@ void CCedtView::ActionInsertSpacesInPlaceOfTab()
 	INT nLstX = GetLastIdxX( rString );
 
 	if( nIdxX < nLstX && m_bOverwriteMode ) {
-		FORMATEDWORD & rWord = GetWordFromIdxX( rLine, nIdxX );
-		if( IS_DBCHAR(rWord) ) {
-			DeleteString(nIdxX, nIdxY, 2);
-			InsertChar(nIdxX, nIdxY, ' ');
-		} else {
-			DeleteChar(nIdxX, nIdxY);
-		}
+		DeleteChar(nIdxX, nIdxY);
 	} else if( nIdxX > nLstX ) {
 		CString szInsert(' ', nIdxX - nLstX );
 		InsertString(nLstX, nIdxY, szInsert);
@@ -98,14 +86,7 @@ void CCedtView::ActionInsertColumnChar(UINT nChar)
 		CFormatedString & rLine = GetLineFromPosY( nPosY );
 		INT nIdxX, nIdxY = GetIdxYFromPosY( nPosY ), nLstX = GetLastPosX( rLine );
 
-		if( nBegX <= nLstX ) {
-			nIdxX = GetIdxXFromPosX( rLine, nBegX, TRUE );
-			FORMATEDWORD & rWord = GetWordFromIdxX( rLine, nIdxX );
-			if( IS_DBCHAR(rWord) && rWord.m_nPosition < nBegX ) {
-				DeleteString(nIdxX, nIdxY, 2);
-				InsertString(nIdxX, nIdxY, _T("  "));
-			}
-		} else {
+		if( nBegX > nLstX ) {
 			nIdxX = GetIdxXFromPosX( rLine, nLstX, TRUE );
 			CString szInsert(' ', (nBegX - nLstX) / nAveCharWidth);
 			InsertString(nIdxX, nIdxY, szInsert);
@@ -135,14 +116,7 @@ void CCedtView::ActionInsertColumnSpacesInPlaceOfTab()
 		CFormatedString & rLine = GetLineFromPosY( nPosY );
 		INT nIdxX, nIdxY = GetIdxYFromPosY( nPosY ), nLstX = GetLastPosX( rLine );
 
-		if( nBegX <= nLstX ) {
-			nIdxX = GetIdxXFromPosX( rLine, nBegX, TRUE );
-			FORMATEDWORD & rWord = GetWordFromIdxX( rLine, nIdxX );
-			if( IS_DBCHAR(rWord) && rWord.m_nPosition < nBegX ) {
-				DeleteString(nIdxX, nIdxY, 2);
-				InsertString(nIdxX, nIdxY, _T("  "));
-			}
-		} else {
+		if( nBegX > nLstX ) {
 			nIdxX = GetIdxXFromPosX( rLine, nLstX, TRUE );
 			CString szInsert(' ', (nBegX - nLstX) / nAveCharWidth);
 			InsertString(nIdxX, nIdxY, szInsert);
@@ -173,15 +147,8 @@ void CCedtView::ActionInsertString(LPCTSTR lpszString)
 
 	if( nSize > 0 && nIdxX < nLstX && m_bOverwriteMode ) {
 		if( nLstX - nIdxX > nSize ) {
-			FORMATEDWORD & rWord = GetWordFromIdxX( rLine, nIdxX+nSize-1 );
-			if( IS_DBCHAR(rWord) && nIdxX+nSize-1 == rWord.m_siIndex ) {
-				CString szInsert( lpszString ); szInsert += ' ';
-				DeleteString(nIdxX, nIdxY, nSize+1);
-				InsertString(nIdxX, nIdxY, szInsert);
-			} else {
-				DeleteString(nIdxX, nIdxY, nSize);
-				InsertString(nIdxX, nIdxY, lpszString);
-			}
+			DeleteString(nIdxX, nIdxY, nSize);
+			InsertString(nIdxX, nIdxY, lpszString);
 		} else {
 			DeleteString(nIdxX, nIdxY, nLstX - nIdxX);
 			InsertString(nIdxX, nIdxY, lpszString);
@@ -281,9 +248,7 @@ void CCedtView::ActionBackspace()
 		// move caret to the left
 		nIdxX = nIdxX - 1;
 	} else if( nIdxX > 0 ) {
-		FORMATEDWORD & rWord = GetWordFromIdxX( rLine, nIdxX-1 );
-		if( IS_DBCHAR(rWord) ) { nIdxX = nIdxX-2; DeleteString(nIdxX, nIdxY, 2); }
-		else { nIdxX = nIdxX-1; DeleteChar(nIdxX, nIdxY); }
+		nIdxX = nIdxX-1; DeleteChar(nIdxX, nIdxY);
 	} else if( nIdxY > 0 ) {
 		CAnalyzedString & rStrn2 = GetLineFromIdxY( nIdxY-1 );
 		nIdxY = nIdxY - 1; nIdxX = GetLastIdxX( rStrn2 );
@@ -305,9 +270,7 @@ void CCedtView::ActionDeleteChar()
 	INT nLstX = GetLastIdxX( rString );
 
 	if( nIdxX < nLstX ) {
-		FORMATEDWORD & rWord = GetWordFromIdxX( rLine, nIdxX );
-		if( IS_DBCHAR(rWord) ) DeleteString(nIdxX, nIdxY, 2);
-		else DeleteChar(nIdxX, nIdxY);
+		DeleteChar(nIdxX, nIdxY);
 	} else if( nIdxY < GetLastIdxY() ) {
 		if( nIdxX > nLstX ) {
 			CString szInsert(' ', nIdxX - nLstX);

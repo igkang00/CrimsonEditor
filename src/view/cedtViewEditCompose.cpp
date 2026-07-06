@@ -51,15 +51,8 @@ void CCedtView::ActionCompositionCompose(LPCTSTR lpszString)
 
 	if( nSize > 0 && nIdxX < nLstX && m_bOverwriteMode ) {
 		if( nLstX - nIdxX > nSize ) {
-			FORMATEDWORD & rWord = GetWordFromIdxX( rLine, nIdxX+nSize-1 );
-			if( IS_DBCHAR(rWord) && nIdxX+nSize-1 == rWord.m_siIndex ) {
-				CString szInsert(lpszString); szInsert += ' ';
-				DeleteCompositionString(nIdxX, nIdxY, nSize+1);
-				InsertCompositionString(nIdxX, nIdxY, szInsert);
-			} else {
-				DeleteCompositionString(nIdxX, nIdxY, nSize);
-				InsertCompositionString(nIdxX, nIdxY, lpszString);
-			}
+			DeleteCompositionString(nIdxX, nIdxY, nSize);
+			InsertCompositionString(nIdxX, nIdxY, lpszString);
 		} else {
 			DeleteCompositionString(nIdxX, nIdxY, nLstX - nIdxX);
 			InsertCompositionString(nIdxX, nIdxY, lpszString);
@@ -102,15 +95,8 @@ void CCedtView::ActionCompositionResult(LPCTSTR lpszString)
 
 	if( nSize > 0 && nIdxX < nLstX && m_bOverwriteMode ) {
 		if( nLstX - nIdxX > nSize ) {
-			FORMATEDWORD & rWord = GetWordFromIdxX( rLine, nIdxX+nSize-1 );
-			if( IS_DBCHAR(rWord) && nIdxX+nSize-1 == rWord.m_siIndex ) {
-				CString szInsert(lpszString); szInsert += ' ';
-				DeleteString(nIdxX, nIdxY, nSize+1);
-				InsertString(nIdxX, nIdxY, szInsert);
-			} else {
-				DeleteString(nIdxX, nIdxY, nSize);
-				InsertString(nIdxX, nIdxY, lpszString);
-			}
+			DeleteString(nIdxX, nIdxY, nSize);
+			InsertString(nIdxX, nIdxY, lpszString);
 		} else {
 			DeleteString(nIdxX, nIdxY, nLstX - nIdxX);
 			InsertString(nIdxX, nIdxY, lpszString);

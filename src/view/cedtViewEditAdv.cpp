@@ -36,11 +36,7 @@ void CCedtView::ActionDeleteColumnChar()
 
 		if( nBegX < nLstX ) {
 			INT nIdxX = GetIdxXFromPosX( rLine, nBegX, TRUE );
-			FORMATEDWORD & rWord = GetWordFromIdxX( rLine, nIdxX );
-			if( IS_DBCHAR(rWord) ) {
-				DeleteString(nIdxX, nIdxY, 2);
-				InsertChar(nIdxX, nIdxY, ' ');
-			} else DeleteChar(nIdxX, nIdxY);
+			DeleteChar(nIdxX, nIdxY);
 		}
 	}
 
@@ -62,11 +58,7 @@ void CCedtView::ActionDeleteColumnPrevChar()
 
 		if( nBegX < nLstX ) {
 			INT nIdxX = GetIdxXFromPosX( rLine, nBegX, TRUE );
-			FORMATEDWORD & rWord = GetWordFromIdxX( rLine, nIdxX );
-			if( IS_DBCHAR(rWord) ) {
-				DeleteString(nIdxX, nIdxY, 2);
-				InsertChar(nIdxX, nIdxY, ' ');
-			} else DeleteChar(nIdxX, nIdxY);
+			DeleteChar(nIdxX, nIdxY);
 		}
 	}
 
@@ -85,12 +77,8 @@ void CCedtView::ActionDeleteColumnToEndOfLine()
 
 		if( nBegX < nLstX ) {
 			INT nIdxX = GetIdxXFromPosX( rLine, nBegX, TRUE );
-			FORMATEDWORD & rWord = GetWordFromIdxX( rLine, nIdxX );
 			INT nLdxX = GetIdxXFromPosX( rLine, nLstX, TRUE );
-			if( IS_DBCHAR(rWord) && rWord.m_nPosition < nBegX ) {
-				DeleteString(nIdxX, nIdxY, nLdxX - nIdxX);
-				InsertChar(nIdxX, nIdxY, ' ');
-			} else DeleteString(nIdxX, nIdxY, nLdxX - nIdxX);
+			DeleteString(nIdxX, nIdxY, nLdxX - nIdxX);
 		}
 	}
 
@@ -109,17 +97,10 @@ void CCedtView::ActionDeleteColumnToBeginOfLine()
 		CFormatedString & rLine = GetLineFromPosY( nPosY );
 		INT nIdxY = GetIdxYFromPosY( nPosY ), nLstX = GetLastPosX( rLine );
 
-		if( nBegX < nLstX ) {
-			INT nIdxX = GetIdxXFromPosX( rLine, nBegX, TRUE );
-			FORMATEDWORD & rWord = GetWordFromIdxX( rLine, nIdxX );
-			if( IS_DBCHAR(rWord) && rWord.m_nPosition < nBegX ) {
-				DeleteString(0, nIdxY, nIdxX + 2);
-				InsertChar(0, nIdxY, ' ');
-			} else DeleteString(0, nIdxY, nIdxX);
-		} else {
-			INT nIdxX = GetIdxXFromPosX( rLine, nLstX, TRUE );
-			DeleteString(0, nIdxY, nIdxX);
-		}
+		INT nIdxX = ( nBegX < nLstX )
+			? GetIdxXFromPosX( rLine, nBegX, TRUE )
+			: GetIdxXFromPosX( rLine, nLstX, TRUE );
+		DeleteString(0, nIdxY, nIdxX);
 	}
 
 	nBegX = nEndX = 0;
@@ -414,39 +395,11 @@ void CCedtView::CopyToColumnSelection(CMemText & rBlock, INT nBegX, INT nBegY, I
 		if( nLstX > nEndX ) {
 			INT nIdxX1 = GetIdxXFromPosX( rLine, nBegX, TRUE );
 			INT nIdxX2 = GetIdxXFromPosX( rLine, nEndX, TRUE );
-
-			FORMATEDWORD & rWord1 = GetWordFromIdxX( rLine, nIdxX1 );
-			FORMATEDWORD & rWord2 = GetWordFromIdxX( rLine, nIdxX2 );
-
-			BOOL bHalf1 = FALSE, bHalf2 = FALSE;
-			if( IS_DBCHAR(rWord1) && rWord1.m_nPosition < nBegX ) bHalf1 = TRUE;
-			if( IS_DBCHAR(rWord2) && rWord2.m_nPosition < nEndX ) bHalf2 = TRUE;
-
-			if( bHalf1 && bHalf2 ) {
-				CopyToString(rString, nIdxX1 + 2, nIdxY, nIdxX2 - nIdxX1 - 2);
-				rString = CString(" ") + rString + CString(" ");
-			} else if( bHalf1 ) {
-				CopyToString(rString, nIdxX1 + 2, nIdxY, nIdxX2 - nIdxX1 - 2);
-				rString = CString(" ") + rString;
-			} else if( bHalf2 ) {
-				CopyToString(rString, nIdxX1, nIdxY, nIdxX2 - nIdxX1);
-				rString = rString + CString(" ");
-			} else {
-				CopyToString(rString, nIdxX1, nIdxY, nIdxX2 - nIdxX1);
-			}
+			CopyToString(rString, nIdxX1, nIdxY, nIdxX2 - nIdxX1);
 		} else if( nLstX > nBegX ) {
 			INT nIdxX1 = GetIdxXFromPosX( rLine, nBegX, TRUE );
 			INT nIdxX2 = GetIdxXFromPosX( rLine, nLstX, TRUE );
-
-			FORMATEDWORD & rWord = GetWordFromIdxX( rLine, nIdxX1 );
-			BOOL bHalf = ( IS_DBCHAR(rWord) && rWord.m_nPosition < nBegX );
-
-			if( bHalf ) {
-				CopyToString( rString, nIdxX1 + 2, nIdxY, nIdxX2 - nIdxX1 - 2 );
-				rString = CString(" ") + rString;
-			} else {
-				CopyToString( rString, nIdxX1, nIdxY, nIdxX2 - nIdxX1 );
-			}
+			CopyToString( rString, nIdxX1, nIdxY, nIdxX2 - nIdxX1 );
 		}
 	}
 }
@@ -480,13 +433,6 @@ void CCedtView::InsertColumnSelection(INT nBegX, INT nBegY, INT & nEndX, INT & n
 		if( nLstX < nBegX ) { // append blank spaces
 			INT nIdxX = GetIdxXFromPosX( rLine, nLstX, TRUE );
 			InsertString( nIdxX, nIdxY, CString( ' ', (nBegX - nLstX) / nAveCharWidth ) );
-		} else { // check if double byte character need to be splitted
-			INT nIdxX = GetIdxXFromPosX( rLine, nBegX, TRUE );
-			FORMATEDWORD & rWord = GetWordFromIdxX( rLine, nIdxX );
-			if ( IS_DBCHAR(rWord) && rWord.m_nPosition < nBegX ) {
-				DeleteString( nIdxX, nIdxY, 2 );
-				InsertString( nIdxX, nIdxY, _T("  ") );
-			}
 		}
 
 		// now insert text block
@@ -506,39 +452,11 @@ void CCedtView::DeleteColumnSelection(INT nBegX, INT nBegY, INT nEndX, INT nEndY
 		if( nLstX > nEndX ) {
 			INT nIdxX1 = GetIdxXFromPosX( rLine, nBegX, TRUE );
 			INT nIdxX2 = GetIdxXFromPosX( rLine, nEndX, TRUE );
-
-			FORMATEDWORD & rWord1 = GetWordFromIdxX( rLine, nIdxX1 );
-			FORMATEDWORD & rWord2 = GetWordFromIdxX( rLine, nIdxX2 );
-
-			BOOL bHalf1 = FALSE, bHalf2 = FALSE;
-			if( IS_DBCHAR(rWord1) && rWord1.m_nPosition < nBegX ) bHalf1 = TRUE;
-			if( IS_DBCHAR(rWord2) && rWord2.m_nPosition < nEndX ) bHalf2 = TRUE;
-
-			if( bHalf1 && bHalf2 ) {
-				DeleteString(nIdxX1, nIdxY, nIdxX2 - nIdxX1 + 2);
-				InsertString(nIdxX1, nIdxY, _T("  "));
-			} else if( bHalf1 ) {
-				DeleteString(nIdxX1, nIdxY, nIdxX2 - nIdxX1);
-				InsertChar(nIdxX1, nIdxY, ' ');
-			} else if( bHalf2 ) {
-				DeleteString(nIdxX1, nIdxY, nIdxX2 - nIdxX1 + 2);
-				InsertChar(nIdxX1, nIdxY, ' ');
-			} else {
-				DeleteString(nIdxX1, nIdxY, nIdxX2 - nIdxX1);
-			}
+			DeleteString(nIdxX1, nIdxY, nIdxX2 - nIdxX1);
 		} else if( nLstX > nBegX ) {
 			INT nIdxX1 = GetIdxXFromPosX( rLine, nBegX, TRUE );
 			INT nIdxX2 = GetIdxXFromPosX( rLine, nLstX, TRUE );
-
-			FORMATEDWORD & rWord = GetWordFromIdxX( rLine, nIdxX1 );
-			BOOL bHalf = ( IS_DBCHAR(rWord) && rWord.m_nPosition < nBegX );
-
-			if( bHalf ) {
-				DeleteString(nIdxX1, nIdxY, nIdxX2 - nIdxX1);
-				InsertChar(nIdxX1, nIdxY, ' ');
-			} else {
-				DeleteString(nIdxX1, nIdxY, nIdxX2 - nIdxX1);
-			}
+			DeleteString(nIdxX1, nIdxY, nIdxX2 - nIdxX1);
 		}
 	}
 }

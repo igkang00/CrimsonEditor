@@ -71,13 +71,11 @@
 #define WT_IDENTIFIER					0x23
 #define WT_WRONGWORD					0x24
 #define WT_DELIMITER					0x25
-#define WT_DBCHAR						0x26
 #define WT_GRAPH						0x27
 
 
 // WORD TYPE CHECK MACROS
 #define IS_DELIMITER(rWord)				( (rWord).m_ucType[0] == WT_DELIMITER )
-#define IS_DBCHAR(rWord)				( (rWord).m_ucType[0] == WT_DBCHAR )
 #define IS_WSPACE(rWord)				( (rWord).m_ucType[0] == WT_RETURN || \
 										  (rWord).m_ucType[0] == WT_LINEBREAK || \
 										  (rWord).m_ucType[0] == WT_TAB || \

@@ -141,9 +141,8 @@ INT CCedtView::GetCharWidth()
 	if( rWord.m_siLength == 1 ) return rWord.m_nWidth;
 
 	INT nIdxX = GetIdxXFromPosX(rLine, rWord, m_nCaretPosX );
-	INT nLength = IS_DBCHAR(rWord) ? 2 : 1;
 
-	CSize size = m_dcScreen.GetTextExtent((LPCTSTR)rLine + nIdxX, nLength);
+	CSize size = m_dcScreen.GetTextExtent((LPCTSTR)rLine + nIdxX, 1);
 	return size.cx;
 }
 

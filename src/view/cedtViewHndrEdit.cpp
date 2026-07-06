@@ -36,22 +36,6 @@ void CCedtView::OnCharKeyDown(UINT nChar)
 	Invalidate(); UpdateWindow(); UpdateAllViews();
 }
 
-void CCedtView::OnDBCharKeyDown(UINT nCH1, UINT nCH2)
-{
-	TCHAR szBuf[3]; szBuf[0] = nCH1; szBuf[1] = nCH2; szBuf[2] = '\0';
-
-	BeginActionRecording(TRUE);
-
-	EventInsertString(szBuf, FALSE);
-	if( IsMacroRecording() ) MacroRecordString(szBuf);
-
-	EndActionRecording();
-	EmptyRedoBuffer(); CheckIfAllActionsCanBeUndone();
-
-	SetScrollPosToMakeCaretVisible();
-	Invalidate(); UpdateWindow(); UpdateAllViews();
-}
-
 void CCedtView::OnImeCompositionStart()
 {
 	EventCompositionStart(FALSE);

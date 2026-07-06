@@ -202,10 +202,7 @@ void CCedtView::MoveCaretLeft()
 
 	} else if( m_nCaretPosX > GetFirstPosX( rLine ) ) {
 		INT nIdxX = GetIdxXFromPosX( rLine, m_nCaretPosX );
-		FORMATEDWORD & rWord = GetWordFromIdxX( rLine, nIdxX-1 );
-
-		if( IS_DBCHAR(rWord) ) SetCaretPosX( GetPosXFromIdxX( rLine, nIdxX-2 ) );
-		else SetCaretPosX( GetPosXFromIdxX( rLine, nIdxX-1 ) );
+		SetCaretPosX( GetPosXFromIdxX( rLine, nIdxX-1 ) );
 
 	} else SetCaretPosX( GetFirstPosX( rLine ) );
 }
@@ -223,10 +220,7 @@ void CCedtView::MoveCaretRight()
 
 	} else if( m_nCaretPosX >= GetFirstPosX( rLine ) ) {
 		INT nIdxX = GetIdxXFromPosX( rLine, m_nCaretPosX );
-		FORMATEDWORD & rWord = GetWordFromIdxX( rLine, nIdxX );
-
-		if( IS_DBCHAR(rWord) ) SetCaretPosX( GetPosXFromIdxX( rLine, nIdxX+2 ) );
-		else SetCaretPosX( GetPosXFromIdxX( rLine, nIdxX+1 ) );
+		SetCaretPosX( GetPosXFromIdxX( rLine, nIdxX+1 ) );
 
 	} else SetCaretPosX( GetFirstPosX( rLine ) );
 }

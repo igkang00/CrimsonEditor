@@ -5,8 +5,7 @@
 #define IS_COUNTABLE_WORD(rWord) ( \
   ( (rWord.m_ucType[0]) >= WT_KEYWORD0   && (rWord.m_ucType[0]) <= WT_KEYWORD9 ) || \
 	(rWord.m_ucType[0]) == WT_CONSTANT   || (rWord.m_ucType[0]) == WT_VARIABLE   || \
-	(rWord.m_ucType[0]) == WT_IDENTIFIER || (rWord.m_ucType[0]) == WT_WRONGWORD  || \
-	(rWord.m_ucType[0]) == WT_DBCHAR \
+	(rWord.m_ucType[0]) == WT_IDENTIFIER || (rWord.m_ucType[0]) == WT_WRONGWORD \
 )
 
 INT CCedtDoc::GetWordCount()

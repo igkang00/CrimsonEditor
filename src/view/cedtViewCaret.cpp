@@ -155,11 +155,9 @@ void CCedtView::SetCaretPosFromMouse(CPoint point)
 		} else SetCaretPosX( nLastPosX );
 	} else if( nPosX > ( nFrstPosX = GetFirstPosX(rLine) ) ) {
 		INT nIdxX = GetIdxXFromPosX( rLine, nPosX );
-		FORMATEDWORD & rWord = GetWordFromIdxX( rLine, nIdxX );
-		INT nIncX = IS_DBCHAR(rWord) ? 2 : 1;
 
 		INT nPos1 = GetPosXFromIdxX( rLine, nIdxX );
-		INT nPos2 = GetPosXFromIdxX( rLine, nIdxX + nIncX );
+		INT nPos2 = GetPosXFromIdxX( rLine, nIdxX + 1 );
 		SetCaretPosX( (nPosX-nPos1 < nPos2-nPosX) ? nPos1 : nPos2 );
 	} else {
 		SetCaretPosX( nFrstPosX );
@@ -211,11 +209,9 @@ void CCedtView::SetDragPosFromMouse(CPoint point)
 		} else SetDragPosX( nLastPosX );
 	} else if( nPosX > ( nFrstPosX = GetFirstPosX(rLine) ) ) {
 		INT nIdxX = GetIdxXFromPosX( rLine, nPosX );
-		FORMATEDWORD & rWord = GetWordFromIdxX( rLine, nIdxX );
-		INT nIncX = IS_DBCHAR(rWord) ? 2 : 1;
 
 		INT nPos1 = GetPosXFromIdxX( rLine, nIdxX );
-		INT nPos2 = GetPosXFromIdxX( rLine, nIdxX + nIncX );
+		INT nPos2 = GetPosXFromIdxX( rLine, nIdxX + 1 );
 		SetDragPosX( (nPosX-nPos1 < nPos2-nPosX) ? nPos1 : nPos2 );
 	} else {
 		SetDragPosX( nFrstPosX );
