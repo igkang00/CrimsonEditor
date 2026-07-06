@@ -438,7 +438,15 @@ void CCedtApp::SetDefaultConfiguration()
 	CCedtDoc::m_bSaveFilesInUnixFormat = FALSE;
 	CCedtDoc::m_bSaveRemoteFilesInUnixFormat = TRUE;
 
-	CCedtDoc::m_nDefaultEncodingType = ENCODING_TYPE_ASCII;
+	// UTF-8 (no BOM) is the modern default for new documents: preserves
+	// every Unicode character round-trip (em dash, smart quotes, CJK,
+	// emoji), interoperates with the toolchains people actually use
+	// (VS Code, Git, most build systems), and stays valid ASCII for
+	// documents that only use ASCII. The pre-Unicode default was
+	// ENCODING_TYPE_ASCII, which under _UNICODE would downgrade pasted
+	// wide-char content through CP_ACP on save and drop everything
+	// outside the current ANSI code page.
+	CCedtDoc::m_nDefaultEncodingType = ENCODING_TYPE_UTF8_XBOM;
 	CCedtDoc::m_nDefaultFileFormat = FILE_FORMAT_DOS;
 
 	// backup options
