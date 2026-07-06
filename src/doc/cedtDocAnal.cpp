@@ -92,11 +92,6 @@ static void _FinishLine(SHORT wcount, BOOL bOverflow, CAnalyzedString & rLine)
 #define _ROLL_BACK(addr)		{ fwd = beg; state = (addr); }
 #define _JUMP_ADDR(addr)		{            state = (addr); }
 
-// The buffer is UTF-16, so DBCS lead-byte detection is meaningless and
-// the historical CJK-specific analyzer path was removed alongside the
-// g_bDoubleByteCharacterSet global. Everything that used to consult
-// _CHCK_DBCS now just goes straight through the ordinary size guard.
-#define _CHCK_DBCS(ptr)			( 0 )
 #define _CHCK_SIZE(ptr, len)	( ptr - str < MAX_STRING_LENGTH - (len) )
 
 static void _AnalyzeLine(CAnalyzedString & rLine) 
@@ -250,11 +245,11 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 
 		case 0x0400: // CHECK HEXADECIMAL & DECIMAL NUMBERS AND FLOATING POINT NUMBERS
 			if( HEX[0] && ! _tcsnicmp(fwd, HEX, lenHEX) && _CHCK_SIZE(fwd, lenHEX) ) {
-				fwd += lenHEX; while( * fwd && _istxdigit(* fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
+				fwd += lenHEX; while( * fwd && _istxdigit(* fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
 				_WordFound(wcount++, WT_CONSTANT, RT_GLOBAL, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
 			} else if( _istdigit(* fwd) && _CHCK_SIZE(fwd, 1) ) {
-				fwd++; while( * fwd && (_istdigit(* fwd) || * fwd == '.') && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
+				fwd++; while( * fwd && (_istdigit(* fwd) || * fwd == '.') && _CHCK_SIZE(fwd, 1) ) fwd++;
 				_JUMP_ADDR(0x0401);
 			} else {
 				_ROLL_BACK(bPRE ? 0x0500 : (bVAR ? 0x0600 : 0x0700));
@@ -272,8 +267,8 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 			break;
 
 		case 0x0402:
-			if( * fwd && (* fwd == '+' || * fwd == '-' || _istdigit(* fwd)) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) {
-				fwd++; while( * fwd && (_istdigit(* fwd)) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
+			if( * fwd && (* fwd == '+' || * fwd == '-' || _istdigit(* fwd)) && _CHCK_SIZE(fwd, 1) ) {
+				fwd++; while( * fwd && (_istdigit(* fwd)) && _CHCK_SIZE(fwd, 1) ) fwd++;
 				_WordFound(wcount++, WT_CONSTANT, RT_GLOBAL, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
 			} else {
@@ -296,11 +291,11 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 			if( bKEY && _pKEY->LookupTable(type, info, beg, fwd-beg) ) {
 				_WordFoundExtended(wcount++, type, info, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
-			} else if( * fwd && _tcschr( PRE, * fwd ) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) {
+			} else if( * fwd && _tcschr( PRE, * fwd ) && _CHCK_SIZE(fwd, 1) ) {
 				fwd++;
 				_JUMP_ADDR(0x0501);
 			} else {
-				while( * fwd && ! _istspace(* fwd) && ! _tcschr(DEL, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
+				while( * fwd && ! _istspace(* fwd) && ! _tcschr(DEL, * fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
 				_JUMP_ADDR(0x0502);
 			}
 			break;
@@ -320,7 +315,7 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 				fwd++;
 				_JUMP_ADDR(0x0601);
 			} else if( VQU && * fwd == VQU && _CHCK_SIZE(fwd, 1) ) {
-				fwd++; while( * fwd && ! _istspace(* fwd) && * fwd != VQU && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
+				fwd++; while( * fwd && ! _istspace(* fwd) && * fwd != VQU && _CHCK_SIZE(fwd, 1) ) fwd++;
 				_JUMP_ADDR(0x0604);
 			} else {
 				_ROLL_BACK(0x0700);
@@ -329,13 +324,13 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 
 		case 0x0601:
 			if( * fwd && VEB[0] && * fwd == VEB[0] && _CHCK_SIZE(fwd, 1) ) {
-				fwd++; while( * fwd && ! _istspace(* fwd) && ! _tcschr(VEB, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
+				fwd++; while( * fwd && ! _istspace(* fwd) && ! _tcschr(VEB, * fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
 				_JUMP_ADDR(0x0602);
-			} else if( * fwd && SVC[0] && _tcschr(SVC, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) {
-				fwd++; while( * fwd && _tcschr(SVC, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
+			} else if( * fwd && SVC[0] && _tcschr(SVC, * fwd) && _CHCK_SIZE(fwd, 1) ) {
+				fwd++; while( * fwd && _tcschr(SVC, * fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
 				_JUMP_ADDR(0x0603);
-			} else if( * fwd && ! _istspace(* fwd) && ! _tcschr(DEL, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) {
-				fwd++; while( * fwd && ! _istspace(* fwd) && ! _tcschr(DEL, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
+			} else if( * fwd && ! _istspace(* fwd) && ! _tcschr(DEL, * fwd) && _CHCK_SIZE(fwd, 1) ) {
+				fwd++; while( * fwd && ! _istspace(* fwd) && ! _tcschr(DEL, * fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
 				_WordFound(wcount++, WT_VARIABLE, RT_GLOBAL, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
 			} else {
@@ -354,8 +349,8 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 			break;
 
 		case 0x0603:
-			if( * fwd && ! _istspace(* fwd) && ! _tcschr(DEL, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) {
-				fwd++; while( * fwd && ! _istspace(* fwd) && ! _tcschr(DEL, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
+			if( * fwd && ! _istspace(* fwd) && ! _tcschr(DEL, * fwd) && _CHCK_SIZE(fwd, 1) ) {
+				fwd++; while( * fwd && ! _istspace(* fwd) && ! _tcschr(DEL, * fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
 				_WordFound(wcount++, WT_VARIABLE, RT_GLOBAL, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
 			} else {
@@ -376,8 +371,8 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 
 
 		case 0x0700: // CHECK IDENTIFIER
-			if( ! _tcschr(DEL, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) {
-				fwd++; while( * fwd && ! _istspace(* fwd) && ! _tcschr(DEL, * fwd) && ! _CHCK_DBCS(fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
+			if( ! _tcschr(DEL, * fwd) && _CHCK_SIZE(fwd, 1) ) {
+				fwd++; while( * fwd && ! _istspace(* fwd) && ! _tcschr(DEL, * fwd) && _CHCK_SIZE(fwd, 1) ) fwd++;
 				_JUMP_ADDR(0x0701);
 			} else {
 				_ROLL_BACK(0x0800);
