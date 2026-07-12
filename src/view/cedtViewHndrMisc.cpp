@@ -93,14 +93,27 @@ void CCedtView::OnViewWordWrap()
 	CChildFrame * pChild = (CChildFrame *)GetParentFrame();
 
 	if( ! m_bLocalWordWrap && (m_bColumnMode || pChild->GetColumnCount() > 1 ) ) {
-		AfxMessageBox(IDS_ERR_SWITCH_WORD_WRAP, MB_OK); 
+		AfxMessageBox(IDS_ERR_SWITCH_WORD_WRAP, MB_OK);
 		return;
 	}
 
+	// Save the caret BEFORE flipping the mode.
+	//
+	// SaveCaretAndAnchorPos turns the caret's pixel Y into a logical line number by
+	// reading the row list — which, at this point, still holds the OLD wrapping. The
+	// row <-> line mapping functions choose their algorithm from m_bLocalWordWrap, so
+	// flipping the flag first makes them read the old list under the new rules: when
+	// turning wrap OFF they treat a screen ROW index as if it were a LINE index, and
+	// on a wrapped document those differ, so the caret lands on a different line.
+	//
+	// (This ordering was harmless while the mapping functions ignored the flag and
+	// always walked the list. It stopped being harmless when they gained a no-wrap
+	// fast path.)
+	SaveCaretAndAnchorPos();
+
 	m_bLocalWordWrap = ! m_bLocalWordWrap;
 
-	SaveCaretAndAnchorPos();
-	FormatScreenText(); 
+	FormatScreenText();
 	RestoreCaretAndAnchorPos();
 
 	Invalidate(); UpdateWindow();

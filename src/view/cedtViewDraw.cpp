@@ -105,6 +105,11 @@ void CCedtView::DrawScreenBackgroundAndText()
 	INT nLineCount = m_nScrollPosY / nLineHeight;
 	INT nParaCount = GetIdxYFromPosY(m_nScrollPosY);
 
+	// The draw loop walks the row list directly rather than going through
+	// GetLineFromPosY, so it has to ask for its rows itself. One batch call, not one
+	// per row — see EnsureFormattedRange.
+	EnsureFormattedRange( nLineCount, rect.Height() / nLineHeight + 2 );
+
 	POSITION pos = m_clsFormatedScreenText.FindIndex(nLineCount);
 	while( pos ) {
 		CFormatedString & rLine = m_clsFormatedScreenText.GetNext( pos );
@@ -234,6 +239,10 @@ void CCedtView::InvertScreenSelected()
 
 	INT nLineCount = m_nScrollPosY / nLineHeight;
 	INT nParaCount = GetIdxYFromPosY(m_nScrollPosY);
+
+	// Also walks the row list directly, and reads GetFirstPosX / GetLastPosX off the
+	// rows, which need a layout. Same batch call as the text draw.
+	EnsureFormattedRange( nLineCount, rect.Height() / nLineHeight + 2 );
 
 	POSITION pos = m_clsFormatedScreenText.FindIndex(nLineCount);
 	while( pos ) {
