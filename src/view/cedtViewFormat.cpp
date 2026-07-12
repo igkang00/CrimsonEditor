@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "cedtHeader.h"
+#include "perflog.h"
 
 
 static FORMATEDWORD _words[MAX_WORDS_COUNT+1];
@@ -380,15 +381,19 @@ static BOOL _CheckLineFlag(CFormatedString & rFmtLine, USHORT & usLineFlag, CStr
 }
 
 
-void CCedtView::FormatScreenText() 
+void CCedtView::FormatScreenText()
 {
 	CCedtDoc * pDoc = (CCedtDoc *)GetDocument();
 	INT nLineCount = pDoc->GetLineCount();
+
+	LONGLONG _perf = CedtPerfNow(); // [profiling] stage 3
 
 	m_clsFormatedScreenText.RemoveAll(); CFormatedString dummyLine;
 	for(INT i = 0; i < nLineCount; i++) m_clsFormatedScreenText.AddTail( dummyLine );
 
 	FormatScreenText(0, nLineCount);
+
+	if( nLineCount > 1000 ) CedtPerfLog(_T("3.FormatScreenText"), _perf, nLineCount); // [profiling] stage 3
 }
 
 

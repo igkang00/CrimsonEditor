@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "cedtHeader.h"
+#include "perflog.h"
 
 
 // temporary variables
@@ -431,8 +432,10 @@ INT CCedtDoc::GetCharType(TCHAR nChar)
 }
 
 
-void CCedtDoc::AnalyzeText(INT nIndex, INT nCount) 
+void CCedtDoc::AnalyzeText(INT nIndex, INT nCount)
 {
+	LONGLONG _perf = CedtPerfNow(); // [profiling] stage 2
+
 	// save settings to global variables
 	_pKEY = & m_clsKeywords;
 	_pDIC = & m_clsDictionary;
@@ -498,5 +501,7 @@ void CCedtDoc::AnalyzeText(INT nIndex, INT nCount)
 		if( pWait ) delete pWait;
 		pMainFrame->EndProgress();
 	}
+
+	if( nCount > 1000 ) CedtPerfLog(_T("2.AnalyzeText"), _perf, nCount); // [profiling] stage 2
 }
 

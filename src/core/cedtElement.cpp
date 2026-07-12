@@ -5,6 +5,7 @@
 #include "cedtUnicode.h"
 #include "Encode.h"
 #include "RegExp.h"
+#include "perflog.h"
 #include "Utility.h"
 #include "cedtElement.h"
 
@@ -695,7 +696,9 @@ BOOL CAnalyzedText::FileLoad(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 {
 	INT chDelim = '\n', chKill = '\r'; // FILE_FORMAT_DOS & FILE_FORMAT_UNIX
 	if( nFileFormat == FILE_FORMAT_MAC ) { chDelim = '\r'; chKill = '\0'; }
-	
+
+	LONGLONG _perf = CedtPerfNow(); // [profiling] stage 1
+
 	try {
 		CFile file(lpszPathName, CFile::modeRead | CFile::typeBinary | CFile::shareDenyNone);
 		RemoveAll(); AddTail(_T("")); // initialize contents
@@ -811,6 +814,8 @@ BOOL CAnalyzedText::FileLoad(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 		ex->ReportError( MB_OK | MB_ICONSTOP );
 		ex->Delete(); return FALSE;
 	}
+
+	if( GetCount() > 1000 ) CedtPerfLog(_T("1.FileLoad"), _perf, (INT)GetCount()); // [profiling] stage 1
 
 	return TRUE;
 }
