@@ -512,32 +512,141 @@ CFormatedString & CFormatedString::operator=(const CFormatedString & stringSrc) 
 }
 
 
+
+// Batches writes into blocks.
+//
+// CFile::Write goes straight through to WriteFile — there is no buffering underneath
+// it. Writing a line and then its line ending is therefore two system calls per line,
+// and a 900,000-line file paid 1.8 million of them: saving took 13 s, longer than
+// loading the same file. Collecting into a 64 KiB block turns that into ~1,600 calls.
+class CWriteBuffer
+{
+public:
+	CWriteBuffer(CFile & rFile, size_t nCapacity = (1 << 16)) : m_rFile(rFile), m_nCapacity(nCapacity)
+	{
+		m_vec.reserve( nCapacity );
+	}
+
+	void Put(const void * pData, size_t nBytes)
+	{
+		if( nBytes == 0 || pData == NULL ) return;
+
+		if( m_vec.size() + nBytes > m_nCapacity ) Flush();
+
+		// A single line bigger than the block goes straight to the file — buffering it
+		// would only mean copying it twice.
+		if( nBytes >= m_nCapacity ) { m_rFile.Write( pData, (UINT)nBytes ); return; }
+
+		const CHAR * p = (const CHAR *)pData;
+		m_vec.insert( m_vec.end(), p, p + nBytes );
+	}
+
+	// Called explicitly before the file is closed. Deliberately NOT done from the
+	// destructor: CFile::Write throws, and throwing while unwinding another exception
+	// terminates the process. If a save fails partway, dropping the tail is correct
+	// anyway — the file is already broken.
+	void Flush()
+	{
+		if( m_vec.empty() ) return;
+		m_rFile.Write( & m_vec[0], (UINT)m_vec.size() );
+		m_vec.clear();
+	}
+
+private:
+	CFile & m_rFile;
+	size_t m_nCapacity;
+	std::vector<CHAR> m_vec;
+};
+
+// Decode one COMPLETE line's raw bytes into a CString.
+//
+// Decoding a whole line at a time — rather than each fixed-size read buffer — is what
+// keeps multi-byte characters intact. A line break never falls inside a UTF-8
+// sequence, a CP949 lead/trail pair, or a UTF-16 code unit; a 512-byte read boundary
+// happily does. The previous implementation converted per read chunk, so any such
+// character that straddled a chunk boundary was corrupted (only reachable on lines
+// longer than the buffer, which is why it went unnoticed).
+static void _DecodeLine(CString & rLine, const CHAR * pBytes, INT nBytes, INT nEncodingType)
+{
+	rLine.Empty();
+	if( nBytes <= 0 || pBytes == NULL ) return;
+
+	if( nEncodingType == ENCODING_TYPE_UNICODE_LE || nEncodingType == ENCODING_TYPE_UNICODE_BE ) {
+		INT nChars = nBytes / 2;
+		if( nChars <= 0 ) return;
+
+		LPTSTR pDst = rLine.GetBuffer(nChars + 1);
+		if( nEncodingType == ENCODING_TYPE_UNICODE_LE ) {
+			memcpy(pDst, pBytes, (size_t)nChars * 2);
+		} else {
+			const UCHAR * p = (const UCHAR *)pBytes;
+			for(INT i = 0; i < nChars; i++) pDst[i] = (TCHAR)((p[2*i] << 8) | p[2*i + 1]);
+		}
+		pDst[nChars] = 0;
+		rLine.ReleaseBuffer(nChars);
+		return;
+	}
+
+	// UTF-8 -> UTF-16 directly, no CP_ACP round-trip: that round-trip is what used to
+	// turn an em dash or a CJK character outside CP949 into '?'.
+	// ANSI stays on CP_ACP, which is what preserves CP949 Korean in legacy files.
+	UINT nCodePage = ( nEncodingType == ENCODING_TYPE_UTF8_WBOM ||
+	                   nEncodingType == ENCODING_TYPE_UTF8_XBOM ) ? CP_UTF8 : CP_ACP;
+
+	INT nChars = MultiByteToWideChar(nCodePage, 0, pBytes, nBytes, NULL, 0);
+	if( nChars <= 0 ) return;
+
+	LPTSTR pDst = rLine.GetBuffer(nChars + 1);
+	MultiByteToWideChar(nCodePage, 0, pBytes, nBytes, pDst, nChars);
+	pDst[nChars] = 0;
+	rLine.ReleaseBuffer(nChars);
+}
+
+
 // CMemText
+//
+// Reads the file as ANSI (CP_ACP) — this is the drag-and-drop "insert this file as a
+// block" path, and it has no encoding parameter.
 BOOL CMemText::FileLoad(LPCTSTR lpszPathName)
 {
 	try {
 		CFile file(lpszPathName, CFile::modeRead | CFile::typeBinary | CFile::shareDenyNone);
-		RemoveAll(); AddTail(_T("")); // initialize contents
+		RemoveAll();
 
-		CHAR szBuffer[FILE_READ_BUFFER_SIZE+1];
-		int i, nCount, nTotal = 0; BOOL bDelimFount = FALSE;
+		// Same block-at-a-time structure as CAnalyzedText::FileLoad, and for the same
+		// two reasons: the old loop did one read and one seek PER LINE, and it decoded
+		// each read buffer separately, so a CP949 lead/trail pair that straddled the
+		// buffer boundary was mangled.
+		const INT nBufSize = 1 << 16;
+		std::vector<CHAR> vecBuf( nBufSize );
+		CHAR * pBuf = & vecBuf[0];
 
-		while( nCount = file.Read( szBuffer, FILE_READ_BUFFER_SIZE ) ) { // read file contents
-			for( bDelimFount = FALSE, i = 0; i <= nCount-1; i++ ) {
-				if( szBuffer[i] == '\n' ) { bDelimFount = TRUE; i++; break; }
+		std::vector<CHAR> vecLine;
+		vecLine.reserve( 4096 );
+
+		CString szLine;
+		INT nRead;
+
+		while( ( nRead = file.Read( pBuf, nBufSize ) ) > 0 ) {
+			INT nStart = 0;
+			for( INT i = 0; i < nRead; i++ ) {
+				if( pBuf[i] != '\n' ) continue;
+
+				vecLine.insert( vecLine.end(), pBuf + nStart, pBuf + i );
+				if( ! vecLine.empty() && vecLine.back() == '\r' ) vecLine.pop_back();
+
+				_DecodeLine( szLine, vecLine.empty() ? NULL : & vecLine[0], (INT)vecLine.size(), ENCODING_TYPE_ASCII );
+				AddTail( (LPCTSTR)szLine );
+
+				vecLine.clear();
+				nStart = i + 1;
 			}
-
-			nCount = i; nTotal += nCount; 
-			szBuffer[nCount] = 0x00;
-
-			if( nCount >= 1 && szBuffer[nCount-1] == '\n' ) { szBuffer[nCount-1] = 0x00; nCount--; }
-			if( nCount >= 1 && szBuffer[nCount-1] == '\r' ) { szBuffer[nCount-1] = 0x00; nCount--; }
-
-			GetTail() += szBuffer;
-			if( bDelimFount ) AddTail(_T(""));
-
-			file.Seek(nTotal, CFile::begin);
+			vecLine.insert( vecLine.end(), pBuf + nStart, pBuf + nRead );
 		}
+
+		if( ! vecLine.empty() && vecLine.back() == '\r' ) vecLine.pop_back();
+		_DecodeLine( szLine, vecLine.empty() ? NULL : & vecLine[0], (INT)vecLine.size(), ENCODING_TYPE_ASCII );
+		AddTail( (LPCTSTR)szLine );
 
 		file.Close();
 	} catch( CException * ex ) {
@@ -551,14 +660,35 @@ BOOL CMemText::FileLoad(LPCTSTR lpszPathName)
 BOOL CMemText::FileSave(LPCTSTR lpszPathName)
 {
 	try {
-		CFile file(lpszPathName, CFile::modeReadWrite | CFile::typeBinary | CFile::shareDenyWrite);
+		CFile file(lpszPathName, CFile::modeReadWrite | CFile::modeCreate | CFile::typeBinary | CFile::shareDenyWrite);
+		CWriteBuffer out( file );
+
+		// Written as ANSI, to mirror what FileLoad reads.
+		//
+		// This used to do file.Write(rString, nLength) — but CFile::Write counts BYTES
+		// and GetLength() counts CHARACTERS, and a TCHAR became 2 bytes in the Unicode
+		// migration. It wrote exactly half of every line, as raw UTF-16 bytes, with a
+		// lone CR for the line ending. Nothing calls this today, which is why nobody
+		// noticed; leaving a landmine in place is worse than fixing it.
+		std::vector<CHAR> vecOut;
+
 		POSITION pos = GetHeadPosition();
 		while( pos ) {
 			CString & rString = GetNext(pos);
 			INT nLength = rString.GetLength();
-			file.Write( rString, nLength );
-			if( pos ) file.Write( _T("\r\n"), 2 );
+
+			if( nLength ) {
+				INT nBytes = WideCharToMultiByte(CP_ACP, 0, (LPCWSTR)rString, nLength, NULL, 0, NULL, NULL);
+				if( nBytes > 0 ) {
+					vecOut.resize( (size_t)nBytes );
+					WideCharToMultiByte(CP_ACP, 0, (LPCWSTR)rString, nLength, & vecOut[0], nBytes, NULL, NULL);
+					out.Put( & vecOut[0], (size_t)nBytes );
+				}
+			}
+			if( pos ) out.Put( "\r\n", 2 );
 		}
+
+		out.Flush();
 		file.Close();
 	} catch( CException * ex ) {
 		ex->ReportError( MB_OK | MB_ICONSTOP );
@@ -695,50 +825,6 @@ void CMemText::MemorySave(CHAR * pMem, INT size)
 
 
 // CAnalyzedTextFile
-
-// Decode one COMPLETE line's raw bytes into a CString.
-//
-// Decoding a whole line at a time — rather than each fixed-size read buffer — is what
-// keeps multi-byte characters intact. A line break never falls inside a UTF-8
-// sequence, a CP949 lead/trail pair, or a UTF-16 code unit; a 512-byte read boundary
-// happily does. The previous implementation converted per read chunk, so any such
-// character that straddled a chunk boundary was corrupted (only reachable on lines
-// longer than the buffer, which is why it went unnoticed).
-static void _DecodeLine(CString & rLine, const CHAR * pBytes, INT nBytes, INT nEncodingType)
-{
-	rLine.Empty();
-	if( nBytes <= 0 || pBytes == NULL ) return;
-
-	if( nEncodingType == ENCODING_TYPE_UNICODE_LE || nEncodingType == ENCODING_TYPE_UNICODE_BE ) {
-		INT nChars = nBytes / 2;
-		if( nChars <= 0 ) return;
-
-		LPTSTR pDst = rLine.GetBuffer(nChars + 1);
-		if( nEncodingType == ENCODING_TYPE_UNICODE_LE ) {
-			memcpy(pDst, pBytes, (size_t)nChars * 2);
-		} else {
-			const UCHAR * p = (const UCHAR *)pBytes;
-			for(INT i = 0; i < nChars; i++) pDst[i] = (TCHAR)((p[2*i] << 8) | p[2*i + 1]);
-		}
-		pDst[nChars] = 0;
-		rLine.ReleaseBuffer(nChars);
-		return;
-	}
-
-	// UTF-8 -> UTF-16 directly, no CP_ACP round-trip: that round-trip is what used to
-	// turn an em dash or a CJK character outside CP949 into '?'.
-	// ANSI stays on CP_ACP, which is what preserves CP949 Korean in legacy files.
-	UINT nCodePage = ( nEncodingType == ENCODING_TYPE_UTF8_WBOM ||
-	                   nEncodingType == ENCODING_TYPE_UTF8_XBOM ) ? CP_UTF8 : CP_ACP;
-
-	INT nChars = MultiByteToWideChar(nCodePage, 0, pBytes, nBytes, NULL, 0);
-	if( nChars <= 0 ) return;
-
-	LPTSTR pDst = rLine.GetBuffer(nChars + 1);
-	MultiByteToWideChar(nCodePage, 0, pBytes, nBytes, pDst, nChars);
-	pDst[nChars] = 0;
-	rLine.ReleaseBuffer(nChars);
-}
 
 BOOL CAnalyzedText::FileLoad(LPCTSTR lpszPathName, INT nEncodingType, INT nFileFormat)
 {
@@ -902,10 +988,14 @@ BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 	CHAR szDelim[3]; lstrcpyA(szDelim, "\r\n"); INT nDelimSize = 2; // FILE_FORMAT_DOS
 	if( nFileFormat == FILE_FORMAT_UNIX ) { lstrcpyA(szDelim, "\n"); nDelimSize = 1; }
 	else if( nFileFormat == FILE_FORMAT_MAC ) { lstrcpyA(szDelim, "\r"); nDelimSize = 1; }
-	
+
+	LONGLONG _perf = CedtPerfNow(); // [profiling] save
+
 	try {
 		CFile file(lpszPathName, CFile::modeReadWrite | CFile::modeCreate | CFile::shareExclusive);
 		POSITION pos = GetHeadPosition();
+
+		CWriteBuffer out( file );
 
 		INT nBufferSize = 0; CHAR * pBuffer = NULL;
 		UCHAR szWideDelim[4], * pWideBuffer = NULL;
@@ -913,7 +1003,7 @@ BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 		if( nEncodingType == ENCODING_TYPE_UNICODE_LE ) {
 			// write byte-order mark
 			static const UCHAR bomLE[2] = { 0xFF, 0xFE };
-			file.Write(bomLE, 2);
+			out.Put(bomLE, 2);
 
 			szWideDelim[0] = szDelim[0];	szWideDelim[1] = 0x00;
 			szWideDelim[2] = szDelim[1];	szWideDelim[3] = 0x00;
@@ -923,13 +1013,13 @@ BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 				INT nLength = rLine.GetLength();
 
 				// rLine is already UTF-16 LE; write its wide-char buffer directly.
-				if( nLength ) file.Write( (LPCWSTR)rLine, 2 * nLength );
-				if( pos ) file.Write( szWideDelim, 2 * nDelimSize );
+				if( nLength ) out.Put( (LPCWSTR)rLine, 2 * (size_t)nLength );
+				if( pos ) out.Put( szWideDelim, 2 * (size_t)nDelimSize );
 			}
 		} else if( nEncodingType == ENCODING_TYPE_UNICODE_BE ) {
 			// write byte-order mark
 			static const UCHAR bomBE[2] = { 0xFE, 0xFF };
-			file.Write(bomBE, 2);
+			out.Put(bomBE, 2);
 
 			szWideDelim[0] = 0x00; 	szWideDelim[1] = szDelim[0];
 			szWideDelim[2] = 0x00; 	szWideDelim[3] = szDelim[1];
@@ -945,17 +1035,17 @@ BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 
 				// Copy the wide chars, then swap each pair to big-endian.
 				if( nLength ) {
-					memcpy(pWideBuffer, (LPCWSTR)rLine, 2 * nLength);
+					memcpy(pWideBuffer, (LPCWSTR)rLine, 2 * (size_t)nLength);
 					for( INT i = 0; i < nLength; i++ ) _SWAP_UCHAR( pWideBuffer[2*i], pWideBuffer[2*i+1] );
-					file.Write( pWideBuffer, 2 * nLength );
+					out.Put( pWideBuffer, 2 * (size_t)nLength );
 				}
-				if( pos ) file.Write( szWideDelim, 2 * nDelimSize );
+				if( pos ) out.Put( szWideDelim, 2 * (size_t)nDelimSize );
 			}
 		} else if( nEncodingType == ENCODING_TYPE_UTF8_WBOM || nEncodingType == ENCODING_TYPE_UTF8_XBOM ) {
 			// write byte-order mark when it is not ENCODING_TYPE_UTF8_XBOM
 			if( nEncodingType != ENCODING_TYPE_UTF8_XBOM ) {
 				static const UCHAR bomUTF8[3] = { 0xEF, 0xBB, 0xBF };
-				file.Write(bomUTF8, 3);
+				out.Put(bomUTF8, 3);
 			}
 
 			while( pos ) {
@@ -974,9 +1064,9 @@ BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 				if( nLength ) {
 					nBytes = WideCharToMultiByte(CP_UTF8, 0, (LPCWSTR)rLine, nLength,
 						pBuffer, 3 * (nBufferSize + 1), NULL, NULL);
-					if( nBytes > 0 ) file.Write( pBuffer, nBytes );
+					if( nBytes > 0 ) out.Put( pBuffer, (size_t)nBytes );
 				}
-				if( pos ) file.Write( szDelim, nDelimSize );
+				if( pos ) out.Put( szDelim, (size_t)nDelimSize );
 			}
 		} else { /* nEncodingType == ENCODING_TYPE_ASCII */
 			while( pos ) {
@@ -994,16 +1084,20 @@ BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 				if( nLength ) {
 					INT nBytes = WideCharToMultiByte(CP_ACP, 0, (LPCWSTR)rLine, nLength,
 						pBuffer, 2 * (nBufferSize + 1), NULL, NULL);
-					if( nBytes > 0 ) file.Write( pBuffer, nBytes );
+					if( nBytes > 0 ) out.Put( pBuffer, (size_t)nBytes );
 				}
-				if( pos ) file.Write( szDelim, nDelimSize );
+				if( pos ) out.Put( szDelim, (size_t)nDelimSize );
 			}
 		}
+
+		out.Flush();
 
 		delete [] pBuffer;
 		delete [] pWideBuffer;
 
 		file.Close();
+
+		if( GetCount() > 1000 ) CedtPerfLog(_T("4.FileSave"), _perf, (INT)GetCount()); // [profiling] save
 
 	} catch( CException * ex ) {
 		ex->ReportError( MB_OK | MB_ICONSTOP );
