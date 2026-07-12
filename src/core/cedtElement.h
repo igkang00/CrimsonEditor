@@ -463,14 +463,17 @@ public:
 
 // CFormatedText Class
 //
-// One entry per SCREEN ROW. Opening a large file mints one blank row per line up
-// front, so the list is built with a 1024-node block size: a 900,000-line file
-// then costs ~900 plex allocations instead of ~90,000 (MFC's default block size
-// is 10).
-class CFormatedText : public CList<CFormatedString, CFormatedString &>
+// One entry per SCREEN ROW. With word wrap off that is one row per line; with it on, a
+// long line occupies several consecutive rows, the first with m_siSplitIndex == 0 and
+// its continuations numbered from 1.
+//
+// Backed by CLineList for the same reason CAnalyzedText is: the draw loop and
+// GetLineFromPosY reach a row by index, and on a linked list that meant walking to it.
+// See docs/refactoring-line-container.md.
+class CFormatedText : public CLineList<CFormatedString, CFormatedString &>
 {
 public:
-	CFormatedText() : CList<CFormatedString, CFormatedString &>(1024) {}
+	CFormatedText() : CLineList<CFormatedString, CFormatedString &>() {}
 	virtual ~CFormatedText() {}
 };
 

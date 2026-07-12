@@ -18,7 +18,17 @@ static SHORT _siIndex, _siLength;
 
 
 
-static INT _GetLeadingSpaceWidth(CAnalyzedString & rLine, CDC * pDC) 
+// How many screen rows does the logical line whose first row is nRow occupy? One, plus
+// its continuation rows — the ones word wrap pushed onto the next display line, which
+// carry a non-zero m_siSplitIndex.
+static INT _ParagraphRowCount(CFormatedText & rRows, INT nRow, INT nTotal)
+{
+	INT nRows = 1;
+	while( nRow + nRows < nTotal && rRows.ElementAt(nRow + nRows).m_siSplitIndex != 0 ) nRows++;
+	return nRows;
+}
+
+static INT _GetLeadingSpaceWidth(CAnalyzedString & rLine, CDC * pDC)
 {
 	INT nPosition = 0;
 
@@ -568,8 +578,10 @@ void CCedtView::FormatScreenText()
 	CCedtDoc * pDoc = (CCedtDoc *)GetDocument();
 	INT nLineCount = pDoc->GetLineCount();
 
-	m_clsFormatedScreenText.RemoveAll(); CFormatedString dummyLine;
-	for(INT i = 0; i < nLineCount; i++) m_clsFormatedScreenText.AddTail( dummyLine );
+	// One blank row per line, in one go. This used to AddTail a copy of a dummy row
+	// 900,000 times, and each of those ran CFormatedString::operator=.
+	m_clsFormatedScreenText.RemoveAll();
+	m_clsFormatedScreenText.InsertGap(0, nLineCount);
 
 	if( m_bLocalWordWrap ) {
 		// Wrapped: a logical line can occupy several rows, and how many depends on
@@ -686,11 +698,16 @@ void CCedtView::FormatScreenText(INT nIndex, INT nCount)
 	}
 
 	// now start formatting text
+	//
+	// The analyzed list is only read here, so a POSITION into it is safe to carry. The
+	// ROW list is inserted into and removed from as wrapped lines grow and shrink, so it
+	// is walked by index — a POSITION would not survive the first insert.
 	POSITION po1 = pDoc->m_clsAnalyzedText.FindIndex(nIndex);
-	POSITION po2 = FindScreenTextIndex(nIndex);
+	INT nRow = FindScreenTextRow(nIndex);
+	if( nRow < 0 ) { if( pWait ) delete pWait; if( nCount > 1000 ) pMainFrame->EndProgress(); return; }
 
-	USHORT usLineFlag = m_clsFormatedScreenText.GetAt(po2).m_usLineFlag;
-	CString szTerminator = m_clsFormatedScreenText.GetAt(po2).m_szHereDocumentTerminator;
+	USHORT usLineFlag = m_clsFormatedScreenText.ElementAt(nRow).m_usLineFlag;
+	CString szTerminator = m_clsFormatedScreenText.ElementAt(nRow).m_szHereDocumentTerminator;
 	BOOL bMultiLineStringConstant = MultiLineStringConstant();
 
 	while( po1 && nProcess < nCount ) {
@@ -698,22 +715,28 @@ void CCedtView::FormatScreenText(INT nIndex, INT nCount)
 		if( ! bMultiLineStringConstant ) usLineFlag &= ~(LF_QUOTATION1 | LF_QUOTATION2 | LF_QUOTATION3);
 
 		if( m_bLocalWordWrap ) {
-			CAnalyzedString & rLine = pDoc->m_clsAnalyzedText.GetNext(po1); FlattenScreenTextAt(po2);
-			BOOL bContinue = _FormatLineWrap( m_clsFormatedScreenText.GetAt(po2), rLine, & m_dcScreen );
-			_CheckLineFlag( m_clsFormatedScreenText.GetAt(po2), usLineFlag, szTerminator );
+			CAnalyzedString & rLine = pDoc->m_clsAnalyzedText.GetNext(po1);
+
+			// Throw away last time's continuation rows; this line is about to say how
+			// many it needs now.
+			FlattenScreenTextAt(nRow);
+
+			BOOL bContinue = _FormatLineWrap( m_clsFormatedScreenText.ElementAt(nRow), rLine, & m_dcScreen );
+			_CheckLineFlag( m_clsFormatedScreenText.ElementAt(nRow), usLineFlag, szTerminator );
 
 			while( bContinue ) {
-				CFormatedString dummyLine; po2 = m_clsFormatedScreenText.InsertAfter(po2, dummyLine);
-				bContinue = _FormatLineWrapContinue( m_clsFormatedScreenText.GetAt(po2), rLine, & m_dcScreen );
-				_CheckLineFlag( m_clsFormatedScreenText.GetAt(po2), usLineFlag, szTerminator );
+				m_clsFormatedScreenText.InsertGap(nRow + 1, 1);
+				nRow++;
+				bContinue = _FormatLineWrapContinue( m_clsFormatedScreenText.ElementAt(nRow), rLine, & m_dcScreen );
+				_CheckLineFlag( m_clsFormatedScreenText.ElementAt(nRow), usLineFlag, szTerminator );
 			}
-			m_clsFormatedScreenText.GetNext(po2);
+			nRow++;
 
 		} else {
-			CAnalyzedString & rLine = pDoc->m_clsAnalyzedText.GetNext(po1); // FlattenScreenTextAt(po2);
-			_FormatLineNoWrap( m_clsFormatedScreenText.GetAt(po2), rLine, & m_dcScreen );
-			_CheckLineFlag( m_clsFormatedScreenText.GetAt(po2), usLineFlag, szTerminator );
-			m_clsFormatedScreenText.GetNext(po2);
+			CAnalyzedString & rLine = pDoc->m_clsAnalyzedText.GetNext(po1);
+			_FormatLineNoWrap( m_clsFormatedScreenText.ElementAt(nRow), rLine, & m_dcScreen );
+			_CheckLineFlag( m_clsFormatedScreenText.ElementAt(nRow), usLineFlag, szTerminator );
+			nRow++;
 		}
 
 		if( nCount > 1000 && ! (nProcess % 20) ) pMainFrame->SetProgress( 100 * nProcess / nCount );
@@ -728,19 +751,24 @@ void CCedtView::FormatScreenText(INT nIndex, INT nCount)
 	// Post-process the carry-over state past the edited region, until it re-converges
 	// with what the rows already hold. Typing "/*" has to repaint everything below it;
 	// typing the matching "*/" has to stop repainting at that line.
+	//
+	// Nothing below changes the row list, so the count is settled now.
 	BOOL bCanStopProcessing = FALSE;
+	INT nRowCount = (INT)m_clsFormatedScreenText.GetCount();
 
-	while( po2 && ! bCanStopProcessing ) {
+	while( nRow < nRowCount && ! bCanStopProcessing ) {
 		usLineFlag &= ~LF_LINECOMMENT;
 		if( ! bMultiLineStringConstant ) usLineFlag &= ~(LF_QUOTATION1 | LF_QUOTATION2 | LF_QUOTATION3);
 
 		if( m_bLocalWordWrap ) {
-			BOOL bContinue = m_clsFormatedScreenText.GetAt(po2).m_bLineBreak;
-			bCanStopProcessing = _CheckLineFlag( m_clsFormatedScreenText.GetNext(po2), usLineFlag, szTerminator );
+			BOOL bContinue = m_clsFormatedScreenText.ElementAt(nRow).m_bLineBreak;
+			bCanStopProcessing = _CheckLineFlag( m_clsFormatedScreenText.ElementAt(nRow), usLineFlag, szTerminator );
+			nRow++;
 
-			while( bContinue ) {
-				bContinue = m_clsFormatedScreenText.GetAt(po2).m_bLineBreak;
-				bCanStopProcessing = _CheckLineFlag( m_clsFormatedScreenText.GetNext(po2), usLineFlag, szTerminator );
+			while( bContinue && nRow < nRowCount ) {
+				bContinue = m_clsFormatedScreenText.ElementAt(nRow).m_bLineBreak;
+				bCanStopProcessing = _CheckLineFlag( m_clsFormatedScreenText.ElementAt(nRow), usLineFlag, szTerminator );
+				nRow++;
 			}
 
 		} else {
@@ -757,7 +785,8 @@ void CCedtView::FormatScreenText(INT nIndex, INT nCount)
 			if( ! po1 ) break;
 
 			CAnalyzedString & rAna = pDoc->m_clsAnalyzedText.GetNext(po1);
-			CFormatedString & rFmt = m_clsFormatedScreenText.GetNext(po2);
+			CFormatedString & rFmt = m_clsFormatedScreenText.ElementAt(nRow);
+			nRow++;
 
 			bCanStopProcessing = _CheckLineFlagAnalyzed( rAna, rFmt, usLineFlag, szTerminator );
 		}
@@ -796,8 +825,8 @@ void CCedtView::FormatPrintText(CDC * pDC, RECT rectDraw, INT nIndex, INT nCount
 	_nMinWidth = 8 * nAveCharWidth;
 
 
-	m_clsFormatedPrintText.RemoveAll(); CFormatedString dummyLine;
-	for(INT i = 0; i < nCount; i++) m_clsFormatedPrintText.AddTail( dummyLine );
+	m_clsFormatedPrintText.RemoveAll();
+	m_clsFormatedPrintText.InsertGap(0, nCount);
 
 	CCedtDoc * pDoc = (CCedtDoc *)GetDocument(); ASSERT( pDoc );
 	CMainFrame * pMainFrame = (CMainFrame *)AfxGetMainWnd(); ASSERT( pMainFrame );
@@ -809,12 +838,23 @@ void CCedtView::FormatPrintText(CDC * pDC, RECT rectDraw, INT nIndex, INT nCount
 	}
 
 	// now start formatting text
+	//
+	// The print row list grows as wrapped lines need continuation rows, so it is walked
+	// by index for the same reason the screen one is.
 	POSITION po1 = pDoc->m_clsAnalyzedText.FindIndex(nIndex);
-	POSITION po2 = m_clsFormatedPrintText.GetHeadPosition();
-	POSITION po3 = FindScreenTextIndex(nIndex);
+	INT nRow = 0;
 
-	USHORT usLineFlag = m_clsFormatedScreenText.GetAt(po3).m_usLineFlag;
-	CString szTerminator = m_clsFormatedScreenText.GetAt(po3).m_szHereDocumentTerminator;
+	// The carry-over syntax state to start from is whatever the SCREEN rows already
+	// worked out for this line — printing does not re-derive it from the top of the file.
+	INT nScreenRow = FindScreenTextRow(nIndex);
+	USHORT usLineFlag = 0x0000;
+	CString szTerminator;
+
+	if( nScreenRow >= 0 ) {
+		usLineFlag = m_clsFormatedScreenText.ElementAt(nScreenRow).m_usLineFlag;
+		szTerminator = m_clsFormatedScreenText.ElementAt(nScreenRow).m_szHereDocumentTerminator;
+	}
+
 	BOOL bMultiLineStringConstant = MultiLineStringConstant();
 
 	while( po1 && nProcess < nCount ) {
@@ -822,15 +862,16 @@ void CCedtView::FormatPrintText(CDC * pDC, RECT rectDraw, INT nIndex, INT nCount
 		if( ! bMultiLineStringConstant ) usLineFlag &= ~(LF_QUOTATION1 | LF_QUOTATION2 | LF_QUOTATION3);
 
 		CAnalyzedString & rLine = pDoc->m_clsAnalyzedText.GetNext(po1);
-		BOOL bContinue = _FormatLineWrap( m_clsFormatedPrintText.GetAt(po2), rLine, pDC );
-		_CheckLineFlag( m_clsFormatedPrintText.GetAt(po2), usLineFlag, szTerminator );
+		BOOL bContinue = _FormatLineWrap( m_clsFormatedPrintText.ElementAt(nRow), rLine, pDC );
+		_CheckLineFlag( m_clsFormatedPrintText.ElementAt(nRow), usLineFlag, szTerminator );
 
 		while( bContinue ) {
-			CFormatedString dummyLine; po2 = m_clsFormatedPrintText.InsertAfter(po2, dummyLine);
-			bContinue = _FormatLineWrapContinue( m_clsFormatedPrintText.GetAt(po2), rLine, pDC );
-			_CheckLineFlag( m_clsFormatedPrintText.GetAt(po2), usLineFlag, szTerminator );
+			m_clsFormatedPrintText.InsertGap(nRow + 1, 1);
+			nRow++;
+			bContinue = _FormatLineWrapContinue( m_clsFormatedPrintText.ElementAt(nRow), rLine, pDC );
+			_CheckLineFlag( m_clsFormatedPrintText.ElementAt(nRow), usLineFlag, szTerminator );
 		}
-		m_clsFormatedPrintText.GetNext(po2);
+		nRow++;
 
 		if( nCount > 100 && ! (nProcess % 2) ) pMainFrame->SetProgress( 100 * nProcess / nCount );
 		nProcess++;
@@ -843,22 +884,47 @@ void CCedtView::FormatPrintText(CDC * pDC, RECT rectDraw, INT nIndex, INT nCount
 }
 
 
+// Drop nCount logical lines, starting at line nIndex, from the screen rows. The carry-over
+// syntax flag from the first of them survives onto whatever now sits in its place.
 void CCedtView::RemoveScreenText(INT nIndex, INT nCount)
 {
-	POSITION posRemove = FindScreenTextIndex( nIndex );
-	USHORT usLineFlag = m_clsFormatedScreenText.GetAt( posRemove ).m_usLineFlag;
+	if( nCount <= 0 ) return;
 
-	while( nCount-- ) posRemove = RemoveScreenTextAt( posRemove );
-	if( posRemove ) m_clsFormatedScreenText.GetAt( posRemove ).m_usLineFlag = usLineFlag;
+	INT nRow = FindScreenTextRow( nIndex );
+	if( nRow < 0 ) return;
+
+	USHORT usLineFlag = m_clsFormatedScreenText.ElementAt( nRow ).m_usLineFlag;
+
+	// Count the rows those nCount lines occupy — one each, plus their continuation rows
+	// when wrapped — and remove them in ONE call. Removing a line at a time was free on
+	// the linked list; on the array it is a memmove each, so deleting a large selection
+	// would have gone quadratic.
+	INT nTotal = (INT)m_clsFormatedScreenText.GetCount();
+	INT nRows = 0;
+
+	for(INT i = 0; i < nCount && nRow + nRows < nTotal; i++)
+		nRows += _ParagraphRowCount(m_clsFormatedScreenText, nRow + nRows, nTotal);
+
+	m_clsFormatedScreenText.RemoveRange(nRow, nRows);
+
+	if( nRow < (INT)m_clsFormatedScreenText.GetCount() )
+		m_clsFormatedScreenText.ElementAt( nRow ).m_usLineFlag = usLineFlag;
 }
 
+// Make room for nCount new logical lines after line nIndex. They are laid out later, by
+// FormatScreenText; blank rows are all that is needed here.
 void CCedtView::InsertScreenText(INT nIndex, INT nCount)
 {
-	POSITION posInsert = (nIndex < 0) ? NULL : FindScreenTextIndex( nIndex );
-	CFormatedString dummyLine;
+	if( nCount <= 0 ) return;
 
-	if( posInsert ) while( nCount-- ) m_clsFormatedScreenText.InsertAfter( posInsert, dummyLine );
-	else while( nCount-- ) m_clsFormatedScreenText.AddHead( dummyLine );
+	// nIndex < 0 means "before the first line".
+	INT nRow = 0;
+	if( nIndex >= 0 ) {
+		INT nFound = FindScreenTextRow( nIndex );
+		nRow = ( nFound < 0 ) ? 0 : nFound + 1;
+	}
+
+	m_clsFormatedScreenText.InsertGap(nRow, nCount);		// one structural change
 }
 
 
@@ -892,49 +958,48 @@ SHORT CCedtView::GetWordIndex(LPCTSTR lpWord, SHORT siLength, INT nWidth, CDC * 
 // With word wrap OFF that is just row nIndex. FindIndex still walks the list, but
 // it walks it WITHOUT READING the rows — which is what matters here, because with
 // lazy layout most of the rows it passes have no m_pWord yet.
-POSITION CCedtView::FindScreenTextIndex(INT nIndex)
+// These used to hand POSITIONs around, and two of them removed rows WHILE holding a
+// POSITION into the list they were removing from. On the linked list that was fine — a
+// POSITION was a node pointer, so deleting some other node left it alone. On the array
+// underneath now it is not: remove row i and everything after shifts down, so the held
+// POSITION names the wrong row. No crash, just the wrong line rendered or edited.
+//
+// So they work in ROW INDICES, which is what they were really doing all along, and they
+// remove a run of rows in one call rather than one at a time.
+
+
+// Row index of the first screen row of logical line nIndex. -1 if there are no rows.
+//
+// With word wrap off, row == line. With it on, a line owns its first row (m_siSplitIndex
+// == 0) plus however many continuation rows follow it.
+INT CCedtView::FindScreenTextRow(INT nIndex)
 {
+	INT nTotal = (INT)m_clsFormatedScreenText.GetCount();
+	if( nTotal == 0 ) return -1;
+
 	if( ! m_bLocalWordWrap ) {
-		POSITION pos = m_clsFormatedScreenText.FindIndex(nIndex);
-		return pos ? pos : m_clsFormatedScreenText.GetTailPosition();
+		if( nIndex < 0 ) return 0;
+		return ( nIndex < nTotal ) ? nIndex : nTotal - 1;
 	}
 
 	INT nParaCount = 0;
-	POSITION posFound, pos = m_clsFormatedScreenText.GetHeadPosition();
-	while( pos ) {
-		posFound = pos;
-		CFormatedString & rLine = m_clsFormatedScreenText.GetNext( pos );
-		if( rLine.m_siSplitIndex == 0 ) nParaCount++;
-		if( nParaCount-1 == nIndex ) break;
+	for(INT nRow = 0; nRow < nTotal; nRow++) {
+		if( m_clsFormatedScreenText.ElementAt(nRow).m_siSplitIndex == 0 ) nParaCount++;
+		if( nParaCount - 1 == nIndex ) return nRow;
 	}
-	return posFound;
+
+	return nTotal - 1;		// past the end: the old code returned the last row too
 }
 
-POSITION CCedtView::FlattenScreenTextAt(POSITION pos)
+// Drop the continuation rows of the line that starts at nRow, keeping its first row.
+// Returns the row just past it.
+INT CCedtView::FlattenScreenTextAt(INT nRow)
 {
-	INT nParaCount = 0;
-	POSITION posFlatten;
-	while( pos ) {
-		posFlatten = pos;
-		CFormatedString & rLine = m_clsFormatedScreenText.GetNext( pos );
-		if( rLine.m_siSplitIndex == 0 ) nParaCount++;
-		if( nParaCount-1 == 0 ) {
-			if( rLine.m_siSplitIndex ) m_clsFormatedScreenText.RemoveAt( posFlatten );
-		} else break;
-	}
-	return posFlatten;
-}
+	INT nTotal = (INT)m_clsFormatedScreenText.GetCount();
+	if( nRow < 0 || nRow >= nTotal ) return nRow;
 
-POSITION CCedtView::RemoveScreenTextAt(POSITION pos)
-{
-	INT nParaCount = 0;
-	POSITION posRemove;
-	while( pos ) {
-		posRemove = pos;
-		CFormatedString & rLine = m_clsFormatedScreenText.GetNext( pos );
-		if( rLine.m_siSplitIndex == 0 ) nParaCount++;
-		if( nParaCount-1 == 0 ) m_clsFormatedScreenText.RemoveAt( posRemove );
-		else break;
-	}
-	return posRemove;
+	INT nRows = _ParagraphRowCount(m_clsFormatedScreenText, nRow, nTotal);
+	if( nRows > 1 ) m_clsFormatedScreenText.RemoveRange(nRow + 1, nRows - 1);
+
+	return nRow + 1;
 }
