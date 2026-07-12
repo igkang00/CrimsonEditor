@@ -281,5 +281,35 @@ of it, and values would relocate and dangle — silently, and usually appearing 
 the row list was empty. Its replacement, `FindScreenTextRow`, returns -1 and the callers
 check.
 
+**Flushed out on the way past: not every view on the document is a `CCedtView`.** Print
+preview crashed in the access-violation way — no assert, just gone. It had nothing to do
+with the container, and everything to do with having moved it.
+
+MFC's print preview registers its view *with the document*: `DoPrintPreview` builds the
+`CPreviewView` with a `CCreateContext` naming the document, and `CView::OnCreate` obliges
+with `pDoc->AddView(this)`. So while preview is up, the view list holds a view that is not
+ours. All fourteen walks of that list did this:
+
+```cpp
+CCedtView * pView = (CCedtView *)pDoc->GetNextView( posView );   // no check
+```
+
+Resize the main window during preview and `ApplyCurrentScreenFont` reaches the
+`CPreviewView`, calls `OnScreenFontChange()` on it, and reads `m_dcActiveLine` — at an
+offset that lies past the end of the real object. The garbage there was non-zero, so the
+`if( m_dcActiveLine.m_hDC )` guard passed and the garbage went to `DeleteDC()`. The
+debugger showed `attrib=0xcdcdcdcd00000333`: `0xcdcdcdcd` is what the debug heap writes
+into memory it has not constructed. `m_hWnd` looked fine, because both classes are `CWnd`s
+and the front of the object still lines up.
+
+The cast was always wrong. What changed is that `CFormatedText` swapped `CList` for
+`CLineList`, which moved every member after it — and the garbage `m_dcActiveLine` landed on
+went from harmlessly zero to not. It was a latent bug living on luck, and the refactor
+spent the luck.
+
+Fixed by routing every walk of the view list through `CCedtDoc::GetNextCedtView`, which
+skips what is not ours, rather than by adding fourteen guards someone can forget the
+fifteenth time.
+
 **Memory.** A `CList` node carries two pointers of overhead (16 bytes). A pointer vector
 carries 8. Slightly better, and the line objects themselves are unchanged.

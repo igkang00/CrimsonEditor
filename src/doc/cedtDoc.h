@@ -10,6 +10,8 @@
 #endif // _MSC_VER > 1000
 
 
+class CCedtView;
+
 class CCedtDoc : public CDocument
 {
 protected: // create from serialization only
@@ -112,7 +114,8 @@ protected:
 
 
 public: // *** cedtDocView.cpp ***
-	CView * GetFirstView();
+	CCedtView * GetNextCedtView(POSITION & pos);
+	CCedtView * GetFirstView();
 	INT GetViewCount();
 
 	void ReinitializeAllViews();

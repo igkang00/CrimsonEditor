@@ -46,9 +46,8 @@ CFont * CCedtView::ApplyCurrentScreenFont()
 	POSITION posDoc = pApp->GetFirstDocPosition();
 	while( posDoc ) {
 		CCedtDoc * pDoc = (CCedtDoc *)pApp->GetNextDoc( posDoc );
-		POSITION posView = pDoc->GetFirstViewPosition();
-		while( posView ) {
-			CCedtView * pView = (CCedtView *)pDoc->GetNextView( posView );
+		POSITION posView = pDoc->GetFirstViewPosition(); CCedtView * pView;
+		while( (pView = pDoc->GetNextCedtView( posView )) != NULL ) {
 			pView->OnScreenFontChange();
 		}
 	}

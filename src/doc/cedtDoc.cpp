@@ -185,9 +185,8 @@ BOOL CCedtDoc::IsModifiedOutside()
 
 void CCedtDoc::GoToLineNumber(INT nLineNumber)
 {
-	POSITION pos = GetFirstViewPosition();
-	while( pos ) {
-		CCedtView * pView = (CCedtView *)GetNextView( pos );
+	POSITION pos = GetFirstViewPosition(); CCedtView * pView;
+	while( (pView = GetNextCedtView( pos )) != NULL ) {
 		pView->OnSearchGoTo(nLineNumber);
 	}
 }

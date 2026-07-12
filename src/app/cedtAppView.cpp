@@ -27,9 +27,8 @@ void CCedtApp::UpdateAllViews()
 	POSITION posDoc = GetFirstDocPosition();
 	while( posDoc ) {
 		CCedtDoc * pDoc = (CCedtDoc *)GetNextDoc( posDoc );
-		POSITION posView = pDoc->GetFirstViewPosition();
-		while( posView ) {
-			CCedtView * pView = (CCedtView *)pDoc->GetNextView( posView );
+		POSITION posView = pDoc->GetFirstViewPosition(); CCedtView * pView;
+		while( (pView = pDoc->GetNextCedtView( posView )) != NULL ) {
 			pView->Invalidate();
 		}
 	}
@@ -40,9 +39,8 @@ void CCedtApp::SaveCaretAndAnchorPosAllViews()
 	POSITION posDoc = GetFirstDocPosition();
 	while( posDoc ) {
 		CCedtDoc * pDoc = (CCedtDoc *)GetNextDoc( posDoc );
-		POSITION posView = pDoc->GetFirstViewPosition();
-		while( posView ) {
-			CCedtView * pView = (CCedtView *)pDoc->GetNextView( posView );
+		POSITION posView = pDoc->GetFirstViewPosition(); CCedtView * pView;
+		while( (pView = pDoc->GetNextCedtView( posView )) != NULL ) {
 			pView->SaveCaretAndAnchorPos();
 		}
 	}
@@ -53,9 +51,8 @@ void CCedtApp::RestoreCaretAndAnchorPosAllViews()
 	POSITION posDoc = GetFirstDocPosition();
 	while( posDoc ) {
 		CCedtDoc * pDoc = (CCedtDoc *)GetNextDoc( posDoc );
-		POSITION posView = pDoc->GetFirstViewPosition();
-		while( posView ) {
-			CCedtView * pView = (CCedtView *)pDoc->GetNextView( posView );
+		POSITION posView = pDoc->GetFirstViewPosition(); CCedtView * pView;
+		while( (pView = pDoc->GetNextCedtView( posView )) != NULL ) {
 			pView->RestoreCaretAndAnchorPos();
 		}
 	}
@@ -66,9 +63,8 @@ void CCedtApp::FormatScreenTextAllViews()
 	POSITION posDoc = GetFirstDocPosition();
 	while( posDoc ) {
 		CCedtDoc * pDoc = (CCedtDoc *)GetNextDoc( posDoc );
-		POSITION posView = pDoc->GetFirstViewPosition();
-		while( posView ) {
-			CCedtView * pView = (CCedtView *)pDoc->GetNextView( posView );
+		POSITION posView = pDoc->GetFirstViewPosition(); CCedtView * pView;
+		while( (pView = pDoc->GetNextCedtView( posView )) != NULL ) {
 			pView->FormatScreenText();
 		}
 	}
@@ -79,9 +75,8 @@ void CCedtApp::TurnOffWordWrapModeAllViews()
 	POSITION posDoc = GetFirstDocPosition();
 	while( posDoc ) {
 		CCedtDoc * pDoc = (CCedtDoc *)GetNextDoc( posDoc );
-		POSITION posView = pDoc->GetFirstViewPosition();
-		while( posView ) {
-			CCedtView * pView = (CCedtView *)pDoc->GetNextView( posView );
+		POSITION posView = pDoc->GetFirstViewPosition(); CCedtView * pView;
+		while( (pView = pDoc->GetNextCedtView( posView )) != NULL ) {
 			if( pView->IsWordWrapOn() ) pView->TurnOffWordWrapMode();
 		}
 	}
