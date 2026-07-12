@@ -410,6 +410,10 @@ public:
 	BOOL FileLoad(LPCTSTR lpszPathName, INT nEncodingType, INT nFileFormat);
 	BOOL FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileFormat);
 
+	// Replace any unpaired surrogate left by a malformed file with U+FFFD, so
+	// the rest of the editor can assume every surrogate belongs to a pair.
+	void ScrubLoneSurrogates();
+
 	BOOL HaveAnyOverflowLine();
 };
 

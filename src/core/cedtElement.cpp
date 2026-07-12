@@ -2,6 +2,7 @@
 #include "fstream_compat.h"
 #include <sstream>
 #include <ctype.h>
+#include "cedtUnicode.h"
 #include "Encode.h"
 #include "RegExp.h"
 #include "Utility.h"
@@ -804,12 +805,53 @@ BOOL CAnalyzedText::FileLoad(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 
 		file.Close();
 
+		ScrubLoneSurrogates();
+
 	} catch( CException * ex ) {
 		ex->ReportError( MB_OK | MB_ICONSTOP );
 		ex->Delete(); return FALSE;
 	}
 
 	return TRUE;
+}
+
+// Establish the invariant every surrogate-aware helper relies on: the document
+// never holds an *unpaired* surrogate.
+//
+// The editing paths can no longer create one, but a malformed file can arrive
+// with one already in it — a truncated UTF-16 file, or CESU-8 bytes that some
+// UTF-8 decoders let through. An unpaired surrogate is not a legal character in
+// any encoding, so replace it with U+FFFD (the replacement character), which is
+// exactly what a conforming encoder would have written anyway.
+//
+// This must run per completed LINE, never per read chunk: a chunk boundary can
+// fall between the two halves of a pair, and scrubbing at that level would
+// mistake a perfectly good high surrogate for a lone one and destroy it.
+void CAnalyzedText::ScrubLoneSurrogates()
+{
+#ifdef _UNICODE
+	POSITION pos = GetHeadPosition();
+
+	while( pos ) {
+		CAnalyzedString & rLine = GetNext(pos);
+		INT nLength = rLine.GetLength();
+
+		for(INT i = 0; i < nLength; i++) {
+			TCHAR ch = rLine[i];
+			if( ! IsSurrogate(ch) ) continue;
+
+			// A high surrogate is fine only if a low one follows it, and a low
+			// surrogate is fine only if a high one precedes it. Anything else
+			// is a half character.
+			if( IsHighSurrogate(ch) && i + 1 < nLength && IsLowSurrogate(rLine[i + 1]) ) {
+				i++;	// well-formed pair — skip past both halves
+				continue;
+			}
+
+			rLine.SetAt(i, (TCHAR)0xFFFD);
+		}
+	}
+#endif
 }
 
 BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileFormat)

@@ -12,7 +12,9 @@ void CCedtView::ActionInsertChar(UINT nChar)
 	INT nLstX = GetLastIdxX( rString );
 
 	if( nIdxX < nLstX && m_bOverwriteMode ) {
-		DeleteChar(nIdxX, nIdxY);
+		// Overwrite consumes the whole character under the caret. Removing one
+		// code unit would leave half of an emoji behind.
+		DeleteCharacter(nIdxX, nIdxY);
 	} else if( nIdxX > nLstX ) {
 		CString szInsert(' ', nIdxX - nLstX );
 		InsertString(nLstX, nIdxY, szInsert);
@@ -61,7 +63,8 @@ void CCedtView::ActionInsertSpacesInPlaceOfTab()
 	INT nLstX = GetLastIdxX( rString );
 
 	if( nIdxX < nLstX && m_bOverwriteMode ) {
-		DeleteChar(nIdxX, nIdxY);
+		// Overwrite consumes the whole character — see ActionInsertChar.
+		DeleteCharacter(nIdxX, nIdxY);
 	} else if( nIdxX > nLstX ) {
 		CString szInsert(' ', nIdxX - nLstX );
 		InsertString(nLstX, nIdxY, szInsert);
@@ -146,8 +149,13 @@ void CCedtView::ActionInsertString(LPCTSTR lpszString)
 	INT nLstX = GetLastIdxX( rString );
 
 	if( nSize > 0 && nIdxX < nLstX && m_bOverwriteMode ) {
-		if( nLstX - nIdxX > nSize ) {
-			DeleteString(nIdxX, nIdxY, nSize);
+		// Overwrite eats as many code units as we are about to insert — but the
+		// cut has to land on a character boundary, otherwise the trailing half
+		// of a surrogate pair survives as a lone surrogate.
+		INT nSpan = SpanToCharBoundary((LPCTSTR)rString, nIdxX, nSize, nLstX);
+
+		if( nLstX - nIdxX > nSpan ) {
+			DeleteString(nIdxX, nIdxY, nSpan);
 			InsertString(nIdxX, nIdxY, lpszString);
 		} else {
 			DeleteString(nIdxX, nIdxY, nLstX - nIdxX);
@@ -245,10 +253,13 @@ void CCedtView::ActionBackspace()
 	INT nLstX = GetLastIdxX( rString );
 
 	if( nIdxX > nLstX ) {
-		// move caret to the left
+		// move caret to the left (virtual space past end of line — no text here)
 		nIdxX = nIdxX - 1;
 	} else if( nIdxX > 0 ) {
-		nIdxX = nIdxX-1; DeleteChar(nIdxX, nIdxY);
+		// Step back one CHARACTER and delete it whole. A bare nIdxX-1 would
+		// remove only the low half of a surrogate pair, stranding the high half
+		// as a lone surrogate that UTF-8 save then destroys.
+		nIdxX = PrevIdxX((LPCTSTR)rString, nIdxX); DeleteCharacter(nIdxX, nIdxY);
 	} else if( nIdxY > 0 ) {
 		CAnalyzedString & rStrn2 = GetLineFromIdxY( nIdxY-1 );
 		nIdxY = nIdxY - 1; nIdxX = GetLastIdxX( rStrn2 );
@@ -270,7 +281,8 @@ void CCedtView::ActionDeleteChar()
 	INT nLstX = GetLastIdxX( rString );
 
 	if( nIdxX < nLstX ) {
-		DeleteChar(nIdxX, nIdxY);
+		// Delete the whole character at the caret, pair included.
+		DeleteCharacter(nIdxX, nIdxY);
 	} else if( nIdxY < GetLastIdxY() ) {
 		if( nIdxX > nLstX ) {
 			CString szInsert(' ', nIdxX - nLstX);
@@ -545,6 +557,15 @@ void CCedtView::DeleteChar(INT nIdxX, INT nIdxY)
 {
 	CCedtDoc * pDoc = (CCedtDoc *)GetDocument();
 	pDoc->DeleteChar(nIdxX, nIdxY);
+
+	pDoc->AnalyzeText(nIdxY, 1);
+	pDoc->FormatScreenText(nIdxY, 1);
+}
+
+void CCedtView::DeleteCharacter(INT nIdxX, INT nIdxY)
+{
+	CCedtDoc * pDoc = (CCedtDoc *)GetDocument();
+	pDoc->DeleteCharacter(nIdxX, nIdxY);
 
 	pDoc->AnalyzeText(nIdxY, 1);
 	pDoc->FormatScreenText(nIdxY, 1);

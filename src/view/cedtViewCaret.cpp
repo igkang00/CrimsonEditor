@@ -156,8 +156,11 @@ void CCedtView::SetCaretPosFromMouse(CPoint point)
 	} else if( nPosX > ( nFrstPosX = GetFirstPosX(rLine) ) ) {
 		INT nIdxX = GetIdxXFromPosX( rLine, nPosX );
 
+		// Snap the click to whichever CHARACTER edge is nearer. The far edge is
+		// the next character, not the next code unit — with nIdxX+1 a click on
+		// an emoji would compare against the pixel of a lone high surrogate.
 		INT nPos1 = GetPosXFromIdxX( rLine, nIdxX );
-		INT nPos2 = GetPosXFromIdxX( rLine, nIdxX + 1 );
+		INT nPos2 = GetPosXFromIdxX( rLine, NextIdxX((LPCTSTR)rLine, nIdxX, GetLastIdxX(rLine)) );
 		SetCaretPosX( (nPosX-nPos1 < nPos2-nPosX) ? nPos1 : nPos2 );
 	} else {
 		SetCaretPosX( nFrstPosX );
@@ -210,8 +213,9 @@ void CCedtView::SetDragPosFromMouse(CPoint point)
 	} else if( nPosX > ( nFrstPosX = GetFirstPosX(rLine) ) ) {
 		INT nIdxX = GetIdxXFromPosX( rLine, nPosX );
 
+		// Nearest CHARACTER edge — see SetCaretPosFromMouse.
 		INT nPos1 = GetPosXFromIdxX( rLine, nIdxX );
-		INT nPos2 = GetPosXFromIdxX( rLine, nIdxX + 1 );
+		INT nPos2 = GetPosXFromIdxX( rLine, NextIdxX((LPCTSTR)rLine, nIdxX, GetLastIdxX(rLine)) );
 		SetDragPosX( (nPosX-nPos1 < nPos2-nPosX) ? nPos1 : nPos2 );
 	} else {
 		SetDragPosX( nFrstPosX );

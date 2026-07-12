@@ -142,7 +142,12 @@ INT CCedtView::GetCharWidth()
 
 	INT nIdxX = GetIdxXFromPosX(rLine, rWord, m_nCaretPosX );
 
-	CSize size = m_dcScreen.GetTextExtent((LPCTSTR)rLine + nIdxX, 1);
+	// Measure the whole CHARACTER under the caret, not one code unit — an
+	// astral char is a surrogate pair, and asking GDI for just its high half
+	// would size the OVR block caret to cover half an emoji.
+	INT nUnits = CharUnitsAt((LPCTSTR)rLine, nIdxX, GetLastIdxX(rLine));
+
+	CSize size = m_dcScreen.GetTextExtent((LPCTSTR)rLine + nIdxX, nUnits);
 	return size.cx;
 }
 

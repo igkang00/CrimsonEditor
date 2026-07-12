@@ -50,8 +50,11 @@ void CCedtView::ActionCompositionCompose(LPCTSTR lpszString)
 	INT nLstX = GetLastIdxX( rString );
 
 	if( nSize > 0 && nIdxX < nLstX && m_bOverwriteMode ) {
-		if( nLstX - nIdxX > nSize ) {
-			DeleteCompositionString(nIdxX, nIdxY, nSize);
+		// Cut on a character boundary — see ActionInsertString.
+		INT nSpan = SpanToCharBoundary((LPCTSTR)rString, nIdxX, nSize, nLstX);
+
+		if( nLstX - nIdxX > nSpan ) {
+			DeleteCompositionString(nIdxX, nIdxY, nSpan);
 			InsertCompositionString(nIdxX, nIdxY, lpszString);
 		} else {
 			DeleteCompositionString(nIdxX, nIdxY, nLstX - nIdxX);
@@ -94,8 +97,11 @@ void CCedtView::ActionCompositionResult(LPCTSTR lpszString)
 	INT nLstX = GetLastIdxX( rString );
 
 	if( nSize > 0 && nIdxX < nLstX && m_bOverwriteMode ) {
-		if( nLstX - nIdxX > nSize ) {
-			DeleteString(nIdxX, nIdxY, nSize);
+		// Cut on a character boundary — see ActionInsertString.
+		INT nSpan = SpanToCharBoundary((LPCTSTR)rString, nIdxX, nSize, nLstX);
+
+		if( nLstX - nIdxX > nSpan ) {
+			DeleteString(nIdxX, nIdxY, nSpan);
 			InsertString(nIdxX, nIdxY, lpszString);
 		} else {
 			DeleteString(nIdxX, nIdxY, nLstX - nIdxX);

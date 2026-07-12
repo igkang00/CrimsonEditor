@@ -48,6 +48,26 @@ void CCedtDoc::DeleteChar(INT nIdxX, INT nIdxY)
 	FastDeleteChar(rLine, nIdxX, nIdxY);
 }
 
+// Delete one CHARACTER at nIdxX — which is one code unit for anything in the
+// BMP, but a two-unit surrogate pair for an astral char (emoji, CJK Ext-B).
+//
+// A pair goes out through FastDeleteString so it lands as a SINGLE undo record:
+// AT_DELETESTRING already stores an arbitrary-length CString, so no new record
+// format is needed. Doing it as two FastDeleteChar calls would also replay
+// correctly, but would leave the document momentarily holding a lone surrogate
+// and would cost two analyze passes and a two-step redo.
+//
+// Note DeleteChar above is deliberately left alone: undo replay of
+// AT_INSERTCHAR depends on it removing exactly one code unit.
+void CCedtDoc::DeleteCharacter(INT nIdxX, INT nIdxY)
+{
+	CAnalyzedString & rLine = GetLineFromIdxY(nIdxY);
+	INT nUnits = CharUnitsAt((LPCTSTR)rLine, nIdxX, rLine.GetLength());
+
+	if( nUnits > 1 ) FastDeleteString(rLine, nIdxX, nIdxY, nUnits);
+	else             FastDeleteChar(rLine, nIdxX, nIdxY);
+}
+
 void CCedtDoc::InsertString(INT nIdxX, INT nIdxY, LPCTSTR lpszString)
 {
 	CAnalyzedString & rLine = GetLineFromIdxY(nIdxY);

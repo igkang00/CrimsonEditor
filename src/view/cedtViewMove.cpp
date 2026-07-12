@@ -202,7 +202,10 @@ void CCedtView::MoveCaretLeft()
 
 	} else if( m_nCaretPosX > GetFirstPosX( rLine ) ) {
 		INT nIdxX = GetIdxXFromPosX( rLine, m_nCaretPosX );
-		SetCaretPosX( GetPosXFromIdxX( rLine, nIdxX-1 ) );
+		// Step back one CHARACTER, not one code unit: a surrogate pair (emoji,
+		// CJK Ext-B) is two units, and a bare nIdxX-1 would park the caret
+		// between its halves.
+		SetCaretPosX( GetPosXFromIdxX( rLine, PrevIdxX((LPCTSTR)rLine, nIdxX) ) );
 
 	} else SetCaretPosX( GetFirstPosX( rLine ) );
 }
@@ -220,7 +223,8 @@ void CCedtView::MoveCaretRight()
 
 	} else if( m_nCaretPosX >= GetFirstPosX( rLine ) ) {
 		INT nIdxX = GetIdxXFromPosX( rLine, m_nCaretPosX );
-		SetCaretPosX( GetPosXFromIdxX( rLine, nIdxX+1 ) );
+		// Step forward one CHARACTER — see MoveCaretLeft.
+		SetCaretPosX( GetPosXFromIdxX( rLine, NextIdxX((LPCTSTR)rLine, nIdxX, GetLastIdxX(rLine)) ) );
 
 	} else SetCaretPosX( GetFirstPosX( rLine ) );
 }

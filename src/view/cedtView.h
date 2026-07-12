@@ -133,6 +133,14 @@ protected: // matching pairs highlight
 protected: // IMM composition
 	BOOL m_bComposition;
 
+protected: // UTF-16 surrogate pair input
+	// Windows sends an astral character (emoji, CJK Ext-B) as two WM_CHAR /
+	// WM_IME_CHAR messages: the high surrogate, then the low. We hold the high
+	// half here until its partner arrives, then insert both at once. Zero means
+	// "nothing pending".
+	TCHAR m_chPendingHighSurrogate;
+	BOOL HandleSurrogateChar(TCHAR ch);	// TRUE = message consumed, do not process further
+
 protected: // Drag And Drop
 	COleDropTarget m_oleDropTarget;
 	COleDataSource m_oleDataSource;
@@ -386,6 +394,7 @@ public: // *** cedtViewMapAdv.cpp ***
 protected: // *** cedtViewHndrEdit.cpp ***
 	void OnMoveKeyDown(UINT nChar, UINT nFlags);
 	void OnCharKeyDown(UINT nChar);
+	void OnStringKeyDown(LPCTSTR lpszString);	// astral char: both surrogate halves, inserted atomically
 
 	void OnImeCompositionStart();
 	void OnImeCompositionEnd(BOOL bRedraw = TRUE);
@@ -532,6 +541,7 @@ protected: // *** cedtViewEdit.cpp ***
 protected:
 	void InsertChar(INT nIdxX, INT nIdxY, UINT nChar);
 	void DeleteChar(INT nIdxX, INT nIdxY);
+	void DeleteCharacter(INT nIdxX, INT nIdxY);	// one character: 1 unit, or a 2-unit surrogate pair
 
 	void CopyToString(CString & rString, INT nIdxX, INT nIdxY, INT nLength);
 	void InsertString(INT nIdxX, INT nIdxY, LPCTSTR lpszString);

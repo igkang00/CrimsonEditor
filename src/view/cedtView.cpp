@@ -274,6 +274,9 @@ CCedtView::CCedtView()
 
 	// Drag and Drop
 	m_bDragDataSource = m_bDragDropOccured = FALSE;
+
+	// no half of a surrogate pair is waiting for its partner
+	m_chPendingHighSurrogate = 0;
 }
 
 CCedtView::~CCedtView()
@@ -426,6 +429,9 @@ void CCedtView::OnInitialUpdate()
 	// imm composition
 	m_bComposition = FALSE;
 
+	// surrogate pair input — don't let half a character leak across documents
+	m_chPendingHighSurrogate = 0;
+
 
 	// saved index (save & restore caret and scroll pos)
 	m_nCaretIdxX = m_nCaretIdxY = 0;
@@ -467,6 +473,9 @@ void CCedtView::Reinitialize()
 
 	// imm composition
 	m_bComposition = FALSE;
+
+	// surrogate pair input — don't let half a character leak across documents
+	m_chPendingHighSurrogate = 0;
 
 	// saved index (save & restore caret and scroll pos)
 	m_nCaretIdxX = m_nCaretIdxY = 0;
@@ -1289,6 +1298,46 @@ void CCedtView::OnTimer(UINT_PTR nIDEvent)
 	CView::OnTimer(nIDEvent);
 }
 
+// Pair up the two character messages that make up one astral character (emoji,
+// CJK Ext-B). Windows sends the high surrogate and the low surrogate as two
+// separate WM_CHAR / WM_IME_CHAR messages. Returns TRUE when the message has
+// been fully consumed here and the caller must not process it further.
+//
+// Surrogates are unambiguous: a code unit's range alone says whether it is a
+// high half, a low half, or an ordinary BMP character. So this needs no state
+// beyond the one pending half, and no backward scanning — unlike the MBCS
+// lead/trail-byte machinery this codebase used to carry, where a byte's role
+// could only be determined by scanning from a known boundary.
+BOOL CCedtView::HandleSurrogateChar(TCHAR ch)
+{
+	if( IsHighSurrogate(ch) ) {
+		// First half. Swallow it and wait for its partner — inserting it now
+		// would put a lone surrogate into the document, and a lone surrogate is
+		// destroyed (replaced with U+FFFD) the moment the file is saved.
+		m_chPendingHighSurrogate = ch;
+		return TRUE;
+	}
+
+	if( IsLowSurrogate(ch) ) {
+		if( m_chPendingHighSurrogate ) {
+			TCHAR szPair[3] = { m_chPendingHighSurrogate, ch, 0 };
+			m_chPendingHighSurrogate = 0;
+
+			// One insert, one undo record, one analyze pass. The document never
+			// passes through a state that holds half a character.
+			OnStringKeyDown( szPair );
+		}
+
+		// A low half with no pending high is malformed input — drop it rather
+		// than write an unpairable code unit into the buffer.
+		return TRUE;
+	}
+
+	// Any ordinary character cancels a stale pending half.
+	m_chPendingHighSurrogate = 0;
+	return FALSE;
+}
+
 BOOL CCedtView::PreTranslateMessage(MSG* pMsg)
 {
 	static CString szCompositionString;
@@ -1320,6 +1369,9 @@ BOOL CCedtView::PreTranslateMessage(MSG* pMsg)
 			OnImeCompositionEnd(FALSE);
 		}
 
+		// An astral character arrives as two messages; hold the first half.
+		if( HandleSurrogateChar( (TCHAR)pMsg->wParam ) ) return TRUE;
+
 		if( pMsg->wParam == 0x0D ) {
 			OnEditReturn();
 		} else if( pMsg->wParam == 0x1B ) {
@@ -1337,7 +1389,11 @@ BOOL CCedtView::PreTranslateMessage(MSG* pMsg)
 		}
 
 		// wParam is a single UTF-16 code unit; feed it through the normal
-		// character path (identical to WM_CHAR under _UNICODE).
+		// character path (identical to WM_CHAR under _UNICODE). The Windows
+		// emoji panel (Win+.) and some IMEs deliver surrogate halves here, so
+		// this path needs the same pairing logic as WM_CHAR.
+		if( HandleSurrogateChar( (TCHAR)pMsg->wParam ) ) return TRUE;
+
 		OnCharKeyDown( (UINT)pMsg->wParam );
 
 		return TRUE;

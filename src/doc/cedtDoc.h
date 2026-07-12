@@ -199,6 +199,7 @@ public: // *** cedtDocEdit.cpp ***
 
 	void InsertChar(INT nIdxX, INT nIdxY, UINT nChar);
 	void DeleteChar(INT nIdxX, INT nIdxY);
+	void DeleteCharacter(INT nIdxX, INT nIdxY);	// one character: 1 unit, or a 2-unit surrogate pair
 	void InsertString(INT nIdxX, INT nIdxY, LPCTSTR lpszString);
 	void DeleteString(INT nIdxX, INT nIdxY, INT nLength);
 

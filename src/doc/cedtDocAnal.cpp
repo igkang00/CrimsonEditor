@@ -129,7 +129,12 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 
 		case 0x0200: // CHECK QUOTATION MARK & ESCAPE CHARACTERS
 			if( ESC && * fwd == ESC && * (fwd+1) && * (fwd+1) != '\t' && * (fwd+1) != ' ' && _CHCK_SIZE(fwd, 2) ) {
-				fwd += 2; 
+				// Consume the escape char plus the character it escapes. That
+				// character may be astral (a surrogate pair = 2 code units), so
+				// a blind fwd += 2 would swallow only its high half and leave
+				// the low half to be tokenized as a separate word — tearing the
+				// pair in two. Reading fwd[2] is safe: fwd[1] is known non-null.
+				fwd += 1 + ( ( IsHighSurrogate(fwd[1]) && IsLowSurrogate(fwd[2]) ) ? 2 : 1 );
 				_WordFound(wcount++, WT_CONSTANT, RT_GLOBAL, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
 			} else if( HRD[0] && ! _tcsnicmp(fwd, HRD, lenHRD) && _CHCK_SIZE(fwd, lenHRD) ) {
@@ -399,7 +404,11 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 				_WordFound(wcount++, WT_DELIMITER, RT_GLOBAL, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
 			} else {
-				fwd++;
+				// Advance a whole character. An emoji does not actually reach
+				// this branch today (the identifier state above absorbs both
+				// halves into one word), but a language spec that listed a
+				// surrogate-range delimiter would land here and split the pair.
+				fwd += ( IsHighSurrogate(fwd[0]) && IsLowSurrogate(fwd[1]) ) ? 2 : 1;
 				_WordFound(wcount++, WT_GRAPH, RT_GLOBAL, beg-str, fwd-beg);
 				_NEXT_WORD(0x0000);
 			}

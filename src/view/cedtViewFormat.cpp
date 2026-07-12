@@ -37,45 +37,39 @@ static INT _GetLeadingSpaceWidth(CAnalyzedString & rLine, CDC * pDC)
 	return nPosition;
 }
 
-// East Asian Width classifier: return 2 for full-width (CJK ideographs,
-// Hangul syllables, Hiragana/Katakana, fullwidth Latin, etc.), 1 for
-// everything else. Under MBCS this was implicit — CP949 stored CJK as
-// two bytes, and the code counted bytes, so the layout math happened
-// to line up with the two-column glyph. Under Unicode every CJK char
-// is a single wchar_t, so the layout code has to look at the code
-// point to know it renders wide.
+// Can this word's width be computed with plain arithmetic, or do we have to ask
+// GDI what it will actually draw?
 //
-// Ranges follow Unicode's East Asian Width property (categories W and
-// F), covering everything a Korean / Japanese / Chinese user is
-// realistically going to type in source. Ambiguous (A) is treated as
-// narrow — same behavior a Western monospace font gives.
-static inline INT _CharColumnWidth(TCHAR c)
+// The fixed-pitch fast path (width = _nSpaceWidth * length) is only valid when
+// EVERY character is exactly one narrow cell. Under MBCS that was implicit:
+// CP949 stored CJK as two bytes, the code counted bytes, and the arithmetic
+// happened to line up with the two-column glyph. Under Unicode a character's
+// advance no longer follows from its storage size at all.
+//
+// This used to test against a hand-written table of East Asian Width ranges, and
+// that was the wrong shape of solution: enumerating the wide characters is a
+// losing game. It missed BMP emoji entirely — U+2705 (white heavy check mark)
+// and U+2B50 (white medium star) look like ordinary BMP code points, are in none
+// of the CJK ranges, yet render roughly two cells wide. They took the fast path,
+// were billed one cell, and were then drawn two cells wide: the caret landed in
+// the middle of the glyph and everything after them on the line was shifted.
+// Unicode adds more such characters every version, so the table could only ever
+// be behind.
+//
+// So invert the test. Only plain ASCII in a fixed-pitch font is GUARANTEED to be
+// one narrow cell. Everything else — CJK, surrogate pairs, BMP emoji, symbols,
+// anything font-linking substitutes from a fallback face — goes to GDI, which by
+// definition reports the width that will actually be rendered. Pure-ASCII source
+// (the overwhelmingly common case) still takes the fast path.
+static BOOL _NeedsGdiMeasure(LPCTSTR pWord, SHORT siLength)
 {
 #ifdef _UNICODE
-	unsigned int u = (unsigned int)(unsigned short)c;
-	if( u < 0x0080 ) return 1;                     // ASCII fast path
-	if( (u >= 0x1100 && u <= 0x115F) ||            // Hangul Jamo
-	    (u >= 0x2E80 && u <= 0x303E) ||            // CJK Radicals, Kangxi
-	    (u >= 0x3041 && u <= 0x33FF) ||            // Hiragana/Katakana/CJK Symbols
-	    (u >= 0x3400 && u <= 0x4DBF) ||            // CJK Unified Ext A
-	    (u >= 0x4E00 && u <= 0x9FFF) ||            // CJK Unified
-	    (u >= 0xA000 && u <= 0xA4CF) ||            // Yi
-	    (u >= 0xAC00 && u <= 0xD7A3) ||            // Hangul Syllables
-	    (u >= 0xF900 && u <= 0xFAFF) ||            // CJK Compat Ideographs
-	    (u >= 0xFE30 && u <= 0xFE4F) ||            // CJK Compat Forms
-	    (u >= 0xFF00 && u <= 0xFF60) ||            // Fullwidth Latin/punct
-	    (u >= 0xFFE0 && u <= 0xFFE6) ) {           // Fullwidth signs
-		return 2;
+	for(SHORT i = 0; i < siLength; i++) {
+		if( (unsigned int)(unsigned short)pWord[i] >= 0x0080 ) return TRUE;
 	}
 #else
-	(void)c;
+	(void)pWord; (void)siLength;
 #endif
-	return 1;
-}
-
-static BOOL _HasWideChar(LPCTSTR pWord, SHORT siLength)
-{
-	for(SHORT i = 0; i < siLength; i++) if( _CharColumnWidth(pWord[i]) > 1 ) return TRUE;
 	return FALSE;
 }
 
@@ -85,15 +79,15 @@ static INT _GetWordWidth(LPCTSTR pWord, SHORT siLength, INT nPosition, UCHAR cTy
 		return ((nPosition + _nSpaceWidth - _nTabMargin) / _nTabWidth + 1) * _nTabWidth - nPosition;
 	} else if( cType == WT_SPACE ) {
 		return _nSpaceWidth * siLength;
-	} else if( _bFixedPitch && ! _HasWideChar(pWord, siLength) ) {
+	} else if( _bFixedPitch && ! _NeedsGdiMeasure(pWord, siLength) ) {
 		// Pure ASCII in a fixed-pitch font: fast path, no GDI round-trip.
 		return _nSpaceWidth * siLength;
 	} else {
-		// Any CJK char forces the GDI path even when the base font is
-		// declared fixed-pitch, because Windows font-linking renders
-		// missing CJK glyphs from a fallback font whose actual pixel
-		// width does NOT necessarily equal 2 × _nSpaceWidth. Only
-		// GetTextExtent knows the real width the renderer will produce.
+		// Anything non-ASCII forces the GDI path even when the base font is
+		// declared fixed-pitch. Windows font-linking renders missing glyphs
+		// (CJK, emoji) from a fallback face whose actual pixel width is NOT
+		// necessarily a whole multiple of _nSpaceWidth. Only GetTextExtent
+		// knows the real width the renderer will produce.
 		CSize size = pDC->GetTextExtent(pWord, siLength);
 		return (SHORT)size.cx;
 	}
@@ -103,22 +97,37 @@ static SHORT _GetWordIndex(LPCTSTR pWord, SHORT siLength, INT nWidth, CDC * pDC)
 {
 	SHORT siIndex = 0; CSize size;
 
-	if( _bFixedPitch && ! _HasWideChar(pWord, siLength) ) {
-		// Pure ASCII fast path — every char is exactly _nSpaceWidth.
+	if( _bFixedPitch && ! _NeedsGdiMeasure(pWord, siLength) ) {
+		// Pure ASCII fast path — every char is exactly _nSpaceWidth, and there
+		// can be no surrogate pair here, so stepping one unit at a time is safe.
 		for(SHORT i = 0; i <= siLength; i++) {
 			if( _nSpaceWidth * i <= nWidth ) siIndex = i;
 			else break;
 		}
 	} else {
-		// Word contains CJK (or the font is variable-pitch). Ask GDI
-		// for the real prefix widths so the split lands on a glyph
+		// Word contains non-ASCII (CJK, emoji, astral) or the font is variable-pitch.
+		// Ask GDI for the real prefix widths so the split lands on a glyph
 		// boundary that matches what will be drawn.
-		for(SHORT i = 0; i <= siLength; i++) {
+		//
+		// Walk CHARACTER boundaries, not code units: this index is used both
+		// for caret placement (via GetIdxXFromPosX) and as the word-wrap split
+		// point, so stepping one code unit at a time would let the caret sit
+		// between the halves of a surrogate pair and let word wrap tear an
+		// emoji across two display rows.
+		for(SHORT i = 0; i <= siLength; ) {
 			size = pDC->GetTextExtent(pWord, i);
 			if( size.cx <= nWidth ) siIndex = i;
 			else break;
+
+			if( i == siLength ) break;
+			i = (SHORT)( i + CharUnitsAt(pWord, i, siLength) );
 		}
 	}
+
+	// Defensive: never hand back an index sitting on the low half of a pair.
+	// (The loop above already guarantees this; the ASCII fast path can't see a
+	// surrogate at all. This is here so a future edit can't silently regress.)
+	if( siIndex < siLength ) siIndex = (SHORT)SnapIdxX(pWord, siIndex);
 
 	return siIndex;
 }

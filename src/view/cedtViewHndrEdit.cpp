@@ -36,6 +36,30 @@ void CCedtView::OnCharKeyDown(UINT nChar)
 	Invalidate(); UpdateWindow(); UpdateAllViews();
 }
 
+// Same as OnCharKeyDown, but for a character that does not fit in one code
+// unit. Windows delivers an astral character (emoji, CJK Ext-B) as TWO WM_CHAR
+// messages — the high surrogate then the low. PreTranslateMessage buffers the
+// high half and calls this once, with both halves, when the low half arrives.
+//
+// Going through the string path rather than two OnCharKeyDown calls means one
+// insert, one AT_INSERTSTRING undo record, and one analyze/format pass: the
+// document never holds a lone surrogate, and a single Ctrl+Z removes the whole
+// character. Macro recording must use MacroRecordString for the same reason —
+// replaying a lone half would produce broken text.
+void CCedtView::OnStringKeyDown(LPCTSTR lpszString)
+{
+	BeginActionRecording(TRUE);
+
+	EventInsertString(lpszString, FALSE);
+	if( IsMacroRecording() ) MacroRecordString(lpszString);
+
+	EndActionRecording();
+	EmptyRedoBuffer(); CheckIfAllActionsCanBeUndone();
+
+	SetScrollPosToMakeCaretVisible();
+	Invalidate(); UpdateWindow(); UpdateAllViews();
+}
+
 void CCedtView::OnImeCompositionStart()
 {
 	EventCompositionStart(FALSE);

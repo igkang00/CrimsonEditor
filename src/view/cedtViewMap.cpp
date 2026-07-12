@@ -211,6 +211,10 @@ INT CCedtView::GetPosXFromIdxX(CFormatedString & rLine, INT nIdxX, BOOL bAdjust)
 
 INT CCedtView::GetPosXFromIdxX(CFormatedString & rLine, FORMATEDWORD & rWord, INT nIdxX, BOOL bAdjust)
 {
+	// Defensive: a stray mid-pair index would make GetWordWidth below measure a
+	// prefix ending on a lone high surrogate, which GDI sizes as .notdef.
+	nIdxX = SnapIdxX((LPCTSTR)rLine, nIdxX);
+
 	if( rWord.m_siIndex + rWord.m_siLength <= nIdxX ) return rWord.m_nPosition + rWord.m_nWidth;
 	if( IS_SINGLE(rWord) || rWord.m_siIndex >= nIdxX ) return rWord.m_nPosition;
 	return rWord.m_nPosition + GetWordWidth((LPCTSTR)rLine + rWord.m_siIndex, nIdxX - rWord.m_siIndex, rWord.m_nPosition, rWord.m_ucType[0]);
