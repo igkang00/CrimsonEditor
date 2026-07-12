@@ -1,11 +1,15 @@
 # Replacing the line container
 
-The document's lines live in an MFC `CList` — a doubly-linked list. Reaching line *n*
-means walking *n* nodes from the head. This document plans replacing it with a
-random-access container.
+The document's lines used to live in an MFC `CList` — a doubly-linked list. Reaching line
+*n* meant walking *n* nodes from the head. They now live in an array.
 
-> Status: **planned, not implemented.** Written before the work so the risks are on the
-> record rather than discovered halfway through.
+With the caret on the last line of a 900,000-line file, the lookup every keystroke goes
+through cost **7–10 ms**. It now costs **0.2 µs**, the same as it does on line 1.
+
+> Status: **done.** This document was written *before* the work, as a plan, so that the two
+> things that would break were on the record rather than discovered halfway through. Both
+> did break, exactly where it said they would. The phase list at the bottom records what
+> actually happened.
 
 ---
 
@@ -206,43 +210,76 @@ The block-pool variant wins nothing outside the noise, so it is not worth its co
 Plain `vector<CAnalyzedString *>` it is. Memory grows by 5 MB (2.8 %) — the vector itself,
 900,000 × 8 bytes — which is the expected price and an acceptable one.
 
-**Phase 1 — bulk operations, on the current `CList`.** Rewrite `DeleteBlock` and
-`InsertBlock` to remove and insert ranges rather than looping element by element. This is
-correct and slightly faster on the list too, it is independently testable, and it means
-the container swap does not also have to change edit semantics. Lands on its own.
+**Phase 1 — bulk operations, on the current `CList`. DONE.** `DeleteBlock` and
+`InsertBlock` now ask `CAnalyzedText::InsertLines` / `RemoveLines` for a range instead of
+spelling out a loop. On the linked list this changed nothing and sped up nothing — that
+was the point. The meaning of an edit gets pinned down, with tests, on the container that
+already works, so the swap is not also free to change it.
 
-**Phase 2 — `CLineList<T>`.** New container in `src/core`, with the 14 methods plus the
-two range operations, the modification counter, and the debug POSITION check. It is pure
-data structure with no MFC-app dependency, so it goes straight into `cedt_tests` — and the
-test that matters is a **differential** one: run the same random sequence of operations
-against `CList` and `CLineList` and assert the visible state is identical after every step.
-That is what proves it is a drop-in, rather than hoping.
+**Phase 2 — `CLineList<T>`. DONE.** The differential test runs the same pseudo-random
+operation sequence against a `CList` and a `CLineList` and compares the entire visible
+state — count, forward walk, backward walk, head, tail, every index — after every step,
+over 20 seeds. The stale-POSITION detector is itself tested: that every structural change
+invalidates, and that the legitimate `pos = InsertAfter(pos, x)` pattern does *not* get
+flagged. A false-positive assert is worse than none, because someone would delete it.
 
-**Phase 3 — swap `CAnalyzedText`.** One base-class change. Build, run the suite, run the
-app under the debug assert. Fix whatever the assert catches.
+**Phase 3 — swap `CAnalyzedText`. DONE.** One base-class change. 140 call sites, none
+touched, zero errors, zero warnings. `InsertLines` had to be rewritten on the range
+primitives — its first version looped `InsertBefore`, which on an array is both a memmove
+per line and, because a POSITION does not survive the first insert, would have laid the
+lines down in reverse. The Phase 1 tests caught nothing because they did not have to: they
+were written before the swap precisely so they *could* catch it.
 
-**Phase 4 — swap `CFormatedText`.** Same, plus `FlattenScreenTextAt` /
-`RemoveScreenTextAt`.
+**Phase 4 — swap `CFormatedText`. DONE.** `FlattenScreenTextAt` and `RemoveScreenTextAt`
+worked in POSITIONs and removed rows while holding one. They now work in row indices,
+which is what they were open-coding all along. `RemoveScreenTextAt` is gone: removing a
+paragraph at a time would have been a memmove each, so `RemoveScreenText` counts the rows
+its lines occupy and drops them in one `RemoveRange`.
 
-**Phase 5 — measure.** The claim to verify is not "opening got faster" (it will not; the
-open path already avoids `FindIndex`). It is **typing at line 900,000 stops being slow**,
-and **`FindIndex` disappears from the profile**.
+**Phase 5 --- measure. DONE.** The claim to verify was never "opening got faster" --- the
+open path already avoided FindIndex. It was **typing at line 900,000 stops being slow**.
+
+A SendKeys harness could not see it: SendKeys imposes a flat ~30 ms per keystroke of its
+own, and that floor was identical at the top and the bottom of the file *even on the old
+build*. So the gateway itself was instrumented instead --- the same ten-line probe applied
+to both trees, `CCedtView::GetLineFromPosY`, timed and averaged over 200 calls:
+
+| caret position | before (CList) | after (CLineList) |
+| --- | ---: | ---: |
+| line 1 | 0.1 us | 0.2 us |
+| **line 900,000** | **6,582 - 10,445 us** | **0.2 us** |
+
+Before, reaching the line under the caret cost **7 to 10 milliseconds**, every time, and a
+keystroke does it more than once. After, it costs the same at the bottom of the file as at
+the top, because there is no longer a walk to do. Opening the 100 MB file is unchanged at
+2.5 s.
 
 Out of scope: `CMemText`, `CUndoBuffer` and the other small `CList`s. They are appended to
 and walked head-to-tail; they never index. Leave them.
 
 ---
 
-## What could still go wrong
+## What to know before touching this
 
-**`GetCount()` returns `INT_PTR` today and is called in loop conditions.** Types must
-match or `for(INT i = 0; i < GetCount(); i++)` changes behaviour at the boundary. Keep the
-signature.
+**A POSITION does not survive a structural change.** This is the one thing that is
+different, and it is the one thing that can go wrong silently. Do not carry a POSITION
+across an `InsertAfter` / `RemoveAt` / `AddTail` / `InsertGap` / `RemoveRange` — re-fetch
+it, or use the one the mutating call returned. Debug builds assert if you get it wrong;
+release builds do not, so do not develop against release only.
 
-**A POSITION crossing a function boundary.** No `POSITION` is stored as a member anywhere
-(checked), so every one lives and dies inside a single function — but `FindScreenTextIndex`
-and `FlattenScreenTextAt` *return* one to their caller. Those returns are fine as long as
-the caller does not mutate before using it; the debug assert covers it.
+**Removing in a loop is quadratic.** `RemoveAt` in a loop is a memmove per element. Use
+`RemoveRange`. The same goes for `InsertGap` versus repeated `InsertAfter`. Two tests
+(`RemoveALargeRange`, `LargeBulkOpsAreNotQuadratic`) exist to make a regression here show
+up as a hang in CI rather than a bug report about pasting.
+
+**Elements are held by pointer on purpose.** Do not "simplify" `std::vector<TYPE *>` to
+`std::vector<TYPE>`. The editor holds C++ references into the container across mutations
+of it, and values would relocate and dangle — silently, and usually appearing to work.
+`CLineList.ReferencesIntoTheListSurviveInsertsAndRemovals` pins this.
+
+**Fixed on the way past.** `FindScreenTextIndex` returned an uninitialised `POSITION` when
+the row list was empty. Its replacement, `FindScreenTextRow`, returns -1 and the callers
+check.
 
 **Memory.** A `CList` node carries two pointers of overhead (16 bytes). A pointer vector
 carries 8. Slightly better, and the line objects themselves are unchanged.
