@@ -29,6 +29,13 @@ removed once the work landed).
 | **Open (wall clock)** | **28.4 s** | **2.2 s** | **13×** |
 | `FileSave` | 13,021 ms | 136 ms | 96× |
 
+Word wrap is the one mode that cannot skip the layout (§4). Measured separately, with wrap on:
+
+| Stage | Before | After | Factor |
+| --- | ---: | ---: | ---: |
+| 3. `FormatScreenText` (wrap) | 12,279 ms | 662 ms | 18.6× |
+| **Open with wrap (wall clock)** | **14.5 s** | **2.9 s** | **5×** |
+
 The guess going in was that the syntax analyzer's state machine was the bottleneck. It was not.
 The measurements are the only reason the right thing got fixed.
 
@@ -136,6 +143,56 @@ of magnitude less than the progress bar.
 
 ---
 
+## 4. The formatter measured the same characters over and over
+
+Lazy layout fixed the *default* path by not laying out lines nobody looks at. It could do nothing
+for word wrap, which cannot be lazy for the reason above. Opening the 100 MB Korean fixture with
+wrap on still took **12.3 s** in `FormatScreenText`.
+
+Counting the work showed where it went:
+
+| | |
+| --- | ---: |
+| words priced by arithmetic (pure ASCII fast path) | 24,300,000 |
+| words sent to GDI `GetTextExtent` (the Korean ones) | 3,600,000 |
+| screen rows produced | 1,800,001 |
+
+Those 3.6 M round trips were ~90 % of the 12.3 s. Each one has to font-link, find a fallback face
+for the Korean, and shape — to re-measure a character the formatter had already measured thousands
+of times.
+
+A character's advance does not depend on its neighbours. GDI lays text out by summing per-glyph
+advances, and `TextOut` — the call that eventually *draws* this text — sums the same ones. So the
+width of a word is the sum of the widths of its characters, and each character can be measured once
+and remembered. A Korean source file has a few thousand distinct characters, not 3.6 million.
+
+**Now**: a `_charWidth[0x10000]` cache, filled on first use. GDI calls drop from 3,600,000 to **1**.
+`FormatScreenText` with wrap: **12,279 ms → 662 ms (18.6×)**. Opening the file with word wrap on:
+**14.5 s → 2.9 s**.
+
+`_GetWordIndex` — which finds the wrap split point — was worse still: it re-measured the whole
+prefix on every step, `GetTextExtent(word, 1)` then `(word, 2)` then `(word, 3)`, quadratic in GDI
+calls. Advances add up, so it now keeps a running total.
+
+### This was verified, not assumed
+
+The claim "width of a word == sum of widths of its characters" is the whole basis of the cache, and
+it is the kind of claim that is *usually* true and silently wrong at the edges. So an instrumented
+build computed **both** — the summed width and a whole-word `GetTextExtent` — for every one of the
+3.6 M non-ASCII words in the 100 MB fixture and for the astral/emoji fixture, and compared them.
+**Zero mismatches.**
+
+It holds because GDI applies no kerning and no cross-character shaping on this path. Which is
+exactly why **it would not hold under DirectWrite**. The roadmap proposes moving the draw path to
+DirectWrite for colour emoji and grapheme clusters; if that happens, this cache has to move with it,
+not be left behind. The comment on the cache in the source says so.
+
+The cache is keyed on the font actually selected in the DC — not on a "font changed" flag — so a
+font change, an italic switch, or the printer DC borrowing these same helpers invalidates it rather
+than silently handing back widths measured against some other face.
+
+---
+
 ## What is still slow
 
 `GetLineFromPosY` and `CCedtDoc::GetLineFromIdxY` still reach a line with `CList::FindIndex`, which
@@ -143,11 +200,11 @@ walks from the head. Sequential access — the overwhelmingly common pattern —
 one-entry cursor cache (remember the last index and position, invalidate on structural change).
 This is orthogonal to lazy layout and was left out on purpose.
 
-**Word wrap is still eager.** With wrap on, the number of screen rows depends on the pixel width of
-every word in every line, so the vertical scroll bar cannot be sized without laying the whole
-document out. Making it lazy needs an estimate-then-correct scheme plus a cumulative row-count
-index to keep the row↔line mapping cheap — a larger change than everything above, for a mode that
-is off by default.
+**Word wrap is still eager** — but no longer slow (see §4). With wrap on, the number of screen rows
+depends on the pixel width of every word in every line, so the vertical scroll bar cannot be sized
+without laying the whole document out. Making it lazy needs an estimate-then-correct scheme plus a
+cumulative row-count index to keep the row↔line mapping cheap. That is a large change, and with the
+eager wrap path now down to 662 ms for 900,000 lines there is little left to win.
 
 ---
 
