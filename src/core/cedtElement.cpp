@@ -6,7 +6,6 @@
 #include "cedtUnicode.h"
 #include "Encode.h"
 #include "RegExp.h"
-#include "perflog.h"
 #include "Utility.h"
 #include "cedtElement.h"
 
@@ -835,8 +834,6 @@ BOOL CAnalyzedText::FileLoad(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 	                  nEncodingType == ENCODING_TYPE_UNICODE_BE );
 	BOOL bLittleEndian = ( nEncodingType == ENCODING_TYPE_UNICODE_LE );
 
-	LONGLONG _perf = CedtPerfNow(); // [profiling] stage 1
-
 	try {
 		CFile file(lpszPathName, CFile::modeRead | CFile::typeBinary | CFile::shareDenyNone);
 		RemoveAll();
@@ -939,8 +936,6 @@ BOOL CAnalyzedText::FileLoad(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 		ex->Delete(); return FALSE;
 	}
 
-	if( GetCount() > 1000 ) CedtPerfLog(_T("1.FileLoad"), _perf, (INT)GetCount()); // [profiling] stage 1
-
 	return TRUE;
 }
 
@@ -988,8 +983,6 @@ BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 	CHAR szDelim[3]; lstrcpyA(szDelim, "\r\n"); INT nDelimSize = 2; // FILE_FORMAT_DOS
 	if( nFileFormat == FILE_FORMAT_UNIX ) { lstrcpyA(szDelim, "\n"); nDelimSize = 1; }
 	else if( nFileFormat == FILE_FORMAT_MAC ) { lstrcpyA(szDelim, "\r"); nDelimSize = 1; }
-
-	LONGLONG _perf = CedtPerfNow(); // [profiling] save
 
 	try {
 		CFile file(lpszPathName, CFile::modeReadWrite | CFile::modeCreate | CFile::shareExclusive);
@@ -1096,8 +1089,6 @@ BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileF
 		delete [] pWideBuffer;
 
 		file.Close();
-
-		if( GetCount() > 1000 ) CedtPerfLog(_T("4.FileSave"), _perf, (INT)GetCount()); // [profiling] save
 
 	} catch( CException * ex ) {
 		ex->ReportError( MB_OK | MB_ICONSTOP );
