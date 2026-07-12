@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "fstream_compat.h"
 #include <sstream>
+#include <vector>
 #include <ctype.h>
 #include "cedtUnicode.h"
 #include "Encode.h"
@@ -695,119 +696,153 @@ void CMemText::MemorySave(CHAR * pMem, INT size)
 
 // CAnalyzedTextFile
 
+// Decode one COMPLETE line's raw bytes into a CString.
+//
+// Decoding a whole line at a time — rather than each fixed-size read buffer — is what
+// keeps multi-byte characters intact. A line break never falls inside a UTF-8
+// sequence, a CP949 lead/trail pair, or a UTF-16 code unit; a 512-byte read boundary
+// happily does. The previous implementation converted per read chunk, so any such
+// character that straddled a chunk boundary was corrupted (only reachable on lines
+// longer than the buffer, which is why it went unnoticed).
+static void _DecodeLine(CString & rLine, const CHAR * pBytes, INT nBytes, INT nEncodingType)
+{
+	rLine.Empty();
+	if( nBytes <= 0 || pBytes == NULL ) return;
+
+	if( nEncodingType == ENCODING_TYPE_UNICODE_LE || nEncodingType == ENCODING_TYPE_UNICODE_BE ) {
+		INT nChars = nBytes / 2;
+		if( nChars <= 0 ) return;
+
+		LPTSTR pDst = rLine.GetBuffer(nChars + 1);
+		if( nEncodingType == ENCODING_TYPE_UNICODE_LE ) {
+			memcpy(pDst, pBytes, (size_t)nChars * 2);
+		} else {
+			const UCHAR * p = (const UCHAR *)pBytes;
+			for(INT i = 0; i < nChars; i++) pDst[i] = (TCHAR)((p[2*i] << 8) | p[2*i + 1]);
+		}
+		pDst[nChars] = 0;
+		rLine.ReleaseBuffer(nChars);
+		return;
+	}
+
+	// UTF-8 -> UTF-16 directly, no CP_ACP round-trip: that round-trip is what used to
+	// turn an em dash or a CJK character outside CP949 into '?'.
+	// ANSI stays on CP_ACP, which is what preserves CP949 Korean in legacy files.
+	UINT nCodePage = ( nEncodingType == ENCODING_TYPE_UTF8_WBOM ||
+	                   nEncodingType == ENCODING_TYPE_UTF8_XBOM ) ? CP_UTF8 : CP_ACP;
+
+	INT nChars = MultiByteToWideChar(nCodePage, 0, pBytes, nBytes, NULL, 0);
+	if( nChars <= 0 ) return;
+
+	LPTSTR pDst = rLine.GetBuffer(nChars + 1);
+	MultiByteToWideChar(nCodePage, 0, pBytes, nBytes, pDst, nChars);
+	pDst[nChars] = 0;
+	rLine.ReleaseBuffer(nChars);
+}
+
 BOOL CAnalyzedText::FileLoad(LPCTSTR lpszPathName, INT nEncodingType, INT nFileFormat)
 {
 	INT chDelim = '\n', chKill = '\r'; // FILE_FORMAT_DOS & FILE_FORMAT_UNIX
 	if( nFileFormat == FILE_FORMAT_MAC ) { chDelim = '\r'; chKill = '\0'; }
 
+	BOOL bUnicode = ( nEncodingType == ENCODING_TYPE_UNICODE_LE ||
+	                  nEncodingType == ENCODING_TYPE_UNICODE_BE );
+	BOOL bLittleEndian = ( nEncodingType == ENCODING_TYPE_UNICODE_LE );
+
 	LONGLONG _perf = CedtPerfNow(); // [profiling] stage 1
 
 	try {
 		CFile file(lpszPathName, CFile::modeRead | CFile::typeBinary | CFile::shareDenyNone);
-		RemoveAll(); AddTail(_T("")); // initialize contents
+		RemoveAll();
 
-		CHAR szBuffer[FILE_READ_BUFFER_SIZE + 1]; UCHAR szWideBuffer[2 * FILE_READ_BUFFER_SIZE + 2]; 
-		INT i, nCount, nTotal = 0; BOOL bDelimFound = FALSE;
+		// Read in large blocks and consume EVERY line in each one.
+		//
+		// The old loop read a buffer, took only the text up to the FIRST line break in
+		// it, and then seeked back so the next read would start at the next line. That
+		// is one read and one seek per LINE — a 900,000-line file paid 900,000 of each,
+		// and re-read most of the file several times over.
+		const INT nBufSize = 1 << 16;			// 64 KiB
+		std::vector<CHAR> vecBuf( nBufSize );
+		CHAR * pBuf = & vecBuf[0];
 
-		if( nEncodingType == ENCODING_TYPE_UNICODE_LE ) {
-			// extract byte-order mark
-			nCount = file.Read( szWideBuffer, 2 );
+		std::vector<CHAR> vecLine;				// raw bytes of the line being assembled
+		vecLine.reserve( 4096 );
 
-			if( nCount >= 2 && szWideBuffer[0] == 0xFF && szWideBuffer[1] == 0xFE ) nTotal = 2;
-			file.Seek(nTotal, CFile::begin);
+		CString szLine;
 
-			while( ( nCount = file.Read( szWideBuffer, FILE_READ_BUFFER_SIZE ) ) >= 2 ) { // read file contents
-				for( bDelimFound = FALSE, i = 0; i <= nCount-2; i += 2 ) {
-					if( szWideBuffer[i] == chDelim && szWideBuffer[i+1] == 0x00 ) { bDelimFound = TRUE; i += 2; break; }
-				}
-
-				nCount = i; nTotal += nCount;
-				szWideBuffer[nCount] = szWideBuffer[nCount+1] = 0x00;
-
-				if( nCount >= 2 && szWideBuffer[nCount-2] == chDelim && szWideBuffer[nCount-1] == 0x00 ) { szWideBuffer[nCount-2] = szWideBuffer[nCount-1] = 0x00; nCount -= 2; }
-				if( nCount >= 2 && szWideBuffer[nCount-2] == chKill  && szWideBuffer[nCount-1] == 0x00 ) { szWideBuffer[nCount-2] = szWideBuffer[nCount-1] = 0x00; nCount -= 2; }
-
-				// Direct UTF-16 → CString<wchar_t>. No CP_ACP round-trip; preserves every code point.
-				GetTail() += (LPCWSTR)szWideBuffer;
-				if( bDelimFound ) AddTail(_T(""));
-
-				file.Seek(nTotal, CFile::begin);
-			}
-		} else if( nEncodingType == ENCODING_TYPE_UNICODE_BE ) {
-			// extract byte-order mark
-			nCount = file.Read( szWideBuffer, 2 );
-
-			if( nCount >= 2 && szWideBuffer[0] == 0xFE && szWideBuffer[1] == 0xFF ) nTotal = 2;
-			file.Seek(nTotal, CFile::begin);
-
-			while( ( nCount = file.Read( szWideBuffer, FILE_READ_BUFFER_SIZE ) ) >= 2 ) { // read file contents
-				for( bDelimFound = FALSE, i = 0; i <= nCount-2; i += 2 ) {
-					if( szWideBuffer[i] == 0x00 && szWideBuffer[i+1] == chDelim ) { bDelimFound = TRUE; i += 2; break; }
-				}
-
-				nCount = i; nTotal += nCount;
-				szWideBuffer[nCount] = szWideBuffer[nCount+1] = 0x00;
-
-				if( nCount >= 2 && szWideBuffer[nCount-2] == 0x00 && szWideBuffer[nCount-1] == chDelim ) { szWideBuffer[nCount-2] = szWideBuffer[nCount-1] = 0x00; nCount -= 2; }
-				if( nCount >= 2 && szWideBuffer[nCount-2] == 0x00 && szWideBuffer[nCount-1] == chKill  ) { szWideBuffer[nCount-2] = szWideBuffer[nCount-1] = 0x00; nCount -= 2; }
-
-				// Byte-swap into little-endian order, then append the wide chars directly.
-				for( i = 0; i < nCount; i += 2 ) _SWAP_UCHAR( szWideBuffer[i], szWideBuffer[i+1] );
-
-				GetTail() += (LPCWSTR)szWideBuffer;
-				if( bDelimFound ) AddTail(_T(""));
-
-				file.Seek(nTotal, CFile::begin);
-			}
-		} else if( nEncodingType == ENCODING_TYPE_UTF8_WBOM || nEncodingType == ENCODING_TYPE_UTF8_XBOM ) {
-			// extract byte-order mark
-			nCount = file.Read( szWideBuffer, 4 );
-
-			if( nCount >= 3 && szWideBuffer[0] == 0xEF && szWideBuffer[1] == 0xBB && szWideBuffer[2] == 0xBF ) nTotal = 3;
-			file.Seek(nTotal, CFile::begin);
-
-			while( nCount = file.Read( szBuffer, FILE_READ_BUFFER_SIZE ) ) { // read file contents
-				for( bDelimFound = FALSE, i = 0; i <= nCount-1; i++ ) {
-					if( szBuffer[i] == chDelim ) { bDelimFound = TRUE; i++; break; }
-				}
-
-				nCount = i; nTotal += nCount;
-				szBuffer[nCount] = 0x00;
-
-				if( nCount >= 1 && szBuffer[nCount-1] == chDelim ) { szBuffer[nCount-1] = 0x00; nCount--; }
-				if( nCount >= 1 && szBuffer[nCount-1] == chKill  ) { szBuffer[nCount-1] = 0x00; nCount--; }
-
-				// UTF-8 → UTF-16 directly. Dropping the CP_ACP round-trip is
-				// what makes '—', '“ ”', box-drawing chars, and other non-ANSI
-				// text finally render — that regression was the reason for
-				// the whole Unicode migration.
-				MultiByteToWideChar(CP_UTF8, 0, szBuffer, -1, (LPWSTR)szWideBuffer, FILE_READ_BUFFER_SIZE + 1);
-				GetTail() += (LPCWSTR)szWideBuffer;
-				if( bDelimFound ) AddTail(_T(""));
-
-				file.Seek(nTotal, CFile::begin);
-			}
-		} else { /* nEncodingType == ENCODING_TYPE_ASCII */
-			while( nCount = file.Read( szBuffer, FILE_READ_BUFFER_SIZE ) ) { // read file contents
-				for( bDelimFound = FALSE, i = 0; i <= nCount-1; i++ ) {
-					if( szBuffer[i] == chDelim ) { bDelimFound = TRUE; i++; break; }
-				}
-
-				nCount = i; nTotal += nCount;
-				szBuffer[nCount] = 0x00;
-
-				if( nCount >= 1 && szBuffer[nCount-1] == chDelim ) { szBuffer[nCount-1] = 0x00; nCount--; }
-				if( nCount >= 1 && szBuffer[nCount-1] == chKill  ) { szBuffer[nCount-1] = 0x00; nCount--; }
-
-				// ANSI/legacy path: CString's LPCSTR overload uses CP_ACP,
-				// which preserves CP949 Korean on Korean systems (same as
-				// the pre-Unicode behavior for these files).
-				GetTail() += szBuffer;
-				if( bDelimFound ) AddTail(_T(""));
-
-				file.Seek(nTotal, CFile::begin);
-			}
+		// Skip the byte-order mark, if the encoding has one.
+		INT nSkip = 0;
+		{
+			UCHAR bom[4] = { 0, 0, 0, 0 };
+			INT n = file.Read( bom, 4 );
+			if( nEncodingType == ENCODING_TYPE_UNICODE_LE && n >= 2 && bom[0] == 0xFF && bom[1] == 0xFE ) nSkip = 2;
+			else if( nEncodingType == ENCODING_TYPE_UNICODE_BE && n >= 2 && bom[0] == 0xFE && bom[1] == 0xFF ) nSkip = 2;
+			else if( ( nEncodingType == ENCODING_TYPE_UTF8_WBOM || nEncodingType == ENCODING_TYPE_UTF8_XBOM ) &&
+			         n >= 3 && bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF ) nSkip = 3;
+			file.Seek( nSkip, CFile::begin );
 		}
+
+		INT nCarry = 0;		// a dangling odd byte of a UTF-16 unit, held over to the next read
+
+		for( ;; ) {
+			INT nRead = file.Read( pBuf + nCarry, nBufSize - nCarry );
+			if( nRead <= 0 ) break;
+
+			INT nAvail = nCarry + nRead;
+			nCarry = 0;
+
+			// UTF-16 is scanned in 2-byte units, so an odd trailing byte cannot be
+			// looked at yet; it goes back to the front of the buffer for the next read.
+			INT nUsable = bUnicode ? (nAvail & ~1) : nAvail;
+
+			INT nStart = 0;
+			for( INT i = 0; i < nUsable; i += (bUnicode ? 2 : 1) ) {
+				if( bUnicode ) {
+					const UCHAR * p = (const UCHAR *)(pBuf + i);
+					TCHAR wc = bLittleEndian ? (TCHAR)( p[0] | (p[1] << 8) )
+					                         : (TCHAR)( (p[0] << 8) | p[1] );
+					if( wc != (TCHAR)chDelim ) continue;
+				} else {
+					if( pBuf[i] != (CHAR)chDelim ) continue;
+				}
+
+				vecLine.insert( vecLine.end(), pBuf + nStart, pBuf + i );
+
+				// Drop the trailing kill character ('\r' before '\n'). Doing it on the
+				// ASSEMBLED line rather than in the read buffer is what makes a "\r\n"
+				// split across a read boundary work — the old code let that '\r' through.
+				if( chKill ) {
+					if( bUnicode ) {
+						size_t n = vecLine.size();
+						if( n >= 2 ) {
+							const UCHAR * q = (const UCHAR *)( & vecLine[n-2] );
+							TCHAR wk = bLittleEndian ? (TCHAR)( q[0] | (q[1] << 8) )
+							                         : (TCHAR)( (q[0] << 8) | q[1] );
+							if( wk == (TCHAR)chKill ) vecLine.resize( n - 2 );
+						}
+					} else {
+						if( ! vecLine.empty() && vecLine.back() == (CHAR)chKill ) vecLine.pop_back();
+					}
+				}
+
+				_DecodeLine( szLine, vecLine.empty() ? NULL : & vecLine[0], (INT)vecLine.size(), nEncodingType );
+				AddTail( (LPCTSTR)szLine );
+
+				vecLine.clear();
+				nStart = i + (bUnicode ? 2 : 1);
+			}
+
+			// Whatever is left is the start of a line that continues into the next read.
+			vecLine.insert( vecLine.end(), pBuf + nStart, pBuf + nUsable );
+
+			if( nAvail > nUsable ) { pBuf[0] = pBuf[nAvail-1]; nCarry = 1; }
+		}
+
+		// The final line: the text after the last line break (empty if the file ended
+		// with one — matching the old behavior, which always left a blank tail line).
+		if( chKill && ! bUnicode && ! vecLine.empty() && vecLine.back() == (CHAR)chKill ) vecLine.pop_back();
+		_DecodeLine( szLine, vecLine.empty() ? NULL : & vecLine[0], (INT)vecLine.size(), nEncodingType );
+		AddTail( (LPCTSTR)szLine );
 
 		file.Close();
 
