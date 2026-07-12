@@ -53,6 +53,15 @@ public: // file contents & status
 	BOOL m_bDocumentSaved;
 	INT  m_nSavedUndoCount;
 
+	// "This document is on its way out; do not bother laying it out again."
+	//
+	// Set from CChildFrame::OnClose, which is early enough to beat the un-maximize that
+	// DefMDIChildProc does on its way to destroying the child -- that un-maximize is a
+	// width change, and a width change is what makes CCedtView::OnSize reformat every
+	// line. Also set in OnCloseDocument, which is the path a close that never touches a
+	// frame takes.
+	BOOL m_bClosing;
+
 public: // shared remote path name
 	static INT m_nCurrentFtpAccount;
 	static CString m_szCurrentRemotePathName;
@@ -93,6 +102,9 @@ public: // *** cedtDoc.cpp ***
 	BOOL IsRemoteFile() const { return (m_nFtpAccount >= 0) ? TRUE : FALSE; }
 	BOOL IsNewFileNotSaved() const { return GetPathName().IsEmpty(); }
 
+	BOOL IsClosing() const { return m_bClosing; }
+	void SetClosing(BOOL bClosing) { m_bClosing = bClosing; }
+
 	BOOL HaveAnyOverflowLine() { return m_clsAnalyzedText.HaveAnyOverflowLine(); }
 	BOOL MultiLineStringConstant() const { return m_clsLangSpec.m_bMultiLineStringConstant; }
 	BOOL VariableHighlightInString() const { return m_clsLangSpec.m_bVariableHighlightInString; }
@@ -108,6 +120,7 @@ public: // *** cedtDoc.cpp ***
 
 protected:
 //	BOOL OnNewDocument();
+	virtual void OnCloseDocument();
 	BOOL OnReloadDocument(LPCTSTR lpszPathName, INT nEncodingType);
 //	BOOL OnOpenDocument(LPCTSTR lpszPathName);
 //	BOOL OnSaveDocument(LPCTSTR lpszPathName);

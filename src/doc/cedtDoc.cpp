@@ -147,10 +147,21 @@ CCedtDoc::CCedtDoc()
 {
 	m_szSavedCompositionString = "";
 	m_bCompositionStringSaved = FALSE;
+	m_bClosing = FALSE;
 }
 
 CCedtDoc::~CCedtDoc()
 {
+}
+
+// A document can also be closed without anyone closing a frame first -- the File menu, or
+// the app shutting down. CChildFrame::OnClose is the early hook for the MDI close button;
+// this is the backstop for everything else. Same reason: no point laying out lines that
+// are about to be deleted.
+void CCedtDoc::OnCloseDocument()
+{
+	m_bClosing = TRUE;
+	CDocument::OnCloseDocument();   // usually deletes this
 }
 
 

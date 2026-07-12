@@ -17,6 +17,7 @@ IMPLEMENT_DYNCREATE(CChildFrame, CMDIChildWnd)
 
 BEGIN_MESSAGE_MAP(CChildFrame, CMDIChildWnd)
 	//{{AFX_MSG_MAP(CChildFrame)
+	ON_WM_CLOSE()
 	ON_WM_DESTROY()
 	ON_WM_MDIACTIVATE()
 	ON_WM_CREATE()
@@ -73,7 +74,34 @@ int CChildFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	return 0;
 }
 
-void CChildFrame::OnDestroy() 
+// Closing a MAXIMIZED MDI child laid out the whole document again on the way out. With word
+// wrap on and a 900,000-line file, you watch the progress bar spend a second doing it.
+//
+// Nobody asked for it. DefMDIChildProc un-maximizes the child before it destroys it, so the
+// view gets a WM_SIZE with a smaller width -- and a width change is a real wrap-width
+// change, so CCedtView::OnSize does what it must and reformats every line. Lines that are
+// about to be deleted. Closing from the File menu never un-maximizes, which is why only the
+// MDI close button showed it.
+//
+// The view cannot tell, from a WM_SIZE alone, that it is on its way out. So it is told,
+// from each of the three doors out of a document -- here (WM_CLOSE: the file tab, when the
+// close-on-double-click preference is on), OnWindowClose (the MDI close button), and
+// CCedtDoc::OnCloseDocument (the File menu, and shutdown).
+void CChildFrame::OnClose()
+{
+	CCedtDoc * pDoc = (CCedtDoc *)GetActiveDocument();
+	HWND hWnd = m_hWnd;
+
+	if( pDoc ) pDoc->SetClosing(TRUE);
+
+	CMDIChildWnd::OnClose();   // if this closes us, `this` and pDoc are gone when it returns
+
+	// Still a window? Then the close was refused -- at the "save changes?" prompt, say --
+	// and the frame and its document both survive. Take the flag back.
+	if( pDoc && ::IsWindow(hWnd) ) pDoc->SetClosing(FALSE);
+}
+
+void CChildFrame::OnDestroy()
 {
 	// delete from file tab
 	CMainFrame * pMainFrame = (CMainFrame *)AfxGetMainWnd();
@@ -93,10 +121,17 @@ void CChildFrame::OnMDIActivate(BOOL bActivate, CWnd* pActivateWnd, CWnd* pDeact
 	}
 }
 
-void CChildFrame::OnWindowClose() 
+// The MDI close button lands here, not on WM_CLOSE -- MDIDestroy goes straight to
+// WM_MDIDESTROY. Same story as OnClose: DefMDIChildProc un-maximizes the child on its way
+// to destroying it, and that width change would reformat the whole document. Say we are
+// leaving before we start leaving.
+void CChildFrame::OnWindowClose()
 {
-	CDocument * pDoc = GetActiveDocument(); ASSERT( pDoc );
-	if( pDoc->CanCloseFrame(this) ) MDIDestroy();
+	CCedtDoc * pDoc = (CCedtDoc *)GetActiveDocument(); ASSERT( pDoc );
+	if( ! pDoc->CanCloseFrame(this) ) return;   // the user said no; nothing to undo
+
+	pDoc->SetClosing(TRUE);
+	MDIDestroy();
 }
 
 

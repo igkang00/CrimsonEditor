@@ -782,7 +782,14 @@ void CCedtView::OnSize(UINT nType, int cx, int cy)
 	// check if not initialized yet
 	if( ! m_clsFormatedScreenText.GetCount() ) return; 
 
-	if( m_szPrevClientSize.cx != cx && m_bLocalWordWrap && ! m_nFixedWrapWidth ) {
+	// A width change means the wrap width moved, so every line has to be laid out again --
+	// unless the document is being closed, in which case MFC is merely un-maximizing the
+	// MDI child on its way to destroying it, and the lines we would lay out are about to
+	// be deleted. See CCedtDoc::OnCloseDocument.
+	CCedtDoc * pDoc = (CCedtDoc *)GetDocument();
+	BOOL bClosing = pDoc && pDoc->IsClosing();
+
+	if( m_szPrevClientSize.cx != cx && m_bLocalWordWrap && ! m_nFixedWrapWidth && ! bClosing ) {
 		SaveCaretAndAnchorPos();
 		FormatScreenText();
 		RestoreCaretAndAnchorPos();
