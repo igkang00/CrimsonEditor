@@ -168,7 +168,20 @@ static void _FinishLine(SHORT wcount, SHORT siSplitIndex, BOOL bLineBreak, CForm
 	rFmtLine.m_siSplitIndex = siSplitIndex;
 	rFmtLine.m_bLineBreak = bLineBreak;
 	rFmtLine.m_usLineInfo = rLine.m_usLineInfo;
-	rFmtLine.m_usLineFlag = 0x0000;
+	rFmtLine.m_bFormatted = TRUE;
+
+	// m_usLineFlag is deliberately NOT reset here.
+	//
+	// It used to be zeroed, which was dead code: every caller formats a row and
+	// then immediately calls _CheckLineFlag on it, and that overwrites the flag.
+	// (True on all four paths — FormatScreenText no-wrap and wrap, and both
+	// FormatPrintText loops.)
+	//
+	// It matters now because rows are laid out lazily: the carry-over syntax
+	// state is seeded onto every row at load time, and formatting a row later —
+	// when the user finally scrolls to it — must not throw that state away, or
+	// the row would forget it is inside a block comment and render the wrong
+	// colour.
 }
 
 
@@ -302,11 +315,19 @@ static BOOL _FormatLineNoWrap(CFormatedString & rFmtLine, CAnalyzedString & rLin
 }
 
 
-static void _CheckWordType(CFormatedString & rLine, FORMATEDWORD & rWord, USHORT & usFlag, CString & szTerminator)
+// Advance the carry-over syntax state (am I inside a block comment / a multi-line
+// string / a here-document?) across one word.
+//
+// Takes the word's raw fields rather than a FORMATEDWORD, because it never needed
+// anything more: m_nPosition and m_nWidth are the only two fields FORMATEDWORD adds
+// over ANALYZEDWORD, and neither is read here. That lets the same function drive
+// the carry state straight off the ANALYZER's output — no device context, no pixel
+// measurement, no per-line allocation — which is what makes the state cheap enough
+// to compute eagerly for every line while the layout itself stays lazy.
+static void _CheckWordType(LPCTSTR pString, UCHAR ucType, UCHAR ucRange,
+                           SHORT siIndex, SHORT siLength,
+                           USHORT & usFlag, CString & szTerminator)
 {
-	UCHAR ucType = rWord.m_ucType[0];
-	UCHAR ucRange = rWord.m_ucInfo;
-
 	switch( ucType ) {
 	case WT_QUOTATION0:   if( ! CHECK_QUOTE_EX0(usFlag) && ! CHECK_COMMENT(usFlag) && EFFECTIVE_RANGE(ucRange, usFlag) ) usFlag ^=  LF_QUOTATION0;    break;
 	case WT_QUOTATION1:   if( ! CHECK_QUOTE_EX1(usFlag) && ! CHECK_COMMENT(usFlag) && EFFECTIVE_RANGE(ucRange, usFlag) ) usFlag ^=  LF_QUOTATION1;    break;
@@ -331,12 +352,12 @@ static void _CheckWordType(CFormatedString & rLine, FORMATEDWORD & rWord, USHORT
 	case WT_IDENTIFIER:
 		if( CHECK_THIS(usFlag, LF_HEREDOCUMENT) ) {
 			if( ! szTerminator.GetLength() ) {
-				szTerminator = CString(rLine.m_pString + rWord.m_siIndex, rWord.m_siLength);
+				szTerminator = CString(pString + siIndex, siLength);
 			}
 		}
 		if( CHECK_THIS(usFlag, LF_QUOTATIONH) ) {
-			if( ! szTerminator.Compare(rLine.m_pString + rWord.m_siIndex) ) {
-				szTerminator = "";
+			if( ! szTerminator.Compare(pString + siIndex) ) {
+				szTerminator = _T("");
 				usFlag &= ~LF_QUOTATIONH;
 			}
 		}
@@ -365,7 +386,8 @@ static BOOL _CheckLineFlag(CFormatedString & rFmtLine, USHORT & usLineFlag, CStr
 	if( rFmtLine.m_usLineInfo & LI_HAVEHEREDOCUMENT || CHECK_THIS(usLineFlag, LF_QUOTATIONH) ) {
 		for(SHORT i = 0; i < rFmtLine.m_siWordCount; i++ ) {
 			FORMATEDWORD & rWord = rFmtLine.m_pWord[i];
-			_CheckWordType(rFmtLine, rWord, usLineFlag, szTerminator);
+			_CheckWordType(rFmtLine.m_pString, rWord.m_ucType[0], rWord.m_ucInfo,
+			               rWord.m_siIndex, rWord.m_siLength, usLineFlag, szTerminator);
 		}
 	} else if( rFmtLine.m_usLineInfo & (LI_HAVERANGE | LI_HAVEHIGHLIGHT | LI_HAVECOMMENT | LI_HAVEQUOTATION) ) {
 		for(SHORT i = 0; i < rFmtLine.m_siWordCount; i++ ) {
@@ -373,13 +395,94 @@ static BOOL _CheckLineFlag(CFormatedString & rFmtLine, USHORT & usLineFlag, CStr
 			UCHAR ucType = rWord.m_ucType[0];
 			if( _IS_BET(WT_RANGE1BEG, ucType, WT_RANGE2END) || _IS_BET(WT_SHADOWON, ucType, WT_HIGHLIGHTOFF) ||
 				_IS_BET(WT_LINECOMMENT, ucType, WT_COMMENT2OFF) || _IS_BET(WT_QUOTATION0, ucType, WT_QUOTATION3) )
-				_CheckWordType(rFmtLine, rWord, usLineFlag, szTerminator);
+				_CheckWordType(rFmtLine.m_pString, rWord.m_ucType[0], rWord.m_ucInfo,
+				               rWord.m_siIndex, rWord.m_siLength, usLineFlag, szTerminator);
 		}
 	}
 
 	return bCanStopProcessing;
 }
 
+// Same carry-state step, driven off the ANALYZED line instead of the formatted row.
+// This is the only producer of carry state once layout is lazy, and it has to be:
+// an unformatted row has m_usLineInfo == 0 and m_siWordCount == 0, so the version
+// above would look at it, see "nothing interesting on this line", and pass the state
+// straight through — silently missing the /* that actually IS there. The analyzer
+// knows; the empty row does not.
+//
+// Writes the INCOMING state onto rFmt (that is what a row's m_usLineFlag means: the
+// state at the START of the row) and advances usLineFlag/szTerminator over the line.
+// No device context, no allocation.
+static BOOL _CheckLineFlagAnalyzed(CAnalyzedString & rAna, CFormatedString & rFmt,
+                                   USHORT & usLineFlag, CString & szTerminator)
+{
+	BOOL bCanStopProcessing = ( (rFmt.m_usLineFlag == usLineFlag) &&
+		! rFmt.m_szHereDocumentTerminator.Compare(szTerminator) );
+
+	if( ! bCanStopProcessing ) {
+		rFmt.m_usLineFlag = usLineFlag;
+		rFmt.m_szHereDocumentTerminator = szTerminator;
+	}
+
+	LPCTSTR pString = (LPCTSTR)rAna;
+
+	if( rAna.m_usLineInfo & LI_HAVEHEREDOCUMENT || CHECK_THIS(usLineFlag, LF_QUOTATIONH) ) {
+		for(SHORT i = 0; i < rAna.m_siWordCount; i++ ) {
+			ANALYZEDWORD & rWord = rAna.m_pWord[i];
+			_CheckWordType(pString, rWord.m_ucType[0], rWord.m_ucInfo,
+			               rWord.m_siIndex, rWord.m_siLength, usLineFlag, szTerminator);
+		}
+	} else if( rAna.m_usLineInfo & (LI_HAVERANGE | LI_HAVEHIGHLIGHT | LI_HAVECOMMENT | LI_HAVEQUOTATION) ) {
+		for(SHORT i = 0; i < rAna.m_siWordCount; i++ ) {
+			ANALYZEDWORD & rWord = rAna.m_pWord[i];
+			UCHAR ucType = rWord.m_ucType[0];
+			if( _IS_BET(WT_RANGE1BEG, ucType, WT_RANGE2END) || _IS_BET(WT_SHADOWON, ucType, WT_HIGHLIGHTOFF) ||
+				_IS_BET(WT_LINECOMMENT, ucType, WT_COMMENT2OFF) || _IS_BET(WT_QUOTATION0, ucType, WT_QUOTATION3) )
+				_CheckWordType(pString, rWord.m_ucType[0], rWord.m_ucInfo,
+				               rWord.m_siIndex, rWord.m_siLength, usLineFlag, szTerminator);
+		}
+	}
+	// Ordinary lines — no quotes, comments, ranges or heredoc — hit neither branch:
+	// the state provably cannot change, so they cost one USHORT test.
+
+	return bCanStopProcessing;
+}
+
+
+// Seed the carry-over syntax state onto every screen row, WITHOUT laying any of
+// them out.
+//
+// Row N's colour depends on every row before it (a /* on line 5 colours line 5,000),
+// so this part genuinely has to be eager and sequential. It is also cheap: it walks
+// the analyzed lines, and a line with no quote, comment, range or heredoc token in it
+// — which is most lines — costs a single USHORT test. No device context, no
+// GetTextExtent, no per-line allocation.
+//
+// The two lists are walked in LOCKSTEP with GetNext. Indexing into a CList is a walk
+// from the head, so doing this per row would be O(n^2).
+void CCedtView::SeedScreenTextFlags()
+{
+	CCedtDoc * pDoc = (CCedtDoc *)GetDocument(); ASSERT( pDoc );
+
+	USHORT usLineFlag = 0x0000;
+	CString szTerminator;
+	BOOL bMultiLineStringConstant = MultiLineStringConstant();
+
+	POSITION po1 = pDoc->m_clsAnalyzedText.GetHeadPosition();
+	POSITION po2 = m_clsFormatedScreenText.GetHeadPosition();
+
+	while( po1 && po2 ) {
+		// Same per-logical-line reset the formatter does: a line comment never
+		// survives the newline, and quotations only survive if the language says so.
+		usLineFlag &= ~LF_LINECOMMENT;
+		if( ! bMultiLineStringConstant ) usLineFlag &= ~(LF_QUOTATION1 | LF_QUOTATION2 | LF_QUOTATION3);
+
+		CAnalyzedString & rAna = pDoc->m_clsAnalyzedText.GetNext(po1);
+		CFormatedString & rFmt = m_clsFormatedScreenText.GetNext(po2);
+
+		_CheckLineFlagAnalyzed( rAna, rFmt, usLineFlag, szTerminator );
+	}
+}
 
 void CCedtView::FormatScreenText()
 {
@@ -391,13 +494,29 @@ void CCedtView::FormatScreenText()
 	m_clsFormatedScreenText.RemoveAll(); CFormatedString dummyLine;
 	for(INT i = 0; i < nLineCount; i++) m_clsFormatedScreenText.AddTail( dummyLine );
 
-	FormatScreenText(0, nLineCount);
+	if( m_bLocalWordWrap ) {
+		// Wrapped: a logical line can occupy several rows, and how many depends on
+		// the pixel width of every word in it. The vertical scroll bar is sized from
+		// the ROW count, so there is no way to know it without laying the whole
+		// document out. Stays eager.
+		FormatScreenText(0, nLineCount);
+	} else {
+		// Not wrapped: one row per line, so the row count is already known and
+		// nothing but the visible rows needs a layout. Seed the syntax carry state
+		// and stop — rows are laid out by EnsureFormattedRange when something
+		// actually looks at them.
+		SeedScreenTextFlags();
+	}
 
 	if( nLineCount > 1000 ) CedtPerfLog(_T("3.FormatScreenText"), _perf, nLineCount); // [profiling] stage 3
 }
 
 
-void CCedtView::FormatScreenText(INT nIndex, INT nCount) 
+// Publish the font/wrap metrics the _Format* helpers read out of file-static
+// globals. Must be re-run before every batch of formatting: GetWordWidth /
+// GetWordIndex (below) overwrite _nTabMargin for their own purposes, so the
+// globals cannot be assumed to survive between calls.
+void CCedtView::PrepareFormatMetrics()
 {
 	CRect rect; GetClientRect( & rect );
 	INT nLeftMargin   = GetLeftMargin();
@@ -415,7 +534,66 @@ void CCedtView::FormatScreenText(INT nIndex, INT nCount)
 	else _nWrapWidth = rect.Width() - nLeftMargin - nMaxCharWidth;
 	_nIndentWidth = m_nWrapIndentation * _nSpaceWidth;
 	_nMinWidth = 8 * nAveCharWidth;
+}
 
+// Lay out nCount screen rows starting at nRow, if they are not laid out already.
+//
+// This is where the expensive work — GetTextExtent per word, new FORMATEDWORD[] per
+// row — finally happens, for the handful of rows something is actually about to look
+// at. Opening a 900,000-line file lays out the ~50 rows on screen; the rest stay
+// blank until the user scrolls to them.
+//
+// Both lists are indexed ONCE and then advanced in lockstep. Calling this per row
+// instead would index a CList per row, and CList indexing walks from the head — with
+// the caret at line 800,000 that would be 50 x 800,000 hops per paint, far worse than
+// the eager formatting it replaces.
+//
+// The carry-over syntax state on each row (seeded by SeedScreenTextFlags) survives
+// this: _FinishLine no longer clears m_usLineFlag.
+void CCedtView::EnsureFormattedRange(INT nRow, INT nCount)
+{
+	if( m_bLocalWordWrap ) return;		// wrapped documents are formatted eagerly
+
+	INT nTotal = (INT)m_clsFormatedScreenText.GetCount();
+	if( nRow < 0 ) { nCount += nRow; nRow = 0; }
+	if( nRow >= nTotal || nCount <= 0 ) return;
+	if( nRow + nCount > nTotal ) nCount = nTotal - nRow;
+
+	CCedtDoc * pDoc = (CCedtDoc *)GetDocument(); ASSERT( pDoc );
+
+	// Cheap pre-check: the common case is that everything asked for is already laid
+	// out (the caret sits on a row that was painted), and then we must not touch the
+	// analyzed list at all.
+	BOOL bAnyMissing = FALSE;
+	POSITION posPeek = m_clsFormatedScreenText.FindIndex(nRow);
+	for(INT i = 0; i < nCount && posPeek; i++) {
+		if( ! m_clsFormatedScreenText.GetNext(posPeek).m_bFormatted ) { bAnyMissing = TRUE; break; }
+	}
+	if( ! bAnyMissing ) return;
+
+	PrepareFormatMetrics();
+
+	POSITION po1 = pDoc->m_clsAnalyzedText.FindIndex(nRow);
+	POSITION po2 = m_clsFormatedScreenText.FindIndex(nRow);
+
+	for(INT i = 0; i < nCount && po1 && po2; i++) {
+		CAnalyzedString & rAna = pDoc->m_clsAnalyzedText.GetNext(po1);
+		CFormatedString & rFmt = m_clsFormatedScreenText.GetNext(po2);
+
+		if( rFmt.m_bFormatted ) continue;
+		_FormatLineNoWrap( rFmt, rAna, & m_dcScreen );	// sets m_bFormatted
+	}
+}
+
+void CCedtView::EnsureFormattedAt(INT nRow)
+{
+	EnsureFormattedRange(nRow, 1);
+}
+
+
+void CCedtView::FormatScreenText(INT nIndex, INT nCount)
+{
+	PrepareFormatMetrics();
 
 	CCedtDoc * pDoc = (CCedtDoc *)GetDocument(); ASSERT( pDoc );
 	CMainFrame * pMainFrame = (CMainFrame *)AfxGetMainWnd(); ASSERT( pMainFrame );
@@ -466,7 +644,9 @@ void CCedtView::FormatScreenText(INT nIndex, INT nCount)
 		pMainFrame->EndProgress();
 	}
 
-	// post processing line flag until we reach the same status line...
+	// Post-process the carry-over state past the edited region, until it re-converges
+	// with what the rows already hold. Typing "/*" has to repaint everything below it;
+	// typing the matching "*/" has to stop repainting at that line.
 	BOOL bCanStopProcessing = FALSE;
 
 	while( po2 && ! bCanStopProcessing ) {
@@ -483,7 +663,22 @@ void CCedtView::FormatScreenText(INT nIndex, INT nCount)
 			}
 
 		} else {
-			bCanStopProcessing = _CheckLineFlag( m_clsFormatedScreenText.GetNext(po2), usLineFlag, szTerminator );
+			// Walk the ANALYZED line alongside the row (po1 was advanced in lockstep
+			// by the loop above, so it already points here).
+			//
+			// The rows down here are almost certainly NOT laid out — that is the whole
+			// point of lazy layout — and an unformatted row carries no words. Reading
+			// the state off the row would therefore see "nothing interesting on this
+			// line", pass the state through untouched, never find the */ that closes
+			// the comment, and paint the remaining 900,000 lines as one block comment.
+			// No crash; just silently wrong colour, on every edit. Read the analyzed
+			// line instead, which always has its words.
+			if( ! po1 ) break;
+
+			CAnalyzedString & rAna = pDoc->m_clsAnalyzedText.GetNext(po1);
+			CFormatedString & rFmt = m_clsFormatedScreenText.GetNext(po2);
+
+			bCanStopProcessing = _CheckLineFlagAnalyzed( rAna, rFmt, usLineFlag, szTerminator );
 		}
 	}
 }
@@ -606,8 +801,18 @@ SHORT CCedtView::GetWordIndex(LPCTSTR lpWord, SHORT siLength, INT nWidth, CDC * 
 }
 
 
+// Logical line -> POSITION of its first screen row.
+//
+// With word wrap OFF that is just row nIndex. FindIndex still walks the list, but
+// it walks it WITHOUT READING the rows — which is what matters here, because with
+// lazy layout most of the rows it passes have no m_pWord yet.
 POSITION CCedtView::FindScreenTextIndex(INT nIndex)
 {
+	if( ! m_bLocalWordWrap ) {
+		POSITION pos = m_clsFormatedScreenText.FindIndex(nIndex);
+		return pos ? pos : m_clsFormatedScreenText.GetTailPosition();
+	}
+
 	INT nParaCount = 0;
 	POSITION posFound, pos = m_clsFormatedScreenText.GetHeadPosition();
 	while( pos ) {

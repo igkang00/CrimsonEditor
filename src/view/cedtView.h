@@ -321,6 +321,13 @@ public: // *** cedtViewFormat.cpp ***
 	void FormatScreenText();
 	void FormatScreenText(INT nIndex, INT nCount);
 
+	// Lazy screen layout (word wrap OFF only — a wrapped document is still laid out
+	// eagerly, because its row count depends on the pixel width of every line).
+	void PrepareFormatMetrics();		// publish font/wrap metrics to the format globals
+	void SeedScreenTextFlags();			// eager, cheap: carry-over syntax state for every row
+	void EnsureFormattedRange(INT nRow, INT nCount);	// lay out rows on demand
+	void EnsureFormattedAt(INT nRow);
+
 	void FormatPrintText(CDC * pDC, RECT rectDraw);
 	void FormatPrintText(CDC * pDC, RECT rectDraw, INT nIndex, INT nCount);
 

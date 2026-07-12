@@ -498,12 +498,15 @@ CAnalyzedString & CAnalyzedString::operator=(const CAnalyzedString & stringSrc) 
 
 
 // CFormatedString
+// Note this RESETS rather than copies — CList::AddTail(dummyLine) relies on it to
+// mint a blank row cheaply.
 CFormatedString & CFormatedString::operator=(const CFormatedString & stringSrc) {
 	m_pString = stringSrc.m_pString;
-	delete [] m_pWord; m_pWord = NULL; 
+	delete [] m_pWord; m_pWord = NULL;
 	m_siWordCount = m_siSplitIndex = 0; m_bLineBreak = FALSE;
 	m_usLineInfo = m_usLineFlag = 0x00;
 	m_szHereDocumentTerminator = _T("");
+	m_bFormatted = FALSE;
 	return * this;
 }
 

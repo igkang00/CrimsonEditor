@@ -350,16 +350,30 @@ typedef struct _FORMATEDWORD {
 
 
 // CFormatedString Class
-class CFormatedString 
+class CFormatedString
 {
 public:
 	LPCTSTR m_pString; FORMATEDWORD * m_pWord;
 	SHORT	m_siWordCount, m_siSplitIndex; BOOL m_bLineBreak;
 	USHORT	m_usLineInfo, m_usLineFlag;
 	CString	m_szHereDocumentTerminator;
-	
+
+	// TRUE once the expensive layout (m_pWord: per-word x-position and pixel
+	// width, measured through the device context) has been computed for this row.
+	//
+	// Screen rows are created empty and only laid out when something actually
+	// looks at them — a 900,000-line file is opened with ~50 rows formatted, not
+	// 900,000. The carry-over syntax state (m_usLineFlag, m_szHereDocumentTerminator)
+	// is NOT part of this: it is seeded eagerly for every row at load time, because
+	// it is cheap and because row N's colour depends on every row before it.
+	//
+	// This needs its own flag: the default ctor leaves m_pWord NULL, m_siWordCount 0
+	// and m_siSplitIndex 0, which is indistinguishable from a legitimately formatted
+	// empty paragraph-start row.
+	BOOL	m_bFormatted;
+
 public:
-	CFormatedString() { m_pString = NULL; m_pWord = NULL; m_siWordCount = m_siSplitIndex = 0; m_bLineBreak = FALSE; m_usLineInfo = m_usLineFlag = 0x00; }
+	CFormatedString() { m_pString = NULL; m_pWord = NULL; m_siWordCount = m_siSplitIndex = 0; m_bLineBreak = FALSE; m_usLineInfo = m_usLineFlag = 0x00; m_bFormatted = FALSE; }
 	virtual ~CFormatedString() { delete [] m_pWord; }
 
 	// Same Rule-of-Three reasoning as CAnalyzedString: owns m_pWord, so the
@@ -419,10 +433,15 @@ public:
 
 
 // CFormatedText Class
+//
+// One entry per SCREEN ROW. Opening a large file mints one blank row per line up
+// front, so the list is built with a 1024-node block size: a 900,000-line file
+// then costs ~900 plex allocations instead of ~90,000 (MFC's default block size
+// is 10).
 class CFormatedText : public CList<CFormatedString, CFormatedString &>
 {
 public:
-	CFormatedText() : CList<CFormatedString, CFormatedString &>() {}
+	CFormatedText() : CList<CFormatedString, CFormatedString &>(1024) {}
 	virtual ~CFormatedText() {}
 };
 

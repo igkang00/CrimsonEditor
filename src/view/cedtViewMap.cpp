@@ -109,9 +109,15 @@ CAnalyzedString & CCedtView::GetLineFromIdxY(INT nIdxY)
 	return pDoc->GetLineFromIdxY(nIdxY);
 }
 
+// THE gateway: every caret, edit, move, search, highlight and metric consumer gets
+// its CFormatedString from here. Laying the row out on the way through is therefore
+// all it takes to make lazy layout invisible to the rest of the editor.
 CFormatedString & CCedtView::GetLineFromPosY(INT nPosY)
 {
 	INT nLineIndex = nPosY / GetLineHeight();
+
+	EnsureFormattedAt( nLineIndex );
+
 	POSITION pos = m_clsFormatedScreenText.FindIndex(nLineIndex);
 	if( pos ) return m_clsFormatedScreenText.GetAt(pos);
 	return m_clsFormatedScreenText.GetTail();
@@ -143,9 +149,23 @@ FORMATEDWORD & CCedtView::GetWordFromIdxX(CFormatedString & rLine, INT nIdxX)
 	return rLine.m_pWord[siWordCount-1];
 }
 
+// Screen row -> logical line.
+//
+// With word wrap OFF a logical line is exactly one screen row, so this is the
+// identity and can be answered by arithmetic. That is worth doing: the loop below
+// walks the row list from the head, and it is called on every paint and every
+// caret move — on a 900,000-line file that is a 900,000-node walk per keystroke.
+// It is also the walk that would touch rows that have not been laid out yet.
 INT CCedtView::GetIdxYFromPosY(INT nPosY)
 {
 	INT nLineIndex = nPosY / GetLineHeight();
+
+	if( ! m_bLocalWordWrap ) {
+		INT nCount = (INT)m_clsFormatedScreenText.GetCount();
+		if( nLineIndex < 0 || nLineIndex >= nCount ) return nCount - 1;	// same clamp as the loop
+		return nLineIndex;
+	}
+
 	INT nParaCount = 0, nLineCount = 0;
 
 	POSITION pos = m_clsFormatedScreenText.GetHeadPosition();
@@ -179,9 +199,27 @@ INT CCedtView::GetIdxXFromPosX(CFormatedString & rLine, FORMATEDWORD & rWord, IN
 	return rWord.m_siIndex + GetWordIndex((LPCTSTR)rLine + rWord.m_siIndex, rWord.m_siLength, nPosX - rWord.m_nPosition);
 }
 
+// Logical line -> screen Y.
+//
+// With word wrap OFF row index == line index, so the answer is nIdxY * height for
+// any in-range line, whatever nIdxX is: the loop below only consults nIdxX to pick
+// WHICH wrapped row of the line the caret sits on, and there is only one.
+//
+// Taking the arithmetic path also removes the GetLastIdxX(rLine) call, which reads
+// rLine.m_pWord[m_siWordCount-1] on every row it merely walks past. That would
+// dereference NULL[-1] on a row that has not been laid out yet — it is the single
+// reason lazy layout could not simply be dropped in.
 INT CCedtView::GetPosYFromIdxY(INT nIdxX, INT nIdxY, BOOL bAdjust)
 {
 	INT nLineHeight = GetLineHeight();
+
+	if( ! m_bLocalWordWrap ) {
+		INT nCount = (INT)m_clsFormatedScreenText.GetCount();
+		if( nIdxY < 0 ) return 0;
+		if( nIdxY >= nCount ) return (nCount - 1) * nLineHeight;
+		return nIdxY * nLineHeight;
+	}
+
 	INT nParaCount = 0, nLineCount = 0;
 
 	POSITION pos = m_clsFormatedScreenText.GetHeadPosition();
