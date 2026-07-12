@@ -342,11 +342,13 @@ Measured on 90,000 lines wrapping into 360,063 rows:
 | **after Phase 4 (`CLineList`)** | **2,778.9 ms** |
 | after the fix | 194.1 ms |
 
-**16× slower, and it shipped.** Nothing caught it: the differential tests compare *what the
-container holds*, not what it costs, and `LargeBulkOpsAreNotQuadratic` covers `RemoveRange`
-and `InsertGap` — the calls that were already correct. Phase 5 measured with word wrap
-**off**, where a line is exactly one row and nothing is ever inserted, and reported the open
-path unchanged. It was. The one path that inserts was the one path not measured.
+**16× slower, and it got all the way to the end of the branch.** It did not ship — it was
+caught before the release, but only because someone said the editor *felt* slower. Nothing
+else was going to catch it. The differential tests compare *what the container holds*, not
+what it costs, and `LargeBulkOpsAreNotQuadratic` covers `RemoveRange` and `InsertGap` — the
+calls that were already correct. Phase 5 measured with word wrap **off**, where a line is
+exactly one row and nothing is ever inserted, and reported the open path unchanged. It was.
+The one path that inserts was the one path not measured.
 
 The fix is the same one the plan prescribes: produce the run, hand it over once.
 `CLineList::ReplaceRange(nIndex, nOldCount, ppNew, nNewCount)` swaps a run of rows for a run
