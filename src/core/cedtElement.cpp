@@ -1109,6 +1109,43 @@ BOOL CAnalyzedText::HaveAnyOverflowLine()
 	return FALSE;
 }
 
+// Insert nCount lines so that pLines[0] becomes line nIndex.
+//
+// Backed by a CList today, so this walks to the spot once and then splices, which is
+// exactly what the callers used to do inline. The point of the method is not that it
+// is faster here — it is that the edit code no longer states HOW to insert a run of
+// lines, only that it wants to. See the header.
+void CAnalyzedText::InsertLines(INT nIndex, const CString * pLines, INT nCount)
+{
+	if( nCount <= 0 ) return;
+	ASSERT( pLines );
+	ASSERT( nIndex >= 0 && nIndex <= GetCount() );
+
+	if( nIndex >= GetCount() ) {
+		for(INT i = 0; i < nCount; i++) AddTail( (LPCTSTR)pLines[i] );
+		return;
+	}
+
+	// InsertBefore leaves pos pointing at the same element it did before, so inserting
+	// repeatedly before it lays the new lines down in order.
+	POSITION pos = FindIndex(nIndex);
+	for(INT i = 0; i < nCount; i++) InsertBefore(pos, (LPCTSTR)pLines[i]);
+}
+
+// Remove nCount lines starting at line nIndex.
+void CAnalyzedText::RemoveLines(INT nIndex, INT nCount)
+{
+	if( nCount <= 0 ) return;
+	ASSERT( nIndex >= 0 && nIndex + nCount <= GetCount() );
+
+	POSITION pos = FindIndex(nIndex);
+
+	while( nCount-- && pos ) {
+		POSITION posRemove = pos; GetNext(pos);
+		RemoveAt(posRemove);
+	}
+}
+
 
 // CUndoBuffer
 void CUndoBuffer::EmptyBuffer()

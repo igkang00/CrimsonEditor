@@ -429,6 +429,24 @@ public:
 	void ScrubLoneSurrogates();
 
 	BOOL HaveAnyOverflowLine();
+
+	// Bulk structural edits.
+	//
+	// Pasting or deleting a block is ONE change to the document, and the container
+	// should be told so once. The callers used to loop, removing and inserting a line
+	// at a time; on a linked list that happens to be cheap, but it hard-codes the
+	// assumption that a linked list is what is underneath. It is about to not be —
+	// see docs/refactoring-line-container.md — and on an array a per-line loop turns
+	// a 100,000-line paste into 100,000 memmoves.
+	//
+	// So the edit code asks for the range, and the container decides how to do it.
+
+	// Insert nCount lines so that pLines[0] becomes line nIndex. nIndex == GetCount()
+	// appends.
+	void InsertLines(INT nIndex, const CString * pLines, INT nCount);
+
+	// Remove nCount lines starting at line nIndex.
+	void RemoveLines(INT nIndex, INT nCount);
 };
 
 

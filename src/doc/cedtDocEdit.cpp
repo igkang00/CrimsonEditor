@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "cedtHeader.h"
 
+#include <vector>
+
 
 void CCedtDoc::EmptySavedCompositionString()
 {
@@ -83,16 +85,32 @@ void CCedtDoc::DeleteString(INT nIdxX, INT nIdxY, INT nLength)
 
 void CCedtDoc::InsertBlock(INT nBegX, INT nBegY, INT & nEndX, INT & nEndY, CMemText & rBlock)
 {
+	// The first block line joins what is left of nBegY; the rest become new lines, and
+	// the tail of nBegY is pushed onto the last of them.
 	CAnalyzedString & rLineBeg = GetLineFromIdxY(nBegY);
 	CString szSplit = rLineBeg.Mid(nBegX);
-	POSITION pos = m_clsAnalyzedText.FindIndex(nBegY);
+
 	POSITION po2 = rBlock.GetHeadPosition();
 	rLineBeg = rLineBeg.Left(nBegX) + rBlock.GetNext(po2);
-	for(INT i = 1; i < rBlock.GetCount(); i++) pos = m_clsAnalyzedText.InsertAfter(pos, rBlock.GetNext(po2));
-	CAnalyzedString & rLineEnd = m_clsAnalyzedText.GetAt(pos);
+
+	// One structural change, however many lines were pasted.
+	INT nExtra = (INT)rBlock.GetCount() - 1;
+	if( nExtra > 0 ) {
+		std::vector<CString> vecLines;
+		vecLines.reserve(nExtra);
+		while( po2 ) vecLines.push_back( rBlock.GetNext(po2) );
+
+		m_clsAnalyzedText.InsertLines(nBegY + 1, vecLines.data(), nExtra);
+	}
+
+	nEndY = nBegY + nExtra;
+
+	// Fetched AFTER the insert, deliberately: rLineBeg above is only safe because
+	// nothing structural has happened yet, and the container is about to stop being a
+	// linked list, at which point a reference held across an insert is a bug.
+	CAnalyzedString & rLineEnd = GetLineFromIdxY(nEndY);
 	rLineEnd += szSplit;
 
-	nEndY = nBegY + (INT)rBlock.GetCount() - 1;
 	nEndX = rLineEnd.GetLength() - szSplit.GetLength();
 
 	RecordInsertBlock(nBegX, nBegY, nEndX, nEndY);
@@ -106,11 +124,13 @@ void CCedtDoc::DeleteBlock(INT nBegX, INT nBegY, INT nEndX, INT nEndY)
 	CAnalyzedString & rLineBeg = GetLineFromIdxY(nBegY);
 	CAnalyzedString & rLineEnd = GetLineFromIdxY(nEndY);
 	rLineBeg = rLineBeg.Left(nBegX) + rLineEnd.Mid(nEndX);
-	POSITION pos = m_clsAnalyzedText.FindIndex(nBegY+1);
-	for(INT i = nBegY+1; i <= nEndY; i++) {
-		POSITION posRemove = pos; m_clsAnalyzedText.GetNext(pos);
-		m_clsAnalyzedText.RemoveAt(posRemove);
-	}
+
+	// One structural change, however many lines the selection spanned. This used to
+	// remove them one at a time while holding a POSITION into the list it was
+	// mutating — free on a linked list, quadratic on an array, and on an array the
+	// held POSITION would have silently pointed at the wrong line after the first
+	// removal.
+	m_clsAnalyzedText.RemoveLines(nBegY + 1, nEndY - nBegY);
 
 	RecordDeleteBlock(nBegX, nBegY, Block);
 	SetModifiedFlag(TRUE);
