@@ -2,6 +2,7 @@
 #define __CEDT_ELEMENT_H_
 
 #include "fstream_compat.h"
+#include "cedtLineList.h"
 
 
 
@@ -415,10 +416,20 @@ public:
 
 
 // CAnalyzedText Class
-class CAnalyzedText : public CList<CAnalyzedString, LPCTSTR>
+//
+// One entry per LINE of the document.
+//
+// Backed by CLineList (an array of pointers), not CList (a linked list): reaching line
+// 900,000 in a linked list meant walking 900,000 nodes, and GetLineFromPosY -- which
+// every caret move, edit, search and repaint goes through -- did exactly that on every
+// call. See docs/refactoring-line-container.md.
+//
+// The API is the same, with ONE difference that matters: a POSITION does not survive a
+// structural change to the list. Debug builds assert if you use one that does.
+class CAnalyzedText : public CLineList<CAnalyzedString, LPCTSTR>
 {
 public:
-	CAnalyzedText() : CList<CAnalyzedString, LPCTSTR>() {}
+	CAnalyzedText() : CLineList<CAnalyzedString, LPCTSTR>() {}
 	virtual ~CAnalyzedText() {}
 
 	BOOL FileLoad(LPCTSTR lpszPathName, INT nEncodingType, INT nFileFormat);

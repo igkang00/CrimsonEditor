@@ -1111,39 +1111,23 @@ BOOL CAnalyzedText::HaveAnyOverflowLine()
 
 // Insert nCount lines so that pLines[0] becomes line nIndex.
 //
-// Backed by a CList today, so this walks to the spot once and then splices, which is
-// exactly what the callers used to do inline. The point of the method is not that it
-// is faster here — it is that the edit code no longer states HOW to insert a run of
-// lines, only that it wants to. See the header.
+// One structural change: open the gap once, then fill it. The first version of this
+// looped InsertBefore, which was right for the linked list and is wrong twice over for
+// the array underneath now — it would be a memmove per line, and a POSITION does not
+// survive the first insert, so the lines would come out reversed.
 void CAnalyzedText::InsertLines(INT nIndex, const CString * pLines, INT nCount)
 {
 	if( nCount <= 0 ) return;
 	ASSERT( pLines );
-	ASSERT( nIndex >= 0 && nIndex <= GetCount() );
 
-	if( nIndex >= GetCount() ) {
-		for(INT i = 0; i < nCount; i++) AddTail( (LPCTSTR)pLines[i] );
-		return;
-	}
-
-	// InsertBefore leaves pos pointing at the same element it did before, so inserting
-	// repeatedly before it lays the new lines down in order.
-	POSITION pos = FindIndex(nIndex);
-	for(INT i = 0; i < nCount; i++) InsertBefore(pos, (LPCTSTR)pLines[i]);
+	InsertGap(nIndex, nCount);
+	for(INT i = 0; i < nCount; i++) ElementAt(nIndex + i) = (LPCTSTR)pLines[i];
 }
 
-// Remove nCount lines starting at line nIndex.
+// Remove nCount lines starting at line nIndex. One structural change.
 void CAnalyzedText::RemoveLines(INT nIndex, INT nCount)
 {
-	if( nCount <= 0 ) return;
-	ASSERT( nIndex >= 0 && nIndex + nCount <= GetCount() );
-
-	POSITION pos = FindIndex(nIndex);
-
-	while( nCount-- && pos ) {
-		POSITION posRemove = pos; GetNext(pos);
-		RemoveAt(posRemove);
-	}
+	RemoveRange(nIndex, nCount);
 }
 
 
