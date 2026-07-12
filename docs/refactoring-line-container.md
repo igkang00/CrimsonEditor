@@ -187,11 +187,24 @@ In release builds the POSITION is just the index and the check compiles away.
 
 ## Plan
 
-**Phase 0 — measure the allocation cost.** `CList` allocates its nodes from plex blocks;
-a vector of pointers means one `new` per line. Loading 900,000 lines currently costs
-752 ms end to end. Before anything else, confirm 900,000 individual allocations do not eat
-that win. If they do, the line objects get a block allocator and the rest of the plan is
-unchanged. **This phase can kill the design — run it first.**
+**Phase 0 — measure the allocation cost. DONE: the design survives.** `CList` allocates
+its nodes from plex blocks; a vector of pointers means one `new` per line. The worry was
+that 900,000 individual allocations would eat the win. Measured, building 900,000 lines:
+
+| container | build | teardown | working set |
+| --- | ---: | ---: | ---: |
+| `CList` (plex-allocated nodes) | 144.3 ms | 76.5 ms | 180.6 MB |
+| **`vector<T*>`, one `new` per line** | **141.0 ms** | 93.9 ms | 185.6 MB |
+| `vector<T*>` + 1024-line block pool | 139.7 ms | 68.0 ms | 171.3 MB |
+
+The individual allocations are, if anything, marginally *faster*. The reason is that
+`CAnalyzedString` already owns a `CString`, so **there is already one heap allocation per
+line** — the plex only batches the node wrapper around it, which was never the expensive
+part. Moving to a pointer vector does not add an allocation that was not already there.
+
+The block-pool variant wins nothing outside the noise, so it is not worth its complexity.
+Plain `vector<CAnalyzedString *>` it is. Memory grows by 5 MB (2.8 %) — the vector itself,
+900,000 × 8 bytes — which is the expected price and an acceptable one.
 
 **Phase 1 — bulk operations, on the current `CList`.** Rewrite `DeleteBlock` and
 `InsertBlock` to remove and insert ranges rather than looping element by element. This is
