@@ -146,6 +146,7 @@
     <ClCompile Include="CAnalyzedString_test.cpp" />
     <ClCompile Include="cedtUnicode_test.cpp" />
     <ClCompile Include="CAnalyzedTextBulk_test.cpp" />
+    <ClCompile Include="CLineList_test.cpp" />
     <ClCompile Include="CAnalyzedTextFile_test.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
