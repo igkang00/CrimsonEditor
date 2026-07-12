@@ -313,3 +313,47 @@ fifteenth time.
 
 **Memory.** A `CList` node carries two pointers of overhead (16 bytes). A pointer vector
 carries 8. Slightly better, and the line objects themselves are unchanged.
+
+---
+
+## The quadratic loop this document warned about, in this document's own code
+
+*Fixed after the fact. Recorded because the way it was missed is the point.*
+
+The plan above has a section called **Bulk edits become quadratic**. It says: on an array,
+removing or inserting one element at a time is a memmove per element, so the loops that do
+that must be rewritten to range operations *before* the container is swapped. `DeleteBlock`
+and `InsertBlock` were. `RemoveScreenText` was. **The word-wrap formatter was not.**
+
+`FormatScreenText` lays out a wrapped line and appends however many continuation rows it
+turns out to need. Phase 4 translated that faithfully:
+
+```cpp
+po2 = m_clsFormatedScreenText.InsertAfter(po2, dummyLine);   // CList: O(1) node splice
+m_clsFormatedScreenText.InsertGap(nRow + 1, 1);              // CLineList: memmove the tail
+```
+
+Identical meaning, and the cost went from O(1) to O(n) — per row, over the whole document.
+Measured on 90,000 lines wrapping into 360,063 rows:
+
+| | wrap-on `FormatScreenText` |
+| --- | ---: |
+| before the refactor (`CList`) | 167.9 ms |
+| **after Phase 4 (`CLineList`)** | **2,778.9 ms** |
+| after the fix | 194.1 ms |
+
+**16× slower, and it shipped.** Nothing caught it: the differential tests compare *what the
+container holds*, not what it costs, and `LargeBulkOpsAreNotQuadratic` covers `RemoveRange`
+and `InsertGap` — the calls that were already correct. Phase 5 measured with word wrap
+**off**, where a line is exactly one row and nothing is ever inserted, and reported the open
+path unchanged. It was. The one path that inserts was the one path not measured.
+
+The fix is the same one the plan prescribes: produce the run, hand it over once.
+`CLineList::ReplaceRange(nIndex, nOldCount, ppNew, nNewCount)` swaps a run of rows for a run
+of a different length in one structural change, and the formatter builds its rows off to the
+side and splices them in. `FormatPrintText` had the identical loop and got the identical
+fix. `FlattenScreenTextAt` — which existed only to remove last time's continuation rows one
+line at a time — is gone; the splice replaces them.
+
+`CLineList.ReplaceRangeOverAWholeListIsNotQuadratic` now pins it. A cost regression needs a
+test that fails on cost, and there wasn't one.

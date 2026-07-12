@@ -315,6 +315,100 @@ TEST(CLineList, LargeBulkOpsAreNotQuadratic)
 
 
 // ---------------------------------------------------------------------------
+// ReplaceRange -- swap a run of elements for a run of a different length.
+//
+// This is what the wrapped-line formatter needs: it produces as many screen rows as a
+// line turns out to need, and it cannot know how many until it has laid the line out.
+// Growing the list one row at a time is a memmove of the tail PER ROW, and the formatter
+// does it for every line in the document -- which is quadratic, and was: 90,000 wrapped
+// lines took 2,779 ms that way, against 168 ms on the CList this class replaced. The
+// regression shipped because nothing here would have caught it. Now something does.
+// ---------------------------------------------------------------------------
+
+TEST(CLineList, ReplaceRangeSwapsARunForALongerOne)
+{
+	NewList list;
+	list.AddTail(_T("a")); list.AddTail(_T("b")); list.AddTail(_T("c"));
+
+	CString * rows[3] = { new CString(_T("X")), new CString(_T("Y")), new CString(_T("Z")) };
+	list.ReplaceRange(1, 1, rows, 3);		// "b" out, three rows in
+
+	std::vector<CString> got = DumpNew(list);
+	ASSERT_EQ(got.size(), 5u);
+	EXPECT_STREQ(got[0], _T("a"));
+	EXPECT_STREQ(got[1], _T("X"));
+	EXPECT_STREQ(got[2], _T("Y"));
+	EXPECT_STREQ(got[3], _T("Z"));
+	EXPECT_STREQ(got[4], _T("c"));
+}
+
+TEST(CLineList, ReplaceRangeSwapsARunForAShorterOne)
+{
+	NewList list;
+	for(int i = 0; i < 5; i++) list.AddTail(_T("old"));
+
+	CString * rows[1] = { new CString(_T("one")) };
+	list.ReplaceRange(1, 3, rows, 1);		// three rows collapse to one
+
+	std::vector<CString> got = DumpNew(list);
+	ASSERT_EQ(got.size(), 3u);
+	EXPECT_STREQ(got[0], _T("old"));
+	EXPECT_STREQ(got[1], _T("one"));
+	EXPECT_STREQ(got[2], _T("old"));
+}
+
+TEST(CLineList, ReplaceRangeWithEqualCountsKeepsEveryOtherElement)
+{
+	NewList list;
+	list.AddTail(_T("a")); list.AddTail(_T("b")); list.AddTail(_T("c"));
+
+	CString * rows[1] = { new CString(_T("B")) };
+	list.ReplaceRange(1, 1, rows, 1);
+
+	std::vector<CString> got = DumpNew(list);
+	ASSERT_EQ(got.size(), 3u);
+	EXPECT_STREQ(got[0], _T("a"));
+	EXPECT_STREQ(got[1], _T("B"));
+	EXPECT_STREQ(got[2], _T("c"));
+}
+
+TEST(CLineList, ReplaceRangeCanEmptyARunAndCanFillAnEmptyList)
+{
+	NewList list;
+	for(int i = 0; i < 3; i++) list.AddTail(_T("x"));
+
+	list.ReplaceRange(0, 3, NULL, 0);		// everything out, nothing in
+	ASSERT_EQ(list.GetCount(), 0);
+
+	CString * rows[2] = { new CString(_T("p")), new CString(_T("q")) };
+	list.ReplaceRange(0, 0, rows, 2);		// nothing out, everything in
+	ASSERT_EQ(list.GetCount(), 2);
+	EXPECT_STREQ(list.GetHead(), _T("p"));
+	EXPECT_STREQ(list.GetTail(), _T("q"));
+}
+
+// The one that would have caught the regression. Rebuilding a 200,000-row list as the
+// wrapped formatter does -- every line replaced, each yielding several rows -- must cost
+// one splice, not one per row. Looped InsertGap makes this take minutes.
+TEST(CLineList, ReplaceRangeOverAWholeListIsNotQuadratic)
+{
+	NewList list;
+	for(int i = 0; i < 50000; i++) list.AddTail(_T("line"));
+
+	// Every line re-wraps into four rows: 50,000 in, 200,000 out.
+	std::vector<CString *> rows;
+	rows.reserve(200000);
+	for(int i = 0; i < 200000; i++) rows.push_back( new CString(_T("row")) );
+
+	list.ReplaceRange(0, 50000, & rows[0], (INT_PTR)rows.size());
+
+	ASSERT_EQ(list.GetCount(), 200000);
+	EXPECT_STREQ(list.GetHead(), _T("row"));
+	EXPECT_STREQ(list.GetTail(), _T("row"));
+}
+
+
+// ---------------------------------------------------------------------------
 // The safety net.
 //
 // An index-based POSITION does not survive a structural change: remove element i and

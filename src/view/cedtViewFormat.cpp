@@ -700,8 +700,8 @@ void CCedtView::FormatScreenText(INT nIndex, INT nCount)
 	// now start formatting text
 	//
 	// The analyzed list is only read here, so a POSITION into it is safe to carry. The
-	// ROW list is inserted into and removed from as wrapped lines grow and shrink, so it
-	// is walked by index — a POSITION would not survive the first insert.
+	// ROW list is replaced wholesale below, so it is worked in indices — a POSITION would
+	// not survive that.
 	POSITION po1 = pDoc->m_clsAnalyzedText.FindIndex(nIndex);
 	INT nRow = FindScreenTextRow(nIndex);
 	if( nRow < 0 ) { if( pWait ) delete pWait; if( nCount > 1000 ) pMainFrame->EndProgress(); return; }
@@ -710,37 +710,61 @@ void CCedtView::FormatScreenText(INT nIndex, INT nCount)
 	CString szTerminator = m_clsFormatedScreenText.ElementAt(nRow).m_szHereDocumentTerminator;
 	BOOL bMultiLineStringConstant = MultiLineStringConstant();
 
-	while( po1 && nProcess < nCount ) {
-		usLineFlag &= ~LF_LINECOMMENT;
-		if( ! bMultiLineStringConstant ) usLineFlag &= ~(LF_QUOTATION1 | LF_QUOTATION2 | LF_QUOTATION3);
+	if( m_bLocalWordWrap ) {
+		// A wrapped line yields as many rows as it turns out to need, and we do not know
+		// how many until we have laid it out. Growing the row list one row at a time is a
+		// memmove of every row below it, per row -- quadratic over the document, and
+		// measurably so: 2,779 ms for 90,000 wrapped lines against 168 ms on the linked
+		// list this array replaced. So the whole run is built off to the side and handed
+		// over in one ReplaceRange.
+		INT nRowBeg = nRow;
+		INT nRowEnd = FindRowPastLines(nRowBeg, nCount);   // rows the old wrapping used
 
-		if( m_bLocalWordWrap ) {
+		std::vector<CFormatedString *> vecRows;
+		vecRows.reserve( (size_t)(nRowEnd - nRowBeg) );
+
+		while( po1 && nProcess < nCount ) {
+			usLineFlag &= ~LF_LINECOMMENT;
+			if( ! bMultiLineStringConstant ) usLineFlag &= ~(LF_QUOTATION1 | LF_QUOTATION2 | LF_QUOTATION3);
+
 			CAnalyzedString & rLine = pDoc->m_clsAnalyzedText.GetNext(po1);
 
-			// Throw away last time's continuation rows; this line is about to say how
-			// many it needs now.
-			FlattenScreenTextAt(nRow);
-
-			BOOL bContinue = _FormatLineWrap( m_clsFormatedScreenText.ElementAt(nRow), rLine, & m_dcScreen );
-			_CheckLineFlag( m_clsFormatedScreenText.ElementAt(nRow), usLineFlag, szTerminator );
+			CFormatedString * pRow = new CFormatedString;
+			BOOL bContinue = _FormatLineWrap( * pRow, rLine, & m_dcScreen );
+			_CheckLineFlag( * pRow, usLineFlag, szTerminator );
+			vecRows.push_back( pRow );
 
 			while( bContinue ) {
-				m_clsFormatedScreenText.InsertGap(nRow + 1, 1);
-				nRow++;
-				bContinue = _FormatLineWrapContinue( m_clsFormatedScreenText.ElementAt(nRow), rLine, & m_dcScreen );
-				_CheckLineFlag( m_clsFormatedScreenText.ElementAt(nRow), usLineFlag, szTerminator );
+				pRow = new CFormatedString;
+				bContinue = _FormatLineWrapContinue( * pRow, rLine, & m_dcScreen );
+				_CheckLineFlag( * pRow, usLineFlag, szTerminator );
+				vecRows.push_back( pRow );
 			}
-			nRow++;
 
-		} else {
+			if( nCount > 1000 && ! (nProcess % 20) ) pMainFrame->SetProgress( 100 * nProcess / nCount );
+			nProcess++;
+		}
+
+		m_clsFormatedScreenText.ReplaceRange( nRowBeg, nRowEnd - nRowBeg,
+		                                      vecRows.empty() ? NULL : & vecRows[0],
+		                                      (INT_PTR)vecRows.size() );
+		nRow = nRowBeg + (INT)vecRows.size();
+
+	} else {
+		// No wrap: one row per line, always. Nothing is inserted or removed, so the rows
+		// are laid out where they already sit.
+		while( po1 && nProcess < nCount ) {
+			usLineFlag &= ~LF_LINECOMMENT;
+			if( ! bMultiLineStringConstant ) usLineFlag &= ~(LF_QUOTATION1 | LF_QUOTATION2 | LF_QUOTATION3);
+
 			CAnalyzedString & rLine = pDoc->m_clsAnalyzedText.GetNext(po1);
 			_FormatLineNoWrap( m_clsFormatedScreenText.ElementAt(nRow), rLine, & m_dcScreen );
 			_CheckLineFlag( m_clsFormatedScreenText.ElementAt(nRow), usLineFlag, szTerminator );
 			nRow++;
-		}
 
-		if( nCount > 1000 && ! (nProcess % 20) ) pMainFrame->SetProgress( 100 * nProcess / nCount );
-		nProcess++;
+			if( nCount > 1000 && ! (nProcess % 20) ) pMainFrame->SetProgress( 100 * nProcess / nCount );
+			nProcess++;
+		}
 	}
 
 	if( nCount > 1000 ) {
@@ -826,7 +850,6 @@ void CCedtView::FormatPrintText(CDC * pDC, RECT rectDraw, INT nIndex, INT nCount
 
 
 	m_clsFormatedPrintText.RemoveAll();
-	m_clsFormatedPrintText.InsertGap(0, nCount);
 
 	CCedtDoc * pDoc = (CCedtDoc *)GetDocument(); ASSERT( pDoc );
 	CMainFrame * pMainFrame = (CMainFrame *)AfxGetMainWnd(); ASSERT( pMainFrame );
@@ -839,10 +862,13 @@ void CCedtView::FormatPrintText(CDC * pDC, RECT rectDraw, INT nIndex, INT nCount
 
 	// now start formatting text
 	//
-	// The print row list grows as wrapped lines need continuation rows, so it is walked
-	// by index for the same reason the screen one is.
+	// Built off to the side and handed over in one go, for the reason FormatScreenText
+	// spells out: a wrapped line needs as many rows as it needs, and pushing them into the
+	// list one at a time is a memmove per row.
 	POSITION po1 = pDoc->m_clsAnalyzedText.FindIndex(nIndex);
-	INT nRow = 0;
+
+	std::vector<CFormatedString *> vecRows;
+	vecRows.reserve( (size_t)nCount );
 
 	// The carry-over syntax state to start from is whatever the SCREEN rows already
 	// worked out for this line — printing does not re-derive it from the top of the file.
@@ -862,20 +888,25 @@ void CCedtView::FormatPrintText(CDC * pDC, RECT rectDraw, INT nIndex, INT nCount
 		if( ! bMultiLineStringConstant ) usLineFlag &= ~(LF_QUOTATION1 | LF_QUOTATION2 | LF_QUOTATION3);
 
 		CAnalyzedString & rLine = pDoc->m_clsAnalyzedText.GetNext(po1);
-		BOOL bContinue = _FormatLineWrap( m_clsFormatedPrintText.ElementAt(nRow), rLine, pDC );
-		_CheckLineFlag( m_clsFormatedPrintText.ElementAt(nRow), usLineFlag, szTerminator );
+
+		CFormatedString * pRow = new CFormatedString;
+		BOOL bContinue = _FormatLineWrap( * pRow, rLine, pDC );
+		_CheckLineFlag( * pRow, usLineFlag, szTerminator );
+		vecRows.push_back( pRow );
 
 		while( bContinue ) {
-			m_clsFormatedPrintText.InsertGap(nRow + 1, 1);
-			nRow++;
-			bContinue = _FormatLineWrapContinue( m_clsFormatedPrintText.ElementAt(nRow), rLine, pDC );
-			_CheckLineFlag( m_clsFormatedPrintText.ElementAt(nRow), usLineFlag, szTerminator );
+			pRow = new CFormatedString;
+			bContinue = _FormatLineWrapContinue( * pRow, rLine, pDC );
+			_CheckLineFlag( * pRow, usLineFlag, szTerminator );
+			vecRows.push_back( pRow );
 		}
-		nRow++;
 
 		if( nCount > 100 && ! (nProcess % 2) ) pMainFrame->SetProgress( 100 * nProcess / nCount );
 		nProcess++;
 	}
+
+	m_clsFormatedPrintText.ReplaceRange( 0, 0, vecRows.empty() ? NULL : & vecRows[0],
+	                                     (INT_PTR)vecRows.size() );
 
 	if( nCount > 100 ) {
 		if( pWait ) delete pWait;
@@ -991,15 +1022,26 @@ INT CCedtView::FindScreenTextRow(INT nIndex)
 	return nTotal - 1;		// past the end: the old code returned the last row too
 }
 
-// Drop the continuation rows of the line that starts at nRow, keeping its first row.
-// Returns the row just past it.
-INT CCedtView::FlattenScreenTextAt(INT nRow)
+// The row just past the nCount logical lines that begin at row nRowBeg -- i.e. how many
+// rows those lines currently occupy. nRowBeg must be a line's FIRST row.
+//
+// With wrap off that is nRowBeg + nCount. With it on, a line owns its first row plus its
+// continuation rows, so they have to be counted.
+INT CCedtView::FindRowPastLines(INT nRowBeg, INT nCount)
 {
 	INT nTotal = (INT)m_clsFormatedScreenText.GetCount();
-	if( nRow < 0 || nRow >= nTotal ) return nRow;
+	if( ! m_bLocalWordWrap ) return _MY_MIN(nRowBeg + nCount, nTotal);
 
-	INT nRows = _ParagraphRowCount(m_clsFormatedScreenText, nRow, nTotal);
-	if( nRows > 1 ) m_clsFormatedScreenText.RemoveRange(nRow + 1, nRows - 1);
+	INT nRow = nRowBeg, nSeen = 0;
 
-	return nRow + 1;
+	while( nRow < nTotal ) {
+		if( m_clsFormatedScreenText.ElementAt(nRow).m_siSplitIndex == 0 ) {
+			if( nSeen == nCount ) break;   // the row that starts the line after our last
+			nSeen++;
+		}
+		nRow++;
+	}
+
+	return nRow;
 }
+

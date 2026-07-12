@@ -338,10 +338,10 @@ protected:
 	INT   GetWordWidth(LPCTSTR lpWord, SHORT siLength, INT nPosition, UCHAR ucType, CDC * pDC = NULL);
 	SHORT GetWordIndex(LPCTSTR lpWord, SHORT siLength, INT nWidth, CDC * pDC = NULL);
 
-	// Row indices, not POSITIONs: these two remove rows, and a POSITION into the row
-	// list does not survive that. See cedtViewFormat.cpp.
+	// Row indices, not POSITIONs: the row list is spliced, and a POSITION into it does not
+	// survive that. See cedtViewFormat.cpp.
 	INT FindScreenTextRow(INT nIndex);
-	INT FlattenScreenTextAt(INT nRow);
+	INT FindRowPastLines(INT nRowBeg, INT nCount);
 
 
 protected: // *** cedtViewMap.cpp ***
