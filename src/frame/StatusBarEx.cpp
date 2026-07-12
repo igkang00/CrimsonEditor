@@ -26,6 +26,7 @@ CStatusBarEx::CStatusBarEx()
 	m_fontPane2.CreateStockObject( DEFAULT_GUI_FONT );
 
 	m_bSplashMessage = FALSE;
+	m_nLastProgress = -1;
 
 	memset( m_crPaneTextColors, 0x00, sizeof(m_crPaneTextColors));
 	memset( m_bPaneHighlight, 0x00, sizeof(m_bPaneHighlight));
@@ -60,6 +61,8 @@ void CStatusBarEx::BeginProgress(LPCTSTR lpszMessage)
 	CStatusBar::SetPaneText(0, _T(""), FALSE);
 	m_szPaneText = lpszMessage;
 
+	m_nLastProgress = -1;	// a fresh operation: the next SetProgress must paint
+
 	Invalidate();
 	UpdateWindow(); /* update window right now */
 }
@@ -74,8 +77,20 @@ void CStatusBarEx::EndProgress()
 	Invalidate();
 }
 
+// Repainting the bar is expensive: it builds an offscreen DC and bitmap, draws the
+// border and the text twice, blits the result, and tears it all down again. And the
+// bar only has 101 distinct appearances.
+//
+// Callers loop over lines or file offsets, not percentages, so they naturally ask for
+// the same percentage over and over — the analyzer used to ask 45,000 times to open a
+// 900,000-line file, and the dictionary loader asks once per 100 words. Dropping the
+// no-op repaints here fixes every caller at once, including any added later, rather
+// than relying on each of them to throttle itself.
 void CStatusBarEx::SetProgress(INT nPercent)
 {
+	if( nPercent == m_nLastProgress ) return;
+	m_nLastProgress = nPercent;
+
 	CFont * pFontOld; CBitmap * pBmpOld;
 	CRect rect; GetItemRect(0, & rect);
 

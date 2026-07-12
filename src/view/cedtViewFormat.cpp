@@ -597,7 +597,7 @@ void CCedtView::FormatScreenText(INT nIndex, INT nCount)
 
 	CCedtDoc * pDoc = (CCedtDoc *)GetDocument(); ASSERT( pDoc );
 	CMainFrame * pMainFrame = (CMainFrame *)AfxGetMainWnd(); ASSERT( pMainFrame );
-	INT nProcess = 0, nLastPercent = -1; CWaitCursor * pWait = NULL;
+	INT nProcess = 0; CWaitCursor * pWait = NULL;
 
 	if( nCount > 1000 ) {
 		pWait = new CWaitCursor;
@@ -635,13 +635,7 @@ void CCedtView::FormatScreenText(INT nIndex, INT nCount)
 			m_clsFormatedScreenText.GetNext(po2);
 		}
 
-		// Repaint the progress bar only when the number on it changes — see the same
-		// throttle in CCedtDoc::AnalyzeText. SetProgress rebuilds an offscreen bitmap
-		// and blits it, so calling it on a fixed line interval burns seconds.
-		if( nCount > 1000 ) {
-			INT nPercent = 100 * nProcess / nCount;
-			if( nPercent != nLastPercent ) { nLastPercent = nPercent; pMainFrame->SetProgress( nPercent ); }
-		}
+		if( nCount > 1000 && ! (nProcess % 20) ) pMainFrame->SetProgress( 100 * nProcess / nCount );
 		nProcess++;
 	}
 
@@ -721,7 +715,7 @@ void CCedtView::FormatPrintText(CDC * pDC, RECT rectDraw, INT nIndex, INT nCount
 
 	CCedtDoc * pDoc = (CCedtDoc *)GetDocument(); ASSERT( pDoc );
 	CMainFrame * pMainFrame = (CMainFrame *)AfxGetMainWnd(); ASSERT( pMainFrame );
-	INT nProcess = 0, nLastPercent = -1; CWaitCursor * pWait = NULL;
+	INT nProcess = 0; CWaitCursor * pWait = NULL;
 
 	if( nCount > 100 ) {
 		pWait = new CWaitCursor;
@@ -752,12 +746,7 @@ void CCedtView::FormatPrintText(CDC * pDC, RECT rectDraw, INT nIndex, INT nCount
 		}
 		m_clsFormatedPrintText.GetNext(po2);
 
-		// Every SECOND line here — even worse than the analyzer's every-twentieth. Same
-		// throttle: only when the displayed number changes.
-		if( nCount > 100 ) {
-			INT nPercent = 100 * nProcess / nCount;
-			if( nPercent != nLastPercent ) { nLastPercent = nPercent; pMainFrame->SetProgress( nPercent ); }
-		}
+		if( nCount > 100 && ! (nProcess % 2) ) pMainFrame->SetProgress( 100 * nProcess / nCount );
 		nProcess++;
 	}
 

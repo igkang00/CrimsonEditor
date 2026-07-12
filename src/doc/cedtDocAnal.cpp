@@ -609,21 +609,12 @@ void CCedtDoc::AnalyzeText(INT nIndex, INT nCount)
 	}
 
 	POSITION pos = m_clsAnalyzedText.FindIndex( nIndex );
-	// Only repaint the progress bar when the percentage it displays actually changes.
-	//
-	// CStatusBarEx::SetProgress is not cheap: it creates an offscreen DC and bitmap,
-	// draws the border and the text twice, blits to the screen, and tears it all down
-	// again. Firing it every 20 lines meant 45,000 of those to open a 900,000-line
-	// file — several seconds of redrawing a bar that only has 101 distinct states.
-	INT nLastPercent = -1;
-
 	while( pos && nProcess < nCount ) {
 		_AnalyzeLine( m_clsAnalyzedText.GetNext(pos) );
 
-		if( nCount > 1000 ) {
-			INT nPercent = 100 * nProcess / nCount;
-			if( nPercent != nLastPercent ) { nLastPercent = nPercent; pMainFrame->SetProgress(nPercent); }
-		}
+		// Asks for the same percentage many times over; CStatusBarEx::SetProgress drops
+		// the repaints that would produce an identical bar.
+		if( nCount > 1000 && ! (nProcess % 20) ) pMainFrame->SetProgress(100 * nProcess / nCount);
 		nProcess++;
 	}
 

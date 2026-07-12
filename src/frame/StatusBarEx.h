@@ -27,6 +27,10 @@ protected:
 	CString		m_szSplashMessage;
 	BOOL		m_bSplashMessage;
 
+	// Last percentage actually painted, so SetProgress can drop a redraw that would
+	// produce the identical bar. -1 means "nothing painted yet".
+	INT			m_nLastProgress;
+
 	COLORREF	m_crPaneTextColors[256];
 	BOOL		m_bPaneHighlight[256];
 
