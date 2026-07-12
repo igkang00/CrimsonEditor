@@ -31,7 +31,7 @@
 ;   uninstall flow.
 
 #define MyAppName         "Crimson Editor"
-#define MyAppVersion      "3.90"
+#define MyAppVersion      "3.91"
 #define MyAppPublisher    "Ingyu Kang"
 #define MyAppURL          "https://github.com/igkang00/CrimsonEditor"
 #define MyAppExeKr        "cedt_kr.exe"

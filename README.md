@@ -10,7 +10,7 @@ A freeware source-code editor for Windows, originally written between 1999 and 2
 
 The current release ships an x64 installer for Windows 10 and 11.
 
-- **[Download cedt-390-setup.exe](https://github.com/igkang00/CrimsonEditor/releases/latest)** (≈ 26 MB) — from the GitHub Releases page
+- **[Download cedt-391-setup.exe](https://github.com/igkang00/CrimsonEditor/releases/latest)** (≈ 26 MB) — from the GitHub Releases page
 
 Run the installer and accept the UAC prompt. It installs to `Program Files\Crimson Editor`, bundles the Visual C++ x64 runtime, and optionally adds an "Edit with Crimson Editor" entry to the Explorer right-click menu.
 
@@ -49,7 +49,7 @@ msbuild cedt.sln /p:Configuration=Debug-US   /p:Platform=x64
 .\scripts\build_installer.ps1
 ```
 
-Build artifacts land in `build\x64\<Configuration>\` (e.g. `build\x64\Release-KR\cedt_kr.exe`); the installer lands in `dist\cedt-390-setup.exe`. Both `build\` and `dist\` are gitignored.
+Build artifacts land in `build\x64\<Configuration>\` (e.g. `build\x64\Release-KR\cedt_kr.exe`); the installer lands in `dist\cedt-391-setup.exe`. Both `build\` and `dist\` are gitignored.
 
 ### Prerequisites
 
@@ -134,35 +134,17 @@ For the full source breakdown — every `.cpp` and what it does, the MFC class d
 
 ## Known issues
 
-### Large-file loading is slow
+### Very large files hold the whole document in memory
 
-Loading a text file walks the whole document through the syntax analyzer
-(`src/doc/cedtDocAnal.cpp`) and then through the word-wrap formatter
-(`src/view/cedtViewFormat.cpp`) before the editor becomes interactive.
-On the current build:
+Large-file loading was slow until v3.91 (a 100 MB file took ~28 s to open
+and ~13 s to save); it now opens in ~2 s and saves in ~0.14 s. See
+[docs/refactoring-large-file-perf.md](docs/refactoring-large-file-perf.md).
 
-- **10 MB**: ~10 s
-- **100 MB**: ~2 min
-
-The editor is fully responsive once the load finishes. The migration to
-Unicode (v3.90) doubled the in-memory buffer size (1 byte → 2 bytes per
-character), which roughly doubled these numbers from the v3.83 baseline
-but did not change the algorithm. Beyond 100 MB the analyzer starts
-holding uncomfortably large chunks of memory in a single pass.
-
-Directions for a future pass:
-
-1. Skip full document re-analysis on load — analyze incrementally as the
-   caret first visits each line, or as syntax highlighting first paints
-   it.
-2. Batch the formatter across the visible viewport plus a small over-
-   scroll window instead of the whole document.
-3. For files above a threshold (~50 MB), stream from disk and hold only
-   the current viewport ± a page in memory.
-
-For now, if you regularly edit files >10 MB, running the Release-KR /
-Release-US build (not the Debug configuration) roughly halves the load
-time.
+What remains is memory, not time: the document, its token analysis, and its
+screen layout are all held in RAM in full, so a file well beyond 100 MB will
+run the process out of address space long before it feels slow. Streaming —
+holding only the viewport and a page either side — is the fix, and it is not
+implemented.
 
 ### High-DPI displays (display scaling > 100%)
 
@@ -197,6 +179,6 @@ scaling** because the legacy UI predates high-DPI:
 
 ---
 
-- **Version**: 3.90
+- **Version**: 3.91
 - **Copyright**: © 1999–2026 Ingyu Kang
 - **License**: see [LICENSE](LICENSE)
