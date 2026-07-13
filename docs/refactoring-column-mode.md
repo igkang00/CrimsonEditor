@@ -193,24 +193,47 @@ still deletes it in one press; the character count in the status bar still count
 are not "making Hangul two columns" — we are adding a column-mode-only alignment coordinate,
 exactly as vim does.
 
-### The boundary rule: expand both edges
+### The boundary rule: a character belongs to the block holding its first cell
 
-When a column edge falls inside a wide character, **the character is included** — the left
-edge snaps to its start, the right edge to its end.
+When a column edge falls inside a wide character, the question is which side it goes to. One
+rule answers it:
+
+> **A character belongs to the column range that contains its FIRST cell.**
+
+Equivalently, and this is how it reads in code: **both edges snap to the next character
+boundary at or after the column.** One function, no direction parameter.
+
+Read from the two edges it looks asymmetric — a character straddling the left edge is
+excluded (its first cell is before the block), one straddling the right edge is included (its
+first cell is inside) — but that is one rule seen twice, not two rules.
 
 ```
-col:   1 2 3 4 5 6 7 8
-       a b 한  한  c          한 occupies 3-4 and 5-6
-block:     [------]           columns 3..6 requested
-expand:    [한  한 ]          both straddling characters included
+line:   a 한  b            한 occupies columns 2-3
+block A: [1,3)   block B: [3,5)
+
+this rule:  A → [a]      B → [한 b]      exact partition — no gap, no overlap
+expand:     A → [a 한]   B → [한 b]      한 in BOTH
+shrink:     A → [a]      B → [b]         한 in NEITHER
 ```
 
-- **See == get.** The highlight is painted at the expanded boundary, so what is blue is what
-  gets copied. Closing that gap is the whole point of this work.
+**That partition property is why.** Adjacent column ranges tile the text exactly: every
+character belongs to exactly one of them. Under *expand* a straddling character is duplicated
+into both; under *shrink* it falls through the crack and belongs to neither. In an editor
+where column operations get applied one after another, that is the difference that matters.
+
+- **See == get.** The highlight is painted at the snapped boundary, so what is blue is what
+  gets copied — including the case where a line's selection is empty.
 - **No character is split**, at either edge.
-- **Symmetric, so it round-trips.** Cut a block, paste it back, it lands where it started. The
-  alternative — shrink left, expand right — walks the block one cell right every time, which
-  for the one operation column mode exists to do is fatal.
+- **It round-trips.** Cut a block, paste it back at the same column, it lands where it started.
+
+The cost: a one-cell block over the *right* half of a wide character selects nothing on that
+line, because that character's first cell is outside the block. The highlight is empty there
+too, so the reason is visible.
+
+*(An earlier draft of this document chose "expand both edges" and justified it by claiming the
+single-rule alternative breaks the cut/paste round trip. That was simply wrong — checked
+against worked examples, it round-trips fine — and the partition property, which the earlier
+draft missed entirely, points the other way.)*
 
 ### Column Backspace
 
@@ -236,9 +259,9 @@ text; it does not owe the text alignment after the text has changed.
 **Phase 1 — the column coordinate, wired to nothing yet.**
 
 - `GetColumnFromIdxX(rLine, nIdxX)` — sum the cells before `nIdxX`.
-- `GetIdxXFromColumn(rLine, nColumn, edge)` — walk cells to `nColumn`; if it lands inside a
-  character, return that character's **start** for a left edge and its **end** for a right
-  edge. The expand rule lives here, once.
+- `GetIdxXFromColumn(rLine, nColumn)` — the first character whose start column is `>= nColumn`.
+  **No edge parameter**: the boundary rule is one function, and this is it. Both edges of a
+  block call it.
 - `GetLastColumn(rLine)`.
 
 **Tabs are part of this, not an afterthought.** A tab advances to the next tab stop, so its
@@ -248,7 +271,8 @@ by tab stop, not by a fixed width.
 
 These three functions are the entire model, so they get the treatment `CLineList` got: a
 table-driven test over lines mixing ASCII, Hangul, astral emoji, combining marks and tabs,
-checking the round trip `column → index → column` and both edge rules.
+checking the round trip `column → index → column`, the boundary rule on both edges, and the
+partition property: for adjacent column ranges, every character lands in exactly one of them.
 
 **Phase 2 — column-mode layout is placed on the grid.**
 In column mode the formatter computes `FORMATEDWORD::m_nPosition` / `m_nWidth` from cells ×
@@ -265,8 +289,8 @@ would place the caret correctly and draw the glyphs somewhere else — so 2 and 
 or not at all.
 
 **Phase 4 — the selection is painted where it will actually cut.**
-`InvertScreenSelected` paints the expanded snapped column boundary per row. This is the phase
-a user notices first: see == get.
+`InvertScreenSelected` paints the snapped column boundary per row — including the rows where
+that makes the selection empty. This is the phase a user notices first: see == get.
 
 **Phase 5 — the block operations count cells, not characters.**
 `CopyToColumnSelection`, `InsertColumnSelection`, `DeleteColumnSelection`,
