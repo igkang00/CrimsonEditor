@@ -20,7 +20,8 @@ roughly twice the Latin advance. Byte count, cell count and pixel width all line
 
 That is not true any more, and it is worth being precise about *how* untrue, because the
 answer decides the design. Measured with GDI at 10 pt / 96 dpi, taking the advance of `a` as
-one narrow cell:
+one narrow cell — re-runnable with
+[`analysis/font-cell-width.ps1`](../analysis/font-cell-width.ps1):
 
 | font | narrow cell | Hangul `가` | Han `漢` | 😀 U+1F600 |
 | --- | ---: | ---: | ---: | ---: |
