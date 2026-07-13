@@ -135,12 +135,37 @@ So the classifier must lean wide. Use the **union of two sources**:
 - **A table** — East Asian Width `W` and `F` (CJK ideographs, Hangul, Kana, fullwidth forms)
   plus the emoji ranges. This is font-independent: the same document has the same columns
   everywhere, which is the point of a grid.
-- **A measurement** — `advance(ch) > 1.5 × narrowWidth` ⇒ 2 cells, using the per-character
+- **A measurement** — `advance(ch) > 1.2 × narrowWidth` ⇒ 2 cells, using the per-character
   advance cache that already exists ([cedtViewFormat.cpp:112](../src/view/cedtViewFormat.cpp#L112)).
 
 They cover each other's holes. The table catches Hangul that a bad fallback draws too narrow
 (Courier New's 1.13×). The measurement catches emoji added to Unicode after the table was
 written — which is exactly how `_CharColumnWidth` failed last time.
+
+**Why the threshold is 1.2 and not 1.5.** Sort the measured ratios and the reason is on the
+page:
+
+```
+1.00   a, space
+1.13   Courier New Hangul      genuinely wide, drawn narrow by a poor fallback
+1.14   Consolas ★ ⭐
+1.25   Courier New ★ ⭐
+────────────────────────────── 1.2
+1.43   Consolas Hangul         genuinely wide
+1.71   emoji
+────────────────────────────── 1.5
+2.00   Han, D2Coding Hangul
+```
+
+**Consolas Hangul sits at 1.43 — under a 1.5 threshold.** A safety net that misses the single
+most important character in the exercise, in the font that is the current default, is not a
+safety net; it just leaves the table carrying the whole weight alone. At 1.2 both sources
+catch it, which is what redundancy is supposed to mean.
+
+The only classification 1.2 changes is Courier New's ★ (1.25), which becomes 2 cells. ★ is
+East Asian Width `Ambiguous` — the standard explicitly declines to say — so calling it wide is
+not an error, it is the East Asian convention, and the font is already drawing it 1.25 cells
+wide anyway. Given the asymmetry above, a lower threshold is structurally the safe direction.
 
 > **That failure is worth naming, because this brings the table back.** The old
 > `_CharColumnWidth` was deleted for classifying U+2705 (✅) as one narrow cell while the font
