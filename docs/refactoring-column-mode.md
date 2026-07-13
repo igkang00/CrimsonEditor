@@ -227,7 +227,7 @@ text; it does not owe the text alignment after the text has changed.
 
 **Phase 0 — the cell classifier, split so the interesting half is testable.**
 
-- `CellsOf(ch)` — table (EAW `W`/`F` + emoji) ∪ measurement (`advance > 1.5 × narrow`), with
+- `CellsOf(ch)` — table (EAW `W`/`F` + emoji) ∪ measurement (`advance > 1.2 × narrow`), with
   the astral branch a surrogate pair needs. Pure table logic gets a unit test; the measured
   half is one call into the existing cache.
 - `GetNarrowWidth()` — the space advance in the current font.
