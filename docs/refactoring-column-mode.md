@@ -312,9 +312,26 @@ skipped the reformat and rows kept the geometry of the mode they were laid out i
 text drawn with `TextOut` after leaving column mode. The toggle now always reformats. (The plan
 above claimed the reformat was already forced; it was not, and this is where that showed.)
 
-**Phase 4 — the selection is painted where it will actually cut.**
-`InvertScreenSelected` paints the snapped column boundary per row — including the rows where
-that makes the selection empty. This is the phase a user notices first: see == get.
+**Phase 4 — the selection is painted where it will actually cut. DONE.**
+`InvertScreenSelected` snaps each edge to a character boundary *in that row* rather than
+painting the raw pixel rectangle, so the highlight stops cutting through a Hangul glyph and
+starts showing what a copy would take. This is the phase a user notices first: see == get.
+
+**The virtual space stays.** The snap passes `bAdjust = FALSE` — a column block is a
+*rectangle*, not a piece of text. Where a row is too short to reach the block, the block is
+still there over empty cells, and a paste fills them with spaces
+([cedtViewEditAdv.cpp:433](../src/view/cedtViewEditAdv.cpp#L433)); clamping to the line end
+would draw a ragged block and hide the region about to be pasted into. The first cut of this
+phase clamped, on a reading of "see == get" that only counted the text a *copy* returns. That
+was wrong: the highlight also has to answer "where will a paste land", and that is the whole
+rectangle. `bAdjust` already meant exactly this — column mode passes `! m_bColumnMode` to
+these functions everywhere else precisely to keep the virtual space.
+
+*(A note on the boundary rule: the block operations snap with `GetIdxXFromPosX`, which resolves
+a column inside a wide character to that character's NEAR side — the opposite of
+`GetIdxXFromColumn`'s rule from Phase 1. The highlight matches the operations here, so see ==
+get holds today. Unifying both on the documented rule is Phase 5's job, and they have to move
+together or the highlight starts lying again.)*
 
 **Phase 5 — the block operations count cells, not characters.**
 `CopyToColumnSelection`, `InsertColumnSelection`, `DeleteColumnSelection`,
