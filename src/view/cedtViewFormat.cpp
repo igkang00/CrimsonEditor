@@ -959,6 +959,28 @@ void CCedtView::InsertScreenText(INT nIndex, INT nCount)
 }
 
 
+// Display cells (0, 1 or 2) of the character starting at nIdxX — the column-mode grid unit.
+// See docs/refactoring-column-mode.md. This is the GDI half of the classifier: it measures
+// the advance and hands it, with the code point and the narrow cell, to the pure CellsFor.
+// One _MeasureRun call, which reads the per-character advance cache built for formatting.
+//
+// The grid is only meaningful in a fixed-pitch font — a proportional one has no single narrow
+// cell to be a multiple of. Column mode already forces fixed pitch (CreateScreenFontObject
+// substitutes the Column Mode font); the assert records that the model now depends on it.
+INT CCedtView::GetCharCells(LPCTSTR lpszLine, INT nIdxX, INT nLength, CDC * pDC)
+{
+	if( pDC == NULL ) pDC = & m_dcScreen;
+	ASSERT( IsUsingFixedPitchFont(pDC) );
+
+	_ResetWidthCacheIfFontChanged( pDC );
+
+	SHORT nUnits   = (SHORT)CharUnitsAt(lpszLine, nIdxX, nLength);
+	INT   nAdvance = _MeasureRun(pDC, lpszLine + nIdxX, nUnits);
+	unsigned int cp = CodepointAt(lpszLine, nIdxX, nLength);
+
+	return CellsFor(cp, nAdvance, GetSpaceWidth(pDC));
+}
+
 INT CCedtView::GetWordWidth(LPCTSTR lpWord, SHORT siLength, INT nPosition, UCHAR ucType, CDC * pDC)
 {
 	// save width setting to global variables

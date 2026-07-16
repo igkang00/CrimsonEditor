@@ -249,13 +249,23 @@ text; it does not owe the text alignment after the text has changed.
 
 ## Plan
 
-**Phase 0 — the cell classifier, split so the interesting half is testable.**
+**Phase 0 — the cell classifier, split so the interesting half is testable. DONE.**
+The pure half lives in `src/include/cedtCharWidth.h` and is unit-tested in
+`tests/CharWidth_test.cpp`: `IsWideByTable(cp)` (the EAW table), `CellsFor(cp, advance, narrow)`
+(the union, the `advance*10 > narrow*12` threshold, and the zero-cell combining-mark case, all
+taking plain values), and `CodepointAt` (the surrogate-pair decode, so the table can be keyed
+on astral emoji). The GDI half is `CCedtView::GetCharCells`, a shell that measures one
+character's advance through the existing width cache (`_MeasureRun`) and calls `CellsFor`.
 
-- `CellsOf(ch)` — table (EAW `W`/`F` + emoji) ∪ measurement (`advance > 1.2 × narrow`), with
-  the astral branch a surrogate pair needs. Pure table logic gets a unit test; the measured
-  half is one call into the existing cache.
-- `GetNarrowWidth()` — the space advance in the current font.
-- Assert the column-mode font is fixed pitch; it already is, but the model now depends on it.
+- The narrow cell is the space advance — the existing `GetSpaceWidth()`, reused rather than a
+  new `GetNarrowWidth()`. It is what alignment padding depends on, and it already exists.
+- `GetCharCells` asserts the font is fixed pitch. Column mode already forces this; the assert
+  records that the grid model now depends on it.
+- Writing the tests surfaced the real shape of the table: it carries whole astral emoji blocks
+  and the CJK/Hangul/fullwidth ranges, but deliberately does **not** enumerate the emoji
+  scattered through the BMP (U+2705, U+2B50 …). That scattering is exactly what made the old
+  `_CharColumnWidth` miss U+2705; here the measurement half catches them, so the table does not
+  have to pretend to.
 
 **Phase 1 — the column coordinate, wired to nothing yet.**
 

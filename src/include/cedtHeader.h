@@ -111,6 +111,7 @@
 // HEADERS
 #include "fstream_compat.h"
 #include "cedtUnicode.h"
+#include "cedtCharWidth.h"
 #include "resource.h"
 #include "PathName.h"
 #include "RegExp.h"

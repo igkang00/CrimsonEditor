@@ -30,5 +30,6 @@
     <ClCompile Include="CDictionary_test.cpp"><Filter>Tests</Filter></ClCompile>
     <ClCompile Include="CLangSpec_test.cpp"><Filter>Tests</Filter></ClCompile>
     <ClCompile Include="CAnalyzedString_test.cpp"><Filter>Tests</Filter></ClCompile>
+    <ClCompile Include="CharWidth_test.cpp"><Filter>Tests</Filter></ClCompile>
   </ItemGroup>
 </Project>
