@@ -206,11 +206,18 @@ void CCedtView::DrawScreenBackgroundAndText()
 						// when italicize comment option is on and this part is comment then set font to italic
 						if( m_bItalicizeComment && (CHECK_COMMENT(usFlag) || ucType2 == WT_LINECOMMENT) ) m_dcScreen.SelectObject( & m_fontScreenIt );
 
-						// draw text string
-						m_dcScreen.TextOut(nPosX, nPosY, (LPCTSTR)rLine + rWord.m_siIndex, rWord.m_siLength);
+						// draw text string — column mode forces each glyph onto the grid
+						if( m_bColumnMode )
+							DrawColumnWord(nPosX, nPosY, (LPCTSTR)rLine + rWord.m_siIndex, rWord.m_siLength);
+						else
+							m_dcScreen.TextOut(nPosX, nPosY, (LPCTSTR)rLine + rWord.m_siIndex, rWord.m_siLength);
 
-						if( m_bEmboldenKeywords && _IS_BET(WT_KEYWORD0, ucType2, WT_KEYWORD9) && _CanEmbolden(rWord.m_ucInfo, usFlag) && ! CHECK_HILIGHT(usFlag) && ! CHECK_COMMENT(usFlag) && ! CHECK_QUOTATION(usFlag) ) 
-							m_dcScreen.TextOut(nPosX+1, nPosY, (LPCTSTR)rLine + rWord.m_siIndex, rWord.m_siLength);
+						if( m_bEmboldenKeywords && _IS_BET(WT_KEYWORD0, ucType2, WT_KEYWORD9) && _CanEmbolden(rWord.m_ucInfo, usFlag) && ! CHECK_HILIGHT(usFlag) && ! CHECK_COMMENT(usFlag) && ! CHECK_QUOTATION(usFlag) ) {
+							if( m_bColumnMode )
+								DrawColumnWord(nPosX+1, nPosY, (LPCTSTR)rLine + rWord.m_siIndex, rWord.m_siLength);
+							else
+								m_dcScreen.TextOut(nPosX+1, nPosY, (LPCTSTR)rLine + rWord.m_siIndex, rWord.m_siLength);
+						}
 
 						if( m_bLocalSpellCheck && ucType2 == WT_WRONGWORD /* && ! CHECK_HIGHLIGHT && ! CHECK_COMMENT && ! CHECK_QUOTATION */ ) 
 							DrawScreenUnderbar(nPosX, nPosY+nCharHeight-1, rWord.m_nWidth, 1);
@@ -552,6 +559,28 @@ void CCedtView::DrawScreenUnderbar(INT nPosX, INT nPosY, INT nWidth, INT nHeight
 	}
 
 	m_dcScreen.SelectObject( penOld );
+}
+
+void CCedtView::DrawColumnWord(INT nPosX, INT nPosY, LPCTSTR pWord, SHORT siLength)
+{
+	if( siLength <= 0 ) return;
+
+	// One advance per code unit: a character's whole width goes on its first unit, and the
+	// low half of a surrogate pair gets 0, so ExtTextOut places the pair as one glyph and the
+	// next character lands on the grid. Reused across draws — drawing is single-threaded UI.
+	static std::vector<INT> vecDx;
+	if( (INT)vecDx.size() < siLength ) vecDx.resize(siLength);
+
+	INT nSpace = GetSpaceWidth();
+
+	for(SHORT i = 0; i < siLength; ) {
+		SHORT nUnits = (SHORT)CharUnitsAt(pWord, i, siLength);
+		vecDx[i] = GetCharCells(pWord, i, siLength) * nSpace;
+		for(SHORT k = 1; k < nUnits; k++) vecDx[i + k] = 0;
+		i = (SHORT)( i + nUnits );
+	}
+
+	m_dcScreen.ExtTextOut(nPosX, nPosY, 0, NULL, pWord, siLength, & vecDx[0]);
 }
 
 void CCedtView::DrawScreenSpaces(INT nPosX, INT nPosY, INT nWidth, INT nHeight, INT nCount)

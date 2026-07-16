@@ -90,21 +90,23 @@ void CCedtApp::OnEditColumnMode()
 	// turn off word wrap mode of all views
 	if( CCedtView::m_bColumnMode ) TurnOffWordWrapModeAllViews();
 
-	BOOL bNeedFormat = FALSE;
-	if( CCedtView::m_bColumnMode ) { // check if it need to use column mode font
-		if( CCedtView::IsUsingFixedPitchFont() ) CCedtView::m_bUsingColumnModeFont = FALSE;
-		else { bNeedFormat = TRUE; CCedtView::m_bUsingColumnModeFont = TRUE; }
-	} else {
-		if( CCedtView::m_bUsingColumnModeFont ) bNeedFormat = TRUE;
+	// Column mode now changes the LAYOUT, not just the font: positions snap to the cell grid
+	// (see docs/refactoring-column-mode.md). So a toggle always needs a reformat, even when
+	// the font does not change — otherwise rows keep the geometry of the mode they were last
+	// laid out in, and a fixed-pitch user (whose font never switches) would see grid-placed
+	// text after leaving column mode. It used to be conditional because the old column mode
+	// left the layout alone and only the font substitution required it.
+	if( CCedtView::m_bColumnMode ) // check if it need to use column mode font
+		CCedtView::m_bUsingColumnModeFont = ! CCedtView::IsUsingFixedPitchFont();
+	else
 		CCedtView::m_bUsingColumnModeFont = FALSE;
-	}
 
 	// create screen font object and apply to all views
 	SaveCaretAndAnchorPosAllViews();
 
 	CCedtView::CreateScreenFontObject();
 	CCedtView::ApplyCurrentScreenFont();
-	if( bNeedFormat ) FormatScreenTextAllViews();
+	FormatScreenTextAllViews();
 
 	RestoreCaretAndAnchorPosAllViews();
 	UpdateAllViews();

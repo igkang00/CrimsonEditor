@@ -8,6 +8,12 @@ static BOOL  _bFixedPitch;
 static INT   _nSpaceWidth, _nTabWidth, _nTabMargin;
 static INT   _nWrapWidth, _nIndentWidth, _nMinWidth;
 
+// TRUE while laying out for the column-mode grid — runs measure to cells x narrow rather
+// than their real advance. Distinct from CCedtView::m_bColumnMode (which is the editing
+// mode, always on while column mode is): this is the LAYOUT choice, and it is off for the
+// printer path, which measures for real, even when column mode happens to be on.
+static BOOL  _bGridLayout;
+
 // temporary global variables for format text
 static BOOL  _bWordSplit; 
 static INT   _nLeadingSpaceWidth;
@@ -157,6 +163,32 @@ static INT _MeasureRun(CDC * pDC, LPCTSTR pWord, SHORT siLength)
 	return nTotal;
 }
 
+// Display cells of one character (0/1/2), from its code point and its measured advance.
+// Static so the static formatters below can reach it; the cache reset is the caller's job
+// (formatting resets once per batch). The narrow cell is the cached space advance.
+static INT _CharCells(CDC * pDC, LPCTSTR psz, INT nIdxX, INT nLen)
+{
+	SHORT nUnits = (SHORT)CharUnitsAt(psz, nIdxX, nLen);
+	INT nAdvance = _MeasureRun(pDC, psz + nIdxX, nUnits);
+	unsigned int cp = CodepointAt(psz, nIdxX, nLen);
+	return CellsFor(cp, nAdvance, _CharAdvance(pDC, _T(' ')));
+}
+
+// The grid width of a run: the sum of its characters' cells, times the narrow cell. This is
+// what a word measures to in column mode — not its real pixel advance, which for CJK or emoji
+// is not a whole number of cells. Padding and every position downstream are multiples of the
+// cell, so the run must be too.
+static INT _WordCellWidth(CDC * pDC, LPCTSTR pWord, SHORT siLength)
+{
+	INT nCells = 0;
+	for(SHORT i = 0; i < siLength; ) {
+		SHORT nUnits = (SHORT)CharUnitsAt(pWord, i, siLength);
+		nCells += _CharCells(pDC, pWord, i, siLength);
+		i = (SHORT)( i + nUnits );
+	}
+	return nCells * _nSpaceWidth;
+}
+
 static INT _GetWordWidth(LPCTSTR pWord, SHORT siLength, INT nPosition, UCHAR cType, CDC * pDC)
 {
 	if( cType == WT_TAB ) {
@@ -164,8 +196,14 @@ static INT _GetWordWidth(LPCTSTR pWord, SHORT siLength, INT nPosition, UCHAR cTy
 	} else if( cType == WT_SPACE ) {
 		return _nSpaceWidth * siLength;
 	} else if( _bFixedPitch && ! _NeedsGdiMeasure(pWord, siLength) ) {
-		// Pure ASCII in a fixed-pitch font: fast path, no measuring at all.
+		// Pure ASCII in a fixed-pitch font: fast path, no measuring at all. Already one cell
+		// per character, so column mode needs nothing extra here.
 		return _nSpaceWidth * siLength;
+	} else if( _bGridLayout ) {
+		// Column mode forces the run onto the grid: cells x narrow, not the real advance.
+		// A font-linked CJK glyph drawn at 1.43x the Latin cell becomes a clean 2 cells, and
+		// the caret, the selection and the padding all agree on where it ends.
+		return _WordCellWidth(pDC, pWord, siLength);
 	} else {
 		// Anything non-ASCII has to be measured even when the base font is declared
 		// fixed-pitch. Windows font-linking renders missing glyphs (CJK, emoji) from
@@ -209,7 +247,10 @@ static SHORT _GetWordIndex(LPCTSTR pWord, SHORT siLength, INT nWidth, CDC * pDC)
 			if( i == siLength ) break;
 
 			SHORT siUnits = (SHORT)CharUnitsAt(pWord, i, siLength);
-			nRunning += _MeasureRun(pDC, pWord + i, siUnits);
+			// Advance in the same units _GetWordWidth used, so the split lands where the text
+			// is actually drawn: grid cells in column mode, real pixels otherwise.
+			if( _bGridLayout ) nRunning += _CharCells(pDC, pWord, i, siLength) * _nSpaceWidth;
+			else               nRunning += _MeasureRun(pDC, pWord + i, siUnits);
 			i = (SHORT)( i + siUnits );
 		}
 	}
@@ -618,6 +659,7 @@ void CCedtView::PrepareFormatMetrics()
 
 	// save width setting to global variables
 	_bFixedPitch = IsUsingFixedPitchFont();
+	_bGridLayout = m_bColumnMode;			// screen layout: grid when in column mode
 	_nSpaceWidth = GetSpaceWidth();
 	_nTabWidth   = m_nTabSize * _nSpaceWidth;
 	_nTabMargin  = 1;
@@ -839,6 +881,7 @@ void CCedtView::FormatPrintText(CDC * pDC, RECT rectDraw, INT nIndex, INT nCount
 
 	// save width setting to global variables
 	_bFixedPitch = IsUsingFixedPitchFont( pDC );
+	_bGridLayout = FALSE;			// the printer measures for real, even in column mode
 	_nSpaceWidth = GetSpaceWidth( pDC );
 	_nTabWidth   = m_nTabSize * _nSpaceWidth;
 	_nTabMargin  = _MY_MAX(_nSpaceWidth / 10, 1);
@@ -973,18 +1016,14 @@ INT CCedtView::GetCharCells(LPCTSTR lpszLine, INT nIdxX, INT nLength, CDC * pDC)
 	ASSERT( IsUsingFixedPitchFont(pDC) );
 
 	_ResetWidthCacheIfFontChanged( pDC );
-
-	SHORT nUnits   = (SHORT)CharUnitsAt(lpszLine, nIdxX, nLength);
-	INT   nAdvance = _MeasureRun(pDC, lpszLine + nIdxX, nUnits);
-	unsigned int cp = CodepointAt(lpszLine, nIdxX, nLength);
-
-	return CellsFor(cp, nAdvance, GetSpaceWidth(pDC));
+	return _CharCells(pDC, lpszLine, nIdxX, nLength);
 }
 
 INT CCedtView::GetWordWidth(LPCTSTR lpWord, SHORT siLength, INT nPosition, UCHAR ucType, CDC * pDC)
 {
 	// save width setting to global variables
 	_bFixedPitch = IsUsingFixedPitchFont( pDC );
+	_bGridLayout = m_bColumnMode && ( pDC == NULL || pDC == & m_dcScreen );	// screen only
 	_nSpaceWidth = GetSpaceWidth( pDC );
 	_nTabWidth   = m_nTabSize * _nSpaceWidth;
 	_nTabMargin  = _MY_MAX(_nSpaceWidth / 10, 1);
@@ -997,6 +1036,7 @@ SHORT CCedtView::GetWordIndex(LPCTSTR lpWord, SHORT siLength, INT nWidth, CDC * 
 {
 	// save width setting to global variables
 	_bFixedPitch = IsUsingFixedPitchFont( pDC );
+	_bGridLayout = m_bColumnMode && ( pDC == NULL || pDC == & m_dcScreen );	// screen only
 	_nSpaceWidth = GetSpaceWidth( pDC );
 	_nTabWidth   = m_nTabSize * _nSpaceWidth;
 	_nTabMargin  = _MY_MAX(_nSpaceWidth / 10, 1);

@@ -288,19 +288,29 @@ and astral emoji 2, combining mark 0) drives lines mixing all of those plus tabs
 round trip `column → index → column`, the boundary rule on a column that lands mid-character,
 and the partition property — adjacent ranges map to index ranges that neither gap nor overlap.
 
-**Phase 2 — column-mode layout is placed on the grid.**
-In column mode the formatter computes `FORMATEDWORD::m_nPosition` / `m_nWidth` from cells ×
-narrow width instead of measuring. `GetIdxXFromPosX` / `GetPosXFromIdxX` become exact
-arithmetic; the `/ GetAveCharWidth()` extrapolation past the end of a line
-([cedtViewMap.cpp:191](../src/view/cedtViewMap.cpp#L191),
-[:246](../src/view/cedtViewMap.cpp#L246)) becomes the same arithmetic as inside the line, so
-the model stops contradicting itself. Toggling column mode already forces a reformat, so a
-layout change is expected here.
+**Phase 2 — column-mode layout is placed on the grid. DONE (with Phase 3).**
+The measuring is done in `_GetWordWidth` / `_GetWordIndex`, so those are where the grid goes
+in: a file-global `_bGridLayout` (distinct from `m_bColumnMode` — it is the LAYOUT choice, off
+for the printer, which measures for real) switches a word's width from its real advance to
+`cells × narrow`. `_WordCellWidth` sums the cells. Because `GetPosXFromIdxX` / `GetIdxXFromPosX`
+compute a position inside a word as `word start + GetWordWidth(prefix)`, making `GetWordWidth`
+cell-based carries the whole coordinate system with it — the caret follows the grid with no
+further change. The `/ GetAveCharWidth()` extrapolation past the end of a line was already
+correct: in a fixed-pitch font `tmAveCharWidth == GetSpaceWidth`, which is why ASCII column
+mode worked before any of this.
 
-**Phase 3 — drawing obeys the grid.**
-Column mode draws with `ExtTextOut` and an explicit `lpDx` array. Until this lands, Phase 2
-would place the caret correctly and draw the glyphs somewhere else — so 2 and 3 ship together
-or not at all.
+**Phase 3 — drawing obeys the grid. DONE (with Phase 2).**
+`DrawColumnWord` draws with `ExtTextOut` and a per-code-unit `lpDx` (a character's whole width
+on its first unit, 0 on the low half of a surrogate pair), so a glyph the font would advance
+off-grid lands in its cell. Both draw sites — the text and the embolden pass — branch on
+`m_bColumnMode`.
+
+**Flushed out here: the toggle did not reformat.** `CCedtApp::OnEditColumnMode` only reformatted
+when the *font* changed. That was correct while column mode left the layout alone, and this work
+made it wrong: a fixed-pitch user's font never switches, so entering or leaving column mode
+skipped the reformat and rows kept the geometry of the mode they were laid out in — grid-placed
+text drawn with `TextOut` after leaving column mode. The toggle now always reformats. (The plan
+above claimed the reformat was already forced; it was not, and this is where that showed.)
 
 **Phase 4 — the selection is painted where it will actually cut.**
 `InvertScreenSelected` paints the snapped column boundary per row — including the rows where

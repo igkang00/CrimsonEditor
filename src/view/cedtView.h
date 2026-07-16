@@ -303,6 +303,10 @@ protected: // *** cedtViewDraw.cpp ***
 	void DrawScreenTabChar(INT nPosX, INT nPosY, INT nWidth, INT nHeight);
 	void DrawScreenLineBreak(INT nPosX, INT nPosY, INT nWidth, INT nHeight);
 
+	// Draw a run with each character forced onto the column grid (ExtTextOut + per-character
+	// advances), so a glyph the font would draw off-grid lands in its cell. Column mode only.
+	void DrawColumnWord(INT nPosX, INT nPosY, LPCTSTR pWord, SHORT siLength);
+
 	void ParsePageHeaderAndFooter(INT nCurPage, INT nMaxPage);
 	void ParsePageHeaderAndFooter(CString & szArgument, LPCTSTR lpszFilePath, LPCTSTR lpszFileName,
 		 LPCTSTR lpszPageNumber, LPCTSTR lpszTotalPage, LPCTSTR lpszCurrDate, LPCTSTR lpszCurrTime);
