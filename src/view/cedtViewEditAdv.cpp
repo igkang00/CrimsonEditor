@@ -46,11 +46,16 @@ void CCedtView::ActionDeleteColumnChar()
 
 void CCedtView::ActionDeleteColumnPrevChar()
 {
-	INT nLineHeight = GetLineHeight(), nAveCharWidth = GetAveCharWidth();
+	INT nLineHeight = GetLineHeight();
 	INT nBegX, nBegY, nEndX, nEndY; GetSelectedPosition(nBegX, nBegY, nEndX, nEndY);
 
+	// The block steps back exactly one COLUMN, and each row then deletes one whole character.
+	// A row whose character was two cells wide shrinks by two, one whose character was narrow
+	// shrinks by one — so the rows end up different lengths, and that is right: what was
+	// deleted really was of different widths. The block is a column, not a property of the
+	// text, and it owes the text no alignment after the text has changed.
 	if( nBegX <= 0 ) return;
-	else nBegX = nEndX = nBegX - nAveCharWidth;
+	else nBegX = nEndX = nBegX - GetSpaceWidth();
 
 	for(INT nPosY = nBegY; nPosY <= nEndY; nPosY += nLineHeight ) {
 		CFormatedString & rLine = GetLineFromPosY( nPosY );
@@ -406,13 +411,38 @@ void CCedtView::CopyToColumnSelection(CMemText & rBlock, INT nBegX, INT nBegY, I
 
 void CCedtView::InsertColumnSelection(INT nBegX, INT nBegY, INT & nEndX, INT & nEndY, CMemText & rBlock)
 {
-	INT nLineHeight = GetLineHeight(), nAveCharWidth = GetAveCharWidth();
+	INT nLineHeight = GetLineHeight();
 	INT nLastPosY = GetLastPosY();
 
-	rBlock.MakeEqualLength();
-	INT nCount = (INT)rBlock.GetCount(), nMaxLen = rBlock.GetMaxLength();
+	// Square the block off by DISPLAY WIDTH, not character count.
+	//
+	// CMemText::MakeEqualLength pads to an equal number of characters, and GetMaxLength
+	// counts characters — which is not the block's width the moment a line holds anything
+	// wide. A Hangul syllable is one character and two cells, so a block whose lines mix
+	// scripts came out ragged, and nEndX (chars x cell) landed short of where the text
+	// actually ends. That is a counting error, not a metrics one: it was wrong even in a
+	// perfect dual-width font.
+	//
+	// CMemText is a general container and has no business knowing about display width, so
+	// the padding is done here — the block is a column-mode artefact and its width rule
+	// belongs to column mode.
+	INT nMaxCells = 0;
+	POSITION posPad = rBlock.GetHeadPosition();
+	while( posPad ) {
+		INT nCells = GetStringColumns( rBlock.GetNext(posPad) );
+		if( nCells > nMaxCells ) nMaxCells = nCells;
+	}
 
-	nEndX = nBegX + nMaxLen * nAveCharWidth;
+	posPad = rBlock.GetHeadPosition();
+	while( posPad ) {
+		CString & rPad = rBlock.GetNext(posPad);
+		INT nCells = GetStringColumns( rPad );
+		if( nCells < nMaxCells ) rPad += CString(_T(' '), nMaxCells - nCells);
+	}
+
+	INT nCount = (INT)rBlock.GetCount();
+
+	nEndX = nBegX + nMaxCells * GetSpaceWidth();
 	nEndY = nBegY + (nCount - 1) * nLineHeight;
 
 	POSITION pos = rBlock.GetHeadPosition();
@@ -432,7 +462,7 @@ void CCedtView::InsertColumnSelection(INT nBegX, INT nBegY, INT & nEndX, INT & n
 
 		if( nLstX < nBegX ) { // append blank spaces
 			INT nIdxX = GetIdxXFromPosX( rLine, nLstX, TRUE );
-			InsertString( nIdxX, nIdxY, CString( ' ', (nBegX - nLstX) / nAveCharWidth ) );
+			InsertString( nIdxX, nIdxY, CString( _T(' '), (nBegX - nLstX) / GetSpaceWidth() ) );
 		}
 
 		// now insert text block

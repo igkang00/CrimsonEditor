@@ -351,6 +351,7 @@ protected:
 	INT GetColumnFromIdxX(CFormatedString & rLine, INT nIdxX);
 	INT GetIdxXFromColumn(CFormatedString & rLine, INT nColumn);
 	INT GetLastColumn(CFormatedString & rLine);
+	INT GetStringColumns(LPCTSTR psz);
 	static INT CellCallback(void * pCtx, LPCTSTR psz, INT nIdxX, INT nLen);
 
 	// Row indices, not POSITIONs: the row list is spliced, and a POSITION into it does not

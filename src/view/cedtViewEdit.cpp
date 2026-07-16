@@ -82,16 +82,16 @@ void CCedtView::ActionInsertSpacesInPlaceOfTab()
 
 void CCedtView::ActionInsertColumnChar(UINT nChar)
 {
-	INT nLineHeight = GetLineHeight(), nAveCharWidth = GetAveCharWidth();
+	INT nLineHeight = GetLineHeight(), nSpaceWidth = GetSpaceWidth();
 	INT nBegX, nBegY, nEndX, nEndY; GetSelectedPosition(nBegX, nBegY, nEndX, nEndY);
 
 	for(INT nPosY = nBegY; nPosY <= nEndY; nPosY += nLineHeight ) {
 		CFormatedString & rLine = GetLineFromPosY( nPosY );
 		INT nIdxX, nIdxY = GetIdxYFromPosY( nPosY ), nLstX = GetLastPosX( rLine );
 
-		if( nBegX > nLstX ) {
+		if( nBegX > nLstX ) {	// pad the virtual space with spaces — a cell IS a space
 			nIdxX = GetIdxXFromPosX( rLine, nLstX, TRUE );
-			CString szInsert(' ', (nBegX - nLstX) / nAveCharWidth);
+			CString szInsert(_T(' '), (nBegX - nLstX) / nSpaceWidth);
 			InsertString(nIdxX, nIdxY, szInsert);
 		}
 
@@ -112,16 +112,16 @@ void CCedtView::ActionInsertColumnSpacesInPlaceOfTab()
 	INT nNextPosX = GetNextTabPosition(m_nCaretPosX);
 	INT nSpaceCount = (nNextPosX - m_nCaretPosX) / nSpaceWidth;
 
-	INT nLineHeight = GetLineHeight(), nAveCharWidth = GetAveCharWidth();
+	INT nLineHeight = GetLineHeight();
 	INT nBegX, nBegY, nEndX, nEndY; GetSelectedPosition(nBegX, nBegY, nEndX, nEndY);
 
 	for(INT nPosY = nBegY; nPosY <= nEndY; nPosY += nLineHeight ) {
 		CFormatedString & rLine = GetLineFromPosY( nPosY );
 		INT nIdxX, nIdxY = GetIdxYFromPosY( nPosY ), nLstX = GetLastPosX( rLine );
 
-		if( nBegX > nLstX ) {
+		if( nBegX > nLstX ) {	// pad the virtual space with spaces — a cell IS a space
 			nIdxX = GetIdxXFromPosX( rLine, nLstX, TRUE );
-			CString szInsert(' ', (nBegX - nLstX) / nAveCharWidth);
+			CString szInsert(_T(' '), (nBegX - nLstX) / nSpaceWidth);
 			InsertString(nIdxX, nIdxY, szInsert);
 		}
 

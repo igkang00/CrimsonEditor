@@ -76,6 +76,15 @@ INT CCedtView::GetLastColumn(CFormatedString & rLine)
 	return LastColumn(psz, (INT)_tcslen(psz), m_nTabSize, CellCallback, this);
 }
 
+// Display width of a bare string, in cells. For the block clipboard, whose lines are plain
+// CStrings rather than rows. Tabs are measured from column 0 — the block was cut out of its
+// original tab stops, and it is about to land somewhere else anyway.
+INT CCedtView::GetStringColumns(LPCTSTR psz)
+{
+	if( psz == NULL ) return 0;
+	return LastColumn(psz, (INT)_tcslen(psz), m_nTabSize, CellCallback, this);
+}
+
 INT CCedtView::GetTrailingBlankIdxX(CAnalyzedString & rLine)
 {
 	CCedtDoc * pDoc = (CCedtDoc *)GetDocument();

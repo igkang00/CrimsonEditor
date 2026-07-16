@@ -333,15 +333,27 @@ a column inside a wide character to that character's NEAR side — the opposite 
 get holds today. Unifying both on the documented rule is Phase 5's job, and they have to move
 together or the highlight starts lying again.)*
 
-**Phase 5 — the block operations count cells, not characters.**
-`CopyToColumnSelection`, `InsertColumnSelection`, `DeleteColumnSelection`,
-`ActionDeleteColumnPrevChar`, `ActionInsertColumnChar`,
-`ActionInsertColumnSpacesInPlaceOfTab`. The counting bugs die here: padding and width come
-from column differences, not `pixels ÷ tmAveCharWidth`.
+**Phase 5 — the block operations count cells, not characters. DONE.**
+The counting bug was in `InsertColumnSelection`: `CMemText::MakeEqualLength` pads to an equal
+number of *characters* and `GetMaxLength` counts *characters*, so a block whose lines mixed
+scripts came out ragged and `nEndX` (chars × cell) fell short of where the text really ended.
+The paste path now measures each line with `GetStringColumns` (the Phase 1 walk, so tabs are
+handled) and pads to the widest in cells. `CMemText` is a general container and stays ignorant
+of display width — the block is a column-mode artefact and its width rule belongs here.
 
-`CMemText` is a general container, so rather than teach it about display width, the paste path
-pads the block itself — the block is a column-mode artefact and its width rule belongs to
-column mode.
+Everything else was already right, for a reason worth writing down: the padding counts
+(`(nBegX - nLstX) / nAveCharWidth`) and the Backspace step were pixel arithmetic over a
+fixed-pitch font, where `tmAveCharWidth == GetSpaceWidth`. They are now spelled `GetSpaceWidth`
+because *that* is the number the model depends on — padding is spaces — but the behaviour did
+not change.
+
+**The boundary rule is still not the documented one.** The operations snap with
+`GetIdxXFromPosX`, which resolves a column inside a wide character to that character's NEAR
+side; `GetIdxXFromColumn` (Phase 1) implements the documented rule and resolves to the FAR
+side. Both partition the text; they differ in which block a straddling character joins. The
+highlight matches the operations, so see == get holds — but `GetIdxXFromColumn` currently has
+no caller outside its tests. Unifying them means moving the operations and the highlight
+together, and is the one piece of this plan still outstanding.
 
 **Phase 6 — the status bar tells the truth.**
 In column mode the `Col` field shows the display column; outside it, the character position,
