@@ -698,7 +698,12 @@ void CMainFrame::SetCaretPositionInfo(INT nLine, INT nCol, INT nMax)
 {
 	if( m_bPrintPreviewMode ) return;
 
-	CString szPaneText; szPaneText.Format(_T("Ln %d,  Ch %d"), nLine, nCol);
+	// "Ch" is a character position; "Co" is a display column, which is what column mode
+	// reports (a Hangul syllable counts twice there, once here). The number changes meaning
+	// with the mode, so the label has to say which one it is.
+	CString szPaneText;
+	szPaneText.Format(_T("Ln %d,  %s %d"), nLine,
+	                  CCedtView::IsColumnMode() ? _T("Co") : _T("Ch"), nCol);
 	m_wndStatusBar.SetPaneText(1, szPaneText);
 
 	szPaneText.Format(_T("%d"), nMax);

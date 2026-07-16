@@ -355,9 +355,17 @@ highlight matches the operations, so see == get holds — but `GetIdxXFromColumn
 no caller outside its tests. Unifying them means moving the operations and the highlight
 together, and is the one piece of this plan still outstanding.
 
-**Phase 6 — the status bar tells the truth.**
-In column mode the `Col` field shows the display column; outside it, the character position,
-exactly as now ([cedtView.cpp:590](../src/view/cedtView.cpp#L590)).
+**Phase 6 — the status bar tells the truth. DONE.**
+In column mode the field shows the display column; outside it, the character position, exactly
+as before. The column is taken from the caret pixel over the cell rather than from
+`GetColumnFromIdxX`: the caret is grid-aligned in column mode anyway, and that also works in
+the virtual space past the end of a line, where there is no character index to convert.
+
+**And the label moves with it.** The pane reads `Ln 3, Ch 5` normally and `Ln 3, Co 7` in
+column mode. This is where the two coordinate systems first become visible to a user — the same
+caret, two different numbers — so the label has to say which one is being shown. Leaving it at
+`Ch` while the number had become a column would have been a small lie in the one place built to
+explain the difference.
 
 **Phase 7 — measure, and write down what is still not exact.**
 Also: consider defaulting the Column Mode font to the bundled D2Coding. It is no longer
