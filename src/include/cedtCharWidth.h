@@ -119,4 +119,75 @@ inline INT CellsFor(unsigned int cp, INT nAdvance, INT nNarrow)
 }
 
 
+// ---------------------------------------------------------------------------
+// The column coordinate.
+//
+// A display column is a running count of cells from the start of the line. These three
+// functions are the whole of it: character index -> column, column -> character index, and
+// the line's total width. Column mode's caret, selection and block geometry are all rebuilt
+// on them (Phase 2+).
+//
+// Cells come from a caller-supplied function so this logic is testable without a device
+// context — the GDI wrapper passes one backed by GetCharCells; a test passes a fixed rule.
+// TAB is the one thing handled here rather than by that function: a tab advances to the next
+// tab stop, so its width depends on the column it starts at, which only this walk knows.
+// ---------------------------------------------------------------------------
+
+// Cells of the (non-tab) character at psz[nIdxX]. nLen is the line length in code units.
+typedef INT (*PFN_CHARCELLS)(void * pCtx, LPCTSTR psz, INT nIdxX, INT nLen);
+
+// Cells a tab occupies, starting from nColumn. Whole tab stops, so the grid stays integer.
+inline INT _TabCells(INT nColumn, INT nTabSize)
+{
+	if( nTabSize <= 0 ) return 1;
+	return nTabSize - (nColumn % nTabSize);
+}
+
+// The display column at which the character at nIdxX begins — i.e. the cells before it.
+inline INT ColumnFromIdxX(LPCTSTR psz, INT nLen, INT nIdxX, INT nTabSize,
+                          PFN_CHARCELLS pfnCells, void * pCtx)
+{
+	INT nCol = 0, i = 0;
+	while( i < nIdxX && i < nLen ) {
+		if( psz[i] == _T('\t') ) {
+			nCol += _TabCells(nCol, nTabSize);
+			i += 1;
+		} else {
+			nCol += pfnCells(pCtx, psz, i, nLen);
+			i += CharUnitsAt(psz, i, nLen);
+		}
+	}
+	return nCol;
+}
+
+// The index of the first character whose START column is >= nColumn. This IS the boundary
+// rule — a character belongs to the range holding its first cell — and it has no edge
+// parameter because both edges of a block ask it the same question. A column that lands
+// inside a wide character therefore resolves to that character's far side (its next
+// boundary), which is what makes adjacent ranges tile the text with no gap and no overlap.
+// Past the end of the line it returns nLen; virtual space is the caller's business.
+inline INT IdxXFromColumn(LPCTSTR psz, INT nLen, INT nColumn, INT nTabSize,
+                          PFN_CHARCELLS pfnCells, void * pCtx)
+{
+	INT nCol = 0, i = 0;
+	while( i < nLen ) {
+		if( nCol >= nColumn ) return i;
+		if( psz[i] == _T('\t') ) {
+			nCol += _TabCells(nCol, nTabSize);
+			i += 1;
+		} else {
+			nCol += pfnCells(pCtx, psz, i, nLen);
+			i += CharUnitsAt(psz, i, nLen);
+		}
+	}
+	return nLen;
+}
+
+// The line's width in cells.
+inline INT LastColumn(LPCTSTR psz, INT nLen, INT nTabSize, PFN_CHARCELLS pfnCells, void * pCtx)
+{
+	return ColumnFromIdxX(psz, nLen, nLen, nTabSize, pfnCells, pCtx);
+}
+
+
 #endif // __CEDT_CHARWIDTH_H_

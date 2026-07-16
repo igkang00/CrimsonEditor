@@ -267,23 +267,26 @@ character's advance through the existing width cache (`_MeasureRun`) and calls `
   `_CharColumnWidth` miss U+2705; here the measurement half catches them, so the table does not
   have to pretend to.
 
-**Phase 1 — the column coordinate, wired to nothing yet.**
+**Phase 1 — the column coordinate, wired to nothing yet. DONE.**
+The pure walk lives in `cedtCharWidth.h` — `ColumnFromIdxX`, `IdxXFromColumn`, `LastColumn` —
+and takes a cell-count callback so it is tested without a device context. The thin
+`CCedtView` wrappers (`GetColumnFromIdxX` / `GetIdxXFromColumn` / `GetLastColumn`, in
+`cedtViewMap.cpp`) pass a static callback that reaches `GetCharCells` through the `this` it
+carries as context. The line length comes from the string, not `GetLastIdxX`, so the walk does
+not depend on the row being laid out.
 
-- `GetColumnFromIdxX(rLine, nIdxX)` — sum the cells before `nIdxX`.
-- `GetIdxXFromColumn(rLine, nColumn)` — the first character whose start column is `>= nColumn`.
-  **No edge parameter**: the boundary rule is one function, and this is it. Both edges of a
-  block call it.
-- `GetLastColumn(rLine)`.
+- `GetIdxXFromColumn(rLine, nColumn)` is the first character whose start column is `>= nColumn`
+  — **no edge parameter**. The boundary rule is one function, so a column inside a wide
+  character resolves to that character's far side, and adjacent ranges tile the text.
 
-**Tabs are part of this, not an afterthought.** A tab advances to the next tab stop, so its
-cell width depends on where it starts. The grid absorbs this provided tab stops are whole
-numbers of cells — they are (`_nTabWidth = m_nTabSize * _nSpaceWidth`). The helpers walk tabs
-by tab stop, not by a fixed width.
+**Tabs are handled in the walk, not by the callback.** A tab advances to the next tab stop, so
+its width depends on the column it starts at — which only the walk knows. `_TabCells(col,
+tabSize)` returns whole tab stops, keeping the grid integer.
 
-These three functions are the entire model, so they get the treatment `CLineList` got: a
-table-driven test over lines mixing ASCII, Hangul, astral emoji, combining marks and tabs,
-checking the round trip `column → index → column`, the boundary rule on both edges, and the
-partition property: for adjacent column ranges, every character lands in exactly one of them.
+`tests/CharWidth_test.cpp` gets the `CLineList` treatment: a fixed cell rule (ASCII 1, Hangul
+and astral emoji 2, combining mark 0) drives lines mixing all of those plus tabs, checking the
+round trip `column → index → column`, the boundary rule on a column that lands mid-character,
+and the partition property — adjacent ranges map to index ranges that neither gap nor overlap.
 
 **Phase 2 — column-mode layout is placed on the grid.**
 In column mode the formatter computes `FORMATEDWORD::m_nPosition` / `m_nWidth` from cells ×

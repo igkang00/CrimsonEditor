@@ -45,6 +45,37 @@ INT CCedtView::GetFirstNonBlankIdxX(CAnalyzedString & rLine)
 	return pDoc->GetFirstNonBlankIdxX( rLine );
 }
 
+
+// --- the column coordinate (column mode) ------------------------------------
+//
+// Thin GDI-side wrappers over the pure walk in cedtCharWidth.h. The line length is taken
+// from the string itself, not GetLastIdxX, so these do not depend on the row being laid out.
+
+// Static, so it can be a plain function pointer; recovers the view from the context and asks
+// it to measure. GetCharCells asserts fixed pitch — the walk only calls it off tab characters.
+INT CCedtView::CellCallback(void * pCtx, LPCTSTR psz, INT nIdxX, INT nLen)
+{
+	return ((CCedtView *)pCtx)->GetCharCells(psz, nIdxX, nLen);
+}
+
+INT CCedtView::GetColumnFromIdxX(CFormatedString & rLine, INT nIdxX)
+{
+	LPCTSTR psz = (LPCTSTR)rLine; if( psz == NULL ) return 0;
+	return ColumnFromIdxX(psz, (INT)_tcslen(psz), nIdxX, m_nTabSize, CellCallback, this);
+}
+
+INT CCedtView::GetIdxXFromColumn(CFormatedString & rLine, INT nColumn)
+{
+	LPCTSTR psz = (LPCTSTR)rLine; if( psz == NULL ) return 0;
+	return IdxXFromColumn(psz, (INT)_tcslen(psz), nColumn, m_nTabSize, CellCallback, this);
+}
+
+INT CCedtView::GetLastColumn(CFormatedString & rLine)
+{
+	LPCTSTR psz = (LPCTSTR)rLine; if( psz == NULL ) return 0;
+	return LastColumn(psz, (INT)_tcslen(psz), m_nTabSize, CellCallback, this);
+}
+
 INT CCedtView::GetTrailingBlankIdxX(CAnalyzedString & rLine)
 {
 	CCedtDoc * pDoc = (CCedtDoc *)GetDocument();

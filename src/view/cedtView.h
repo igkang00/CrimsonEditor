@@ -341,6 +341,14 @@ protected:
 	// Column-mode display cells (0/1/2) of the character at nIdxX. See cedtCharWidth.h.
 	INT   GetCharCells(LPCTSTR lpszLine, INT nIdxX, INT nLength, CDC * pDC = NULL);
 
+	// The column coordinate — character index <-> display column, and the line width.
+	// Thin wrappers over the pure functions in cedtCharWidth.h; the static callback lets
+	// those reach GetCharCells through the this pointer they carry as context.
+	INT GetColumnFromIdxX(CFormatedString & rLine, INT nIdxX);
+	INT GetIdxXFromColumn(CFormatedString & rLine, INT nColumn);
+	INT GetLastColumn(CFormatedString & rLine);
+	static INT CellCallback(void * pCtx, LPCTSTR psz, INT nIdxX, INT nLen);
+
 	// Row indices, not POSITIONs: the row list is spliced, and a POSITION into it does not
 	// survive that. See cedtViewFormat.cpp.
 	INT FindScreenTextRow(INT nIndex);
