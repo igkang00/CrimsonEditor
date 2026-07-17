@@ -588,9 +588,9 @@ void CCedtView::UpdateCaretPosition()
 	// update status bar caret information
 	//
 	// Column mode reports the DISPLAY COLUMN — the grid a user aligning a block is aligning
-	// to, in which a Hangul syllable is two. Taken from the caret pixel rather than
-	// GetColumnFromIdxX, because the caret is grid-aligned there anyway and this also holds
-	// in the virtual space past the end of the line, where a character index does not exist.
+	// to, in which a Hangul syllable is two. It comes straight from the caret pixel: the
+	// caret is grid-aligned in column mode, and a pixel still has an answer in the virtual
+	// space past the end of the line, where there is no character index to convert.
 	// Outside column mode the field keeps its meaning: the character position, counting that
 	// same syllable once. Two coordinates, each shown where it is the one that matters.
 	CMainFrame * pMainFrame = (CMainFrame *)AfxGetMainWnd();

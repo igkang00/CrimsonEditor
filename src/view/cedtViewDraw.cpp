@@ -268,21 +268,14 @@ void CCedtView::InvertScreenSelected()
 				rectInvert.bottom = nPosY + nCharHeight;
 
 				if( m_bColumnMode ) {
-					// Snap each edge to a character boundary IN THIS ROW, so the rectangle
-					// stops being drawn through the middle of a Hangul glyph and starts
-					// showing what a copy would actually take.
-					//
-					// bAdjust = FALSE, i.e. keep the virtual space: a column block is a
-					// rectangle, not a piece of text. Where a row is too short to reach it
-					// the block is still there, over empty cells — that is what a paste
-					// fills with spaces (InsertColumnSelection), so the highlight has to
-					// show it. Clamping to the line end here would draw a ragged block and
-					// hide the region the user is about to paste into.
-					INT nIdx1 = GetIdxXFromPosX( rLine, nBegX, FALSE );
-					INT nIdx2 = GetIdxXFromPosX( rLine, nEndX, FALSE );
-
-					rectInvert.left  = GetPosXFromIdxX( rLine, nIdx1, FALSE ) - m_nScrollPosX + nLeftMargin;
-					rectInvert.right = GetPosXFromIdxX( rLine, nIdx2, FALSE ) - m_nScrollPosX + nLeftMargin;
+					// Paint each edge where it will actually cut this row — the same rule,
+					// through the same call, that the block operations use. Inside the line
+					// that snaps to a character boundary, so the rectangle stops being drawn
+					// through the middle of a Hangul glyph; past the end of the line it keeps
+					// the virtual space, because the block is a rectangle over empty cells
+					// that a paste will fill with spaces.
+					rectInvert.left  = GetPosXFromBlockEdge( rLine, nBegX ) - m_nScrollPosX + nLeftMargin;
+					rectInvert.right = GetPosXFromBlockEdge( rLine, nEndX ) - m_nScrollPosX + nLeftMargin;
 
 					// A zero-width block still has to be visible: mark it with a caret-width
 					// sliver on every row but the caret's own, where the caret shows it.

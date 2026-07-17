@@ -347,13 +347,21 @@ fixed-pitch font, where `tmAveCharWidth == GetSpaceWidth`. They are now spelled 
 because *that* is the number the model depends on — padding is spaces — but the behaviour did
 not change.
 
-**The boundary rule is still not the documented one.** The operations snap with
-`GetIdxXFromPosX`, which resolves a column inside a wide character to that character's NEAR
-side; `GetIdxXFromColumn` (Phase 1) implements the documented rule and resolves to the FAR
-side. Both partition the text; they differ in which block a straddling character joins. The
-highlight matches the operations, so see == get holds — but `GetIdxXFromColumn` currently has
-no caller outside its tests. Unifying them means moving the operations and the highlight
-together, and is the one piece of this plan still outstanding.
+**The boundary rule is now the documented one.** Two adapters carry it, and nothing else may
+snap a block edge:
+
+- `GetIdxXFromBlockEdge(rLine, nPosX)` — where the edge *cuts*. Pixel → column →
+  `GetIdxXFromColumn`. Every block operation asks this.
+- `GetPosXFromBlockEdge(rLine, nPosX)` — where the edge is *drawn*. Inside the line, the
+  snapped character's pixel; past the end, the pixel unchanged, because an index cannot
+  express virtual space and the grid there is already exact. The highlight asks this.
+
+`GetIdxXFromPosX` deliberately stays as it was, resolving to the NEAR side. It answers a
+different question — "which character is at this pixel" — and the caret and the mouse's
+nearest-edge test ([cedtViewCaret.cpp:162](../src/view/cedtViewCaret.cpp#L162)) depend on
+that: with far-side snapping, `nPosX - nPos1` goes negative and every click lands on the
+character to the right. The two functions look like duplicates and are not; they disagree only
+when an edge falls inside a wide character, which is the one case a block needs a rule for.
 
 **Phase 6 — the status bar tells the truth. DONE.**
 In column mode the field shows the display column; outside it, the character position, exactly

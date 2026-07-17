@@ -58,22 +58,10 @@ INT CCedtView::CellCallback(void * pCtx, LPCTSTR psz, INT nIdxX, INT nLen)
 	return ((CCedtView *)pCtx)->GetCharCells(psz, nIdxX, nLen);
 }
 
-INT CCedtView::GetColumnFromIdxX(CFormatedString & rLine, INT nIdxX)
-{
-	LPCTSTR psz = (LPCTSTR)rLine; if( psz == NULL ) return 0;
-	return ColumnFromIdxX(psz, (INT)_tcslen(psz), nIdxX, m_nTabSize, CellCallback, this);
-}
-
 INT CCedtView::GetIdxXFromColumn(CFormatedString & rLine, INT nColumn)
 {
 	LPCTSTR psz = (LPCTSTR)rLine; if( psz == NULL ) return 0;
 	return IdxXFromColumn(psz, (INT)_tcslen(psz), nColumn, m_nTabSize, CellCallback, this);
-}
-
-INT CCedtView::GetLastColumn(CFormatedString & rLine)
-{
-	LPCTSTR psz = (LPCTSTR)rLine; if( psz == NULL ) return 0;
-	return LastColumn(psz, (INT)_tcslen(psz), m_nTabSize, CellCallback, this);
 }
 
 // Display width of a bare string, in cells. For the block clipboard, whose lines are plain
@@ -83,6 +71,32 @@ INT CCedtView::GetStringColumns(LPCTSTR psz)
 {
 	if( psz == NULL ) return 0;
 	return LastColumn(psz, (INT)_tcslen(psz), m_nTabSize, CellCallback, this);
+}
+
+// Where a column block's EDGE cuts this line. The boundary rule lives here and nowhere else:
+// a character belongs to the range that contains its FIRST cell, so an edge landing inside a
+// wide character resolves to that character's far side.
+//
+// This is deliberately not GetIdxXFromPosX, which answers a different question — "which
+// character is AT this pixel", resolving to the near side, which is what a caret wants and
+// what a mouse click's nearest-edge test depends on. The two disagree only when an edge falls
+// inside a wide character, which is exactly the case a block has to have a rule for. Both
+// edges of a block ask this, and so does the highlight, so what is painted is what is cut.
+INT CCedtView::GetIdxXFromBlockEdge(CFormatedString & rLine, INT nPosX)
+{
+	INT nSpace = GetSpaceWidth(); if( nSpace <= 0 ) return 0;
+	return GetIdxXFromColumn( rLine, nPosX / nSpace );
+}
+
+// Where that same edge is DRAWN on this line. Inside the line it is the snapped character's
+// pixel, so the highlight sits exactly where the cut will be. Past the end of the line there
+// is no character to snap to and none is wanted: the block is a rectangle over empty cells
+// that a paste will fill with spaces, and the grid there is already exact — so the pixel
+// stands as it is. An index cannot express that, which is why this is separate.
+INT CCedtView::GetPosXFromBlockEdge(CFormatedString & rLine, INT nPosX)
+{
+	if( nPosX >= GetLastPosX(rLine) ) return nPosX;
+	return GetPosXFromIdxX( rLine, GetIdxXFromBlockEdge(rLine, nPosX), TRUE );
 }
 
 INT CCedtView::GetTrailingBlankIdxX(CAnalyzedString & rLine)

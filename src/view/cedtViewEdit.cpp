@@ -95,7 +95,7 @@ void CCedtView::ActionInsertColumnChar(UINT nChar)
 			InsertString(nIdxX, nIdxY, szInsert);
 		}
 
-		nIdxX = GetIdxXFromPosX( rLine, nBegX, TRUE );
+		nIdxX = GetIdxXFromBlockEdge( rLine, nBegX );
 		InsertChar(nIdxX, nIdxY, nChar);
 	}
 
@@ -125,7 +125,7 @@ void CCedtView::ActionInsertColumnSpacesInPlaceOfTab()
 			InsertString(nIdxX, nIdxY, szInsert);
 		}
 
-		nIdxX = GetIdxXFromPosX( rLine, nBegX, TRUE );
+		nIdxX = GetIdxXFromBlockEdge( rLine, nBegX );
 		if( nSpaceCount == 1 ) InsertChar(nIdxX, nIdxY, ' ');
 		else InsertString(nIdxX, nIdxY, CString(' ', nSpaceCount));
 	}

@@ -35,7 +35,7 @@ void CCedtView::ActionDeleteColumnChar()
 		INT nIdxY = GetIdxYFromPosY( nPosY ), nLstX = GetLastPosX( rLine );
 
 		if( nBegX < nLstX ) {
-			INT nIdxX = GetIdxXFromPosX( rLine, nBegX, TRUE );
+			INT nIdxX = GetIdxXFromBlockEdge( rLine, nBegX );
 			DeleteChar(nIdxX, nIdxY);
 		}
 	}
@@ -62,7 +62,7 @@ void CCedtView::ActionDeleteColumnPrevChar()
 		INT nIdxY = GetIdxYFromPosY( nPosY ), nLstX = GetLastPosX( rLine );
 
 		if( nBegX < nLstX ) {
-			INT nIdxX = GetIdxXFromPosX( rLine, nBegX, TRUE );
+			INT nIdxX = GetIdxXFromBlockEdge( rLine, nBegX );
 			DeleteChar(nIdxX, nIdxY);
 		}
 	}
@@ -81,7 +81,7 @@ void CCedtView::ActionDeleteColumnToEndOfLine()
 		INT nIdxY = GetIdxYFromPosY( nPosY ), nLstX = GetLastPosX( rLine );
 
 		if( nBegX < nLstX ) {
-			INT nIdxX = GetIdxXFromPosX( rLine, nBegX, TRUE );
+			INT nIdxX = GetIdxXFromBlockEdge( rLine, nBegX );
 			INT nLdxX = GetIdxXFromPosX( rLine, nLstX, TRUE );
 			DeleteString(nIdxX, nIdxY, nLdxX - nIdxX);
 		}
@@ -103,7 +103,7 @@ void CCedtView::ActionDeleteColumnToBeginOfLine()
 		INT nIdxY = GetIdxYFromPosY( nPosY ), nLstX = GetLastPosX( rLine );
 
 		INT nIdxX = ( nBegX < nLstX )
-			? GetIdxXFromPosX( rLine, nBegX, TRUE )
+			? GetIdxXFromBlockEdge( rLine, nBegX )
 			: GetIdxXFromPosX( rLine, nLstX, TRUE );
 		DeleteString(0, nIdxY, nIdxX);
 	}
@@ -398,11 +398,11 @@ void CCedtView::CopyToColumnSelection(CMemText & rBlock, INT nBegX, INT nBegY, I
 		INT nIdxY = GetIdxYFromPosY( nPosY ), nLstX = GetLastPosX( rLine );
 
 		if( nLstX > nEndX ) {
-			INT nIdxX1 = GetIdxXFromPosX( rLine, nBegX, TRUE );
-			INT nIdxX2 = GetIdxXFromPosX( rLine, nEndX, TRUE );
+			INT nIdxX1 = GetIdxXFromBlockEdge( rLine, nBegX );
+			INT nIdxX2 = GetIdxXFromBlockEdge( rLine, nEndX );
 			CopyToString(rString, nIdxX1, nIdxY, nIdxX2 - nIdxX1);
 		} else if( nLstX > nBegX ) {
-			INT nIdxX1 = GetIdxXFromPosX( rLine, nBegX, TRUE );
+			INT nIdxX1 = GetIdxXFromBlockEdge( rLine, nBegX );
 			INT nIdxX2 = GetIdxXFromPosX( rLine, nLstX, TRUE );
 			CopyToString( rString, nIdxX1, nIdxY, nIdxX2 - nIdxX1 );
 		}
@@ -466,7 +466,7 @@ void CCedtView::InsertColumnSelection(INT nBegX, INT nBegY, INT & nEndX, INT & n
 		}
 
 		// now insert text block
-		INT nIdxX = GetIdxXFromPosX( rLine, nBegX, TRUE );
+		INT nIdxX = GetIdxXFromBlockEdge( rLine, nBegX );
 		InsertString( nIdxX, nIdxY, rString );
 	}
 }
@@ -480,11 +480,11 @@ void CCedtView::DeleteColumnSelection(INT nBegX, INT nBegY, INT nEndX, INT nEndY
 		INT nIdxY = GetIdxYFromPosY( nPosY ), nLstX = GetLastPosX( rLine );
 
 		if( nLstX > nEndX ) {
-			INT nIdxX1 = GetIdxXFromPosX( rLine, nBegX, TRUE );
-			INT nIdxX2 = GetIdxXFromPosX( rLine, nEndX, TRUE );
+			INT nIdxX1 = GetIdxXFromBlockEdge( rLine, nBegX );
+			INT nIdxX2 = GetIdxXFromBlockEdge( rLine, nEndX );
 			DeleteString(nIdxX1, nIdxY, nIdxX2 - nIdxX1);
 		} else if( nLstX > nBegX ) {
-			INT nIdxX1 = GetIdxXFromPosX( rLine, nBegX, TRUE );
+			INT nIdxX1 = GetIdxXFromBlockEdge( rLine, nBegX );
 			INT nIdxX2 = GetIdxXFromPosX( rLine, nLstX, TRUE );
 			DeleteString(nIdxX1, nIdxY, nIdxX2 - nIdxX1);
 		}
