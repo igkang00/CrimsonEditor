@@ -10,7 +10,7 @@ A freeware source-code editor for Windows, originally written between 1999 and 2
 
 The current release ships an x64 installer for Windows 10 and 11.
 
-- **[Download cedt-392-setup.exe](https://github.com/igkang00/CrimsonEditor/releases/latest)** (≈ 26 MB) — from the GitHub Releases page
+- **[Download cedt-393-setup.exe](https://github.com/igkang00/CrimsonEditor/releases/latest)** (≈ 26 MB) — from the GitHub Releases page
 
 Run the installer and accept the UAC prompt. It installs to `Program Files\Crimson Editor`, bundles the Visual C++ x64 runtime, and optionally adds an "Edit with Crimson Editor" entry to the Explorer right-click menu.
 
@@ -49,7 +49,7 @@ msbuild cedt.sln /p:Configuration=Debug-US   /p:Platform=x64
 .\scripts\build_installer.ps1
 ```
 
-Build artifacts land in `build\x64\<Configuration>\` (e.g. `build\x64\Release-KR\cedt_kr.exe`); the installer lands in `dist\cedt-392-setup.exe`. Both `build\` and `dist\` are gitignored.
+Build artifacts land in `build\x64\<Configuration>\` (e.g. `build\x64\Release-KR\cedt_kr.exe`); the installer lands in `dist\cedt-393-setup.exe`. Both `build\` and `dist\` are gitignored.
 
 ### Prerequisites
 
@@ -124,8 +124,8 @@ For the full source breakdown — every `.cpp` and what it does, the MFC class d
 - [x] **Surrogate pairs (emoji, CJK Ext-B)** — characters above U+FFFF used to split in half under the caret and under Backspace. They are now one character everywhere. See [docs/refactoring-surrogate-pairs.md](docs/refactoring-surrogate-pairs.md)
 - [x] **Large-file loading** — shipped in v3.91. A 100 MB / 900 k-line file took 28 s to open and 13 s to save; now **2.2 s** and **0.14 s**. Lazy row layout, block file I/O, table-driven analyzer, per-character width cache. See [docs/refactoring-large-file-perf.md](docs/refactoring-large-file-perf.md)
 - [x] **Line container** — shipped in v3.92. The lines moved from a linked list to an array, so finding the line under the caret no longer walks the document: at line 900,000, **7–10 ms → 0.2 µs**. See [docs/refactoring-line-container.md](docs/refactoring-line-container.md)
+- [x] **Column (block) mode in the Unicode era** — shipped in v3.93. Column mode now *imposes* a cell grid instead of hoping the font provides one, and draws each character at its cell — so Hangul lines up even in Consolas, which font-links it at 1.43× the Latin cell and can never align on its own. The selection is painted where it will actually cut, blocks measure in cells rather than characters, and Hangul typed into a multi-row block reaches every row. See [docs/refactoring-column-mode.md](docs/refactoring-column-mode.md)
 - [ ] **Color emoji rendering (DirectWrite)** — emoji render monochrome: GDI `TextOut` predates colour fonts and ignores the COLR/CPAL layers. Moving the draw and measure paths to DirectWrite would also bring proper grapheme clusters (skin tones, ZWJ sequences) and shaping for complex scripts. Large project — it replaces the whole text rendering and measurement layer
-- [ ] **Column (block) mode in the Unicode era** — the cell math assumes `1 index == 1 character cell`, so the selection rectangle looks ragged around wide CJK. Text cannot be corrupted; the display-column model needs replacing. See [docs/refactoring-column-mode.md](docs/refactoring-column-mode.md)
 - [ ] **High-DPI awareness** — ships DPI-unaware on purpose (see *Known issues*); needs the legacy dialogs and toolbar modernized first
 - [ ] **GitHub Actions CI** — automatically build the four configurations and run `cedt_tests` on every push
 - [ ] **Integration tests (L2)** — exercise `CCedtDoc` and other CWinApp-dependent code without showing real windows. Requires extracting a `cedt_core` static library; see [docs/testing.md](docs/testing.md)
@@ -180,6 +180,6 @@ scaling** because the legacy UI predates high-DPI:
 
 ---
 
-- **Version**: 3.92
+- **Version**: 3.93
 - **Copyright**: © 1999–2026 Ingyu Kang
 - **License**: see [LICENSE](LICENSE)
