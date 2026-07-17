@@ -404,6 +404,31 @@ even without D2Coding" because the math "routes CJK through GDI GetTextExtent". 
 true and the reason was always false — honouring GDI is precisely what cannot align a 1.43×
 Hangul. It has been corrected to say what actually holds it up.
 
+
+**Phase 8 — typing Hangul into a multi-row block. DONE, after the fact.**
+Not in the original plan; found by using the thing. A letter went to every row of a block and
+a Hangul syllable went to one, because the two took different paths: `EventInsertChar` reached
+`ActionInsertColumnChar` and grew the multi-row loop, while `EventCompositionCompose` threw
+the selection away and never had one.
+
+Composition is a one-line affair by construction — the document holds exactly one saved line
+to restore on each keystroke, and the preview overwrites the anchor to select the syllable
+being assembled, which is where the block lived. So the block is *parked* when the composition
+opens and put back when it commits, which is the only moment the finished text exists to give
+to every row. The preview stays on the caret's row; there is nothing to show the others yet.
+
+The two paths are now one loop — `ActionInsertColumnString`, with the character form a wrapper
+over it. Them being separate is what caused this. (A Hangul syllable is one `TCHAR` now that
+the editor is Unicode, so the character form would nearly serve; but IME delivers a *string*,
+and a Hanja conversion or a multi-syllable commit is more than one character.)
+
+**The trap, for the next person:** on a commit, `WM_IME_COMPOSITION` calls
+`OnImeCompositionEnd` **before** `OnImeCompositionResult`
+([cedtView.cpp:1432](../src/view/cedtView.cpp#L1432)). Clearing composition state in
+`EventCompositionEnd` therefore destroys it one step before the code that needs it — exactly
+the bug I wrote while trying to handle an abandoned composition. Nothing needs clearing there:
+the next composition's first keystroke recomputes the state from the selection that exists then.
+
 ---
 
 ## What this does not fix
@@ -446,3 +471,7 @@ edge at the near side silently reverses the boundary rule and nothing fails visi
 **The highlight and the block operations snap through the same call, and must keep doing so.**
 The moment they use different rules, the editor highlights one thing and cuts another — which
 is the bug this whole document exists to remove.
+
+**A keystroke and an IME commit go through the same insert.** They were separate once, and the
+multi-row loop got added to one of them, so letters filled a block and Hangul filled one row.
+If they ever diverge again, so will they.

@@ -133,6 +133,19 @@ protected: // matching pairs highlight
 protected: // IMM composition
 	BOOL m_bComposition;
 
+	// A column block being typed into while an IME composition is open.
+	//
+	// Composition is a one-line affair: it saves the caret's line, restores it on every
+	// keystroke, and redraws the syllable being assembled — and the document holds exactly one
+	// saved line, so the preview cannot span rows even in principle. It also overwrites the
+	// anchor to select the text under composition, which is where the block lived.
+	//
+	// So the block is parked here when the composition starts and put back when it commits,
+	// which is the only moment the rows can all be given the finished text.
+	BOOL m_bColumnComposing;
+	INT  m_nColumnComposeCaretX, m_nColumnComposeCaretY;
+	INT  m_nColumnComposeAnchorX, m_nColumnComposeAnchorY;
+
 protected: // UTF-16 surrogate pair input
 	// Windows sends an astral character (emoji, CJK Ext-B) as two WM_CHAR /
 	// WM_IME_CHAR messages: the high surrogate, then the low. We hold the high
@@ -547,6 +560,7 @@ protected: // *** cedtViewSelect.cpp ***
 
 protected: // *** cedtViewEdit.cpp ***
 	void ActionInsertChar(UINT nChar);			void ActionInsertColumnChar(UINT nChar);
+	void ActionInsertColumnString(LPCTSTR lpszString);
 	void ActionInsertSpacesInPlaceOfTab();		void ActionInsertColumnSpacesInPlaceOfTab();
 	void ActionInsertString(LPCTSTR lpszString);
 

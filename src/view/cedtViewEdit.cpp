@@ -82,7 +82,32 @@ void CCedtView::ActionInsertSpacesInPlaceOfTab()
 
 void CCedtView::ActionInsertColumnChar(UINT nChar)
 {
+	TCHAR szChar[2] = { (TCHAR)nChar, 0 };
+	ActionInsertColumnString( szChar );
+}
+
+// Insert into every row of the block.
+//
+// A keystroke and an IME result go through the same loop on purpose: they used to be
+// different code paths, and that is exactly why typing Hangul into a multi-row block only
+// ever reached one row — the character path grew the multi-row loop and the composition path
+// never did.
+//
+// The string, rather than a character, is the honest unit. A Hangul syllable is one TCHAR now
+// that the editor is Unicode, so the character form would very nearly do; but "very nearly"
+// is not a contract. IME delivers a STRING (WM_IME_COMPOSITION / GCS_RESULTSTR), and it can
+// hold more than one character — a Hanja conversion, or an IME committing several syllables
+// at once — while an astral character is two code units. Taking only the first would drop the
+// rest silently.
+//
+// (InsertChar vs InsertString differ only in recording undo as AT_INSERTCHAR against
+// AT_INSERTSTRING with a length of one. Undoing either removes the same text, so there is no
+// reason to spell this loop twice.)
+void CCedtView::ActionInsertColumnString(LPCTSTR lpszString)
+{
 	INT nLineHeight = GetLineHeight(), nSpaceWidth = GetSpaceWidth();
+	INT nSize = (INT)_tcslen( lpszString ); if( nSize <= 0 ) return;
+
 	INT nBegX, nBegY, nEndX, nEndY; GetSelectedPosition(nBegX, nBegY, nEndX, nEndY);
 
 	for(INT nPosY = nBegY; nPosY <= nEndY; nPosY += nLineHeight ) {
@@ -96,11 +121,11 @@ void CCedtView::ActionInsertColumnChar(UINT nChar)
 		}
 
 		nIdxX = GetIdxXFromBlockEdge( rLine, nBegX );
-		InsertChar(nIdxX, nIdxY, nChar);
+		InsertString(nIdxX, nIdxY, lpszString);
 	}
 
 	INT nIdxX, nIdxY; PositionToIndex( nBegX, nBegY, nIdxX, nIdxY );
-	nIdxX = nIdxX + 1; IndexToPosition( nIdxX, nIdxY, nBegX, nBegY );
+	nIdxX = nIdxX + nSize; IndexToPosition( nIdxX, nIdxY, nBegX, nBegY );
 
 	SetCaretPosY( nBegY ); m_nAnchorPosY = nEndY;
 	SetCaretPosX( nBegX ); m_nAnchorPosX = nBegX;

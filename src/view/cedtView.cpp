@@ -428,6 +428,7 @@ void CCedtView::OnInitialUpdate()
 
 	// imm composition
 	m_bComposition = FALSE;
+	m_bColumnComposing = FALSE;
 
 	// surrogate pair input — don't let half a character leak across documents
 	m_chPendingHighSurrogate = 0;
@@ -473,6 +474,7 @@ void CCedtView::Reinitialize()
 
 	// imm composition
 	m_bComposition = FALSE;
+	m_bColumnComposing = FALSE;
 
 	// surrogate pair input — don't let half a character leak across documents
 	m_chPendingHighSurrogate = 0;

@@ -117,16 +117,35 @@ void CCedtView::EventCompositionStart(BOOL bMacro)
 
 void CCedtView::EventCompositionEnd(BOOL bMacro)
 {
+	// Deliberately does NOT clear m_bColumnComposing. On a commit, WM_IME_COMPOSITION calls
+	// this BEFORE EventCompositionResult (see PreTranslateMessage, GCS_RESULTSTR) — clearing
+	// here would throw the parked block away one step before the only code that wants it.
+	// A composition abandoned instead of committed leaves the flag set, and that is harmless:
+	// the next composition's first keystroke recomputes it from the selection that exists then.
 	ActionCompositionEnd();
 }
 
 void CCedtView::EventCompositionCompose(LPCTSTR lpszString, BOOL bMacro)
 {
 	if( m_bColumnMode ) {
-		if( m_bSelected ) {
-			if( m_nCaretPosX != m_nAnchorPosX ) ActionDeleteColumnSelection();
-			m_bSelected = FALSE;
+		// Only on the first keystroke of a composition — after that the block is already
+		// parked and the anchor belongs to the composition. IsCompositionStringSaved() is
+		// what tells the two apart, exactly as ActionCompositionCompose uses it.
+		if( ! IsCompositionStringSaved() ) {
+			if( m_bSelected && m_nCaretPosX != m_nAnchorPosX ) {
+				ActionDeleteColumnSelection();
+				m_bSelected = (m_nCaretPosY != m_nAnchorPosY);
+			}
+
+			// Park a multi-row block. The composition preview can only ever be one line, so
+			// the rows are given the text when it commits — see EventCompositionResult.
+			m_bColumnComposing = m_bSelected && (m_nCaretPosY != m_nAnchorPosY);
+			if( m_bColumnComposing ) {
+				m_nColumnComposeCaretX  = m_nCaretPosX;  m_nColumnComposeCaretY  = m_nCaretPosY;
+				m_nColumnComposeAnchorX = m_nAnchorPosX; m_nColumnComposeAnchorY = m_nAnchorPosY;
+			}
 		}
+		m_bSelected = FALSE;	// compose on the caret's row only
 		ActionCompositionCompose(lpszString);
 	} else {
 		if( m_bSelected ) { ActionDeleteLineSelection(); m_bSelected = FALSE; }
@@ -136,6 +155,26 @@ void CCedtView::EventCompositionCompose(LPCTSTR lpszString, BOOL bMacro)
 
 void CCedtView::EventCompositionResult(LPCTSTR lpszString, BOOL bMacro)
 {
+	// A parked column block: this is the moment the finished text exists, so it is the moment
+	// every row can have it. Typing a letter into a multi-row block already worked because
+	// EventInsertChar reaches ActionInsertColumnChar; composition never had that path, which
+	// is why Hangul only ever landed on one row.
+	if( m_bColumnComposing ) {
+		// Take back the preview the composition left on the caret's row — the block insert
+		// below puts the committed text on that row too, this one included.
+		if( IsCompositionStringSaved() ) {
+			RestoreCurrentCompositionString( GetIdxYFromPosY(m_nCaretPosY) );
+			EmptySavedCompositionString();
+		}
+
+		m_nCaretPosX  = m_nColumnComposeCaretX;  m_nCaretPosY  = m_nColumnComposeCaretY;
+		m_nAnchorPosX = m_nColumnComposeAnchorX; m_nAnchorPosY = m_nColumnComposeAnchorY;
+		m_bSelected = TRUE; m_bColumnComposing = FALSE;
+
+		ActionInsertColumnString(lpszString);
+		return;
+	}
+
 	// there should no selection before this function call
 	ActionCompositionResult(lpszString);
 }
