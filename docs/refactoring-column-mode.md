@@ -1,12 +1,18 @@
 # Column (block) mode in the Unicode era
 
 Column mode pretends text is a grid of cells. Under MBCS the pretence was nearly free. Under
-Unicode the editor stopped maintaining it, and the result is a selection that highlights one
-thing and copies another.
+Unicode the editor stopped maintaining it, and the result was a selection that highlighted one
+thing and copied another.
 
-> Status: **planned.** Written *before* the work, like
-> [refactoring-line-container.md](refactoring-line-container.md) was, so the decisions and the
-> things that will break are on the record rather than discovered halfway through.
+The editor now **imposes** the grid rather than hoping the font provides one: a character
+occupies a whole number of cells and is drawn at that cell whatever the font's own advance
+would be. Hangul lines up in Consolas, which font-links it at 1.43× the Latin cell and can
+therefore never align on its own.
+
+> Status: **done.** This document was written *before* the work, as a plan, like
+> [refactoring-line-container.md](refactoring-line-container.md). The phases below record what
+> actually happened — including the two places the plan turned out to be wrong, which are
+> marked where they occur rather than quietly edited out.
 
 ---
 
@@ -375,10 +381,28 @@ caret, two different numbers — so the label has to say which one is being show
 `Ch` while the number had become a column would have been a small lie in the one place built to
 explain the difference.
 
-**Phase 7 — measure, and write down what is still not exact.**
-Also: consider defaulting the Column Mode font to the bundled D2Coding. It is no longer
-required, but it is the only one of the three measured fonts where the glyphs actually fill
-their cells.
+**Phase 7 — measure, and write down what is still not exact. DONE.**
+The measurements are unchanged from the ones at the top of this document — the classifier
+reads the same advances; what changed is that the editor no longer *believes* them for
+placement. Re-run `analysis/font-cell-width.ps1` to check.
+
+**The Column Mode font stays Consolas.** The idea was to default it to the bundled D2Coding,
+"the only font where the glyphs actually fill their cells". Considered, and rejected:
+
+- That slot is only reached by a user whose screen font is **proportional** — column mode
+  substitutes it then and leaves a fixed-pitch screen font alone. So it is a *fallback*.
+- D2Coding is an **optional install** ([installer.iss:158](../installer.iss#L158)) and may not
+  be present. The same reasoning already put Consolas in screen slot 0
+  ([cedtAppConf.cpp:341](../src/app/cedtAppConf.cpp#L341)): the default has to render on every
+  machine.
+- And the point of this work is that **D2Coding is no longer needed**. Forcing it as the
+  fallback would contradict the thing the grid was built to prove. A user who wants it selects
+  screen font slot 1, and column mode then leaves it alone.
+
+The comment that shipped over that font default claimed font-linked Hangul "stays aligned
+even without D2Coding" because the math "routes CJK through GDI GetTextExtent". It is now
+true and the reason was always false — honouring GDI is precisely what cannot align a 1.43×
+Hangul. It has been corrected to say what actually holds it up.
 
 ---
 
@@ -411,3 +435,14 @@ that is precisely how the last attempt at this died.
 
 **The cell is a space, not `tmAveCharWidth`.** Padding is spaces. If those two numbers ever
 diverge, alignment silently stops working.
+
+**A block edge is not a caret.** `GetIdxXFromBlockEdge` / `GetPosXFromBlockEdge` are for block
+edges; `GetIdxXFromPosX` is for carets and clicks. They resolve a column inside a wide
+character to opposite sides, deliberately, and they look enough alike to invite "simplifying"
+one into the other. Do not: pointing the caret at the far side makes the mouse's nearest-edge
+test compare a negative distance and every click lands one character right. Pointing a block
+edge at the near side silently reverses the boundary rule and nothing fails visibly.
+
+**The highlight and the block operations snap through the same call, and must keep doing so.**
+The moment they use different rules, the editor highlights one thing and cuts another — which
+is the bug this whole document exists to remove.

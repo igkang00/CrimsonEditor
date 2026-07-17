@@ -385,9 +385,23 @@ void CCedtApp::SetDefaultConfiguration()
 
 	// Miscellaneous fonts are functional roles, not a preset list: slot 0 is
 	// the column-(block-)select mode font, slot 1 is the Output window font.
-	// Both need an always-present fixed-pitch face, so both use Consolas; the
-	// column-select math already routes CJK through GDI GetTextExtent, so
-	// font-linked Hangul stays aligned even without D2Coding installed.
+	// Both need an always-present fixed-pitch face, so both use Consolas.
+	//
+	// Slot 0 is only ever reached by a user whose screen font is PROPORTIONAL —
+	// column mode substitutes it then, and leaves a fixed-pitch screen font
+	// alone. That makes it a fallback, and a fallback has to exist: D2Coding is
+	// an optional install (see installer.iss) and may not be there, which is the
+	// same reason screen slot 0 is Consolas.
+	//
+	// Hangul stays aligned here without D2Coding, but not for the reason this
+	// comment used to give. It claimed the column-select math "routes CJK
+	// through GDI GetTextExtent" — measured, Consolas font-links Hangul at 1.43x
+	// the Latin advance (analysis/font-cell-width.ps1), so honouring GDI is
+	// exactly what CANNOT align. Column mode now imposes the grid instead and
+	// draws each character at its cell whatever the font would have done, so any
+	// fixed-pitch face aligns. D2Coding is prettier — its glyphs fill their
+	// cells rather than sitting in them with air — but it is no longer needed.
+	// See docs/refactoring-column-mode.md.
 	memset(CCedtView::m_lfMiscel, 0x00, sizeof(CCedtView::m_lfMiscel));
 	_tcscpy(CCedtView::m_lfMiscel[0].lfFaceName, _T("Consolas"));
 	_tcscpy(CCedtView::m_lfMiscel[1].lfFaceName, _T("Consolas"));
