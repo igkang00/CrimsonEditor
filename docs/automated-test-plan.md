@@ -1,4 +1,8 @@
-# Testing
+# Automated test plan
+
+What a machine checks, and what it will check next. For what a person has to sit down and try —
+the things no harness can see, like whether Korean lines up or whether the caret lands inside a
+glyph — see [manual-test-plan.md](manual-test-plan.md).
 
 Unit tests for Crimson Editor live in [../tests/](../tests/) as a separate `cedt_tests` project inside the same solution. Built with **Google Test** pulled in through **vcpkg manifest mode** — [../tests/vcpkg.json](../tests/vcpkg.json) declares the `gtest` dependency, and vcpkg downloads/builds it on the first test build.
 
@@ -12,7 +16,7 @@ Unit tests for Crimson Editor live in [../tests/](../tests/) as a separate `cedt
 | Subsystem | Console |
 | Entry point | `gtest_main` (no custom `main()` yet — see §3) |
 
-Current coverage: **60 tests across 12 suites, all green.**
+Current coverage: **150 tests across 18 suites, all green.**
 
 ---
 
@@ -40,7 +44,19 @@ Current coverage: **60 tests across 12 suites, all green.**
 | [../src/core/cedtElement.cpp](../src/core/cedtElement.cpp) → `CLangSpec` | [../tests/CLangSpec_test.cpp](../tests/CLangSpec_test.cpp) |
 | [../src/core/cedtElement.cpp](../src/core/cedtElement.cpp) → `CAnalyzedString` | [../tests/CAnalyzedString_test.cpp](../tests/CAnalyzedString_test.cpp) |
 
+**Unicode and layout primitives** — added by the refactorings; header-only logic, deliberately kept free of any device context so it can be tested without one:
+
+| Module | Test file |
+| --- | --- |
+| [../src/include/cedtUnicode.h](../src/include/cedtUnicode.h) — surrogate-pair boundaries | [../tests/cedtUnicode_test.cpp](../tests/cedtUnicode_test.cpp) |
+| [../src/include/cedtCharWidth.h](../src/include/cedtCharWidth.h) — display-cell classifier and the column coordinate | [../tests/CharWidth_test.cpp](../tests/CharWidth_test.cpp) |
+| [../src/core/cedtLineList.h](../src/core/cedtLineList.h) — the array that replaced `CList` | [../tests/CLineList_test.cpp](../tests/CLineList_test.cpp) |
+| `CAnalyzedText` bulk range operations | [../tests/CAnalyzedTextBulk_test.cpp](../tests/CAnalyzedTextBulk_test.cpp) |
+| `CAnalyzedText` file load / save round-trips | [../tests/CAnalyzedTextFile_test.cpp](../tests/CAnalyzedTextFile_test.cpp) |
+
 The remaining "hard" group is the Doc / View / Frame / Dialog layer; it needs a UI-simulation strategy and is not covered yet — see §3.
+
+**What this layer cannot reach**, and why [manual-test-plan.md](manual-test-plan.md) exists: these tests check *what a container holds, not what it costs* — a 16× performance regression once passed all of them and reached the end of a branch. They also run without a font, so nothing here can tell you a glyph was drawn in the wrong place, and without a window, so nothing here has ever opened a file.
 
 ---
 
@@ -65,7 +81,7 @@ The current `cedt_tests` covers pure algorithms and MFC data containers. Extendi
 
 | Layer | Project | Scope | Status |
 | --- | --- | --- | --- |
-| **L1 — Unit** | [../tests/cedt_tests.vcxproj](../tests/cedt_tests.vcxproj) | Algorithms, containers, domain classes that do not need `CWinApp` | Done (60 tests) |
+| **L1 — Unit** | [../tests/cedt_tests.vcxproj](../tests/cedt_tests.vcxproj) | Algorithms, containers, domain classes that do not need `CWinApp` | Done (150 tests) |
 | **L2 — Integration** | `cedt_integration_tests.vcxproj` (planned) | `CCedtDoc` and other CWinApp-dependent code; no real windows | Planned |
 | **L3 — End-to-end** | `tests/e2e/` (planned) | Real `cedt_*.exe` driven by external UI automation | Planned |
 

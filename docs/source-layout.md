@@ -183,7 +183,7 @@ The `.cpp`/`.h` files live under [src/](../src/), split into domain-specific dir
 | --- | --- |
 | [Utility.cpp](../src/util/Utility.cpp), [Utility.h](../src/util/Utility.h) | Helper functions |
 | [PathName.cpp](../src/util/PathName.cpp), [PathName.h](../src/util/PathName.h) | Path manipulation |
-| [RegExp.cpp](../src/util/RegExp.cpp), [RegExp.h](../src/util/RegExp.h) | Regex engine ([RegExp.html](../RegExp.html) bundled as docs) |
+| [RegExp.cpp](../src/util/RegExp.cpp), [RegExp.h](../src/util/RegExp.h) | Regex engine ([RegExp.html](../runtime/docs/RegExp.html) ships in the install directory) |
 | [SortStringArray.cpp](../src/util/SortStringArray.cpp) | Sorted string array |
 | [ColorListBox.cpp](../src/util/ColorListBox.cpp) | List box used by color combos |
 | [HyperLink.cpp](../src/util/HyperLink.cpp) | Clickable hyperlink static |

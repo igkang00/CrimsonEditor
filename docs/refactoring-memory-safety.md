@@ -1,6 +1,6 @@
 # Memory-Safety Refactoring Notes
 
-A pass over the codebase looking for memory-safety hazards — buffer overruns, unsafe ownership, lifetime / Rule-of-Three gaps. Same "discover → categorise → fix" approach as [configuration.md](configuration.md).
+A pass over the codebase looking for memory-safety hazards — buffer overruns, unsafe ownership, lifetime / Rule-of-Three gaps. Same "discover → categorise → fix" approach as [configuration-reference.md](configuration-reference.md).
 
 The actual fixes are not yet applied. This document is the working list to decide which ones to tackle and in what order.
 

@@ -72,9 +72,9 @@ msbuild tests\cedt_tests.vcxproj /p:Configuration=Debug /p:Platform=x64
 tests\build\x64\Debug\cedt_tests.exe
 ```
 
-Current coverage: **60 tests across 12 suites, all green** — algorithm modules in `src/util/` (RegExp, evaluate, date, encode, PathName) and the MFC-data-container classes in `src/core/cedtElement.cpp` plus `src/util/SortStringArray`.
+Current coverage: **150 tests across 18 suites, all green** — algorithm modules in `src/util/` (RegExp, evaluate, date, encode, PathName), the MFC-data-container classes in `src/core/cedtElement.cpp` plus `src/util/SortStringArray`, and the Unicode / layout primitives the recent refactorings added (surrogate boundaries, the display-cell classifier, the line container).
 
-See [docs/testing.md](docs/testing.md) for the per-module test list, project settings, how to add a new test, and the planned roadmap for integration (L2) and end-to-end (L3) coverage.
+See [docs/automated-test-plan.md](docs/automated-test-plan.md) for the per-module test list, how to add a new test, and the roadmap toward integration (L2) and end-to-end (L3) coverage — and [docs/manual-test-plan.md](docs/manual-test-plan.md) for the things no harness can see.
 
 ---
 
@@ -103,13 +103,32 @@ For the full source breakdown — every `.cpp` and what it does, the MFC class d
 
 ## Documentation
 
+**Reference** — how the code behaves:
+
 | | |
 | --- | --- |
 | [docs/source-layout.md](docs/source-layout.md) | Architecture overview, full source-file tour, shell integration internals |
-| [docs/configuration.md](docs/configuration.md) | How settings are loaded at startup, where each piece of state lives, what happens on a clean first run |
-| [docs/testing.md](docs/testing.md) | Test project layout, how to add a test, roadmap toward integration / E2E coverage |
-| [docs/refactoring-memory-safety.md](docs/refactoring-memory-safety.md) | Memory-safety review with severities and a recommended fix order |
-| [docs/refactoring-x64-migration.md](docs/refactoring-x64-migration.md) | Planning doc for the Win32 → x64 migration done in v3.81 |
+| [docs/configuration-reference.md](docs/configuration-reference.md) | How settings are loaded at startup, where each piece of state lives, what happens on a clean first run |
+
+**Testing** — how it gets checked:
+
+| | |
+| --- | --- |
+| [docs/automated-test-plan.md](docs/automated-test-plan.md) | Test project layout, how to add a test, roadmap toward integration / E2E coverage |
+| [docs/manual-test-plan.md](docs/manual-test-plan.md) | The hands-on feature walk-through: what a harness cannot see, and where the refactorings below say they are fragile |
+
+**Refactorings** — what changed, why, and what it endangered. Each was written *before* the work
+as a plan, then updated to record what actually happened — including where the plan was wrong:
+
+| | |
+| --- | --- |
+| [docs/refactoring-x64-migration.md](docs/refactoring-x64-migration.md) | Win32 → x64, shipped in v3.81 |
+| [docs/refactoring-unicode-migration.md](docs/refactoring-unicode-migration.md) | MBCS → UTF-16, shipped in v3.90, plus the ~16 bugs the flip surfaced |
+| [docs/refactoring-surrogate-pairs.md](docs/refactoring-surrogate-pairs.md) | Emoji and CJK Ext-B as one character, not two code units |
+| [docs/refactoring-large-file-perf.md](docs/refactoring-large-file-perf.md) | Lazy row layout, block I/O, width cache — v3.91. Reads as a warning: several fixes look revertible and are not |
+| [docs/refactoring-line-container.md](docs/refactoring-line-container.md) | Linked list → array, v3.92. Also records a 16× regression that reached the end of the branch |
+| [docs/refactoring-column-mode.md](docs/refactoring-column-mode.md) | Column mode imposes its own cell grid, v3.93 |
+| [docs/refactoring-memory-safety.md](docs/refactoring-memory-safety.md) | Memory-safety review with severities and a fix order |
 
 ---
 
@@ -128,7 +147,7 @@ For the full source breakdown — every `.cpp` and what it does, the MFC class d
 - [ ] **Color emoji rendering (DirectWrite)** — emoji render monochrome: GDI `TextOut` predates colour fonts and ignores the COLR/CPAL layers. Moving the draw and measure paths to DirectWrite would also bring proper grapheme clusters (skin tones, ZWJ sequences) and shaping for complex scripts. Large project — it replaces the whole text rendering and measurement layer
 - [ ] **High-DPI awareness** — ships DPI-unaware on purpose (see *Known issues*); needs the legacy dialogs and toolbar modernized first
 - [ ] **GitHub Actions CI** — automatically build the four configurations and run `cedt_tests` on every push
-- [ ] **Integration tests (L2)** — exercise `CCedtDoc` and other CWinApp-dependent code without showing real windows. Requires extracting a `cedt_core` static library; see [docs/testing.md](docs/testing.md)
+- [ ] **Integration tests (L2)** — exercise `CCedtDoc` and other CWinApp-dependent code without showing real windows. Requires extracting a `cedt_core` static library; see [docs/automated-test-plan.md](docs/automated-test-plan.md)
 - [ ] **End-to-end UI tests (L3)** — drive `cedt_*.exe` through WinAppDriver / FlaUI / PyWinAuto / AutoHotkey
 
 ---

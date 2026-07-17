@@ -39,7 +39,7 @@ Done / verified are the phases below where every task is checked. WIP has the co
 | 4i — Clipboard round-trip | `fbcb8f8`, `f429972` | `CF_TEXT` → `CF_UNICODETEXT` everywhere; `CMemText::Memory*` walks TCHAR not CHAR; new-doc default encoding flipped from ASCII → UTF-8 no-BOM |
 | 4j — Cmdline wide-char launch | verified in-session | `Start-Process cedt_kr.exe C:\temp\한글파일명.c` opens correctly |
 | 5 — launch.exe wide args | `bbc8d99` | `GetCommandLineA` / `CreateProcessA` → `W` variants. `ShellExt.dll` was already Unicode-clean (`ShellExecuteW`) |
-| 6a — configuration.md | `ed26c5f` | §9.1.2 rewritten to reflect the actual TCHAR-width impact from v3.90 |
+| 6a — configuration-reference.md | `ed26c5f` | §9.1.2 rewritten to reflect the actual TCHAR-width impact from v3.90 |
 | 6b — this doc | this commit | status board caught up through the installer rebuild; release mechanics deferred |
 | 6c — Unicode-era UI polish + default fonts | this commit | Encoding-menu mnemonics deduped in both `.rc` files (now `U`/`8`/`L`/`B`/`A`, no collisions); two non-ASCII chars in the English status-bar help strings (em dash U+2014, `×` U+00D7) that rendered as CP1252 mojibake (`~2Â—`) replaced with ASCII (`-`, `x`); the C++ encoding-description arrays in `cedtElement.cpp` (`ENCODING_TYPE_DESCRIPTION_FULL` / `_SHORT`, backing the status bar + document-summary dialog) resynced to the new labels (ASCII→"ANSI", Unicode LE/BE→"UTF-16", UTF-8 minus the "Encoding" filler) so the menu, status bar, and summary all agree — the `ENCODING_TYPE_ASCII` enum name is kept for `.conf` binary compatibility; all three default font groups in `SetDefaultConfiguration()` modernized. Slot 0 is **Consolas** everywhere (ships with every Windows since Vista, so the default always renders even when the optional D2Coding bundle is skipped or the font is later uninstalled). Screen fonts: Consolas · **D2Coding** (bundled, SIL OFL 1.1, Hangul/Latin 2:1) · **Cascadia Mono** (modern MS coding font) · Lucida Console · Courier New · Verdana; printer fonts: Consolas · D2Coding · Lucida Console · Courier New; misc fonts (column-select + Output window): Consolas. Legacy bitmap faces (FixedSys, Terminal) dropped. `installer.iss` gains an optional, checked-by-default `installd2coding` task that registers `runtime\fonts\D2Coding.ttf` via `FontInstall` and ships `OFL.txt`. Font slots are user-selectable presets, **not** a GDI fallback chain — hence slot 0 is the always-present face, not D2Coding |
 | 7a — Installer rebuild for 3.90 | 2026-07-06 17:31 | `dist\cedt-390-setup.exe` (25.85 MB) rebuilt end-to-end via `scripts\build_installer.ps1` after every Phase 4 / 5 fix landed; supersedes the earlier same-named artifact from Phase 3.8. **Superseded again and rebuilt for 6c** at 2026-07-06 21:35 — `dist\cedt-390-setup.exe` (27.4 MB) now bundles `runtime\fonts\D2Coding.ttf` + `OFL.txt` via the `installd2coding` task; both `.rc` editions (incl. the reconstructed CP949 `cedt_kr.rc`) compiled clean through `rc.exe` in this build |
@@ -165,7 +165,7 @@ Step 2 exists because the document's in-memory buffer is `char*`. Once the app i
 
 1. Update this planning doc with what actually happened.
 2. `README.md` — flip the roadmap checkbox `[x] Unicode build`.
-3. `docs/configuration.md` — reflect the config-format bump.
+3. `docs/configuration-reference.md` — reflect the config-format bump.
 4. Add a release-note entry for Korean users about what previously-broken characters now work.
 5. Version bump 3.83 → 3.90.
 6. Merge back to `main`, tag `v3.90`, cut the installer.
