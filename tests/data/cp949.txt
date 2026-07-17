@@ -1,0 +1,4 @@
+ascii line
+한글 줄입니다
+漢字 한자
+mixed 한글 and ascii

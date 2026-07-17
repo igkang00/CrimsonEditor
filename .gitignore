@@ -18,6 +18,10 @@ dist/
 
 # Modern Visual Studio
 .vs/
+
+# The 900,000-line manual-test fixture (~56 MB). Regenerate it with
+# `python tests/data/make-fixtures.py --big` — see docs/manual-test-plan.md.
+tests/data/big.txt
 *.vcxproj.user
 
 # vcpkg manifest-mode install dir

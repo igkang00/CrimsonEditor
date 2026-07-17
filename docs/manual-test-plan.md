@@ -106,20 +106,28 @@ wrap on for anything you are unsure about.**
 
 ## Fixtures
 
-Prepare once, keep them:
+All in [../tests/data/](../tests/data/), committed except where noted. Their **bytes** are the
+fixture — a BOM-less CP949 file is only a test if it really has no BOM — so if one ever needs
+recreating, use the script rather than an editor that might add one:
+
+```
+python tests/data/make-fixtures.py          # the small ones (idempotent)
+python tests/data/make-fixtures.py --big    # also big.txt, ~56 MB, gitignored
+```
 
 | File | What | For |
 | --- | --- | --- |
-| `ascii.c` | plain C, a few hundred lines | baseline |
-| `korean.c` | Korean comments + identifiers, CP949 **without BOM** | `[cjk]` `[enc]` |
-| `utf8-bom.txt`, `utf8-nobom.txt`, `utf16le.txt`, `utf16be.txt` | same text, four encodings | `[enc]` |
-| `emoji.txt` | 😀 (astral), ✅ U+2705, ⭐ U+2B50, and the string `"\😀"` in a C file | `[emoji]` |
-| `long-line.txt` | one line of 40,000+ chars | `[trunc]` |
-| `big.txt` | 900,000 lines, mixed Korean/ASCII | `[big]` |
+| `ascii.c` | plain C, ~200 lines | baseline |
+| `korean.c` | Korean comments, identifiers and strings — **CP949, no BOM** | `[cjk]` `[enc]` |
+| `utf8-nobom.txt`, `utf8-bom.txt`, `utf16le.txt`, `utf16be.txt`, `cp949.txt` | the same text in five encodings, for round-trip comparison | `[enc]` |
+| `astral.txt` | 😀, CJK Ext-B, ✅ U+2705, ⭐ U+2B50, Hangul — caret and delete over astral | `[emoji]` |
+| `emoji.c` | the same characters **inside C string literals**, including `"\😀"` — the analyzer's escape branch | `[emoji]` |
+| `long-line.txt` | one line of 41,000 chars — crosses both the 2,048 and 32,767 boundaries | `[trunc]` |
 | `blockcomment.c` | a `/*` held open across thousands of lines | `[wrap]` `[big]` |
+| `big.txt` | 900,000 lines, ~14% carrying Korean. **Not committed** — generate it | `[big]` |
 
-The last two exist already as `tests/data/blockcomment.c` and the generator used during the
-line-container work.
+`cp949.txt` deliberately drops the em-dash/smart-quote line the other four carry: CP949 cannot
+hold it, and that is the point — it is what an ANSI file can actually contain.
 
 ---
 
@@ -180,13 +188,16 @@ The x64 doc names this twice as the most suspicious surviving path.
 
 ### A6. Emoji and astral `[emoji]`
 
-- [ ] `emoji.txt`: arrow past 😀 — one press per character, not two. Backspace deletes the whole
+- [ ] `astral.txt`: arrow past 😀 — one press per character, not two. Backspace deletes the whole
       thing. Save and reopen: it must survive (a half pair *"is not a valid character in any
       encoding… the data is permanently destroyed"*).
-- [ ] The C string `"\😀"` — the analyzer's escape branch does `fwd += 2` unconditionally and can
-      split the pair.
-- [ ] ✅ U+2705 and ⭐ U+2B50 in a fixed-pitch font: the caret must not land inside the glyph.
-      (These are BMP, not astral — they are what killed the previous attempt.)
+- [ ] `emoji.c`, line 3: `"\😀"` — a backslash then an astral pair. The analyzer's escape branch
+      does `fwd += 2` unconditionally and can split it. Lines 4–5 vary the shape.
+- [ ] ✅ U+2705 and ⭐ U+2B50 (`astral.txt` line 3, `emoji.c` line 6) in a fixed-pitch font: the
+      caret must not land inside the glyph. (These are BMP, not astral — they are what killed
+      the previous attempt.)
+- [ ] `astral.txt` lines 5–6: a whole line of ✅, and a whole line of 😀 — column positions and
+      End-key behaviour.
 - [ ] Double-click an emoji to select it; drag-select across one.
 
 ### A7. Long lines and truncation `[trunc]`
