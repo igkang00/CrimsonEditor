@@ -429,6 +429,32 @@ and a Hanja conversion or a multi-syllable commit is more than one character.)
 the bug I wrote while trying to handle an abandoned composition. Nothing needs clearing there:
 the next composition's first keystroke recomputes the state from the selection that exists then.
 
+**Phase 9 — commenting a column block. DONE, after the fact.**
+Also not in the plan; one of the commands listed below as refused, picked off because the
+answer turned out to be clear.
+
+A column block gets wrapped in **block** delimiters — `/* ... */` — on each row, not given a
+line comment. A line comment kills the whole line, which is to say it ignores the columns the
+user picked; commenting out part of a line is exactly what block delimiters are for. A
+language without them (Python) cannot express this, so it beeps rather than substituting
+something else. The delimiter test therefore moved inside the per-mode branch: the two modes
+want different delimiters, and the old code tested `HasLineCommentDelimiter` around both.
+
+Three details, all of them found by using it rather than by reading it:
+
+- **A space inside each delimiter** (`/* x */`), because `FastMakeCommentLine` already writes
+  `"// "` and the two commands should not disagree. Uncomment accepts either form, the same
+  tolerance `FastReleaseCommentLine` shows.
+- **Rows that stop short of the block's right edge are padded out to it**, so the closing
+  delimiter stands on the edge and the comment is the same rectangle the block is. Without it
+  the delimiters land wherever each row happens to end.
+- **Uncomment only narrows the block if something actually came out of it.** It used to narrow
+  unconditionally, so a block over uncommented rows walked its right edge left on every press.
+
+A row that does not match is skipped silently — no beep. A block often spans rows where only
+some are commented, and refusing the whole operation over one of them would be worse than
+doing the part that makes sense.
+
 ---
 
 ## What this does not fix
@@ -437,11 +463,18 @@ the next composition's first keystroke recomputes the state from the selection t
   neither can a terminal. The editor will at least agree with itself.
 - **Glyphs wider than their cells still overlap slightly.** U+2B50 (⭐) measures 8 px against a
   7 px cell. The union classifier keeps this rare and small; a terminal clips, and we will not.
-- **The commands column mode simply refuses**: Select All, indent / unindent, comment /
-  uncomment, cut-append / copy-append, search-in-selection
-  ([cedtViewEvent.cpp](../src/view/cedtViewEvent.cpp),
-  [cedtViewHndrEdit.cpp:782](../src/view/cedtViewHndrEdit.cpp#L782)). Each is its own design
-  question. Out of scope; listed so the next person knows they were not missed.
+- **The commands column mode still refuses**: Select All, Select Block, indent / unindent,
+  cut-append / copy-append ([cedtViewEvent.cpp](../src/view/cedtViewEvent.cpp)). Each is its
+  own design question, and the answers are not obvious — cut-append has to say what it means
+  to concatenate two rectangles, and indent has to say whether it moves the block or the lines
+  under it. Listed so the next person knows they were not missed.
+
+  **Search in selection is not one of these.** It looks like a silent substitution
+  ([cedtViewHndrEdit.cpp:782](../src/view/cedtViewHndrEdit.cpp#L782) forces range 1 = whole
+  file) and it is not: passing anything but 0 makes `CReplaceDialog::OnInitDialog` grey the
+  "in selection" radio out, so the user is told. It is excluded on purpose — the search walks
+  a *continuous* range and `IsStringInSelection` is written for one, while a column block is a
+  rectangle over many rows. A stream selection of nothing is excluded the same way.
 - **Undo does not know about column mode.** A column edit is recorded as N independent per-line
   operations and undo restores the caret by index, so a caret parked in virtual space is not
   restored. Pre-existing, orthogonal, worth its own pass.

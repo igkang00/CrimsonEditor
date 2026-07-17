@@ -779,6 +779,11 @@ void CCedtView::OnSearchReplace()
 //	dlg.m_szFindString = GetCurrentWord();
 	if( m_bSelected && ! GetSelectedLineCount() ) dlg.m_szFindString = GetSelectedString();
 
+	// Range 0 is "in selection", and passing anything else makes the dialog DISABLE that radio
+	// button (see CReplaceDialog::OnInitDialog) — so this is not a silent substitution, it is
+	// how the option gets greyed out. Column mode is excluded for the same reason a stream
+	// selection of nothing is: the search runs over a continuous range, and a column block is
+	// not one — it is a rectangle over many lines, and IsStringInSelection cannot express it.
 	if( ! m_bColumnMode && m_bSelected && GetSelectedLineCount() ) dlg.m_nRange = 0;
 	else dlg.m_nRange = 1;
 

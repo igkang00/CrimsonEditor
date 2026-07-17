@@ -278,17 +278,24 @@ void CCedtView::EventDecreaseIndent(BOOL bMacro)
 	} else ActionWrongOperation(! bMacro);
 }
 
+// The two modes want different delimiters, so the delimiter test is per-mode rather than one
+// test around both. A column block wants BLOCK comments (/* ... */): it covers part of a line,
+// and a line comment would kill the whole line, which is to say it would ignore the columns
+// the user picked. A language with no block delimiters — Python — cannot express this at all,
+// so it beeps rather than doing something else instead.
 void CCedtView::EventMakeComment(BOOL bMacro)
 {
 	CCedtDoc * pDoc = (CCedtDoc *)GetDocument();
 
-	if( pDoc->HasLineCommentDelimiter() ) {
-		if( ! m_bColumnMode ) {
-			if( ! GetSelectedLineCount() ) {
-				if( m_bSelected ) m_bSelected = FALSE;
-				ActionMakeCommentLine();
-			} else ActionMakeCommentLineSelection();
-		} else ActionWrongOperation(! bMacro);
+	if( m_bColumnMode ) {
+		if( pDoc->HasBlockCommentDelimiter() && m_bSelected && m_nCaretPosX != m_nAnchorPosX )
+			ActionMakeCommentColumnSelection();
+		else ActionWrongOperation(! bMacro);
+	} else if( pDoc->HasLineCommentDelimiter() ) {
+		if( ! GetSelectedLineCount() ) {
+			if( m_bSelected ) m_bSelected = FALSE;
+			ActionMakeCommentLine();
+		} else ActionMakeCommentLineSelection();
 	} else ActionWrongOperation(! bMacro);
 }
 
@@ -296,13 +303,15 @@ void CCedtView::EventReleaseComment(BOOL bMacro)
 {
 	CCedtDoc * pDoc = (CCedtDoc *)GetDocument();
 
-	if( pDoc->HasLineCommentDelimiter() ) {
-		if( ! m_bColumnMode ) {
-			if( ! GetSelectedLineCount() ) {
-				if( m_bSelected ) m_bSelected = FALSE;
-				ActionReleaseCommentLine();
-			} else ActionReleaseCommentLineSelection();
-		} else ActionWrongOperation(! bMacro);
+	if( m_bColumnMode ) {
+		if( pDoc->HasBlockCommentDelimiter() && m_bSelected && m_nCaretPosX != m_nAnchorPosX )
+			ActionReleaseCommentColumnSelection();
+		else ActionWrongOperation(! bMacro);
+	} else if( pDoc->HasLineCommentDelimiter() ) {
+		if( ! GetSelectedLineCount() ) {
+			if( m_bSelected ) m_bSelected = FALSE;
+			ActionReleaseCommentLine();
+		} else ActionReleaseCommentLineSelection();
 	} else ActionWrongOperation(! bMacro);
 }
 

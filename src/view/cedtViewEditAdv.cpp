@@ -230,6 +230,129 @@ void CCedtView::ActionUnindentLineSelection()
 	m_nAnchorPosX = GetPosXFromIdxX( rLne3, nEndX );
 }
 
+// Comment out a column block by wrapping what it covers on each row in the BLOCK comment
+// delimiters — /* ... */ — rather than putting a line comment at column 0.
+//
+// A line comment kills the whole line, which makes the block's columns meaningless: the user
+// picked 3..7 and would get all of it commented. Block delimiters are the tool that matches
+// what a column block means, because commenting out part of a line is exactly what they are
+// for. A language without them (Python) cannot express this, and the caller beeps rather than
+// pretending — see EventMakeComment.
+//
+// The block grows to cover the delimiters it just added, so Uncomment right after Comment
+// finds what it needs and round-trips.
+void CCedtView::ActionMakeCommentColumnSelection()
+{
+	CCedtDoc * pDoc = (CCedtDoc *)GetDocument();
+
+	// A space inside each delimiter, the way FastMakeCommentLine writes "// " — same reason,
+	// and the two commands should not disagree about it.
+	CString szOn  = pDoc->GetBlockCommentOn() + _T(" ");
+	CString szOff = _T(" ") + pDoc->GetBlockCommentOff();
+
+	INT nLineHeight = GetLineHeight(), nSpaceWidth = GetSpaceWidth();
+	INT nBegX, nBegY, nEndX, nEndY; GetSelectedPosition(nBegX, nBegY, nEndX, nEndY);
+
+	for(INT nPosY = nBegY; nPosY <= nEndY; nPosY += nLineHeight ) {
+		INT nIdxY = GetIdxYFromPosY( nPosY );
+
+		CFormatedString & rLine = GetLineFromPosY( nPosY );
+		INT nLstX = GetLastPosX( rLine );
+		INT nIdx1 = GetIdxXFromBlockEdge( rLine, nBegX );
+		INT nIdx2 = GetIdxXFromBlockEdge( rLine, nEndX );
+		if( nIdx1 >= nIdx2 ) continue;		// nothing of this row is inside the block
+
+		// A row that stops short of the block's right edge gets padded out to it, so the
+		// closing delimiter stands on the edge and the comment is the same rectangle the
+		// block is. Without this the delimiters land ragged, wherever each row happens to end.
+		if( nEndX > nLstX ) {
+			InsertString(nIdx2, nIdxY, CString(_T(' '), (nEndX - nLstX) / nSpaceWidth));
+			CFormatedString & rPadded = GetLineFromPosY( nPosY );	// re-fetch: the row changed
+			nIdx2 = GetIdxXFromBlockEdge( rPadded, nEndX );
+		}
+
+		// Back to front: inserting at nIdx2 first leaves nIdx1 where it was.
+		InsertString(nIdx2, nIdxY, szOff);
+		InsertString(nIdx1, nIdxY, szOn);
+	}
+
+	nEndX = nEndX + ( GetStringColumns(szOn) + GetStringColumns(szOff) ) * nSpaceWidth;
+
+	SetCaretPosY( nBegY ); m_nAnchorPosY = nEndY;
+	SetCaretPosX( nBegX ); m_nAnchorPosX = nEndX;
+}
+
+// The inverse: on each row, if the block starts with /* and ends with */, take both away.
+//
+// A row that does not match is left alone silently — no beep. A block often covers rows where
+// only some are commented, and refusing the whole operation because of one of them would be
+// worse than doing the part that makes sense.
+// How many characters at psz match lpsz, trying the spaced form first and falling back to the
+// bare one — "/* " then "/*". Same tolerance FastReleaseCommentLine shows for "// " and "//",
+// and for the same reason: we write the spaced form, but a human may have typed either.
+// Returns 0 for no match.
+static INT _MatchDelimiter(LPCTSTR psz, LPCTSTR lpszSpaced, LPCTSTR lpszBare)
+{
+	INT nSpaced = (INT)_tcslen(lpszSpaced), nBare = (INT)_tcslen(lpszBare);
+
+	if( _tcsncmp(psz, lpszSpaced, nSpaced) == 0 ) return nSpaced;
+	if( _tcsncmp(psz, lpszBare,   nBare  ) == 0 ) return nBare;
+	return 0;
+}
+
+void CCedtView::ActionReleaseCommentColumnSelection()
+{
+	CCedtDoc * pDoc = (CCedtDoc *)GetDocument();
+
+	CString szOnBare = pDoc->GetBlockCommentOn(), szOffBare = pDoc->GetBlockCommentOff();
+	CString szOn = szOnBare + _T(" "), szOff = _T(" ") + szOffBare;
+
+	INT nLineHeight = GetLineHeight(), nSpaceWidth = GetSpaceWidth();
+	INT nBegX, nBegY, nEndX, nEndY; GetSelectedPosition(nBegX, nBegY, nEndX, nEndY);
+	INT nReleased = 0;
+
+	for(INT nPosY = nBegY; nPosY <= nEndY; nPosY += nLineHeight ) {
+		INT nIdxY = GetIdxYFromPosY( nPosY );
+
+		CFormatedString & rLine = GetLineFromPosY( nPosY );
+		INT nIdx1 = GetIdxXFromBlockEdge( rLine, nBegX );
+		INT nIdx2 = GetIdxXFromBlockEdge( rLine, nEndX );
+		if( nIdx1 >= nIdx2 ) continue;
+
+		CAnalyzedString & rText = GetLineFromIdxY( nIdxY );
+
+		INT nLenOn = _MatchDelimiter((LPCTSTR)rText + nIdx1, szOn, szOnBare);
+		if( ! nLenOn ) continue;
+
+		// The closing delimiter's length decides where it starts, so try each candidate at
+		// its own offset rather than picking a length first.
+		INT nLenOff = 0;
+		if( nIdx2 - szOff.GetLength() >= nIdx1 &&
+		    _tcsncmp((LPCTSTR)rText + nIdx2 - szOff.GetLength(), szOff, szOff.GetLength()) == 0 )
+			nLenOff = szOff.GetLength();
+		else if( nIdx2 - szOffBare.GetLength() >= nIdx1 &&
+		         _tcsncmp((LPCTSTR)rText + nIdx2 - szOffBare.GetLength(), szOffBare, szOffBare.GetLength()) == 0 )
+			nLenOff = szOffBare.GetLength();
+		if( ! nLenOff ) continue;
+
+		if( nIdx2 - nIdx1 < nLenOn + nLenOff ) continue;	// they would overlap
+
+		DeleteString(nIdx2 - nLenOff, nIdxY, nLenOff);		// back to front again
+		DeleteString(nIdx1, nIdxY, nLenOn);
+		nReleased++;
+	}
+
+	// Only narrow the block if something actually came out of it. A block over rows that were
+	// not commented used to shrink anyway, walking its right edge left on every attempt.
+	if( nReleased ) {
+		INT nShrunk = ( GetStringColumns(szOn) + GetStringColumns(szOff) ) * nSpaceWidth;
+		nEndX = _MY_MAX(nBegX, nEndX - nShrunk);
+	}
+
+	SetCaretPosY( nBegY ); m_nAnchorPosY = nEndY;
+	SetCaretPosX( nBegX ); m_nAnchorPosX = nEndX;
+}
+
 void CCedtView::ActionMakeCommentLineSelection()
 {
 	INT nBegX, nBegY, nEndX, nEndY;

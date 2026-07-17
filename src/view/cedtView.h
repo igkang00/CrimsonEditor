@@ -630,6 +630,7 @@ protected: // *** cedtViewEditAdv.cpp ***
 
 	void ActionIndentLineSelection();			void ActionUnindentLineSelection();
 	void ActionMakeCommentLineSelection();		void ActionReleaseCommentLineSelection();
+	void ActionMakeCommentColumnSelection();	void ActionReleaseCommentColumnSelection();
 
 	void ActionConvertTabsToSpaces();			void ActionConvertSpacesToTabs();
 	void ActionLeadingSpacesToTabs();			void ActionRemoveTrailingSpaces();

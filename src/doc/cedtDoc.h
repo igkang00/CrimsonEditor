@@ -112,6 +112,9 @@ public: // *** cedtDoc.cpp ***
 	BOOL HasLineCommentDelimiter() const { return m_clsLangSpec.m_szLineComment1.GetLength(); }
 	BOOL HasBlockCommentDelimiter() const { return (m_clsLangSpec.m_szBlockComment1On.GetLength() && m_clsLangSpec.m_szBlockComment1Off.GetLength()); }
 
+	CString GetBlockCommentOn() const  { return m_clsLangSpec.m_szBlockComment1On; }
+	CString GetBlockCommentOff() const { return m_clsLangSpec.m_szBlockComment1Off; }
+
 	INT GetFtpAccountNumber() const { return m_nFtpAccount; }
 	CString GetRemotePathName() const { return m_szRemotePathName; }
 
