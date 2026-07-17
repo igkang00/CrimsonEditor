@@ -197,8 +197,18 @@ void CMainFrame::OnUpdateFrameTitle(BOOL bAddToTitle)
 
 void CMainFrame::OnSizeMainWindow(int cx, int cy)
 {
-	// when print preview is closed direct call to CCedtView::OnSizeMainWindow()
-	// causes program to crash...
+	// Not while print preview is up: the edit views are not on screen, and this rebuilds the
+	// screen back-buffer at the new size and re-applies the font to every view — work nobody
+	// can see, repeated on every step of a resize drag. OnSetPreviewMode posts
+	// WM_SIZE_MAIN_WINDOW when preview closes, so the views get their one update then.
+	//
+	// This comment used to say the call "causes program to crash", and it did:
+	// ApplyCurrentScreenFont walked the document's view list and cast whatever it found to
+	// CCedtView *, and while preview is up that list holds a CPreviewView. Reading a CCedtView
+	// member out of it landed past the end of the object. That is fixed at the root —
+	// CCedtDoc::GetNextCedtView skips the views that are not ours — and verified by removing
+	// this guard and failing to reproduce the crash. The guard stays for the reason above,
+	// which is a real one and is not about crashing.
 	if( ! m_bPrintPreviewMode ) CCedtView::OnSizeMainWindow(cx, cy);
 
 	// we need to update all the views again...
@@ -210,7 +220,8 @@ void CMainFrame::OnSize(UINT nType, int cx, int cy)
 {
 	CMDIFrameWnd::OnSize(nType, cx, cy);
 
-	// only call when it is not in print preview mode to avoid program crash
+	// Skipped during print preview — see OnSizeMainWindow above for why, and for why it is
+	// no longer about the crash the old comment blamed.
 	if( ! m_bPrintPreviewMode ) CCedtView::OnSizeMainWindow(cx, cy);
 }
 
