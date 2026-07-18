@@ -222,9 +222,9 @@ Run on a clean Windows VM (VirtualBox), 3.93, first pass 2026-07-18.
 - [x] Open a `.c` file — it must get syntax colouring. (This is the exact symptom of the
       registry-truncation bug: it worked in dev and failed installed.) **Coloured — the
       registry path resolves on a clean install. First time this has been confirmed.**
-- [ ] Colour schemes, templates, syntax `Customize…` — all resolve through the install dir.
-- [x] Explorer right-click → "Edit with Crimson Editor" — works. *(Still to do: `launch.exe`, a
-      file passed on the command line, a filename containing Korean.)*
+- [x] Colour schemes, templates, syntax `Customize…` — all resolve through the install dir. Work.
+- [x] Explorer right-click → "Edit with Crimson Editor"; `launch.exe`; a file passed on the
+      command line; a filename containing Korean. All work.
 - [ ] Uninstall, then reinstall over the top.
 
 ### A9. Release-only hazards `[big]` `[Debug]`
@@ -375,3 +375,6 @@ where not to look again.
 | --- | --- | --- | --- | --- |
 | 1 | §A8 · `.c` syntax highlighting on a clean install | Coloured correctly. The Unicode registry-truncation bug (path → `"C"`, killing install-dir lookups) does **not** reproduce on a clean box. First time this path has been verified. | 3.93 Release-KR, VM | ✅ holds |
 | 2 | §A8 · install, Explorer "Edit with…", Korean file display | All worked. | 3.93 Release-KR, VM | ✅ holds |
+| 3 | §A8 · colour schemes, templates, syntax Customize (all resolve through the install dir) | All applied/opened correctly. Same install-path resolution as row 1, other consumers. | 3.93 Release-KR, VM | ✅ holds |
+| 4 | §A8 · `launch.exe`, command-line file open, Korean filename | All opened. | 3.93 Release-KR, VM | ✅ holds |
+| 5 | §A8 / §Project · open a file with a **Korean path**, close the editor, reopen | **BUG.** On exit the workspace is saved to `cedt.wks`, and `wofstream` (no `imbue`, [FileWndProject.cpp:128](../src/panels/FileWndProject.cpp#L128)) fails on the first non-ASCII character of a path — so the file is **truncated mid-attribute**, right after `path="C:\Temp\`. The next launch reads the truncated `.wks`, hits an unterminated attribute, and shows "프로젝트 속성을 읽어들이면서 에러가 발생했습니다" (`IDS_ERR_PARSE_PRJ_ATTR`). Non-fatal — the editor opens — but the workspace does not restore, and every file after the Korean-path one is silently dropped from it. **Reproduces without reinstalling: a Korean-path file open at exit is enough.** Root cause is the same missing `imbue` on the read side (`wifstream`, [FileWndProject.cpp:77](../src/panels/FileWndProject.cpp#L77)), so even an intact Korean path would not load. This is the `.prj`/`.wks` path the Unicode migration flagged as unmigrated and the plan tagged `[enc]` `[trunc]` under §Project. | 3.93 Release-KR, VM (and dev) | **fixed** — `Utf8FileLocale()` imbued on all four workspace streams ([fstream_compat.h](../src/include/fstream_compat.h), [FileWndProject.cpp](../src/panels/FileWndProject.cpp)). A Korean-path file now saves and restores intact; ASCII workspaces round-trip unchanged. For 3.94. |

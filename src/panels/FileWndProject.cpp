@@ -34,7 +34,8 @@ BOOL CFileWindow::NewProjectWorkspace(LPCTSTR lpszPathName)
 
 BOOL CFileWindow::SaveProjectWorkspace(LPCTSTR lpszPathName)
 {
-	wofstream fout(lpszPathName, ios::out);
+	wofstream fout; fout.imbue(Utf8FileLocale());		// UTF-8 so Korean paths survive
+	fout.open(lpszPathName, ios::out);
 	if( ! fout.is_open() ) return FALSE;
 
 	CString szContents;
@@ -74,7 +75,8 @@ BOOL CFileWindow::OpenProjectWorkspace(LPCTSTR lpszPathName)
 	EnableAllProjectButtons(FALSE);
 
 	// open file to load project workspace
-	wifstream fin(lpszPathName, ios::in);
+	wifstream fin; fin.imbue(Utf8FileLocale());		// UTF-8, matching the save side
+	fin.open(lpszPathName, ios::in);
 
 	CMapStringToString mapAttr; TCHAR szText[kProjectTokenBufSize];
 	fin.width(kProjectTokenBufSize); fin >> szText; // get first token
@@ -125,7 +127,8 @@ BOOL CFileWindow::OpenProjectWorkspace(LPCTSTR lpszPathName)
 
 BOOL CFileWindow::SaveRegularWorkspace(LPCTSTR lpszPathName)
 {
-	wofstream fout(lpszPathName, ios::out);
+	wofstream fout; fout.imbue(Utf8FileLocale());		// UTF-8 so Korean paths survive
+	fout.open(lpszPathName, ios::out);
 	if( ! fout.is_open() ) return FALSE;
 
 	CString szContents;
@@ -156,7 +159,8 @@ BOOL CFileWindow::OpenRegularWorkspace(LPCTSTR lpszPathName)
 	if( ! InsertProjectTreeItem(TVI_ROOT, szItemText, PROJECT_ITEM_PROJECT, 0, _T("")) ) return FALSE;
 
 	// open file to load regular workspace
-	wifstream fin(lpszPathName, ios::in);
+	wifstream fin; fin.imbue(Utf8FileLocale());		// UTF-8, matching the save side
+	fin.open(lpszPathName, ios::in);
 
 	CMapStringToString mapAttr; TCHAR szText[kProjectTokenBufSize];
 	fin.width(kProjectTokenBufSize); fin >> szText; // get first token
