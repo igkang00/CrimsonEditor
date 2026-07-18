@@ -800,13 +800,42 @@ void CCedtView::OnSize(UINT nType, int cx, int cy)
 	BOOL bClosing = pDoc && pDoc->IsClosing();
 
 	if( m_szPrevClientSize.cx != cx && m_bLocalWordWrap && ! m_nFixedWrapWidth && ! bClosing ) {
-		SaveCaretAndAnchorPos();
-		FormatScreenText();
-		RestoreCaretAndAnchorPos();
+		// Re-wrapping is a whole-document job — the row count depends on every line's width, so
+		// word wrap cannot lay out lazily. On a large file that is ~1 s, and a resize DRAG sends
+		// a WM_SIZE per pixel, so doing it inline makes the drag crawl. For a large file, defer
+		// it: (re)arm a short timer on each size step, and only reformat once the drag goes
+		// quiet (ID_TIMER_WRAP_REFORMAT). Small files stay inline, so their wrap still tracks the
+		// drag live.
+		//
+		// "Large" is LARGE_FILE_LINE_COUNT — the same line count above which this reformat shows
+		// the "Formatting..." progress bar. So the rule is one thing: a pass heavy enough to put
+		// up a progress bar is heavy enough to defer, and a resize drag no longer flashes that
+		// bar on every pixel.
+		if( pDoc->GetLineCount() > LARGE_FILE_LINE_COUNT ) {
+			SetTimer( ID_TIMER_WRAP_REFORMAT, 120, NULL );		// re-arm; fires when steps stop
+		} else {
+			SaveCaretAndAnchorPos();
+			FormatScreenText();
+			RestoreCaretAndAnchorPos();
+		}
 	}
 
 	m_szPrevClientSize.cx = cx;
 	m_szPrevClientSize.cy = cy;
+}
+
+// The wrap reformat a resize drag deferred (see OnSize). Fires once the drag stops sending
+// size steps; lays the document out at the width it finally settled on.
+void CCedtView::OnTimerWrapReformat()
+{
+	KillTimer( ID_TIMER_WRAP_REFORMAT );
+
+	if( ! m_bLocalWordWrap || ! m_clsFormatedScreenText.GetCount() ) return;
+
+	SaveCaretAndAnchorPos();
+	FormatScreenText();
+	RestoreCaretAndAnchorPos();
+	Invalidate();
 }
 
 // this function is called when screen font is changed
@@ -1310,6 +1339,9 @@ void CCedtView::OnTimer(UINT_PTR nIDEvent)
 		break;
 	case ID_TIMER_CAPTURE_OUTPUT:
 		OnTimerCaptureOutput();
+		break;
+	case ID_TIMER_WRAP_REFORMAT:
+		OnTimerWrapReformat();
 		break;
 	}
 	CView::OnTimer(nIDEvent);

@@ -734,7 +734,7 @@ void CCedtView::FormatScreenText(INT nIndex, INT nCount)
 	CMainFrame * pMainFrame = (CMainFrame *)AfxGetMainWnd(); ASSERT( pMainFrame );
 	INT nProcess = 0; CWaitCursor * pWait = NULL;
 
-	if( nCount > 1000 ) {
+	if( nCount > LARGE_FILE_LINE_COUNT ) {
 		pWait = new CWaitCursor;
 		pMainFrame->BeginProgress(_T("Formatting..."));
 	}
@@ -746,7 +746,7 @@ void CCedtView::FormatScreenText(INT nIndex, INT nCount)
 	// not survive that.
 	POSITION po1 = pDoc->m_clsAnalyzedText.FindIndex(nIndex);
 	INT nRow = FindScreenTextRow(nIndex);
-	if( nRow < 0 ) { if( pWait ) delete pWait; if( nCount > 1000 ) pMainFrame->EndProgress(); return; }
+	if( nRow < 0 ) { if( pWait ) delete pWait; if( nCount > LARGE_FILE_LINE_COUNT ) pMainFrame->EndProgress(); return; }
 
 	USHORT usLineFlag = m_clsFormatedScreenText.ElementAt(nRow).m_usLineFlag;
 	CString szTerminator = m_clsFormatedScreenText.ElementAt(nRow).m_szHereDocumentTerminator;
@@ -783,7 +783,7 @@ void CCedtView::FormatScreenText(INT nIndex, INT nCount)
 				vecRows.push_back( pRow );
 			}
 
-			if( nCount > 1000 && ! (nProcess % 20) ) pMainFrame->SetProgress( 100 * nProcess / nCount );
+			if( nCount > LARGE_FILE_LINE_COUNT && ! (nProcess % 20) ) pMainFrame->SetProgress( 100 * nProcess / nCount );
 			nProcess++;
 		}
 
@@ -804,12 +804,12 @@ void CCedtView::FormatScreenText(INT nIndex, INT nCount)
 			_CheckLineFlag( m_clsFormatedScreenText.ElementAt(nRow), usLineFlag, szTerminator );
 			nRow++;
 
-			if( nCount > 1000 && ! (nProcess % 20) ) pMainFrame->SetProgress( 100 * nProcess / nCount );
+			if( nCount > LARGE_FILE_LINE_COUNT && ! (nProcess % 20) ) pMainFrame->SetProgress( 100 * nProcess / nCount );
 			nProcess++;
 		}
 	}
 
-	if( nCount > 1000 ) {
+	if( nCount > LARGE_FILE_LINE_COUNT ) {
 		if( pWait ) delete pWait;
 		pMainFrame->EndProgress();
 	}

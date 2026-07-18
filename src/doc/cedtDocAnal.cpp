@@ -600,7 +600,7 @@ void CCedtDoc::AnalyzeText(INT nIndex, INT nCount)
 	CMainFrame * pMainFrame = (CMainFrame *)AfxGetMainWnd(); ASSERT( pMainFrame );
 	INT nProcess = 0; CWaitCursor * pWait = NULL;
 
-	if( nCount > 1000 ) {
+	if( nCount > LARGE_FILE_LINE_COUNT ) {
 		pWait = new CWaitCursor;
 		pMainFrame->BeginProgress(_T("Analyzing..."));
 	}
@@ -611,11 +611,11 @@ void CCedtDoc::AnalyzeText(INT nIndex, INT nCount)
 
 		// Asks for the same percentage many times over; CStatusBarEx::SetProgress drops
 		// the repaints that would produce an identical bar.
-		if( nCount > 1000 && ! (nProcess % 20) ) pMainFrame->SetProgress(100 * nProcess / nCount);
+		if( nCount > LARGE_FILE_LINE_COUNT && ! (nProcess % 20) ) pMainFrame->SetProgress(100 * nProcess / nCount);
 		nProcess++;
 	}
 
-	if( nCount > 1000 ) {
+	if( nCount > LARGE_FILE_LINE_COUNT ) {
 		if( pWait ) delete pWait;
 		pMainFrame->EndProgress();
 	}

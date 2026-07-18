@@ -200,6 +200,7 @@ public:
 protected:
 	void OnScreenFontChange();
 	void OnTimerAutoScroll();
+	void OnTimerWrapReformat();
 
 
 public: // *** cedtViewFont.cpp ***

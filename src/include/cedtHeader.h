@@ -96,6 +96,13 @@
 #define MAX_FILE_FILTER						32
 #define MAX_SYNTAX_TYPE						32
 
+// The line count at which a whole-document pass counts as "large". One number, so the
+// behaviours that switch on it agree: analyzing and screen-formatting show the progress bar
+// above it, and a resize drag defers the word-wrap reformat above it instead of running the
+// full pass on every WM_SIZE. Below it a pass is fast enough to run inline with no progress
+// bar. (The printer format path uses its own, lower, page-oriented threshold.)
+#define LARGE_FILE_LINE_COUNT				1000
+
 
 // MACROS
 #define _IS_BET(min, x, max)				((x) >= (min) && (x) <= (max))
