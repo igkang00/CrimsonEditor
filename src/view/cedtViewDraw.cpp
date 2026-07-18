@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "cedtHeader.h"
+#include <mlang.h>
 
 
 #define _MIX_COLOR(color1, color2)				RGB( ( GetRValue(color1) + GetRValue(color2) ) / 2 , \
@@ -386,6 +387,10 @@ void CCedtView::DrawPrintPageBackgroundAndText(CDC * pDC, RECT rectDraw, INT nCu
 	INT nLineCount = 0;
 	INT nParaCount = m_nFormatedPrintTextStartIdxY;
 
+	// dx buffer for ExtTextOut, grown to the longest word drawn. Reused across the page —
+	// drawing is single-threaded UI, same as DrawColumnWord.
+	static std::vector<INT> vecDx;
+
 	POSITION pos = m_clsFormatedPrintText.GetHeadPosition();
 	while( pos ) {
 		CFormatedString & rLine = m_clsFormatedPrintText.GetNext( pos );
@@ -460,17 +465,35 @@ void CCedtView::DrawPrintPageBackgroundAndText(CDC * pDC, RECT rectDraw, INT nCu
 					} else _SET_TEXT_COLOR(pDC, bRevert, m_crTextColor[ucType2]);
 
 					if( ucType1 != WT_RETURN && ucType1 != WT_TAB && ucType1 != WT_SPACE ) {
-						// when italicize comment option is on and this part is comment then set font to italic
-						if( m_bItalicizeComment && (CHECK_COMMENT(usFlag) || ucType2 == WT_LINECOMMENT) ) pDC->SelectObject( & m_fontPrinterIt );
+						LPCTSTR pStr = (LPCTSTR)rLine + rWord.m_siIndex;
+						SHORT   siLen = rWord.m_siLength;
 
-						// draw text string
-						pDC->TextOut(rect.left+nPosX, -(rect.top+nPosY), (LPCTSTR)rLine + rWord.m_siIndex, rWord.m_siLength);
+						if( siLen > 0 ) {
+							if( (INT)vecDx.size() < siLen ) vecDx.resize( siLen );
 
-						if( m_bEmboldenKeywords && _IS_BET(WT_KEYWORD0, ucType2, WT_KEYWORD9) && _CanEmbolden(rWord.m_ucInfo, usFlag) && ! CHECK_HILIGHT(usFlag) && ! CHECK_COMMENT(usFlag) && ! CHECK_QUOTATION(usFlag) ) 
-							pDC->TextOut(rect.left+nPosX+nAveCharWidth/9, -(rect.top+nPosY), (LPCTSTR)rLine + rWord.m_siIndex, rWord.m_siLength);
+							// Draw with an explicit per-character advance array, not the font's own
+							// advances: in print preview MFC scales the printer font down to the
+							// screen, and the scaled CJK glyphs come out narrower than their laid-out
+							// slots and overlap. ExtTextOut with these dx values places every glyph
+							// where FormatPrintText put it — correct in preview and on paper alike.
+							//
+							// dx is measured with the BASE printer font (the one layout used), before
+							// the italic switch below, so it still sums to the stored word width when a
+							// comment is drawn italic.
+							FillPrintCharDx( pDC, pStr, siLen, & vecDx[0] );
 
-						// restore font from italic
-						if( m_bItalicizeComment && (CHECK_COMMENT(usFlag) || ucType2 == WT_LINECOMMENT) ) pDC->SelectObject( & m_fontPrinter );
+							// when italicize comment option is on and this part is comment then set font to italic
+							if( m_bItalicizeComment && (CHECK_COMMENT(usFlag) || ucType2 == WT_LINECOMMENT) ) pDC->SelectObject( & m_fontPrinterIt );
+
+							// draw text string
+							DrawPrintWord(pDC, rect.left+nPosX, -(rect.top+nPosY), pStr, siLen, & vecDx[0]);
+
+							if( m_bEmboldenKeywords && _IS_BET(WT_KEYWORD0, ucType2, WT_KEYWORD9) && _CanEmbolden(rWord.m_ucInfo, usFlag) && ! CHECK_HILIGHT(usFlag) && ! CHECK_COMMENT(usFlag) && ! CHECK_QUOTATION(usFlag) )
+								DrawPrintWord(pDC, rect.left+nPosX+nAveCharWidth/9, -(rect.top+nPosY), pStr, siLen, & vecDx[0]);
+
+							// restore font from italic
+							if( m_bItalicizeComment && (CHECK_COMMENT(usFlag) || ucType2 == WT_LINECOMMENT) ) pDC->SelectObject( & m_fontPrinter );
+						}
 					}
 				}
 			}
@@ -478,6 +501,77 @@ void CCedtView::DrawPrintPageBackgroundAndText(CDC * pDC, RECT rectDraw, INT nCu
 
 		nLineCount++;
 		if( rLine.m_siSplitIndex == 0 ) nParaCount++;
+	}
+}
+
+
+// Draw one text word, splitting off any run the currently selected (base) printer font can't
+// render and drawing it with an explicitly mapped linked font. GDI would font-link implicitly,
+// but that fallback garbles CJK in MFC's scaled print-preview DC; mapping the font ourselves
+// makes preview match the real print, which font-links fine at full resolution.
+//
+// pDx is one advance per code unit, already summing to the word's laid-out width, so each run
+// is placed at exactly the position FormatPrintText computed. If the font-link service is
+// missing, or the base font covers the whole word, this is a single ExtTextOut as before.
+void CCedtView::DrawPrintWord(CDC * pDC, INT nX, INT nY, LPCTSTR pStr, SHORT siLen, const INT * pDx)
+{
+	if( siLen <= 0 ) return;
+
+	HDC   hdc   = pDC->GetSafeHdc();
+
+	// Base-font coverage from the REAL printer font, not the DC's current one: in print
+	// preview the DC holds a CPreviewDC-scaled temp font, and GetFontCodePages on that can
+	// come back empty and send us down the plain-draw fallback. The glyph coverage is a
+	// property of the face, so the unscaled printer font answers it correctly.
+	HFONT hReal = (HFONT)m_fontPrinter.GetSafeHandle();
+	if( ! hReal ) hReal = (HFONT)::GetCurrentObject( hdc, OBJ_FONT );
+
+	DWORD dwBaseCodePages = 0;
+	if( m_pFontLink ) m_pFontLink->GetFontCodePages( hdc, hReal, & dwBaseCodePages );
+
+	// No service, or we could not learn the base font's coverage: draw it in one go.
+	if( ! m_pFontLink || ! dwBaseCodePages ) {
+		pDC->ExtTextOut( nX, nY, 0, NULL, pStr, siLen, (LPINT)pDx );
+		return;
+	}
+
+	INT nRunX = nX;
+	for(SHORT i = 0; i < siLen; ) {
+		// GetStrCodePages returns the code pages the leading run shares, and how many code
+		// units that run is — so consecutive same-coverage characters are drawn together.
+		DWORD dwRunCodePages = 0; long lRun = 0;
+		HRESULT hr = m_pFontLink->GetStrCodePages( pStr + i, siLen - i, dwBaseCodePages, & dwRunCodePages, & lRun );
+
+		SHORT siRun = (SUCCEEDED(hr) && lRun > 0) ? (SHORT)lRun : (SHORT)(siLen - i);
+		if( siRun > siLen - i ) siRun = (SHORT)(siLen - i);
+
+		INT nRunWidth = 0;
+		for(SHORT k = 0; k < siRun; k++) nRunWidth += pDx[i + k];
+
+		HFONT hLinked = NULL;
+		if( SUCCEEDED(hr) && ! (dwRunCodePages & dwBaseCodePages) ) {
+			// Base font can't render this run — map a linked font. Size it from the ATTRIBUTE
+			// DC's font (the real, unscaled printer font), not the output DC's: in print preview
+			// the output font is CPreviewDC's shrunk proxy, and a link font sized to that and
+			// selected raw draws too big for the advances — which are measured on the printer.
+			// Sizing off the printer font and selecting it THROUGH pDC (below) lets CPreviewDC
+			// shrink it the same way it shrinks the base font, so glyph and advance agree.
+			HDC hAttrib = pDC->m_hAttribDC ? pDC->m_hAttribDC : hdc;
+			if( FAILED(m_pFontLink->MapFont( hAttrib, dwRunCodePages, pStr[i], & hLinked )) ) hLinked = NULL;
+		}
+
+		if( hLinked ) {
+			// Select through pDC (CPreviewDC-aware), NOT ::SelectObject, so preview scaling applies.
+			CFont * pPrev = pDC->SelectObject( CFont::FromHandle( hLinked ) );
+			pDC->ExtTextOut( nRunX, nY, 0, NULL, pStr + i, siRun, (LPINT)(pDx + i) );
+			pDC->SelectObject( pPrev );
+			m_pFontLink->ReleaseFont( hLinked );
+		} else {
+			pDC->ExtTextOut( nRunX, nY, 0, NULL, pStr + i, siRun, (LPINT)(pDx + i) );
+		}
+
+		nRunX += nRunWidth;
+		i = (SHORT)( i + siRun );
 	}
 }
 

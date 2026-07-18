@@ -958,6 +958,40 @@ void CCedtView::FormatPrintText(CDC * pDC, RECT rectDraw, INT nIndex, INT nCount
 }
 
 
+// Per-code-unit advances for one drawn text word, measured on the printer DC exactly the way
+// FormatPrintText laid the word out (same fast path, same per-character measure). The print
+// draw path hands these to ExtTextOut as its dx array, so a scaled preview DC places every
+// glyph at its computed slot instead of trusting the scaled font's own advances — which for
+// CJK come out narrower than the slot and pack the glyphs into each other. Actual printing
+// never needed this (its DC is not scaled), but ExtTextOut with the true advances is correct
+// there too, so the draw is one path.
+//
+// dx has one entry per code unit: a surrogate pair carries the whole advance on its lead unit
+// and 0 on its trail, as ExtTextOut expects. TAB/SPACE/RETURN words are never drawn (the
+// caller skips them), so they are not handled here.
+void CCedtView::FillPrintCharDx(CDC * pDC, LPCTSTR pWord, SHORT siLength, INT * pDx)
+{
+	_ResetWidthCacheIfFontChanged( pDC );
+
+	if( IsUsingFixedPitchFont( pDC ) && ! _NeedsGdiMeasure( pWord, siLength ) ) {
+		// Pure ASCII in a fixed-pitch font: every cell is the space advance, matching the fast
+		// path in _GetWordWidth. No surrogate pairs are possible here.
+		INT nSpace = GetSpaceWidth( pDC );
+		for(SHORT i = 0; i < siLength; i++) pDx[i] = nSpace;
+	} else {
+		// Measured path (CJK, emoji, astral, or a variable-pitch font): the same per-character
+		// advances _MeasureRun sums into the word's width, so the dx array adds up to exactly
+		// that width and the next word still starts where layout put it.
+		for(SHORT i = 0; i < siLength; ) {
+			SHORT siUnits = (SHORT)CharUnitsAt( pWord, i, siLength );
+			pDx[i] = _MeasureRun( pDC, pWord + i, siUnits );
+			if( siUnits == 2 ) pDx[i+1] = 0;
+			i = (SHORT)( i + siUnits );
+		}
+	}
+}
+
+
 // Drop nCount logical lines, starting at line nIndex, from the screen rows. The carry-over
 // syntax flag from the first of them survives onto whatever now sits in its place.
 void CCedtView::RemoveScreenText(INT nIndex, INT nCount)

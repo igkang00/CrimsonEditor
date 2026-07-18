@@ -10,6 +10,9 @@
 #endif // _MSC_VER > 1000
 
 
+struct IMLangFontLink2;		// <mlang.h>; only cedtViewDraw.cpp / cedtViewPrint.cpp need the full type
+
+
 class CCedtView : public CView
 {
 protected: // create from serialization only
@@ -308,6 +311,12 @@ protected: // *** cedtViewDraw.cpp ***
 	void DrawPrintPageOutline(CDC * pDC, RECT rectDraw, INT nCurPage);
 	void DrawPrintPageBackgroundAndText(CDC * pDC, RECT rectDraw, INT nCurPage);
 
+	// Draw one printed text word, drawing any run the base printer font can't render (CJK in a
+	// Latin font) with an explicitly mapped linked font instead of GDI's implicit fallback,
+	// which garbles in the scaled preview DC. m_pFontLink is created for the print job.
+	void DrawPrintWord(CDC * pDC, INT nX, INT nY, LPCTSTR pStr, SHORT siLen, const INT * pDx);
+	IMLangFontLink2 * m_pFontLink;
+
 	void DrawActiveLineHighlight();
 	void DrawColumnMarkerHighlight();
 
@@ -348,6 +357,9 @@ public: // *** cedtViewFormat.cpp ***
 
 	void FormatPrintText(CDC * pDC, RECT rectDraw);
 	void FormatPrintText(CDC * pDC, RECT rectDraw, INT nIndex, INT nCount);
+
+	// Per-code-unit advances for one printed text word, for ExtTextOut in the print draw path.
+	void FillPrintCharDx(CDC * pDC, LPCTSTR pWord, SHORT siLength, INT * pDx);
 
 	void RemoveScreenText(INT nIndex, INT nCount);
 	void InsertScreenText(INT nIndex, INT nCount);

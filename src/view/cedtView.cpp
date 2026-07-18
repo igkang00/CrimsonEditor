@@ -277,6 +277,9 @@ CCedtView::CCedtView()
 
 	// no half of a surrogate pair is waiting for its partner
 	m_chPendingHighSurrogate = 0;
+
+	// font-link service is created per print job (OnBeginPrinting), released in OnEndPrinting
+	m_pFontLink = NULL;
 }
 
 CCedtView::~CCedtView()

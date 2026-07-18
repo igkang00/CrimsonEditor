@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "cedtHeader.h"
+#include <mlang.h>
 
 
 static CRect _rectDraw;
@@ -20,6 +21,14 @@ void CCedtView::OnBeginPrinting(CDC* pDC, CPrintInfo* pInfo)
 {
 	pDC->SetMapMode( MM_LOMETRIC );
 	pDC->SetBkMode( TRANSPARENT );
+
+	// Explicit font linking for the draw path: a Latin printer font (Consolas, Courier New)
+	// has no Hangul, and GDI's implicit fallback renders it as garbage in the scaled preview
+	// DC. DrawPrintWord uses this to map the correct linked font per CJK run instead. NULL is
+	// fine — DrawPrintWord falls back to a plain draw if the service is unavailable.
+	if( ! m_pFontLink )
+		::CoCreateInstance( CLSID_CMultiLanguage, NULL, CLSCTX_INPROC_SERVER,
+		                    IID_IMLangFontLink2, (void **)& m_pFontLink );
 
 	_rectDraw.left = m_rectPageMargin.left;
 	_rectDraw.top = m_rectPageMargin.top;
@@ -71,4 +80,10 @@ void CCedtView::OnEndPrinting(CDC* /*pDC*/, CPrintInfo* /*pInfo*/)
 {
 	m_clsFormatedPrintText.RemoveAll();
 	m_nFormatedPrintTextStartIdxY = 0;
+
+	if( m_pFontLink ) {
+		m_pFontLink->ResetFontMapping();
+		m_pFontLink->Release();
+		m_pFontLink = NULL;
+	}
 }
