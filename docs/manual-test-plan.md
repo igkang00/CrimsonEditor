@@ -225,7 +225,12 @@ Run on a clean Windows VM (VirtualBox), 3.93, first pass 2026-07-18.
 - [x] Colour schemes, templates, syntax `Customize…` — all resolve through the install dir. Work.
 - [x] Explorer right-click → "Edit with Crimson Editor"; `launch.exe`; a file passed on the
       command line; a filename containing Korean. All work.
-- [ ] Uninstall, then reinstall over the top.
+- [x] Uninstall, then reinstall over the top. Reinstall succeeds; settings under `HKCU` and
+      `%APPDATA%` survive the uninstall (README's stated behaviour) — the reinstalled build read
+      the previous workspace on first run, which is how bug #6 surfaced. Config is not reset.
+
+**§A8 complete.** Two confirmations (rows 1–4) and two bugs (rows 5–6, both fixed) — the whole
+installed-build section has now been exercised on a clean VM, the first time it ever has.
 
 ### A9. Release-only hazards `[big]` `[Debug]`
 
