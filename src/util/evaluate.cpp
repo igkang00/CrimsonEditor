@@ -304,8 +304,12 @@ TCHAR * EVAL::EvalConstant(TCHAR * pExpr, double * pValue, INT * pError)
 	while( _istdigit(* pEnd) || * pEnd == '.' ) pEnd++;
 
 	TCHAR szNum[2048]; INT nLen = (INT)(pEnd - pExpr);
-	if( nLen > 0 ) { _tcsncpy( szNum, pExpr, nLen ); szNum[nLen] = '\0'; }
-	else { * pError = EVAL_ERROR_WRONG_SYNTAX; return pExpr; }
+	if( nLen <= 0 ) { * pError = EVAL_ERROR_WRONG_SYNTAX; return pExpr; }
+	// Bound the copy to the buffer — a token longer than this would overrun the stack. A
+	// number with this many digits is far past what a double can hold anyway, so the
+	// truncated value is as meaningless as the original; the point is not to crash.
+	if( nLen > (INT)(sizeof(szNum)/sizeof(TCHAR)) - 1 ) nLen = (INT)(sizeof(szNum)/sizeof(TCHAR)) - 1;
+	_tcsncpy( szNum, pExpr, nLen ); szNum[nLen] = '\0';
 
 	* pValue = _tstof( szNum );
 	pExpr = pEnd;
@@ -340,8 +344,11 @@ TCHAR * EVAL::EvalVariable(TCHAR * pExpr, double * pValue, INT * pError)
 	while( _istalnum(* pEnd) ) pEnd++;
 
 	TCHAR szVar[2048]; INT nLen = (INT)(pEnd - pExpr);
-	if( nLen > 0 ) { _tcsncpy( szVar, pExpr, nLen ); szVar[nLen] = '\0'; _tcslwr(szVar); }
-	else { * pError = EVAL_ERROR_WRONG_SYNTAX; return pExpr; }
+	if( nLen <= 0 ) { * pError = EVAL_ERROR_WRONG_SYNTAX; return pExpr; }
+	// Bound the copy to the buffer (see EvalConstant). An over-long name simply will not
+	// match any defined variable, so truncating it changes nothing but the safety.
+	if( nLen > (INT)(sizeof(szVar)/sizeof(TCHAR)) - 1 ) nLen = (INT)(sizeof(szVar)/sizeof(TCHAR)) - 1;
+	_tcsncpy( szVar, pExpr, nLen ); szVar[nLen] = '\0'; _tcslwr(szVar);
 
 	double dValue;
 	if( hashVariables.Lookup( szVar, dValue ) ) { * pValue = dValue; pExpr = pEnd; }
@@ -358,8 +365,11 @@ TCHAR * EVAL::EvalFunction(TCHAR * pExpr, double * pValue, INT * pError)
 	while( _istalnum(* pEnd) ) pEnd++;
 
 	TCHAR szFun[2048]; INT nLen = (INT)(pEnd - pExpr);
-	if( nLen > 0 ) { _tcsncpy( szFun, pExpr, nLen ); szFun[nLen] = '\0'; _tcslwr(szFun); }
-	else { * pError = EVAL_ERROR_WRONG_SYNTAX; return pExpr; }
+	if( nLen <= 0 ) { * pError = EVAL_ERROR_WRONG_SYNTAX; return pExpr; }
+	// Bound the copy to the buffer (see EvalConstant). An over-long name will not match any
+	// defined function, so truncating it changes nothing but the safety.
+	if( nLen > (INT)(sizeof(szFun)/sizeof(TCHAR)) - 1 ) nLen = (INT)(sizeof(szFun)/sizeof(TCHAR)) - 1;
+	_tcsncpy( szFun, pExpr, nLen ); szFun[nLen] = '\0'; _tcslwr(szFun);
 
 	INT nFunction;
 	if( hashFunctions.Lookup( szFun, nFunction ) ) { pExpr = pEnd; }

@@ -47,3 +47,46 @@ TEST(EvaluateTest, UnknownFunction_ReturnsError)
     EVAL::Evaluate(const_cast<TCHAR *>(_T("nonexistent_func(1)")), &value, &error);
     EXPECT_EQ(EVAL_ERROR_FUNCTION_NOT_DEFINED, error);
 }
+
+// A single token longer than the evaluator's 2048-char scratch buffer must not overrun the
+// stack (it used to crash). Reaching the assertion without crashing is the point; the
+// truncated value/lookup is meaningless by definition.
+TEST(EvaluateTest, OverLongNumberToken_DoesNotOverrun)
+{
+    CString s = _T("1+");
+    for (int i = 0; i < 5000; i++) s += _T("9");
+    double value = 0.0; INT error = 0;
+    EVAL::Evaluate(const_cast<TCHAR *>((LPCTSTR)s), &value, &error);
+    SUCCEED();
+}
+
+TEST(EvaluateTest, OverLongVariableToken_DoesNotOverrun)
+{
+    CString s = _T("$");
+    for (int i = 0; i < 5000; i++) s += _T("a");
+    double value = 0.0; INT error = 0;
+    EVAL::Evaluate(const_cast<TCHAR *>((LPCTSTR)s), &value, &error);
+    EXPECT_EQ(EVAL_ERROR_VARIABLE_NOT_DEFINED, error);
+}
+
+TEST(EvaluateTest, OverLongFunctionToken_DoesNotOverrun)
+{
+    CString s;
+    for (int i = 0; i < 5000; i++) s += _T("a");
+    s += _T("(1)");
+    double value = 0.0; INT error = 0;
+    EVAL::Evaluate(const_cast<TCHAR *>((LPCTSTR)s), &value, &error);
+    EXPECT_EQ(EVAL_ERROR_FUNCTION_NOT_DEFINED, error);
+}
+
+// A long expression must be read in full, not truncated at any scratch-buffer size — a wrong
+// sum would reveal silent truncation (the §A7 concern).
+TEST(EvaluateTest, LongSumEvaluatesFully)
+{
+    CString s;
+    for (int i = 0; i < 2000; i++) { if (i) s += _T("+"); s += _T("1"); }
+    double value = 0.0; INT error = 0;
+    EVAL::Evaluate(const_cast<TCHAR *>((LPCTSTR)s), &value, &error);
+    EXPECT_EQ(EVAL_ERROR_SUCCESSFUL, error);
+    EXPECT_DOUBLE_EQ(2000.0, value);
+}
