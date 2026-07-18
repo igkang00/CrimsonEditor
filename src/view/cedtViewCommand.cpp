@@ -353,16 +353,18 @@ BOOL CCedtView::ExecuteHtmlHelp(LPCTSTR lpszCommand, LPCTSTR lpszArgument)
 
 BOOL CCedtView::ExecuteExecutable(LPCTSTR lpszCommand, LPCTSTR lpszArgument, LPCTSTR lpszDirectory, BOOL bCloseOnExit, BOOL bCaptureOutput)
 {
-	TCHAR szCommandLine[2048];
-	const size_t kCmdLineMax = sizeof(szCommandLine) / sizeof(TCHAR);
+	// Build the whole command line in a CString — no fixed buffer, so a long argument (e.g. a
+	// multi-KB $(CurrWord) selection) is passed in full up to the OS CreateProcess limit
+	// (~32767), rather than truncated at an arbitrary size. The command always quotes the
+	// program path, so CreateProcess does not need to modify the buffer.
+	CString szCommandLine;
 	if( ! bCaptureOutput && ! bCloseOnExit ) {
 		CString szLauncher = CCedtApp::m_szInstallDirectory + _T("\\launch.exe");
 		CString szShortPath = GetShortPathName( lpszCommand );
-		_sntprintf(szCommandLine, kCmdLineMax - 1, _T("\"%s\" %s %s"), (LPCTSTR)szLauncher, (LPCTSTR)szShortPath, lpszArgument);
+		szCommandLine.Format( _T("\"%s\" %s %s"), (LPCTSTR)szLauncher, (LPCTSTR)szShortPath, lpszArgument );
 	} else {
-		_sntprintf(szCommandLine, kCmdLineMax - 1, _T("\"%s\" %s"), lpszCommand, lpszArgument);
+		szCommandLine.Format( _T("\"%s\" %s"), lpszCommand, lpszArgument );
 	}
-	szCommandLine[kCmdLineMax - 1] = '\0';   // _snprintf does not null-terminate on overflow
 
 	HANDLE hChildStdinWr, hChildStdinRd;
 	HANDLE hChildStdoutWr, hChildStdoutRd;
@@ -399,7 +401,9 @@ BOOL CCedtView::ExecuteExecutable(LPCTSTR lpszCommand, LPCTSTR lpszArgument, LPC
 	if( _tcslen(lpszDirectory) ) lpCurrentDirectory = lpszDirectory;
 
 	PROCESS_INFORMATION pi; ZeroMemory( & pi, sizeof(pi) );
-	BOOL bResult = ::CreateProcess( NULL, szCommandLine, NULL, NULL, TRUE, 0, NULL, lpCurrentDirectory, & si, & pi);
+	// CreateProcessW may write into lpCommandLine, so hand it the CString's own writable buffer.
+	BOOL bResult = ::CreateProcess( NULL, szCommandLine.GetBuffer(0), NULL, NULL, TRUE, 0, NULL, lpCurrentDirectory, & si, & pi);
+	szCommandLine.ReleaseBuffer();
 
 	m_hChildProcess = pi.hProcess;
 	m_hChildThread = pi.hThread;

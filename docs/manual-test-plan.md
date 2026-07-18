@@ -239,10 +239,10 @@ tested none of it.
       a unit-test regression.
 - [x] A **user tool** whose command line, or whose piped stdin, is multi-KB. *"Truncation can now
       occur on multi-KB single-line input to a child process."* Pass a long selection via
-      `$(CurrWord)` (when text is selected, it *is* the selection): the command line is capped at
-      2048 chars ([ExecuteExecutable](../src/view/cedtViewCommand.cpp)) and truncates safely — no
-      overrun. But **Capture Output showed the child's output as garbage** (row 12) — a general
-      migration regression, now fixed.
+      `$(CurrWord)` (when text is selected, it *is* the selection). The command line is now built
+      in a `CString` (no arbitrary cap — passed in full up to the OS ~32767 limit) instead of the
+      old fixed 2048 buffer. Two bugs surfaced and were fixed: **Capture Output garbled the
+      child's output** (row 12) and **Copy All crashed** on the long line (row 13).
 - [ ] Open a project whose entries are absurdly long paths; a keyword/dictionary file with a very
       long token. (`stream.width(N)` was added to 20 parse sites.)
 - [ ] Directory panel: **copy / move / rename / delete** a file with a near-`MAX_PATH` path. These
