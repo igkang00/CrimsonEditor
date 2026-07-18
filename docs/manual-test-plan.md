@@ -202,11 +202,12 @@ The x64 doc names this twice as the most suspicious surviving path.
 
 - [x] Type Korean into a normal document; check composition, Backspace mid-composition, Escape.
       Composition, mid-composition Backspace, and Escape all behaved.
-- [~] Type Korean at the **end of a long line** and near the **bottom of a big file**. The long-line
-      end surfaced the max-line-length overflow bug (row 9), now fixed. Big-file bottom: pending.
+- [x] Type Korean at the **end of a long line** and near the **bottom of a big file**. The long-line
+      end surfaced the max-line-length overflow bug (row 9), now fixed; big-file bottom held after that.
 - [x] Type Korean into a **column block** (see A3). Covered by §A3 item 3 — held (Esc mid-composition
       commits the last char and drops the block selection; no corruption).
-- [ ] Record a macro that types Korean, then replay it.
+- [x] Record a macro that types Korean, then replay it. Recorded and replayed correctly — the Korean
+      characters land on replay.
 
 ### A6. Emoji and astral `[emoji]`
 
