@@ -167,16 +167,21 @@ was never checked. This is the highest-yield section in the plan and should be f
 
 ### A3. Column mode `[col]` `[undo]`
 
-- [ ] **Undo a column edit.** The doc admits: *"Undo does not know about column mode… a caret
+- [x] **Undo a column edit.** The doc admits: *"Undo does not know about column mode… a caret
       parked in virtual space is not restored."* Shipped known-weak — find out how bad.
-- [ ] Block-select across Korean, copy, paste into a new file. What was blue must be what lands.
-- [ ] Type Korean into a multi-row block; **abandon a composition with Escape** mid-way, then
+      Undo worked correctly — no visible virtual-space caret problem in the cases tried.
+- [x] Block-select across Korean, copy, paste into a new file. What was blue must be what lands.
+      Held — the selection round-tripped.
+- [x] Type Korean into a multi-row block; **abandon a composition with Escape** mid-way, then
       type again. (The IME/column seam — `OnImeCompositionEnd` runs *before* `Result`.)
-- [ ] Comment/uncomment a block in a `.c` file; then uncomment a block that is **not** commented
-      — the block must not creep left.
-- [ ] Click the **left half** of a Hangul syllable in column mode; the caret must land before it,
-      not after. (Block edges and carets snap to opposite sides on purpose.)
-- [ ] Column mode with a **proportional screen font** — it should substitute the fixed-pitch one.
+      Esc commits the last composed character and drops the multi-row selection; no corruption,
+      typing again is fine.
+- [x] Comment/uncomment a block in a `.c` file; then uncomment a block that is **not** commented
+      — the block must not creep left. Held — no leftward creep.
+- [x] Click the **left half** of a Hangul syllable in column mode; the caret must land before it,
+      not after. (Block edges and carets snap to opposite sides on purpose.) Lands before it.
+- [x] Column mode with a **proportional screen font** — it should substitute the fixed-pitch one.
+      Substitutes the fixed-pitch font.
 
 ### A4. Encoding detection `[enc]` `[cjk]`
 
