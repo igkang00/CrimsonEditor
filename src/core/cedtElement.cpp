@@ -342,6 +342,27 @@ BOOL CLangSpec::FileLoad(LPCTSTR lpszPathName)
 }
 
 
+// `stream.width(N)` bounds the read, but it does not DISCARD what did not fit: the tail of an
+// over-long token stays in the stream and comes back as the very next token. A 300-character
+// keyword therefore used to register twice — once truncated at 255, and once as a 45-character
+// remainder that nobody wrote, which then coloured (or spell-checked) as if it were real.
+//
+// Drop the tail instead. The truncated head is harmless: LookupTable refuses anything longer
+// than MAX_WORD_LENGTH outright, so an over-long entry simply never matches.
+//
+// Call this only when the token came back exactly MAX_WORD_LENGTH long — the one case where
+// width() may have cut it. A token that is genuinely that length is followed by whitespace, so
+// the loop consumes nothing and the call is a no-op.
+static void _DiscardOverlongTokenTail(wistream & in)
+{
+	while( in.good() ) {
+		wint_t ch = in.peek();
+		if( ch == WEOF || _istspace(ch) ) break;
+		in.get();
+	}
+}
+
+
 // CKeywords
 BOOL CKeywords::FileLoad(LPCTSTR lpszPathName, BOOL bCaseSensitive[])
 {
@@ -384,6 +405,7 @@ BOOL CKeywords::FileLoad(LPCTSTR lpszPathName, BOOL bCaseSensitive[])
 				sin >> std::ws; if( ! sin.good() ) break;
 				sin.width(sizeof(szWord) / sizeof(TCHAR));   // bound the read to the buffer size
 				sin >> szWord;  if( szWord[0] == '\0' ) break;
+				if( _tcslen(szWord) == MAX_WORD_LENGTH ) _DiscardOverlongTokenTail(sin);
 
 				if( bIgnoreCase ) { _tcslwr(szWord); _stprintf(szBuffer, _T("I:%s"), szWord); }
 				else _stprintf(szBuffer, _T("C:%s"), szWord);
@@ -443,7 +465,9 @@ BOOL CDictionary::FileLoad(LPCTSTR lpszPathName, CALLBACK_FUNCTION fcnCallback)
 	while( fin.good() ) {
 		fin >> std::ws; if( fin.eof() ) break;
 		fin.width(sizeof(szWord) / sizeof(TCHAR));   // bound the read to the buffer size
-		fin >> szWord; _tcslwr(szWord);
+		fin >> szWord;
+		if( _tcslen(szWord) == MAX_WORD_LENGTH ) _DiscardOverlongTokenTail(fin);
+		_tcslwr(szWord);
 
 		if( ! Lookup( szWord, ucValue ) ) {
 			SetAt( szWord, ucValue = WT_IDENTIFIER );

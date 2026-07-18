@@ -8,6 +8,12 @@
 // `TCHAR szText[...]` declarations they protect.
 static const int kProjectTokenBufSize = 4096;
 
+// The `<...file` readers below trim a trailing '/' off the attribute text with
+//     if( nLen > 0 && szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
+// The `nLen > 0` guard is load-bearing: getline() extracts nothing when the tag is the last
+// thing in the file (a truncated .prj), and szText[-1] would then be read — and, on a chance
+// match, written. Debug builds hide it, since /RTC1 guard bytes never compare equal to '/'.
+
 
 BOOL CFileWindow::InitProjectWorkspace()
 {
@@ -391,7 +397,7 @@ BOOL CFileWindow::LoadProjectItem(wistream & is, TCHAR szText[], HTREEITEM hPare
 
 	} else if( ! _tcsicmp(szText, _T("<localfile")) ) {
 		is.getline(szText, 4096, L'>'); // get attributes
-		INT nLen = (INT)_tcslen(szText); if( szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
+		INT nLen = (INT)_tcslen(szText); if( nLen > 0 && szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
 		if( ! ParseItemAttribute( szText, mapAttr ) ) return FALSE;
 
 		CString szPath; BOOL bLookup = mapAttr.Lookup(_T("path"), szPath);
@@ -402,7 +408,7 @@ BOOL CFileWindow::LoadProjectItem(wistream & is, TCHAR szText[], HTREEITEM hPare
 
 	} else if( ! _tcsicmp(szText, _T("<remotefile")) ) {
 		is.getline(szText, 4096, L'>'); // get attributes
-		INT nLen = (INT)_tcslen(szText); if( szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
+		INT nLen = (INT)_tcslen(szText); if( nLen > 0 && szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
 		if( ! ParseItemAttribute( szText, mapAttr ) ) return FALSE;
 
 		CString szAccount; BOOL bLookup = mapAttr.Lookup(_T("account"), szAccount);
@@ -474,7 +480,7 @@ BOOL CFileWindow::LoadWorkspaceItem(wistream & is, TCHAR szText[], CWinApp * pAp
 
 	if( ! _tcsicmp(szText, _T("<remotefile")) ) {
 		is.getline(szText, 4096, L'>'); // get attributes
-		INT nLen = (INT)_tcslen(szText); if( szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
+		INT nLen = (INT)_tcslen(szText); if( nLen > 0 && szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
 		if( ! ParseItemAttribute( szText, mapAttr ) ) return FALSE;
 
 		CString szAccount; BOOL bLookup = mapAttr.Lookup(_T("account"), szAccount);
@@ -511,7 +517,7 @@ BOOL CFileWindow::LoadWorkspaceItem(wistream & is, TCHAR szText[], CWinApp * pAp
 
 	} else if( ! _tcsicmp(szText, _T("<localfile")) ) {
 		is.getline(szText, 4096, L'>'); // get attributes
-		INT nLen = (INT)_tcslen(szText); if( szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
+		INT nLen = (INT)_tcslen(szText); if( nLen > 0 && szText[nLen-1] == '/' ) szText[nLen-1] = '\0';
 		if( ! ParseItemAttribute( szText, mapAttr ) ) return FALSE;
 
 		CString szPath; BOOL bLookup = mapAttr.Lookup(_T("path"), szPath);
