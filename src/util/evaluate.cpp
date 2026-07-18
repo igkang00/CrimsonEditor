@@ -289,7 +289,11 @@ TCHAR * EVAL::EvalFactor(TCHAR * pExpr, double * pValue, INT * pError)
 {
 	EVAL_EAT_WHITE( pExpr );
 
-	if     ( * pExpr == '\0'  ) return pExpr;
+	// A factor is a required operand. Hitting end-of-string here means one is missing
+	// (e.g. "1+", "1++", "1*", or empty input) — a syntax error, not a silent success.
+	// Returning without an error used to leave *pValue as an uninitialised double that the
+	// caller then added in, so "1++" came out as 1 by luck.
+	if     ( * pExpr == '\0'  ) { * pError = EVAL_ERROR_WRONG_SYNTAX; return pExpr; }
 	else if( _istdigit(* pExpr) ) return EvalConstant( pExpr, pValue, pError );
 	else if( * pExpr == '('   ) return EvalParentheses( pExpr, pValue, pError );
 	else if( * pExpr == '$'   ) return EvalVariable( pExpr, pValue, pError );

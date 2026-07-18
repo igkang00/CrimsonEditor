@@ -79,6 +79,24 @@ TEST(EvaluateTest, OverLongFunctionToken_ReportsErrorNotOverrun)
     EXPECT_EQ(EVAL_ERROR_TOKEN_TOO_LONG, error);
 }
 
+// A missing operand is a syntax error, not a silent success. "1++" used to return 1 (from an
+// uninitialised double) because EvalFactor returned without an error at end-of-string.
+TEST(EvaluateTest, MissingOperand_IsSyntaxError)
+{
+    double value = 0.0; INT error = 0;
+    EVAL::Evaluate(const_cast<TCHAR *>(_T("1++")), &value, &error);
+    EXPECT_EQ(EVAL_ERROR_WRONG_SYNTAX, error);
+
+    error = 0; EVAL::Evaluate(const_cast<TCHAR *>(_T("1+")), &value, &error);
+    EXPECT_EQ(EVAL_ERROR_WRONG_SYNTAX, error);
+
+    error = 0; EVAL::Evaluate(const_cast<TCHAR *>(_T("1*")), &value, &error);
+    EXPECT_EQ(EVAL_ERROR_WRONG_SYNTAX, error);
+
+    error = 0; EVAL::Evaluate(const_cast<TCHAR *>(_T("")), &value, &error);
+    EXPECT_EQ(EVAL_ERROR_WRONG_SYNTAX, error);
+}
+
 // A long expression must be read in full, not truncated at any scratch-buffer size — a wrong
 // sum would reveal silent truncation (the §A7 concern).
 TEST(EvaluateTest, LongSumEvaluatesFully)
