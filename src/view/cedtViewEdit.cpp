@@ -11,6 +11,13 @@ void CCedtView::ActionInsertChar(UINT nChar)
 	CAnalyzedString & rString = GetLineFromIdxY( nIdxY );
 	INT nLstX = GetLastIdxX( rString );
 
+	// Refuse a keystroke that would grow the line past the limit. Overwrite in place does
+	// not grow it; typing at or past the end adds the new char (plus any virtual-space pad).
+	if( ! ( m_bOverwriteMode && nIdxX < nLstX ) ) {
+		INT nAdd = ( nIdxX > nLstX ? nIdxX - nLstX : 0 ) + 1;
+		if( WouldExceedLineLimit( nIdxY, nAdd ) ) { MessageBeep( MB_ICONEXCLAMATION ); return; }
+	}
+
 	if( nIdxX < nLstX && m_bOverwriteMode ) {
 		// Overwrite consumes the whole character under the caret. Removing one
 		// code unit would leave half of an emoji behind.
@@ -173,6 +180,15 @@ void CCedtView::ActionInsertString(LPCTSTR lpszString)
 	CAnalyzedString & rString = GetLineFromIdxY( nIdxY );
 	INT nLstX = GetLastIdxX( rString );
 
+	// Refuse an insert that would grow the line past the limit. Overwrite reuses the span
+	// under the caret, so it only grows by whatever runs past the old line end.
+	if( nSize > 0 ) {
+		INT nAdd = ( m_bOverwriteMode && nIdxX < nLstX )
+		         ? ( nIdxX + nSize > nLstX ? nIdxX + nSize - nLstX : 0 )
+		         : ( nIdxX > nLstX ? nIdxX - nLstX : 0 ) + nSize;
+		if( WouldExceedLineLimit( nIdxY, nAdd ) ) { MessageBeep( MB_ICONEXCLAMATION ); return; }
+	}
+
 	if( nSize > 0 && nIdxX < nLstX && m_bOverwriteMode ) {
 		// Overwrite eats as many code units as we are about to insert — but the
 		// cut has to land on a character boundary, otherwise the trailing half
@@ -286,6 +302,12 @@ void CCedtView::ActionBackspace()
 		// as a lone surrogate that UTF-8 save then destroys.
 		nIdxX = PrevIdxX((LPCTSTR)rString, nIdxX); DeleteCharacter(nIdxX, nIdxY);
 	} else if( nIdxY > 0 ) {
+		// Backspace at the start of a line deletes the previous line break, joining this line
+		// onto the one above. Refuse (and beep) if the merged line would exceed the limit.
+		if( WouldExceedLineLimit( nIdxY-1, GetLineFromIdxY( nIdxY ).GetLength() ) ) {
+			MessageBeep( MB_ICONEXCLAMATION );
+			return;
+		}
 		CAnalyzedString & rStrn2 = GetLineFromIdxY( nIdxY-1 );
 		nIdxY = nIdxY - 1; nIdxX = GetLastIdxX( rStrn2 );
 		JoinLines(nIdxX, nIdxY);
@@ -309,6 +331,12 @@ void CCedtView::ActionDeleteChar()
 		// Delete the whole character at the caret, pair included.
 		DeleteCharacter(nIdxX, nIdxY);
 	} else if( nIdxY < GetLastIdxY() ) {
+		// Deleting the line break here joins the next line onto this one. Refuse (and beep)
+		// if the merged line would exceed the limit, rather than build a hidden-overflow line.
+		if( WouldExceedLineLimit( nIdxY, GetLineFromIdxY( nIdxY+1 ).GetLength() ) ) {
+			MessageBeep( MB_ICONEXCLAMATION );
+			return;
+		}
 		if( nIdxX > nLstX ) {
 			CString szInsert(' ', nIdxX - nLstX);
 			InsertString(nLstX, nIdxY, szInsert);
@@ -343,6 +371,14 @@ void CCedtView::ActionJoinLines()
 	INT nIdxX = GetIdxXFromPosX( rLine, m_nCaretPosX, TRUE );
 
 	if( nIdxY < GetLastIdxY() ) {
+		// Joining also inserts a space between the two lines. Refuse (and beep) if the merged
+		// line would exceed the limit. Checked before the space-trim below so nothing changes
+		// when it is refused; trimming only shrinks, so this never blocks a join that would fit.
+		if( WouldExceedLineLimit( nIdxY, GetLineFromIdxY( nIdxY+1 ).GetLength() + 1 ) ) {
+			MessageBeep( MB_ICONEXCLAMATION );
+			return;
+		}
+
 		DeleteTrailingSpaces( nIdxY );
 		DeleteLeadingSpaces( nIdxY + 1 );
 
@@ -390,6 +426,11 @@ void CCedtView::ActionDeleteWord()
 		INT nEndX = GetNextWordIdxX(rLine, nIdxX);
 		DeleteString(nIdxX, nIdxY, nEndX-nIdxX);
 	} else if( nIdxY < GetLastIdxY() ) {
+		// Deleting the word at the line end joins the next line on. Refuse if it would overflow.
+		if( WouldExceedLineLimit( nIdxY, GetLineFromIdxY( nIdxY+1 ).GetLength() ) ) {
+			MessageBeep( MB_ICONEXCLAMATION );
+			return;
+		}
 		if( nIdxX > nLstX ) {
 			CString szInsert(' ', nIdxX - nLstX);
 			InsertString(nLstX, nIdxY, szInsert);
@@ -418,6 +459,11 @@ void CCedtView::ActionDeletePrevWord()
 		INT nBegX = GetPrevWordIdxX(rLine, nIdxX-1);
 		DeleteString(nBegX, nIdxY, nIdxX-nBegX); nIdxX = nBegX;
 	} else if( nIdxY > 0 ) {
+		// At the line start this joins onto the previous line. Refuse if it would overflow.
+		if( WouldExceedLineLimit( nIdxY-1, GetLineFromIdxY( nIdxY ).GetLength() ) ) {
+			MessageBeep( MB_ICONEXCLAMATION );
+			return;
+		}
 		CAnalyzedString & rStrn2 = GetLineFromIdxY( nIdxY-1 );
 		nIdxY = nIdxY - 1; nIdxX = GetLastIdxX( rStrn2 );
 		JoinLines(nIdxX, nIdxY);
@@ -440,6 +486,11 @@ void CCedtView::ActionDeleteToEndOfLine()
 	if( nIdxX < nLstX ) {
 		DeleteString(nIdxX, nIdxY, nLstX-nIdxX);
 	} else if( nIdxY < GetLastIdxY() ) {
+		// At the line end this joins the next line on. Refuse if it would overflow.
+		if( WouldExceedLineLimit( nIdxY, GetLineFromIdxY( nIdxY+1 ).GetLength() ) ) {
+			MessageBeep( MB_ICONEXCLAMATION );
+			return;
+		}
 		if( nIdxX > nLstX ) {
 			CString szInsert(' ', nIdxX - nLstX);
 			InsertString(nLstX, nIdxY, szInsert);
@@ -465,9 +516,14 @@ void CCedtView::ActionDeleteToBeginOfLine()
 		if( nLstX > 0 ) DeleteString(0, nIdxY, nLstX); 
 		nIdxX = 0;
 	} else if( nIdxX > 0 ) {
-		DeleteString(0, nIdxY, nIdxX); 
+		DeleteString(0, nIdxY, nIdxX);
 		nIdxX = 0;
 	} else if( nIdxY > 0 ) {
+		// At the line start this joins onto the previous line. Refuse if it would overflow.
+		if( WouldExceedLineLimit( nIdxY-1, GetLineFromIdxY( nIdxY ).GetLength() ) ) {
+			MessageBeep( MB_ICONEXCLAMATION );
+			return;
+		}
 		CAnalyzedString & rStrn2 = GetLineFromIdxY( nIdxY-1 );
 		nIdxY = nIdxY - 1; nIdxX = GetLastIdxX( rStrn2 );
 		JoinLines(nIdxX, nIdxY);
@@ -569,6 +625,20 @@ void CCedtView::ActionReleaseCommentLine()
 
 ////////////////////////////////////////////////
 // BASIC EDITING FUNCTIONS
+
+// TRUE if growing line nIdxY by nAddLen code units would push it past MAX_STRING_LENGTH.
+// Text-entry actions refuse (and beep) rather than let the CString grow past what the
+// analyzer can represent: beyond the limit the caret and screen geometry stop, but the
+// characters are still in the string — invisible and unreachable — so Delete/Backspace
+// then act on the wrong character. Keeping the physical length at or below the limit keeps
+// the analyzed (visible) length and the physical length in step. See _AnalyzeLine's
+// overflow gate in cedtDocAnal.cpp.
+BOOL CCedtView::WouldExceedLineLimit(INT nIdxY, INT nAddLen)
+{
+	if( nAddLen <= 0 ) return FALSE;
+	return GetLineFromIdxY( nIdxY ).GetLength() + nAddLen > MAX_STRING_LENGTH;
+}
+
 void CCedtView::InsertChar(INT nIdxX, INT nIdxY, UINT nChar)
 {
 	CCedtDoc * pDoc = (CCedtDoc *)GetDocument();

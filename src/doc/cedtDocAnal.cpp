@@ -205,8 +205,11 @@ static void _AnalyzeLine(CAnalyzedString & rLine)
 				// end of line
 				_WordFound(wcount++, WT_RETURN, RT_GLOBAL, beg-str, fwd-beg);
 				is_finished =  1;
-			} else if( fwd - str >= MAX_STRING_LENGTH-1 ) {
-				// line overflow
+			} else if( fwd - str >= MAX_STRING_LENGTH ) {
+				// line overflow. MAX_STRING_LENGTH (32767) is the ceiling, matching the
+				// buffer (MAX_LINE_BUFFER_SIZE = +1 for the NUL) and the SHORT that holds
+				// siIndex/siLength (SHORT_MAX == 32767). A line of exactly MAX_STRING_LENGTH
+				// chars terminates on its NUL above and is NOT overflow; only a longer one is.
 				_WordFound(wcount++, WT_RETURN, RT_GLOBAL, beg-str, fwd-beg);
 				is_finished = -1;
 			} else if( * fwd == '\t' && _CHCK_SIZE(fwd, 1) ) {

@@ -589,6 +589,9 @@ protected: // *** cedtViewEdit.cpp ***
 	void ActionMakeCommentLine();				void ActionReleaseCommentLine();
 
 protected:
+	// TRUE if growing line nIdxY by nAddLen code units would exceed the max line length.
+	BOOL WouldExceedLineLimit(INT nIdxY, INT nAddLen);
+
 	void InsertChar(INT nIdxX, INT nIdxY, UINT nChar);
 	void DeleteChar(INT nIdxX, INT nIdxY);
 	void DeleteCharacter(INT nIdxX, INT nIdxY);	// one character: 1 unit, or a 2-unit surrogate pair
@@ -614,6 +617,7 @@ protected: // *** cedtViewEditCompose.cpp ***
 	void ActionCompositionEnd();
 	void ActionCompositionCompose(LPCTSTR lpszString);
 	void ActionCompositionResult(LPCTSTR lpszString);
+	void CancelComposition();		// abandon an in-flight IME composition (e.g. refused at the line limit)
 
 protected:
 	BOOL IsCompositionStringSaved();

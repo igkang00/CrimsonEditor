@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "cedtHeader.h"
+#include <imm.h>
 
 
 static INT _nIdxX, _nIdxY;
@@ -29,6 +30,27 @@ void CCedtView::ActionCompositionEnd()
 	SetCaretPosX( GetPosXFromIdxX( rLne2, nIdxX, ! m_bColumnMode ) );
 }
 
+// Abandon an IME composition we are refusing (the line is at its limit): drop any composing
+// text still on the line, clear our saved copy, and tell the IME to cancel — otherwise it
+// keeps resending the same rejected character and leaves a dangling composition underline.
+void CCedtView::CancelComposition()
+{
+	INT nIdxY = GetIdxYFromPosY( m_nCaretPosY );
+
+	if( IsCompositionStringSaved() ) {
+		RestoreCurrentCompositionString( nIdxY );
+		EmptySavedCompositionString();
+	}
+
+	HIMC hImc = ImmGetContext( m_hWnd );
+	if( hImc ) {
+		ImmNotifyIME( hImc, NI_COMPOSITIONSTR, CPS_CANCEL, 0 );
+		ImmReleaseContext( m_hWnd, hImc );
+	}
+
+	m_bComposition = FALSE;
+}
+
 void CCedtView::ActionCompositionCompose(LPCTSTR lpszString)
 {
 	INT nIdxY = GetIdxYFromPosY( m_nCaretPosY );
@@ -48,6 +70,24 @@ void CCedtView::ActionCompositionCompose(LPCTSTR lpszString)
 
 	CAnalyzedString & rString = GetLineFromIdxY( nIdxY );
 	INT nLstX = GetLastIdxX( rString );
+
+	// Refuse composition that would grow the line past the limit — see ActionInsertString.
+	// Also cancel it in the IME, so it does not keep resending the character; then put the
+	// caret back where the composition began (with no leftover selection).
+	if( nSize > 0 ) {
+		INT nAdd = ( m_bOverwriteMode && nIdxX < nLstX )
+		         ? ( nIdxX + nSize > nLstX ? nIdxX + nSize - nLstX : 0 )
+		         : ( nIdxX > nLstX ? nIdxX - nLstX : 0 ) + nSize;
+		if( WouldExceedLineLimit( nIdxY, nAdd ) ) {
+			MessageBeep( MB_ICONEXCLAMATION );
+			CancelComposition();
+			SetCaretPosY( GetPosYFromIdxY( nIdxX, nIdxY, ! m_bColumnMode ) );
+			CFormatedString & rLneX = GetLineFromPosY( m_nCaretPosY );
+			SetCaretPosX( GetPosXFromIdxX( rLneX, nIdxX, ! m_bColumnMode ) );
+			m_nAnchorPosX = m_nCaretPosX; m_nAnchorPosY = m_nCaretPosY;
+			return;
+		}
+	}
 
 	if( nSize > 0 && nIdxX < nLstX && m_bOverwriteMode ) {
 		// Cut on a character boundary — see ActionInsertString.
@@ -95,6 +135,24 @@ void CCedtView::ActionCompositionResult(LPCTSTR lpszString)
 
 	CAnalyzedString & rString = GetLineFromIdxY( nIdxY );
 	INT nLstX = GetLastIdxX( rString );
+
+	// Refuse a commit that would grow the line past the limit — see ActionInsertString. The
+	// composition already ended by the time a result arrives, but cancel defensively and put
+	// the caret back where it began, with no leftover selection.
+	if( nSize > 0 ) {
+		INT nAdd = ( m_bOverwriteMode && nIdxX < nLstX )
+		         ? ( nIdxX + nSize > nLstX ? nIdxX + nSize - nLstX : 0 )
+		         : ( nIdxX > nLstX ? nIdxX - nLstX : 0 ) + nSize;
+		if( WouldExceedLineLimit( nIdxY, nAdd ) ) {
+			MessageBeep( MB_ICONEXCLAMATION );
+			CancelComposition();
+			SetCaretPosY( GetPosYFromIdxY( nIdxX, nIdxY, ! m_bColumnMode ) );
+			CFormatedString & rLneX = GetLineFromPosY( m_nCaretPosY );
+			SetCaretPosX( GetPosXFromIdxX( rLneX, nIdxX, ! m_bColumnMode ) );
+			m_nAnchorPosX = m_nCaretPosX; m_nAnchorPosY = m_nCaretPosY;
+			return;
+		}
+	}
 
 	if( nSize > 0 && nIdxX < nLstX && m_bOverwriteMode ) {
 		// Cut on a character boundary — see ActionInsertString.

@@ -151,6 +151,28 @@ void CCedtView::ActionPasteLineSelection(CMemText & rBlock)
 	INT nBegX, nBegY; PositionToIndex( m_nCaretPosX, m_nCaretPosY, nBegX, nBegY );
 	INT nEndX = nBegX, nEndY = nBegY;
 
+	// Refuse a paste that would push any line past the limit (reject the whole paste, not a
+	// partial insert). One block line merges into the caret line; a multi-line block splits
+	// it, so the first result is prefix+head and the last is tail+suffix. See WouldExceedLineLimit.
+	{
+		INT nCur = GetLineFromIdxY( nBegY ).GetLength();
+		INT nPrefix = ( nBegX < nCur ) ? nBegX : nCur;
+		BOOL bTooLong = FALSE;
+
+		if( rBlock.GetCount() == 1 ) {
+			bTooLong = ( nCur + rBlock.GetTail().GetLength() > MAX_STRING_LENGTH );
+		} else if( rBlock.GetCount() > 1 ) {
+			INT nSuffix = nCur - nPrefix;
+			if( nPrefix + rBlock.GetHead().GetLength() > MAX_STRING_LENGTH ) bTooLong = TRUE;
+			if( rBlock.GetTail().GetLength() + nSuffix > MAX_STRING_LENGTH ) bTooLong = TRUE;
+			POSITION pos = rBlock.GetHeadPosition();
+			while( pos && ! bTooLong )
+				if( rBlock.GetNext( pos ).GetLength() > MAX_STRING_LENGTH ) bTooLong = TRUE;
+		}
+
+		if( bTooLong ) { MessageBeep( MB_ICONEXCLAMATION ); return; }
+	}
+
 	if( rBlock.GetCount() == 1 ) {
 		LPCTSTR lpszString = rBlock.GetTail();
 		InsertString(nBegX, nBegY, lpszString);
@@ -166,6 +188,24 @@ void CCedtView::ActionPasteColumnSelection(CMemText & rBlock)
 {
 	INT nBegX = m_nCaretPosX, nBegY = m_nCaretPosY;
 	INT nEndX = nBegX, nEndY = nBegY;
+
+	// Refuse a column paste that would push any touched row past the limit. Each block line
+	// lands at the caret column on its own row; the row grows by the block line plus any pad
+	// out to that column. Conservative: existing length + caret column index + longest block
+	// line. Reject the whole paste rather than insert part of it.
+	{
+		INT nColX, nRowY; PositionToIndex( m_nCaretPosX, m_nCaretPosY, nColX, nRowY );
+		INT nMaxBlock = 0;
+		POSITION pos = rBlock.GetHeadPosition();
+		while( pos ) { INT nLen = rBlock.GetNext( pos ).GetLength(); if( nLen > nMaxBlock ) nMaxBlock = nLen; }
+
+		INT nRows = (INT)rBlock.GetCount(), nLast = GetLastIdxY();
+		BOOL bTooLong = FALSE;
+		for(INT r = nRowY; r < nRowY + nRows && r <= nLast && ! bTooLong; r++)
+			if( GetLineFromIdxY( r ).GetLength() + nColX + nMaxBlock > MAX_STRING_LENGTH ) bTooLong = TRUE;
+
+		if( bTooLong ) { MessageBeep( MB_ICONEXCLAMATION ); return; }
+	}
 
 	InsertColumnSelection(nBegX, nBegY, nEndX, nEndY, rBlock);
 
