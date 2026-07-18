@@ -198,6 +198,8 @@ BOOL CFileWindow::MoveSelectedDirectoryItem()
 	HTREEITEM hItem = GetSelectedDirectoryTreeItem();
 	if( hItem && m_treDirectoryTree.GetParentItem(hItem) ) {
 		CString szPathName = GetDirectoryItemPathName(hItem);
+		if( ! VerifyDirectoryItemReachable(szPathName) ) return FALSE;
+
 		CString szDirectory = GetFileDirectory(szPathName);
 		if( ! AskDestinationDirectory( szDirectory ) ) return FALSE;
 		if( MoveToDirectoryItem(szPathName, szDirectory) && ! VerifyPathName(szPathName) ) {
@@ -212,6 +214,8 @@ BOOL CFileWindow::CopySelectedDirectoryItem()
 	HTREEITEM hItem = GetSelectedDirectoryTreeItem();
 	if( hItem && m_treDirectoryTree.GetParentItem(hItem) ) {
 		CString szPathName = GetDirectoryItemPathName(hItem);
+		if( ! VerifyDirectoryItemReachable(szPathName) ) return FALSE;
+
 		CString szDirectory = GetFileDirectory(szPathName);
 		if( ! AskDestinationDirectory(szDirectory) ) return FALSE;
 		return CopyToDirectoryItem(szPathName, szDirectory);
@@ -223,6 +227,8 @@ BOOL CFileWindow::DeleteSelectedDirectoryItem()
 	HTREEITEM hItem = GetSelectedDirectoryTreeItem();
 	if( hItem && m_treDirectoryTree.GetParentItem(hItem) ) {
 		CString szPathName = GetDirectoryItemPathName(hItem);
+		if( ! VerifyDirectoryItemReachable(szPathName) ) return FALSE;
+
 		SetAsCurrentDirectory( GetFileDirectory(szPathName) );
 		if( DeleteDirectoryItem(szPathName) && ! VerifyPathName(szPathName) ) {
 			m_treDirectoryTree.SelectItem( m_treDirectoryTree.GetParentItem(hItem) );
@@ -752,7 +758,8 @@ void CFileWindow::OnEndlabeleditDirectoryTree(NMHDR* pNMHDR, LRESULT* pResult)
 	CString szNewName = pNMTVDISPINFO->item.pszText;
 	if( szNewName.GetLength() && szOldName.CompareNoCase(szNewName) ) {
 		CString szPathName = GetDirectoryItemPathName(hItem);
-		if( RenameDirectoryItem(szPathName, szNewName) && ! VerifyPathName(szPathName) ) {
+		if( VerifyDirectoryItemReachable(szPathName)
+		 && RenameDirectoryItem(szPathName, szNewName) && ! VerifyPathName(szPathName) ) {
 			m_treDirectoryTree.SetItemText(hItem, szNewName);
 		}
 	}
@@ -942,10 +949,43 @@ BOOL CFileWindow::SetAsWorkingDirectory(LPCTSTR lpszPathName)
 	} else return FALSE;
 }
 
+// Can this process actually reach the path, and report it if not.
+//
+// The panel can list an item that the rest of the app cannot touch: the tree is filled through
+// shell APIs, which tolerate a path longer than MAX_PATH, while the file routes go through
+// FindFirstFile / CreateFile, which do not. Copy a file into a deep enough directory and it
+// appears in the panel, yet open, rename, copy, move and delete all fail on it. They used to
+// fail *silently* — the click simply did nothing.
+//
+// Callers check this BEFORE handing the path to SHFileOperation, deliberately. Reporting after
+// the fact would double up on the shell's own error dialogs, and would also fire when the user
+// merely answered No to a confirmation, which SHFileOperation reports the same way as a
+// failure. Refusing up front says the one thing the shell will not.
+//
+// Making these paths actually work is a separate job: longPathAware in the manifest would let
+// >260-char paths into the TCHAR[MAX_PATH] buffers scattered through this file, turning a safe
+// refusal into truncated paths in destructive operations.
+BOOL CFileWindow::VerifyDirectoryItemReachable(LPCTSTR lpszPathName)
+{
+	if( GetFileAttributes(lpszPathName) != INVALID_FILE_ATTRIBUTES ) return TRUE;
+
+	CString szMessage; szMessage.Format(IDS_ERR_FILE_NOT_FOUND, lpszPathName);
+	AfxMessageBox(szMessage, MB_OK | MB_ICONSTOP);
+	return FALSE;
+}
+
 BOOL CFileWindow::OpenDirectoryItem(LPCTSTR lpszPathName)
 {
 	CString szPath = lpszPathName;
-	if( ! VerifyFilePath( szPath ) ) return FALSE;
+	if( ! VerifyFilePath( szPath ) ) {
+		// A double-click arrives here for directories as well, and VerifyFilePath accepts only
+		// files, so leave without a word for a directory — the tree expands it, and there is
+		// nothing to open. Anything else is a file we cannot reach; say so.
+		DWORD dwAttribute = GetFileAttributes(szPath);
+		if( dwAttribute != INVALID_FILE_ATTRIBUTES && (dwAttribute & FILE_ATTRIBUTE_DIRECTORY) ) return FALSE;
+
+		return VerifyDirectoryItemReachable(szPath);   // reports, and returns FALSE
+	}
 
 	CCedtApp * pApp = (CCedtApp *)AfxGetApp(); if( ! pApp ) return FALSE;
 	return pApp->PostOpenDocumentFile( szPath, 0 );
@@ -996,12 +1036,20 @@ BOOL CFileWindow::ShowPropDirectoryItem(LPCTSTR lpszPathName)
 	return ShellExecuteEx( & sei ); 
 }
 
+// SHFileOperation's pFrom and pTo are DOUBLE-null-terminated LISTS, so a buffer holding one
+// path needs room for that path's own NUL *and* a second NUL to end the list. A TCHAR[MAX_PATH]
+// does not: lstrcpyn(..., MAX_PATH) writes up to 259 characters plus a NUL, which fills all 260
+// slots exactly. At that length the shell found no list terminator, read on past the buffer,
+// and took the trailing stack bytes as a SECOND file — rename failed with "select only one
+// file to rename", and copy silently did nothing. Shorter paths left a spare zeroed slot and
+// worked, which is why only maximum-length paths misbehaved.
+static const int kShellOpPathBufSize = MAX_PATH + 2;
+
 BOOL CFileWindow::MoveToDirectoryItem(LPCTSTR lpszPathName, LPCTSTR lpszDestination)
 {
-	// SHFileOperation requires a double-null-terminated buffer, which memset(0)
-	// pre-arranges; lstrcpyn keeps the actual copy bounded.
-	TCHAR szFrom[MAX_PATH]; memset(szFrom, 0x00, sizeof(szFrom)); lstrcpyn(szFrom, lpszPathName,    MAX_PATH);
-	TCHAR szDest[MAX_PATH]; memset(szDest, 0x00, sizeof(szDest)); lstrcpyn(szDest, lpszDestination, MAX_PATH);
+	// memset(0) supplies both terminators; lstrcpyn keeps the actual copy bounded.
+	TCHAR szFrom[kShellOpPathBufSize]; memset(szFrom, 0x00, sizeof(szFrom)); lstrcpyn(szFrom, lpszPathName,    MAX_PATH);
+	TCHAR szDest[kShellOpPathBufSize]; memset(szDest, 0x00, sizeof(szDest)); lstrcpyn(szDest, lpszDestination, MAX_PATH);
 	CWnd * pWnd = AfxGetMainWnd();
 
 	SHFILEOPSTRUCT fo; memset( & fo, 0x00, sizeof(SHFILEOPSTRUCT) );
@@ -1015,8 +1063,8 @@ BOOL CFileWindow::MoveToDirectoryItem(LPCTSTR lpszPathName, LPCTSTR lpszDestinat
 
 BOOL CFileWindow::CopyToDirectoryItem(LPCTSTR lpszPathName, LPCTSTR lpszDestination)
 {
-	TCHAR szFrom[MAX_PATH]; memset(szFrom, 0x00, sizeof(szFrom)); lstrcpyn(szFrom, lpszPathName,    MAX_PATH);
-	TCHAR szDest[MAX_PATH]; memset(szDest, 0x00, sizeof(szDest)); lstrcpyn(szDest, lpszDestination, MAX_PATH);
+	TCHAR szFrom[kShellOpPathBufSize]; memset(szFrom, 0x00, sizeof(szFrom)); lstrcpyn(szFrom, lpszPathName,    MAX_PATH);
+	TCHAR szDest[kShellOpPathBufSize]; memset(szDest, 0x00, sizeof(szDest)); lstrcpyn(szDest, lpszDestination, MAX_PATH);
 	CWnd * pWnd = AfxGetMainWnd();
 
 	SHFILEOPSTRUCT fo; memset( & fo, 0x00, sizeof(SHFILEOPSTRUCT) );
@@ -1030,7 +1078,7 @@ BOOL CFileWindow::CopyToDirectoryItem(LPCTSTR lpszPathName, LPCTSTR lpszDestinat
 
 BOOL CFileWindow::DeleteDirectoryItem(LPCTSTR lpszPathName)
 {
-	TCHAR szFrom[MAX_PATH]; memset(szFrom, 0x00, sizeof(szFrom)); lstrcpyn(szFrom, lpszPathName, MAX_PATH);
+	TCHAR szFrom[kShellOpPathBufSize]; memset(szFrom, 0x00, sizeof(szFrom)); lstrcpyn(szFrom, lpszPathName, MAX_PATH);
 	CWnd * pWnd = AfxGetMainWnd();
 
 	SHFILEOPSTRUCT fo; memset( & fo, 0x00, sizeof(SHFILEOPSTRUCT) );
@@ -1043,8 +1091,8 @@ BOOL CFileWindow::DeleteDirectoryItem(LPCTSTR lpszPathName)
 
 BOOL CFileWindow::RenameDirectoryItem(LPCTSTR lpszPathName, LPCTSTR lpszNewName)
 {
-	TCHAR szFrom[MAX_PATH]; memset(szFrom, 0x00, sizeof(szFrom)); lstrcpyn(szFrom, lpszPathName, MAX_PATH);
-	TCHAR szDest[MAX_PATH]; memset(szDest, 0x00, sizeof(szDest)); lstrcpyn(szDest, GetFileDirectory(szFrom) + _T("\\") + lpszNewName, MAX_PATH);
+	TCHAR szFrom[kShellOpPathBufSize]; memset(szFrom, 0x00, sizeof(szFrom)); lstrcpyn(szFrom, lpszPathName, MAX_PATH);
+	TCHAR szDest[kShellOpPathBufSize]; memset(szDest, 0x00, sizeof(szDest)); lstrcpyn(szDest, GetFileDirectory(szFrom) + _T("\\") + lpszNewName, MAX_PATH);
 	CWnd * pWnd = AfxGetMainWnd();
 
 	SHFILEOPSTRUCT fo; memset( & fo, 0x00, sizeof(SHFILEOPSTRUCT) );

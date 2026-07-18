@@ -170,6 +170,8 @@ protected: // action functions
 	BOOL SetAsCurrentDirectory(LPCTSTR lpszPathName);
 	BOOL SetAsWorkingDirectory(LPCTSTR lpszPathName);
 
+	BOOL VerifyDirectoryItemReachable(LPCTSTR lpszPathName);   // reports when it is not
+
 	BOOL OpenDirectoryItem(LPCTSTR lpszPathName);
 	BOOL ExecuteDirectoryItem(LPCTSTR lpszPathName);
 	BOOL ExploreDirectoryItem(LPCTSTR lpszPathName);
