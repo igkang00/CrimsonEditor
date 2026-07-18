@@ -3,6 +3,12 @@
 #include <fstream>
 #include <iostream>
 #include <locale>
+
+#pragma warning(push)
+#pragma warning(disable: 4996)		// <codecvt> is deprecated in C++17, not removed; see below
+#include <codecvt>
+#pragma warning(pop)
+
 using std::ifstream;
 using std::ofstream;
 using std::fstream;
@@ -25,12 +31,21 @@ using std::endl;
 // fail state mid-write, and the file is truncated there. (This is exactly how a workspace with
 // a Korean file path ended up cut off after `path="C:\Temp\`.)
 //
-// Imbue this before opening a wide stream to make it read/write the file as UTF-8, using the
-// Windows UTF-8 code page (65001). This avoids the deprecated <codecvt> header — the runtime's
-// code-page locale does the same wchar (UTF-16) <-> UTF-8 conversion. No BOM is written or
-// expected, so pure-ASCII files — every workspace ever saved before this — round-trip
-// unchanged, and only the non-ASCII bytes of a path are now encoded rather than dropped.
+// Imbue this before opening a wide stream to make it read/write the file as UTF-8. Windows
+// wchar_t is UTF-16, so codecvt_utf8_utf16 is the correct pairing — codecvt_utf8 assumes UCS-2
+// and would mishandle anything astral. No BOM is written or expected, so pure-ASCII files —
+// every workspace ever saved before this — round-trip unchanged, and only the non-ASCII bytes
+// of a path are now encoded rather than dropped.
+//
+// This uses the codecvt FACET rather than a named code-page locale like `std::locale(".65001")`.
+// The named locale depends on the CRT actually having that code page's locale data, which is
+// not present on every Windows/UCRT version — where it is missing the constructor throws, and
+// on startup that unhandled exception crashed the app on a VM while working on the dev machine.
+// The facet is STL code and constructs the same everywhere.
+#pragma warning(push)
+#pragma warning(disable: 4996)
 inline std::locale Utf8FileLocale()
 {
-	return std::locale(".65001");
+	return std::locale(std::locale::classic(), new std::codecvt_utf8_utf16<wchar_t>);
 }
+#pragma warning(pop)
