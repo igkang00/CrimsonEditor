@@ -449,7 +449,13 @@ void CCedtView::OnTimerCaptureOutput()
 		lstrcpyn( szWriteBuffer, szChildInputString, dwWrite + 1 );    // lstrcpyn writes (count-1) chars + null
 		szWriteBuffer[dwWrite] = '\n'; szWriteBuffer[dwWrite+1] = '\0';
 
-		bResult = WriteFile( m_hChildStdinWrDup, szWriteBuffer, dwWrite+1, & dwWritten, NULL );
+		// The child reads bytes in the console (OEM) code page — convert before writing, or it
+		// receives the wide buffer as garbage (the send side of the same migration bug). The
+		// byte buffer is sized for the DBCS worst case of two bytes per wide char.
+		CHAR szWriteBytes[2 * 4096];
+		INT  nBytes = WideCharToMultiByte( CP_OEMCP, 0, szWriteBuffer, (INT)(dwWrite + 1),
+		                                   szWriteBytes, (INT)sizeof(szWriteBytes), NULL, NULL );
+		bResult = ( nBytes > 0 ) ? WriteFile( m_hChildStdinWrDup, szWriteBytes, (DWORD)nBytes, & dwWritten, NULL ) : FALSE;
 	//	bResult = FlushFileBuffers( m_hChildStdinWrDup ); -- flush will hang the child process
 
 		// copy input string to output buffer for local echo effect
@@ -461,16 +467,33 @@ void CCedtView::OnTimerCaptureOutput()
 		m_arrChildInputString.RemoveAt( nArraySize - 1 );
 	}
 
+	// The child writes bytes in the console (OEM) code page. Convert them to wide before they
+	// enter szReadBuffer — which the line splitting below, and the local echo above, treat as
+	// wide TCHARs. Reading the bytes straight into the wide buffer (as this did after the
+	// Unicode migration) showed every captured line as garbage. Read into a byte buffer, then
+	// MultiByteToWideChar into whatever wide space is left.
+	CHAR  szByteBuffer[4096];
 	DWORD dwAvail = 0, dwRead = 0;
 	if( dwExitCode == STILL_ACTIVE ) {
 		bResult = PeekNamedPipe( m_hChildStdoutRdDup, NULL, 0, NULL, & dwAvail, NULL );
 		if( dwAvail ) {
-			bResult = ReadFile( m_hChildStdoutRdDup, szReadBuffer + dwSave, dwAvail, & dwRead, NULL );
-			dwSave += dwRead; szReadBuffer[dwSave] = '\0';
+			DWORD dwWant = ( dwAvail < sizeof(szByteBuffer) ) ? dwAvail : (DWORD)sizeof(szByteBuffer);
+			bResult = ReadFile( m_hChildStdoutRdDup, szByteBuffer, dwWant, & dwRead, NULL );
+			if( dwRead && dwSave + 1 < kReadBufMax ) {
+				INT nWide = MultiByteToWideChar( CP_OEMCP, 0, szByteBuffer, (INT)dwRead,
+				                                 szReadBuffer + dwSave, (INT)(kReadBufMax - dwSave - 1) );
+				dwSave += (DWORD)nWide;
+			}
+			szReadBuffer[dwSave] = '\0';
 		}
 	} else {
-		bResult = ReadFile( m_hChildStdoutRdDup, szReadBuffer + dwSave, 4096 - dwSave, & dwRead, NULL );
-		dwSave += dwRead; szReadBuffer[dwSave] = '\0';
+		bResult = ReadFile( m_hChildStdoutRdDup, szByteBuffer, sizeof(szByteBuffer), & dwRead, NULL );
+		if( dwRead && dwSave + 1 < kReadBufMax ) {
+			INT nWide = MultiByteToWideChar( CP_OEMCP, 0, szByteBuffer, (INT)dwRead,
+			                                 szReadBuffer + dwSave, (INT)(kReadBufMax - dwSave - 1) );
+			dwSave += (DWORD)nWide;
+		}
+		szReadBuffer[dwSave] = '\0';
 		if( dwSave ) {
 			dwSave++; szReadBuffer[dwSave] = '\0';
 		}
