@@ -278,12 +278,14 @@ void COutputWindow::OnOutputWindowClear()
 	m_lstConsoleOutput.ResetContent();
 }
 
-void COutputWindow::OnOutputWindowCopyAll() 
+void COutputWindow::OnOutputWindowCopyAll()
 {
-	CMemText Block; TCHAR szText[2048];
+	CMemText Block; CString szText;
 	INT nCount = m_lstConsoleOutput.GetCount();
 
 	for(INT i = 0; i < nCount; i++) {
+		// CString overload sizes itself to the item — a fixed TCHAR[2048] overran and
+		// crashed on any output line at or past 2048 chars (e.g. a long command echo).
 		m_lstConsoleOutput.GetText(i, szText);
 		Block.AddTail( szText );
 	}
@@ -291,12 +293,12 @@ void COutputWindow::OnOutputWindowCopyAll()
 	CCedtView::SetClipboardData( Block );
 }
 
-void COutputWindow::OnOutputWindowCopy() 
+void COutputWindow::OnOutputWindowCopy()
 {
-	CMemText Block; TCHAR szText[2048];
+	CMemText Block; CString szText;
 	INT nSelect = m_lstConsoleOutput.GetCurSel(); if( nSelect == LB_ERR ) return;
 
-	m_lstConsoleOutput.GetText(nSelect, szText);
+	m_lstConsoleOutput.GetText(nSelect, szText);   // CString overload — no fixed-buffer overrun
 	Block.AddTail( szText ); Block.AddTail(_T(""));
 
 	CCedtView::SetClipboardData( Block );
