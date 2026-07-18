@@ -25,7 +25,12 @@ void CCedtView::ActionEvaluateLine()
 		double dFraction, dInteger; dFraction = modf( dValue, & dInteger );
 		if( dFraction == 0.0 ) szResult.Format(_T("$ans = %.0f"), dValue);
 		else szResult.Format(_T("$ans = %f"), dValue);
-	} else szResult.Format(_T("error(%d): %s"), pExpr - pFormula + 1, EVAL::GetErrorMessage(nError));
+	} else {
+		// Beep on a failed evaluation — the error text alone is easy to miss, and a token
+		// past the buffer limit now reports an error instead of a truncated wrong answer.
+		MessageBeep( MB_ICONEXCLAMATION );
+		szResult.Format(_T("error(%d): %s"), pExpr - pFormula + 1, EVAL::GetErrorMessage(nError));
+	}
 
 	SplitLine(GetLastIdxX(rString), nIdxY);
 	nIdxY = nIdxY + 1; nIdxX = 0;

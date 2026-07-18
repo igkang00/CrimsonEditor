@@ -49,34 +49,34 @@ TEST(EvaluateTest, UnknownFunction_ReturnsError)
 }
 
 // A single token longer than the evaluator's 2048-char scratch buffer must not overrun the
-// stack (it used to crash). Reaching the assertion without crashing is the point; the
-// truncated value/lookup is meaningless by definition.
-TEST(EvaluateTest, OverLongNumberToken_DoesNotOverrun)
+// stack (it used to crash). It is now reported as an error rather than truncated into a wrong
+// value, so the caller can beep and show the error.
+TEST(EvaluateTest, OverLongNumberToken_ReportsErrorNotOverrun)
 {
     CString s = _T("1+");
     for (int i = 0; i < 5000; i++) s += _T("9");
     double value = 0.0; INT error = 0;
     EVAL::Evaluate(const_cast<TCHAR *>((LPCTSTR)s), &value, &error);
-    SUCCEED();
+    EXPECT_EQ(EVAL_ERROR_TOKEN_TOO_LONG, error);
 }
 
-TEST(EvaluateTest, OverLongVariableToken_DoesNotOverrun)
+TEST(EvaluateTest, OverLongVariableToken_ReportsErrorNotOverrun)
 {
     CString s = _T("$");
     for (int i = 0; i < 5000; i++) s += _T("a");
     double value = 0.0; INT error = 0;
     EVAL::Evaluate(const_cast<TCHAR *>((LPCTSTR)s), &value, &error);
-    EXPECT_EQ(EVAL_ERROR_VARIABLE_NOT_DEFINED, error);
+    EXPECT_EQ(EVAL_ERROR_TOKEN_TOO_LONG, error);
 }
 
-TEST(EvaluateTest, OverLongFunctionToken_DoesNotOverrun)
+TEST(EvaluateTest, OverLongFunctionToken_ReportsErrorNotOverrun)
 {
     CString s;
     for (int i = 0; i < 5000; i++) s += _T("a");
     s += _T("(1)");
     double value = 0.0; INT error = 0;
     EVAL::Evaluate(const_cast<TCHAR *>((LPCTSTR)s), &value, &error);
-    EXPECT_EQ(EVAL_ERROR_FUNCTION_NOT_DEFINED, error);
+    EXPECT_EQ(EVAL_ERROR_TOKEN_TOO_LONG, error);
 }
 
 // A long expression must be read in full, not truncated at any scratch-buffer size — a wrong

@@ -76,6 +76,7 @@ namespace EVAL {
 		_T("variable not defined"),
 		_T("function not defined"),
 		_T("function argument count"),
+		_T("token too long"),
 	};
 
 	CMap<CString, LPCTSTR, double, double> hashVariables;
@@ -305,10 +306,9 @@ TCHAR * EVAL::EvalConstant(TCHAR * pExpr, double * pValue, INT * pError)
 
 	TCHAR szNum[2048]; INT nLen = (INT)(pEnd - pExpr);
 	if( nLen <= 0 ) { * pError = EVAL_ERROR_WRONG_SYNTAX; return pExpr; }
-	// Bound the copy to the buffer — a token longer than this would overrun the stack. A
-	// number with this many digits is far past what a double can hold anyway, so the
-	// truncated value is as meaningless as the original; the point is not to crash.
-	if( nLen > (INT)(sizeof(szNum)/sizeof(TCHAR)) - 1 ) nLen = (INT)(sizeof(szNum)/sizeof(TCHAR)) - 1;
+	// A token longer than the buffer would overrun the stack. Reject it as an error rather
+	// than truncate and return a wrong value: the caller shows the error (and beeps).
+	if( nLen > (INT)(sizeof(szNum)/sizeof(TCHAR)) - 1 ) { * pError = EVAL_ERROR_TOKEN_TOO_LONG; return pExpr; }
 	_tcsncpy( szNum, pExpr, nLen ); szNum[nLen] = '\0';
 
 	* pValue = _tstof( szNum );
@@ -345,9 +345,8 @@ TCHAR * EVAL::EvalVariable(TCHAR * pExpr, double * pValue, INT * pError)
 
 	TCHAR szVar[2048]; INT nLen = (INT)(pEnd - pExpr);
 	if( nLen <= 0 ) { * pError = EVAL_ERROR_WRONG_SYNTAX; return pExpr; }
-	// Bound the copy to the buffer (see EvalConstant). An over-long name simply will not
-	// match any defined variable, so truncating it changes nothing but the safety.
-	if( nLen > (INT)(sizeof(szVar)/sizeof(TCHAR)) - 1 ) nLen = (INT)(sizeof(szVar)/sizeof(TCHAR)) - 1;
+	// Reject an over-long token rather than overrun the buffer (see EvalConstant).
+	if( nLen > (INT)(sizeof(szVar)/sizeof(TCHAR)) - 1 ) { * pError = EVAL_ERROR_TOKEN_TOO_LONG; return pExpr; }
 	_tcsncpy( szVar, pExpr, nLen ); szVar[nLen] = '\0'; _tcslwr(szVar);
 
 	double dValue;
@@ -366,9 +365,8 @@ TCHAR * EVAL::EvalFunction(TCHAR * pExpr, double * pValue, INT * pError)
 
 	TCHAR szFun[2048]; INT nLen = (INT)(pEnd - pExpr);
 	if( nLen <= 0 ) { * pError = EVAL_ERROR_WRONG_SYNTAX; return pExpr; }
-	// Bound the copy to the buffer (see EvalConstant). An over-long name will not match any
-	// defined function, so truncating it changes nothing but the safety.
-	if( nLen > (INT)(sizeof(szFun)/sizeof(TCHAR)) - 1 ) nLen = (INT)(sizeof(szFun)/sizeof(TCHAR)) - 1;
+	// Reject an over-long token rather than overrun the buffer (see EvalConstant).
+	if( nLen > (INT)(sizeof(szFun)/sizeof(TCHAR)) - 1 ) { * pError = EVAL_ERROR_TOKEN_TOO_LONG; return pExpr; }
 	_tcsncpy( szFun, pExpr, nLen ); szFun[nLen] = '\0'; _tcslwr(szFun);
 
 	INT nFunction;
