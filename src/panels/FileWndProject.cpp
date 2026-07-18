@@ -546,7 +546,15 @@ BOOL CFileWindow::LoadWorkspaceItem(wistream & is, TCHAR szText[], CWinApp * pAp
 			wndpl.rcNormalPosition.bottom = _ttoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
 		}
 
-		pCedtApp->SpawnDocumentFile(szPath, _ttoi(szLineNum), pwndpl);
+		// A workspace records where files WERE last run. Since then they get deleted, renamed,
+		// or left on a drive that is not mounted today, so a stale entry is ordinary rather
+		// than exceptional — drop it and restore the rest. Handing the path to
+		// SpawnDocumentFile regardless is what used to crash startup: OnOpenDocument fails,
+		// its error box pumps messages, and the ID_FILE_TAB_REFRESH posted earlier is
+		// dispatched against a child frame whose document is not attached yet.
+		if( GetFileAttributes(szPath) != INVALID_FILE_ATTRIBUTES )
+			pCedtApp->SpawnDocumentFile(szPath, _ttoi(szLineNum), pwndpl);
+
 		is.width(kProjectTokenBufSize); is >> szText; // get next token
 
 	} else { // not recognized item

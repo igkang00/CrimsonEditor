@@ -415,8 +415,12 @@ BOOL CFileWindow::RemakeDirectoryTreeRoot(LPCTSTR lpszDriveName)
 
 BOOL CFileWindow::ExpandDirectoryTreePath(LPCTSTR lpszPathName)
 {
-	TCHAR szPathName[MAX_PATH]; lstrcpyn( szPathName, lpszPathName, MAX_PATH - 1 );  // leave 1 byte for trailing '\\'
-	if( szPathName[_tcslen(szPathName)-1] != '\\' ) _tcscat( szPathName, _T("\\") );
+	// Room for a full-length path (259 chars), the '\\' appended below, and the NUL. The old
+	// TCHAR[MAX_PATH] with lstrcpyn(..., MAX_PATH - 1) stopped one character short of what
+	// Windows allows, so a maximum-length directory could not be navigated to at all.
+	TCHAR szPathName[MAX_PATH + 2]; lstrcpyn( szPathName, lpszPathName, MAX_PATH );
+	INT nPathLen = (INT)_tcslen(szPathName);
+	if( nPathLen == 0 || szPathName[nPathLen-1] != '\\' ) _tcscat( szPathName, _T("\\") );
 
 	HTREEITEM hItem = m_treDirectoryTree.GetRootItem();
 	CString szRoot = GetActiveLocalDriveName();
@@ -558,25 +562,34 @@ HTREEITEM CFileWindow::InsertDirectoryTreeChildren(HTREEITEM hParent, LPCTSTR lp
 
 HTREEITEM CFileWindow::InsertDirectoryTreeRoot(LPCTSTR lpszPath)
 {
-	TCHAR szTemp[MAX_PATH]; lstrcpyn(szTemp, lpszPath, MAX_PATH - 1); INT nLen = (INT)_tcslen(szTemp);  // leave 1 byte for trailing '\\'
-	if( nLen > 0 && szTemp[nLen-1] != '\\' ) { szTemp[nLen] = '\\'; nLen++; szTemp[nLen] = '\0'; }
+	// Built in a CString rather than a TCHAR[MAX_PATH]: the old `lstrcpyn(..., MAX_PATH - 1)`
+	// kept only 258 characters, but a legal Windows path runs to 259 (260 including the NUL).
+	// A maximum-length path therefore lost its last character, and SHGetFileInfo failed on the
+	// name that was left — see InsertDirectoryTreeItem below, where that made files vanish.
+	CString szTemp = lpszPath;
+	if( szTemp.IsEmpty() || szTemp[szTemp.GetLength()-1] != _T('\\') ) szTemp += _T("\\");
 
 	SHFILEINFO shFinfo; // INT iIcon, iIconSel;
 	if( ! SHGetFileInfo(szTemp, 0, &shFinfo, sizeof(shFinfo), SHGFI_DISPLAYNAME | SHGFI_SYSICONINDEX) ) return NULL;
 
-//	if( szTemp[nLen-1] == '\\' ) { szTemp[nLen-1] = '\0'; }
 	return m_treDirectoryTree.InsertItem( shFinfo.szDisplayName, shFinfo.iIcon, shFinfo.iIcon, TVI_ROOT );
 }
 
 HTREEITEM CFileWindow::InsertDirectoryTreeItem(HTREEITEM hParent, LPCTSTR lpszPath)
 {
-	TCHAR szTemp[MAX_PATH]; lstrcpyn(szTemp, lpszPath, MAX_PATH - 1); INT nLen = (INT)_tcslen(szTemp);  // leave 1 byte for trailing '\\'
-	if( nLen > 0 && szTemp[nLen-1] != '\\' ) { szTemp[nLen] = '\\'; nLen++; szTemp[nLen] = '\0'; }
+	// See InsertDirectoryTreeRoot for why this is a CString. Concretely: a file whose full path
+	// is exactly 259 characters was truncated to 258, so "…\f.txt" became "…\f.tx", the lookup
+	// below failed on a name that does not exist, and the file was silently left out of the
+	// tree — invisible in the directory panel even though Explorer lists it fine.
+	CString szTemp = lpszPath;
+	if( szTemp.IsEmpty() || szTemp[szTemp.GetLength()-1] != _T('\\') ) szTemp += _T("\\");
 
 	SHFILEINFO shFinfo; // INT iIcon, iIconSel;
 	if( ! SHGetFileInfo(szTemp, 0, &shFinfo, sizeof(shFinfo), SHGFI_SYSICONINDEX) ) return NULL;
 
-	if( szTemp[nLen-1] == '\\' ) { szTemp[nLen-1] = '\0'; }
+	INT nLen = szTemp.GetLength();   // drop the one trailing '\\' added above, as before
+	if( nLen > 0 && szTemp[nLen-1] == _T('\\') ) szTemp = szTemp.Left(nLen-1);
+
 	return m_treDirectoryTree.InsertItem( GetFileName(szTemp), shFinfo.iIcon, shFinfo.iIcon, hParent );
 }
 

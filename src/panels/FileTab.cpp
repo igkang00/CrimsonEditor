@@ -483,7 +483,15 @@ void CMDIFileTab::UpdateMDIFileTab(CMDIChildWnd * pChild)
 {
 	CTabCtrl * pTabCtrl = (CTabCtrl *)GetDlgItem(IDC_FILE_TAB); ASSERT( pTabCtrl );
 
+	// GetActiveDocument() returns NULL while a child frame exists but has no document attached
+	// yet. That happens on a perfectly ordinary path: OnOpenDocument fails on a missing file
+	// (a workspace entry whose file was deleted or moved since last run), its error box pumps
+	// messages, and the ID_FILE_TAB_REFRESH posted by Insert/DeleteMDIFileTab is dispatched
+	// right then. There is nothing to label yet, so leave the tab as it is instead of
+	// dereferencing NULL — this used to kill the app during startup workspace restore.
 	CCedtDoc * pDoc = (CCedtDoc *)pChild->GetActiveDocument();
+	if( pDoc == NULL ) return;
+
 	CString szText; pChild->GetWindowText( szText );
 
 	// check string size of window text (can have zero length if it is not visible)
@@ -498,9 +506,11 @@ void CMDIFileTab::UpdateMDIFileTab(CMDIChildWnd * pChild)
 	item.iImage = pDoc->IsModified() ? 1 : 0;
 	item.lParam = (LPARAM)pChild;
 
-	TCHAR szTxt2[MAX_PATH]; 
+	TCHAR szTxt2[MAX_PATH];
 	TCITEM itm2; itm2.mask = TCIF_TEXT | TCIF_IMAGE | TCIF_PARAM;
-	itm2.pszText = szTxt2; itm2.cchTextMax = sizeof(szTxt2);
+	// cchTextMax counts CHARACTERS, not bytes: sizeof() advertised 520 slots in a 260-slot
+	// buffer, so a long enough tab label would have let GetItem write past the end.
+	itm2.pszText = szTxt2; itm2.cchTextMax = sizeof(szTxt2) / sizeof(TCHAR);
 
 	INT nTab = FindTabIndex(pChild); if(nTab < 0) return;
 	pTabCtrl->GetItem(nTab, & itm2);
