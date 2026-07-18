@@ -32,3 +32,7 @@ Thumbs.db
 
 # Personal AI-assistant instructions (kept locally, not shared)
 CLAUDE.md
+
+# Claude Code personal settings (per-user permissions; shared config, if any,
+# would live in .claude/settings.json and can be committed)
+.claude/settings.local.json

@@ -139,13 +139,18 @@ was never checked. This is the highest-yield section in the plan and should be f
 
 ### A1. Word wrap, everywhere `[wrap]`
 
-- [ ] Open `big.txt`, **turn word wrap on**, and time it. The line-container fix brought this
+- [x] Open `big.txt`, **turn word wrap on**, and time it. The line-container fix brought this
       from 2,779 ms back to 194 ms on 90k lines — confirm it still feels immediate on 900k.
-- [ ] With wrap on, edit near the **bottom** of `big.txt`: type, paste, delete a large block.
-- [ ] With wrap on, open `blockcomment.c` and scroll to the middle. Syntax colour must survive.
+      Reformat ~1 s on 900k; feels immediate.
+- [x] With wrap on, edit near the **bottom** of `big.txt`: type, paste, delete a large block.
+      Edit and scroll held.
+- [x] With wrap on, open `blockcomment.c` and scroll to the middle. Syntax colour must survive.
       Type `*/` somewhere inside the comment and watch the rest of the file recolour; undo it.
-- [ ] Toggle wrap on/off repeatedly on `korean.c`. Caret must stay on the same character.
-- [ ] Resize the window with wrap on, on a large file. (This is what `OnSize` reformats.)
+      Colour survived; recolour and undo correct.
+- [x] Toggle wrap on/off repeatedly on `korean.c`. Caret must stay on the same character.
+      Caret stayed on the same character.
+- [x] Resize the window with wrap on, on a large file. (This is what `OnSize` reformats.)
+      Found a drag-jank bug (row 7) — now fixed with a debounce.
 
 ### A2. Print preview `[big]`
 
@@ -384,3 +389,4 @@ where not to look again.
 | 4 | §A8 · `launch.exe`, command-line file open, Korean filename | All opened. | 3.93 Release-KR, VM | ✅ holds |
 | 5 | §A8 / §Project · open a file with a **Korean path**, close the editor, reopen | **BUG.** On exit the workspace is saved to `cedt.wks`, and `wofstream` (no `imbue`, [FileWndProject.cpp:128](../src/panels/FileWndProject.cpp#L128)) fails on the first non-ASCII character of a path — so the file is **truncated mid-attribute**, right after `path="C:\Temp\`. The next launch reads the truncated `.wks`, hits an unterminated attribute, and shows "프로젝트 속성을 읽어들이면서 에러가 발생했습니다" (`IDS_ERR_PARSE_PRJ_ATTR`). Non-fatal — the editor opens — but the workspace does not restore, and every file after the Korean-path one is silently dropped from it. **Reproduces without reinstalling: a Korean-path file open at exit is enough.** Root cause is the same missing `imbue` on the read side (`wifstream`, [FileWndProject.cpp:77](../src/panels/FileWndProject.cpp#L77)), so even an intact Korean path would not load. This is the `.prj`/`.wks` path the Unicode migration flagged as unmigrated and the plan tagged `[enc]` `[trunc]` under §Project. | 3.93 Release-KR, VM (and dev) | **fixed** — `Utf8FileLocale()` imbued on all four workspace streams ([fstream_compat.h](../src/include/fstream_compat.h), [FileWndProject.cpp](../src/panels/FileWndProject.cpp)). A Korean-path file now saves and restores intact; ASCII workspaces round-trip unchanged. Verified on the VM. For 3.94. |
 | 6 | The fix for #5, first cut | **The fix crashed the app on startup — but only on the VM, never on the dev machine.** The first version imbued `std::locale(".65001")`, a named code-page locale. That depends on the CRT actually having UTF-8 code-page locale data, which the VM's Windows/UCRT lacked, so the constructor threw — and it runs before `open()` on every startup workspace load, so an unhandled exception took the process down. The dev machine's newer UCRT had the data and never reproduced it. Refixed with the `codecvt_utf8_utf16` **facet**, which is STL code and constructs the same on every machine. **This is the whole thesis of §A8 biting the fix itself**: a dev-only pass would have shipped a guaranteed first-run crash. | 3.93 Release-KR — crash **VM-only**, invisible on dev | **fixed** — verified crash-free on the VM |
+| 7 | §A1 · resize the window with wrap on, on a large file | **BUG (jank, not corruption).** Word wrap is inherently eager — the row count depends on every line's width, so a re-wrap is a whole-document pass (~1 s on a large file). `OnSize` reformatted inline on **every** `WM_SIZE`, and a resize *drag* sends one per pixel, so the drag crawled and flashed the "Formatting…" progress bar on every step. The debounce that existed keyed off **screen rows**, which mid-3k.txt (3,000 long lines → >5,000 wrapped rows) tripped wrongly. | 3.93 Release-KR (and dev) | **fixed** — `OnSize` now defers to a 120 ms one-shot timer (`ID_TIMER_WRAP_REFORMAT`, re-armed each size step) when the doc exceeds `LARGE_FILE_LINE_COUNT` (1,000 **logical** lines, the same threshold the progress bar uses); small files still wrap inline live. Verified: `mid-3k.txt` reformats once after the drag stops, `ascii.c` tracks the drag live. For 3.94. |
