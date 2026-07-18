@@ -185,11 +185,16 @@ was never checked. This is the highest-yield section in the plan and should be f
 
 ### A4. Encoding detection `[enc]` `[cjk]`
 
-- [ ] Open **CP949 Korean without a BOM**. The migration's own list records this failing once:
-      *"every Korean byte became U+FFFD."*
-- [ ] Round-trip each of the four encodings: open, edit one character, save, reopen, compare.
-- [ ] `Document > Encoding Type` — convert a Korean file UTF-8 → UTF-16LE → CP949 and back.
-- [ ] Save with each of DOS/Unix/Mac line endings and reopen.
+- [x] Open **CP949 Korean without a BOM**. The migration's own list records this failing once:
+      *"every Korean byte became U+FFFD."* `korean.c` and `cp949.txt` opened correctly — no U+FFFD.
+- [x] Round-trip each of the four encodings: open, edit one character, save, reopen, compare.
+      Byte-verified: content identical after add-char/save/delete/save on all six fixtures; BOM
+      preserved (utf8-bom kept it, utf8-nobom stayed BOM-less); UTF-16 LE/BE byte-identical.
+- [x] `Document > Encoding Type` — convert a Korean file UTF-8 → UTF-16LE → CP949 and back.
+      Byte-verified via saved samples: UTF-8 (no BOM), CP949 (genuinely CP949 — fails a UTF-8
+      decode), UTF-16 LE (`FF FE`) and BE (`FE FF`) all decode to the identical text.
+- [x] Save with each of DOS/Unix/Mac line endings and reopen. Byte-verified: DOS = CRLF, Unix =
+      LF only, Mac = CR only, each with identical content.
 
 ### A5. IME `[ime]` `[cjk]`
 
