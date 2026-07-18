@@ -211,17 +211,20 @@ The x64 doc names this twice as the most suspicious surviving path.
 
 ### A6. Emoji and astral `[emoji]`
 
-- [ ] `astral.txt`: arrow past 😀 — one press per character, not two. Backspace deletes the whole
+- [x] `astral.txt`: arrow past 😀 — one press per character, not two. Backspace deletes the whole
       thing. Save and reopen: it must survive (a half pair *"is not a valid character in any
-      encoding… the data is permanently destroyed"*).
-- [ ] `emoji.c`, line 3: `"\😀"` — a backslash then an astral pair. The analyzer's escape branch
-      does `fwd += 2` unconditionally and can split it. Lines 4–5 vary the shape.
-- [ ] ✅ U+2705 and ⭐ U+2B50 (`astral.txt` line 3, `emoji.c` line 6) in a fixed-pitch font: the
+      encoding… the data is permanently destroyed"*). One press per emoji; Delete and Backspace
+      remove the whole pair; survived save/reopen.
+- [x] `emoji.c`, line 3: `"\😀"` — a backslash then an astral pair. The analyzer's escape branch
+      does `fwd += 2` unconditionally and can split it. Lines 4–5 vary the shape. No split — the
+      pair stays intact.
+- [x] ✅ U+2705 and ⭐ U+2B50 (`astral.txt` line 3, `emoji.c` line 6) in a fixed-pitch font: the
       caret must not land inside the glyph. (These are BMP, not astral — they are what killed
-      the previous attempt.)
-- [ ] `astral.txt` lines 5–6: a whole line of ✅, and a whole line of 😀 — column positions and
-      End-key behaviour.
-- [ ] Double-click an emoji to select it; drag-select across one.
+      the previous attempt.) Caret never landed inside the glyph.
+- [x] `astral.txt` lines 5–6: a whole line of ✅, and a whole line of 😀 — column positions and
+      End-key behaviour. Column positions and End behaved.
+- [x] Double-click an emoji to select it; drag-select across one. Double-click, drag-select, and
+      column-mode selection all held.
 
 ### A7. Long lines and truncation `[trunc]`
 
