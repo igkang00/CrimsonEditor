@@ -215,12 +215,16 @@ tested none of it.
 
 ### A8. The installed build `[enc]`
 
-- [ ] **Install from `dist/cedt-393-setup.exe` onto a machine (or user) with no prior config.**
-- [ ] Open a `.c` file — it must get syntax colouring. (This is the exact symptom of the
-      registry-truncation bug: it worked in dev and failed installed.)
+Run on a clean Windows VM (VirtualBox), 3.93, first pass 2026-07-18.
+
+- [x] **Install from `dist/cedt-393-setup.exe` onto a machine (or user) with no prior config.**
+      Installed cleanly.
+- [x] Open a `.c` file — it must get syntax colouring. (This is the exact symptom of the
+      registry-truncation bug: it worked in dev and failed installed.) **Coloured — the
+      registry path resolves on a clean install. First time this has been confirmed.**
 - [ ] Colour schemes, templates, syntax `Customize…` — all resolve through the install dir.
-- [ ] Explorer right-click → "Edit with Crimson Editor"; `launch.exe`; a file passed on the
-      command line; a filename containing Korean.
+- [x] Explorer right-click → "Edit with Crimson Editor" — works. *(Still to do: `launch.exe`, a
+      file passed on the command line, a filename containing Korean.)*
 - [ ] Uninstall, then reinstall over the top.
 
 ### A9. Release-only hazards `[big]` `[Debug]`
@@ -350,11 +354,24 @@ sizes, colour schemes) are grouped: test one, then confirm a second behaves the 
 
 ---
 
+## The test environment
+
+The installed-build passes need a clean machine, so they run on a VirtualBox Windows VM with no
+prior Crimson Editor config, registry keys, or `%APPDATA%` state. That absence is the fixture:
+the registry-truncation bug (§A8) was invisible on any machine that had ever run the editor, and
+only a first run on a clean box exercises the install-dir path resolution at all.
+
+Keep the VM (or a snapshot of its pre-install state) so the next release can repeat §A8 the same
+way, rather than rebuilding the clean condition each time.
+
 ## Recording what you find
 
 Add findings here as you go — file, steps, expected vs actual, and which build. A bug found on
 Release-installed and not reproducible in Debug is the most valuable kind and should say so.
+Confirmations of the fragile spots are worth a row too: "checked, holds" tells the next person
+where not to look again.
 
 | # | Where | What happened | Build | Status |
 | --- | --- | --- | --- | --- |
-| | | | | |
+| 1 | §A8 · `.c` syntax highlighting on a clean install | Coloured correctly. The Unicode registry-truncation bug (path → `"C"`, killing install-dir lookups) does **not** reproduce on a clean box. First time this path has been verified. | 3.93 Release-KR, VM | ✅ holds |
+| 2 | §A8 · install, Explorer "Edit with…", Korean file display | All worked. | 3.93 Release-KR, VM | ✅ holds |
