@@ -293,11 +293,25 @@ installed-build section has now been exercised on a clean VM, the first time it 
 
 ### A9. Release-only hazards `[big]` `[Debug]`
 
-- [ ] In **Release**: delete a 100,000-line selection out of `big.txt`; paste it back. Then the
+Run 2026-07-19, first pass.
+
+- [x] In **Release**: delete a 100,000-line selection out of `big.txt`; paste it back. Then the
       same in **Debug** — if a POSITION assert fires, the Release run was silently corrupting.
-- [ ] In **Release**: heavy block edits in column mode on a large file.
-- [ ] First run with **no config**: the x64 work resets every config deliberately. Confirm
-      defaults load and no "config corrupted" popup appears.
+      Clean in both, and checked by **hash rather than by the assert**: lines 400,000–500,000
+      deleted and pasted back, saved out, SHA256 compared against `big.txt` — byte-identical
+      (57,644,682 bytes) from Release-KR *and* Debug-KR. The assert is the wrong instrument on
+      its own here, since Release does not compile it in at all; a matching hash is the stronger
+      claim. No assert fired in Debug either.
+- [x] In **Release**: heavy block edits in column mode on a large file. Repeated multi-thousand
+      line column insert / delete / paste with undo mixed in, on `big.txt`. Lines outside the
+      edited range were untouched, undo restored the original shape, no reformat flicker.
+- [x] First run with **no config**: the x64 work resets every config deliberately. Confirm
+      defaults load and no "config corrupted" popup appears. Cleared both halves of the user
+      state — `%APPDATA%\Crimson Editor` and `HKCU\SOFTWARE\Crimson System` — and launched
+      Release-KR. No popup; toolbar, status bar, fonts and colours all came up at their
+      defaults; a `.c` file syntax-highlighted (the §A8 install-dir lookup, exercised with no
+      config to lean on); and a fresh config was written and survived a restart. This is the
+      exact path a real user takes on first launch after upgrading.
 
 ---
 
