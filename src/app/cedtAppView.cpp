@@ -83,8 +83,17 @@ void CCedtApp::TurnOffWordWrapModeAllViews()
 }
 
 
-void CCedtApp::OnEditColumnMode() 
+void CCedtApp::OnEditColumnMode()
 {
+	// Save the selection BEFORE flipping the mode. SaveCaretAndAnchorPos converts each PosX to a
+	// character index through GetIdxXFromPosX, whose measurement branch keys off m_bColumnMode
+	// (via the _bGridLayout global in GetWordIndex): column mode measures in grid cells, line
+	// mode in real pixels. The positions being converted still belong to the CURRENT layout, so
+	// the flag has to still describe that layout. Flipping first made the save measure the old
+	// proportional layout with grid-cell logic, which slid the selection one character left on
+	// every line→column toggle and accumulated across toggles.
+	SaveCaretAndAnchorPosAllViews();
+
 	CCedtView::m_bColumnMode = ! CCedtView::m_bColumnMode;
 
 	// turn off word wrap mode of all views
@@ -102,8 +111,6 @@ void CCedtApp::OnEditColumnMode()
 		CCedtView::m_bUsingColumnModeFont = FALSE;
 
 	// create screen font object and apply to all views
-	SaveCaretAndAnchorPosAllViews();
-
 	CCedtView::CreateScreenFontObject();
 	CCedtView::ApplyCurrentScreenFont();
 	FormatScreenTextAllViews();
