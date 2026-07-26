@@ -406,8 +406,18 @@ from findings 14–19, which the shipped 3.93 did not carry).
 
 ### Document
 
-- [ ] Syntax Type: Auto Detect / Plain Text / Customize — **`.c` must colour on the installed
-      build** (→ A8)
+- [x] Syntax Type: Auto Detect / Plain Text / Customize — **`.c` must colour on the installed
+      build** (→ A8). `.c` colours. The Syntax Type radio is decided purely by the current
+      (spec, keywords) pair, not by an auto/manual flag: a named language is checked when its
+      pair matches, **Plain Text** when either file is empty, **Auto Detect** only when a pair is
+      set but matches no named language. `.txt` mapped (via `link/extension.txt`) to
+      `DEFAULT.SPC`/`DEFAULT.KEY` — empty keywords, so no colour, yet Auto Detect showed checked,
+      which read as "auto-detect but nothing happened". **Decision:** removed `link/extension.txt`
+      so `.txt` now falls through to an empty spec and reads as **Plain Text**. Trade-off
+      accepted: word delimiters have a built-in default (`CLangSpec::ResetContents`) so word
+      selection is unaffected, but bracket-pair matching (`()[]{}`) is off for `.txt` without a
+      spec. Not a bug — a deliberate default-mapping change. (The `link/` files ship in the
+      installer; the installed copy must be removed separately to see it on an installed build.)
 - [ ] Properties · Reload Document · Lock Document
 - [ ] Encoding Type (5 items) → A4
 - [ ] File Format: DOS / Unix / Mac → A4
