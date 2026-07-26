@@ -628,18 +628,28 @@ static void _DecodeLine(CString & rLine, const CHAR * pBytes, INT nBytes, INT nE
 
 // CMemText
 //
-// Reads the file as ANSI (CP_ACP) — this is the drag-and-drop "insert this file as a
-// block" path, and it has no encoding parameter.
+// The Insert File / drag-and-drop "insert this file as a block" path. It takes no encoding
+// parameter, so it detects the file's own encoding rather than assuming ANSI.
 BOOL CMemText::FileLoad(LPCTSTR lpszPathName)
 {
+	// Insert File decodes with the file's OWN encoding, exactly as opening it would. This used
+	// to hard-code ENCODING_TYPE_ASCII, so a CP949, UTF-8 or UTF-16 file inserted its Korean as
+	// mojibake. Detect first, then run the same encoding-aware split as CAnalyzedText::FileLoad
+	// — BOM skip, UTF-16 read in 2-byte units, DOS/Unix/Mac line ends.
+	UINT nEncodingType = ENCODING_TYPE_ASCII, nFileFormat = FILE_FORMAT_DOS;
+	DetectEncodingTypeAndFileFormat( lpszPathName, nEncodingType, nFileFormat );
+
+	INT chDelim = '\n', chKill = '\r'; // FILE_FORMAT_DOS & FILE_FORMAT_UNIX
+	if( nFileFormat == FILE_FORMAT_MAC ) { chDelim = '\r'; chKill = '\0'; }
+
+	BOOL bUnicode = ( nEncodingType == ENCODING_TYPE_UNICODE_LE ||
+	                  nEncodingType == ENCODING_TYPE_UNICODE_BE );
+	BOOL bLittleEndian = ( nEncodingType == ENCODING_TYPE_UNICODE_LE );
+
 	try {
 		CFile file(lpszPathName, CFile::modeRead | CFile::typeBinary | CFile::shareDenyNone);
 		RemoveAll();
 
-		// Same block-at-a-time structure as CAnalyzedText::FileLoad, and for the same
-		// two reasons: the old loop did one read and one seek PER LINE, and it decoded
-		// each read buffer separately, so a CP949 lead/trail pair that straddled the
-		// buffer boundary was mangled.
 		const INT nBufSize = 1 << 16;
 		std::vector<CHAR> vecBuf( nBufSize );
 		CHAR * pBuf = & vecBuf[0];
@@ -648,27 +658,71 @@ BOOL CMemText::FileLoad(LPCTSTR lpszPathName)
 		vecLine.reserve( 4096 );
 
 		CString szLine;
-		INT nRead;
 
-		while( ( nRead = file.Read( pBuf, nBufSize ) ) > 0 ) {
+		// Skip the byte-order mark, if the encoding has one.
+		INT nSkip = 0;
+		{
+			UCHAR bom[4] = { 0, 0, 0, 0 };
+			INT n = file.Read( bom, 4 );
+			if( nEncodingType == ENCODING_TYPE_UNICODE_LE && n >= 2 && bom[0] == 0xFF && bom[1] == 0xFE ) nSkip = 2;
+			else if( nEncodingType == ENCODING_TYPE_UNICODE_BE && n >= 2 && bom[0] == 0xFE && bom[1] == 0xFF ) nSkip = 2;
+			else if( ( nEncodingType == ENCODING_TYPE_UTF8_WBOM || nEncodingType == ENCODING_TYPE_UTF8_XBOM ) &&
+			         n >= 3 && bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF ) nSkip = 3;
+			file.Seek( nSkip, CFile::begin );
+		}
+
+		INT nCarry = 0;		// a dangling odd byte of a UTF-16 unit, held over to the next read
+
+		for( ;; ) {
+			INT nRead = file.Read( pBuf + nCarry, nBufSize - nCarry );
+			if( nRead <= 0 ) break;
+
+			INT nAvail = nCarry + nRead;
+			nCarry = 0;
+
+			INT nUsable = bUnicode ? (nAvail & ~1) : nAvail;
+
 			INT nStart = 0;
-			for( INT i = 0; i < nRead; i++ ) {
-				if( pBuf[i] != '\n' ) continue;
+			for( INT i = 0; i < nUsable; i += (bUnicode ? 2 : 1) ) {
+				if( bUnicode ) {
+					const UCHAR * p = (const UCHAR *)(pBuf + i);
+					TCHAR wc = bLittleEndian ? (TCHAR)( p[0] | (p[1] << 8) )
+					                         : (TCHAR)( (p[0] << 8) | p[1] );
+					if( wc != (TCHAR)chDelim ) continue;
+				} else {
+					if( pBuf[i] != (CHAR)chDelim ) continue;
+				}
 
 				vecLine.insert( vecLine.end(), pBuf + nStart, pBuf + i );
-				if( ! vecLine.empty() && vecLine.back() == '\r' ) vecLine.pop_back();
 
-				_DecodeLine( szLine, vecLine.empty() ? NULL : & vecLine[0], (INT)vecLine.size(), ENCODING_TYPE_ASCII );
+				if( chKill ) {
+					if( bUnicode ) {
+						size_t n = vecLine.size();
+						if( n >= 2 ) {
+							const UCHAR * q = (const UCHAR *)( & vecLine[n-2] );
+							TCHAR wk = bLittleEndian ? (TCHAR)( q[0] | (q[1] << 8) )
+							                         : (TCHAR)( (q[0] << 8) | q[1] );
+							if( wk == (TCHAR)chKill ) vecLine.resize( n - 2 );
+						}
+					} else {
+						if( ! vecLine.empty() && vecLine.back() == (CHAR)chKill ) vecLine.pop_back();
+					}
+				}
+
+				_DecodeLine( szLine, vecLine.empty() ? NULL : & vecLine[0], (INT)vecLine.size(), nEncodingType );
 				AddTail( (LPCTSTR)szLine );
 
 				vecLine.clear();
-				nStart = i + 1;
+				nStart = i + (bUnicode ? 2 : 1);
 			}
-			vecLine.insert( vecLine.end(), pBuf + nStart, pBuf + nRead );
+
+			vecLine.insert( vecLine.end(), pBuf + nStart, pBuf + nUsable );
+
+			if( nAvail > nUsable ) { pBuf[0] = pBuf[nAvail-1]; nCarry = 1; }
 		}
 
-		if( ! vecLine.empty() && vecLine.back() == '\r' ) vecLine.pop_back();
-		_DecodeLine( szLine, vecLine.empty() ? NULL : & vecLine[0], (INT)vecLine.size(), ENCODING_TYPE_ASCII );
+		if( chKill && ! bUnicode && ! vecLine.empty() && vecLine.back() == (CHAR)chKill ) vecLine.pop_back();
+		_DecodeLine( szLine, vecLine.empty() ? NULL : & vecLine[0], (INT)vecLine.size(), nEncodingType );
 		AddTail( (LPCTSTR)szLine );
 
 		file.Close();

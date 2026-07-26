@@ -323,30 +323,48 @@ sizes, colour schemes) are grouped: test one, then confirm a second behaves the 
 
 ### File
 
-- [ ] New `Ctrl+N` · Open `Ctrl+O` `[enc]` `[big]` · Open Template `Alt+Shift+O`
-- [ ] Close `Ctrl+F4` · Close All — `[big]` (closing a large file used to reformat it first)
-- [ ] Reload · Reload As… `[enc]`
-- [ ] Save `Ctrl+S` `[enc]` · Save As `Alt+Shift+S` · Save All — `[big]` (block writes)
-- [ ] Print `Ctrl+P` `[cjk]` `[wrap]` · Print Preview (→ A2) · Print Setup
-- [ ] FTP: Open Remote `Ctrl+Shift+O` · FTP Settings — (x64 smoke list; needs a server)
-- [ ] Recent Files (MRU) — including a path with Korean in it
-- [ ] Exit `Alt+F4` with unsaved changes
+Run on the installed **3.94** build (rebuilt and reinstalled so the sweep exercises the fixes
+from findings 14–19, which the shipped 3.93 did not carry).
+
+- [x] New `Ctrl+N` · Open `Ctrl+O` `[enc]` `[big]` · Open Template `Alt+Shift+O`. All fine.
+- [x] Close `Ctrl+F4` · Close All — `[big]` (closing a large file used to reformat it first). No
+      reformat, no "Formatting…" bar — `big.txt` closes instantly.
+- [x] Reload · Reload As… `[enc]`. Fine.
+- [x] Save `Ctrl+S` `[enc]` · Save As `Alt+Shift+S` · Save All — `[big]` (block writes). **Block
+      writes verified clean by hash**: `big.txt` edited and saved, then compared to the original —
+      byte-identical for all 900,000 lines except the edit, valid UTF-8 throughout, no
+      truncation. The block-write path does not corrupt a large file.
+- [x] Print `Ctrl+P` `[cjk]` `[wrap]` · Print Preview (→ A2) · Print Setup. Fine (preview covered
+      in A2, finding 8).
+- [ ] FTP: Open Remote `Ctrl+Shift+O` · FTP Settings — (x64 smoke list; needs a server).
+      **Skipped — no server.**
+- [x] Recent Files (MRU) — including a path with Korean in it. Korean-path file lands in the MRU
+      and reopens.
+- [x] Exit `Alt+F4` with unsaved changes. Save prompt appears.
 
 ### Edit
 
-- [ ] Undo `Ctrl+Z` · Redo `Ctrl+Y` — `[undo]` `[cjk]` `[emoji]` `[col]`
-- [ ] Cut `Ctrl+X` · Copy `Ctrl+C` · Paste `Ctrl+V` · Delete — `[cjk]` `[emoji]` `[col]`,
-      and paste **to and from another application**
-- [ ] Cut Append `Ctrl+Shift+X` · Copy Append `Ctrl+Shift+C` — `[col]` refuses these; confirm beep
-- [ ] Select All `Ctrl+A` `[col]` (refused) · Select Line `Ctrl+E` · Select Word `Ctrl+D` `[cjk]` ·
-      Select Block `Ctrl+B` `[col]` (refused)
-- [ ] Upper/Lower/Capitalize/Invert Case — `[cjk]` (Korean must pass through untouched) `[col]`
-- [ ] Insert Date `Alt+Shift+D` · Insert Time `Alt+Shift+T` · Insert File `Alt+Shift+F` `[enc]` `[trunc]`
-- [ ] Increase/Decrease Indent `Ctrl+.` `Ctrl+,` — `[col]` refuses; `[wrap]`
-- [ ] Delete Line `Alt+Del` · Duplicate Line `Alt+Ins` · Delete Word `Ctrl+Del` `[cjk]`
-- [ ] Join Lines `Alt+J` · Split Line `Alt+K` — `[wrap]`
-- [ ] Make Comment `Ctrl+M` — `[col]` (→ A3), and in a language with **no** block comment (`.py`)
-- [ ] Column Mode `Alt+C` — the toggle now always reformats; check on a big file `[big]` `[wrap]`
+- [x] Undo `Ctrl+Z` · Redo `Ctrl+Y` — `[undo]` `[cjk]` `[emoji]` `[col]`. Fine across Korean,
+      emoji and column edits; undo-to-origin and redo-to-end both hold.
+- [x] Cut `Ctrl+X` · Copy `Ctrl+C` · Paste `Ctrl+V` · Delete — `[cjk]` `[emoji]` `[col]`,
+      and paste **to and from another application**. Fine, clipboard round-trips through Notepad.
+- [x] Cut Append `Ctrl+Shift+X` · Copy Append `Ctrl+Shift+C` — `[col]` refuses these; confirm beep.
+      Refused with a beep in column mode.
+- [x] Select All `Ctrl+A` `[col]` (refused) · Select Line `Ctrl+E` · Select Word `Ctrl+D` `[cjk]` ·
+      Select Block `Ctrl+B` `[col]` (refused). As specified; Select Word grabs the Korean run.
+- [x] Upper/Lower/Capitalize/Invert Case — `[cjk]` (Korean must pass through untouched) `[col]`.
+      Korean passes through unchanged (`CString::MakeUpper`/`Lower` are no-ops on Hangul).
+- [x] Insert Date `Alt+Shift+D` · Insert Time `Alt+Shift+T` · Insert File `Alt+Shift+F` `[enc]` `[trunc]`.
+      Date/Time fine. **Insert File of a non-CP949 file inserted mojibake — finding 20**, fixed.
+- [x] Increase/Decrease Indent `Ctrl+.` `Ctrl+,` — `[col]` refuses; `[wrap]`. As specified.
+- [x] Delete Line `Alt+Del` · Duplicate Line `Alt+Ins` · Delete Word `Ctrl+Del` `[cjk]`. All fine.
+      Ctrl+Del on a Korean run deletes to the end of the run — **standard word-delete, not a bug**
+      (investigated, see findings table).
+- [x] Join Lines `Alt+J` · Split Line `Alt+K` — `[wrap]`. Fine with wrap on.
+- [x] Make Comment `Ctrl+M` — `[col]` (→ A3), and in a language with **no** block comment (`.py`).
+      Line-comments a `.py` block; column case covered in A3.
+- [x] Column Mode `Alt+C` — the toggle now always reformats; check on a big file `[big]` `[wrap]`.
+      Toggles on `big.txt` without a visible stall.
 
 ### Search
 
@@ -470,3 +488,5 @@ where not to look again.
 | 17 | §A7 · start the editor with a workspace whose file was deleted since last run | **BUG (crash on startup, Debug *and* Release).** Restoring `cedt.wks` calls `SpawnDocumentFile` on every recorded path with no existence check. `OnOpenDocument` fails at [cedtDoc.cpp:359](../src/doc/cedtDoc.cpp#L359), and its error box **pumps messages** — which dispatches the `ID_FILE_TAB_REFRESH` that `Insert`/`DeleteMDIFileTab` had posted. `UpdateMDIFileTab` then runs against a child frame whose document is not attached yet, so `GetActiveDocument()` returns NULL and `pDoc->GetTitle()` dereferences it. A workspace entry going stale is completely ordinary (file deleted, renamed, drive not mounted), so this is reachable in normal use — hit here by deleting a fixture tree the editor still had open. | 3.93 Debug-KR **and** Release-KR | **fixed** — two layers. `LoadWorkspaceItem` skips entries whose file is gone ([FileWndProject.cpp](../src/panels/FileWndProject.cpp)), so the failing path is never entered for the common cause; and `UpdateMDIFileTab` returns early when `GetActiveDocument()` is NULL ([FileTab.cpp](../src/panels/FileTab.cpp)), covering the other ways an open can fail (permissions, a lock, a race between the check and the open). Verified: the same stale `cedt.wks` now restores the surviving files and drops the missing one silently. For 3.94. |
 | 18 | §A7 · directory panel **rename / copy / move / delete** on a file whose path is exactly 259 chars | **BUG (the shell operated on a phantom second file).** `SHFileOperation`'s `pFrom`/`pTo` are **double**-null-terminated lists. `TCHAR szFrom[MAX_PATH]` with `lstrcpyn(..., MAX_PATH)` holds 259 characters plus their NUL — filling all 260 slots, leaving nowhere for the list terminator. The shell read past the buffer and took the trailing stack bytes as a second source: **rename** failed with "select only one file to rename", **copy** silently did nothing. Shorter paths left a spare zeroed slot, so only maximum-length paths misbehaved. Seven buffers across the four handlers. **Delete was not attempted before the fix** — `FO_DELETE` would have tried to delete that phantom second path. | 3.93 Debug-KR | **fixed** — the buffers are `kShellOpPathBufSize` (`MAX_PATH + 2`), so `memset(0)` supplies both terminators; the copy length stays `MAX_PATH`, so a 259-char path is still not truncated ([FileWndDirectory.cpp](../src/panels/FileWndDirectory.cpp)). Verified: rename, copy, move and delete now behave identically at 200, 258 and 259 characters, in Debug-KR and Release-KR. For 3.94. |
 | 19 | §A7 · double-click a file whose path is longer than `MAX_PATH` (copy a file into a near-limit directory to make one) | **BUG (silent no-op).** Nothing happened at all — no window, no error. `OpenDirectoryItem` returns FALSE when `VerifyFilePath` fails and nobody reports it. The panel can *list* such a file because the tree is built through shell APIs, which tolerate over-long paths, while `VerifyFilePath` uses `CFileFind`/`FindFirstFile`, which does not — so the item is visible and unopenable, and from the user's side a double-click simply does nothing. Notepad opens the same file, because it declares `longPathAware` and this machine has `LongPathsEnabled = 1`; [res/cedt.manifest](../res/cedt.manifest) does not declare it. | 3.93 Debug-KR | **fixed (reporting only)** — `OpenDirectoryItem` now shows `IDS_ERR_FILE_NOT_FOUND` with the path ([FileWndDirectory.cpp](../src/panels/FileWndDirectory.cpp)), reusing an existing string so neither `.rc` had to be touched. Directories are filtered out first: a double-click reaches the same function for a folder, and `VerifyFilePath` rejects those too, so without the guard every folder expansion would have popped an error box. **Deliberately not made to work**: `longPathAware` would let >260-char paths into the `TCHAR[MAX_PATH]` buffers this pass keeps finding bugs in (rows 16 and 18 today), turning a safe "cannot open" into truncated paths in destructive operations. That needs a full audit of the path-handling routes first — out of scope for 3.94. |
+| 20 | §B Edit · **Insert File** `Alt+Shift+F` of a file whose encoding differs from the system code page | **BUG (Korean inserted as mojibake).** `CMemText::FileLoad` — the Insert File / drag-drop "insert as block" path — hard-coded `ENCODING_TYPE_ASCII` (→ `CP_ACP`), so it never looked at the file's actual encoding. On a Korean system (`CP_ACP` = 949) a CP949 file happened to come in right, but a **UTF-8 or UTF-16** file was decoded as CP949 and its Korean turned to garbage. The main open path (`CAnalyzedText::FileLoad`) detects and decodes correctly; only Insert File was left behind, even though its own comment already claimed to guard against a mangled CP949 pair. | 3.94 Release-KR | **fixed** — `CMemText::FileLoad` now calls `DetectEncodingTypeAndFileFormat` and runs the same encoding-aware split as the main loader: BOM skip, UTF-16 read in 2-byte units, DOS/Unix/Mac line ends, `_DecodeLine` with the detected type ([cedtElement.cpp](../src/core/cedtElement.cpp)). Regression tests `CMemTextTest.FileLoad_Utf8Bom_*` / `_Utf16LE_*`, confirmed to fail without the fix; they use self-describing encodings so they pin the behaviour on any system code page. For 3.94. |
+| — | §B Edit · **Delete Word** `Ctrl+Del` from the middle of a Korean run | **Investigated — not a defect.** Reported as "Ctrl+Del deletes all Korean after the caret." That is standard delete-word behaviour, identical to English: the editor treats a run of one character type as a single word ([GetNextSegmentIdxX](../src/view/cedtViewMapAdv.cpp)), so `가나다\|라마` deletes `라마` just as `abc\|def` deletes `def`. Notepad behaves the same. Left unchanged: making Korean delete syllable-by-syllable would diverge from the editor's word model and from every other language. | 3.94 Release-KR | not a bug — no change |
