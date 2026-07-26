@@ -435,6 +435,10 @@ public:
 	BOOL FileLoad(LPCTSTR lpszPathName, INT nEncodingType, INT nFileFormat);
 	BOOL FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileFormat);
 
+	// Logical character count: code POINTS (a surrogate pair counts as one), plus one per
+	// line break. Encoding-independent — unlike a byte count, which the file size already gives.
+	INT GetCharCount();
+
 	// Replace any unpaired surrogate left by a malformed file with U+FFFD, so
 	// the rest of the editor can assume every surrogate belongs to a pair.
 	void ScrubLoneSurrogates();

@@ -194,6 +194,7 @@ public: // *** cedtDocMap.cpp ***
 	INT GetLastIdxY() { return (INT)m_clsAnalyzedText.GetCount() - 1; }
 	INT GetWordCount();
 	INT GetByteCount();
+	INT GetCharCount();		// logical character count (code points + newlines)
 
 	INT GetFirstIdxX(CAnalyzedString & rLine);
 	INT GetLastIdxX(CAnalyzedString & rLine);

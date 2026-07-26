@@ -30,6 +30,7 @@ public:
 	BOOL	m_bAttrSystem;
 	CString	m_szEncodingType;
 	int		m_nByteCount;
+	int		m_nCharCount;
 	//}}AFX_DATA
 
 
@@ -45,7 +46,6 @@ protected:
 
 	// Generated message map functions
 	//{{AFX_MSG(CDocumentSummary)
-		// NOTE: the ClassWizard will add member functions here
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

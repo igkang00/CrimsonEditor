@@ -205,7 +205,7 @@ void CCedtDoc::OnDocumentSummary()
 
 	dlg.m_nLineCount = GetLineCount();
 	dlg.m_nWordCount = GetWordCount();
-	dlg.m_nByteCount = GetByteCount();
+	dlg.m_nCharCount = GetCharCount();
 
 	dlg.m_bAttrReadOnly = m_dwFileAttribute & FILE_ATTRIBUTE_READONLY;
 	dlg.m_bAttrHidden = m_dwFileAttribute & FILE_ATTRIBUTE_HIDDEN;

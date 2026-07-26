@@ -293,3 +293,32 @@ TEST(AnalyzedTextFileTest, Utf8_SaveLoadSaveIsByteIdentical)
 
 	_tremove(szPath1); _tremove(szPath2);
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// GetCharCount — logical characters (code points + newlines), not UTF-16 code units
+
+TEST(AnalyzedTextFileTest, CharCount_CountsCodePointsPlusNewlines)
+{
+	CAnalyzedText a;
+	a.AddTail(_T("abc"));
+	a.AddTail(_T("de"));
+	EXPECT_EQ(6, a.GetCharCount());		// 3 + 2 + one newline between the two lines
+}
+
+TEST(AnalyzedTextFileTest, CharCount_SurrogatePairIsOneCharacter)
+{
+	CAnalyzedText a;
+	a.AddTail(_T("\xD83D\xDE00"));		// one astral emoji (U+1F600)
+
+	POSITION pos = a.GetHeadPosition();
+	ASSERT_EQ(2, a.GetNext(pos).GetLength());	// stored as 2 UTF-16 code units
+	EXPECT_EQ(1, a.GetCharCount());				// but it is one logical character
+}
+
+TEST(AnalyzedTextFileTest, CharCount_SingleEmptyLineIsZero)
+{
+	CAnalyzedText a;
+	a.AddTail(_T(""));
+	EXPECT_EQ(0, a.GetCharCount());		// one empty line, no newline
+}

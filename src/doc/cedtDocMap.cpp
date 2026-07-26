@@ -40,6 +40,15 @@ INT CCedtDoc::GetByteCount()
 	return nByteCount;
 }
 
+// Logical character count for the Summary dialog: code points (a surrogate-pair emoji is one
+// character) plus one per line break. Encoding-independent, unlike GetByteCount, which returned
+// UTF-16 code units and was really a leftover from the MBCS era. The file-size field already
+// covers on-disk bytes.
+INT CCedtDoc::GetCharCount()
+{
+	return m_clsAnalyzedText.GetCharCount();
+}
+
 INT CCedtDoc::GetFirstIdxX(CAnalyzedString & rLine)
 {
 	ANALYZEDWORD & rWord = rLine.m_pWord[0];

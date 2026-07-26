@@ -1063,6 +1063,29 @@ void CAnalyzedText::ScrubLoneSurrogates()
 #endif
 }
 
+// Logical character count of the whole document: code POINTS (a surrogate pair — an emoji or
+// other astral character — is one character, not the two UTF-16 code units it is stored as),
+// plus one for each line break between consecutive lines. Encoding-independent; the byte size
+// on disk is what the "file size" field already reports.
+INT CAnalyzedText::GetCharCount()
+{
+	INT nCount = 0, nLines = 0;
+	POSITION pos = GetHeadPosition();
+	while( pos ) {
+		CAnalyzedString & rLine = GetNext( pos );
+		nLines++;
+		INT nLen = rLine.GetLength();
+		for( INT i = 0; i < nLen; i++ ) {
+			// A surrogate pair is one code point: count its high half, skip the low half.
+			unsigned short u = (unsigned short)rLine[i];
+			if( u >= 0xDC00 && u <= 0xDFFF ) continue;
+			nCount++;
+		}
+	}
+	if( nLines > 1 ) nCount += nLines - 1;	// one logical newline between consecutive lines
+	return nCount;
+}
+
 BOOL CAnalyzedText::FileSave(LPCTSTR lpszPathName, INT nEncodingType, INT nFileFormat)
 {
 	CHAR szDelim[3]; lstrcpyA(szDelim, "\r\n"); INT nDelimSize = 2; // FILE_FORMAT_DOS

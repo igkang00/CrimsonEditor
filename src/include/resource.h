@@ -430,6 +430,7 @@
 #define IDC_ENCODING_TYPE               1257
 #define IDC_TREE_DIRECTORY              1258
 #define IDC_BYTE_COUNT                  1258
+#define IDC_CHAR_COUNT                  1307
 #define IDC_MACRO_LOAD_MACROS           1258
 #define IDC_DIRECTORY_TREE              1259
 #define IDC_FWIN_DIRECTORY_TREE         1259
