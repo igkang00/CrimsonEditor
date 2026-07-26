@@ -170,6 +170,19 @@ CFormatedString & CCedtView::GetLineFromPosY(INT nPosY)
 {
 	INT nLineIndex = nPosY / GetLineHeight();
 
+	// Clamp to a real row BEFORE formatting/fetching. A stale PosY can land past the last row —
+	// e.g. the caret's pixel position, still in the OLD line height, converted here with the NEW
+	// height right after a line-spacing change (GetLineHeight scales by m_nLineSpacing). Without
+	// the clamp EnsureFormattedAt no-ops on the out-of-range index and the GetTail() fallback
+	// hands back an UNFORMATTED row (m_pWord == NULL), which the geometry helpers then
+	// dereference and crash. This keeps GetLineFromPosY in step with GetIdxYFromPosY, which
+	// already clamps the same way, so the row we format is always the row we return.
+	INT nCount = (INT)m_clsFormatedScreenText.GetCount();
+	if( nCount > 0 ) {
+		if( nLineIndex < 0 ) nLineIndex = 0;
+		else if( nLineIndex >= nCount ) nLineIndex = nCount - 1;
+	}
+
 	EnsureFormattedAt( nLineIndex );
 
 	POSITION pos = m_clsFormatedScreenText.FindIndex(nLineIndex);
