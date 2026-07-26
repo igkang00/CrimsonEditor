@@ -3075,6 +3075,7 @@ BEGIN
     IDS_OUT_SEARCH_NOT_FOUND "> Cannot find the string '%s'."
     IDS_OUT_SEARCH_RESULT   "> %d occurrence(s) have been found."
     IDS_OUT_SEARCH_CANCELLED "> Search cancelled. %d occurrence(s) found so far."
+    IDS_OUT_SEARCH_TRUNCATED "> (Output shows only the most recent %d lines; earlier matches are not listed.)"
     IDS_OUT_SEARCH_SKIP_BINARY "- Skipping binary file '%s'."
     IDS_OUT_SEARCH_LINE_EXCEED "- Line exceeds %d characters in '%s(%d)'."
     IDS_OUT_SEARCH_CANNOT_OPEN "- Cannot open file '%s'."

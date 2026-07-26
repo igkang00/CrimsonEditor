@@ -111,6 +111,7 @@ public: // output window
 	void ClearOutputWindowContents() { m_wndOutputWindow.SendMessage(WM_COMMAND, ID_OUTPUT_WINDOW_CLEAR, 0L); }
 	void CopyAllOutputWindowContents() { m_wndOutputWindow.SendMessage(WM_COMMAND, ID_OUTPUT_WINDOW_COPY_ALL, 0L); }
 
+	BOOL WereOutputWindowContentsTruncated() { return m_wndOutputWindow.WereContentsTruncated(); }
 	BOOL AddStringToOutputWindow(LPCTSTR lpszString, COLORREF crTextColor) { return m_wndOutputWindow.AddStringToTheLast(lpszString, crTextColor); }
 	BOOL ReplaceStringOfOutputWindow(LPCTSTR lpszString, COLORREF crTextColor) { return m_wndOutputWindow.ReplaceTheLastString(lpszString, crTextColor); }
 	BOOL GetStringOfOutputWindow(CString & szString) { return m_wndOutputWindow.GetTheLastString(szString); }

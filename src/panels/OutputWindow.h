@@ -6,7 +6,7 @@
 #endif // _MSC_VER > 1000
 
 
-#define OUTPUT_MAX_LINE_COUNT	1024
+#define OUTPUT_MAX_LINE_COUNT	4096
 
 
 class COutputWindow : public CSizingControlBar
@@ -41,6 +41,7 @@ protected: // Resources & Controls
 
 	HACCEL m_hAccel;
 	BOOL m_bOccupied;
+	BOOL m_bContentsTruncated;	// set once the ring buffer starts dropping the oldest lines
 
 protected: // output window controls
 	CColorListBox m_lstConsoleOutput;
@@ -53,6 +54,11 @@ public:
 
 	void SetOccupied(BOOL bOccupy) { m_bOccupied = bOccupy; }
 	BOOL CanUseNow() { return ! m_bOccupied; }
+
+	// TRUE once AddStringToTheLast has had to drop the oldest line to stay within
+	// OUTPUT_MAX_LINE_COUNT — i.e. the window no longer shows everything that was added.
+	// Reset whenever the contents are cleared.
+	BOOL WereContentsTruncated() { return m_bContentsTruncated; }
 
 	BOOL AddStringToTheLast(LPCTSTR lpszString, COLORREF crTextColor);
 	BOOL ReplaceTheLastString(LPCTSTR lpszString, COLORREF crTextColor);

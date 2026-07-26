@@ -31,6 +31,8 @@ COLORREF COutputWindow::m_crErrorText;
 
 COutputWindow::COutputWindow()
 {
+	m_bContentsTruncated = FALSE;
+
 	memset( m_tbiToolbarOutput, 0x00, sizeof(m_tbiToolbarOutput) );
 	memset( m_tbiWinButtons, 0x00, sizeof(m_tbiWinButtons) );
 
@@ -214,14 +216,22 @@ void COutputWindow::EnableInputConsole(BOOL bEnable)
 
 BOOL COutputWindow::AddStringToTheLast(LPCTSTR lpszString, COLORREF crTextColor)
 {
+	// Freeze redraw across the WHOLE delete/add/scroll sequence. With it on, each step updated
+	// the scrollbar separately — the thumb jumped up (oldest line dropped), down (new line
+	// added), then to the bottom (scroll) — so at the line cap it flickered up and down on
+	// every line during a big search. Batching gives one scrollbar update per line instead.
+	m_lstConsoleOutput.SetRedraw(FALSE);
+
 	if( m_lstConsoleOutput.GetCount() >= OUTPUT_MAX_LINE_COUNT ) {
-		m_lstConsoleOutput.SetRedraw(FALSE);
 		m_lstConsoleOutput.DeleteString(0);
-		m_lstConsoleOutput.SetRedraw(TRUE);
+		m_bContentsTruncated = TRUE;	// oldest line dropped — the window is no longer complete
 	}
 
 	INT nIndex = m_lstConsoleOutput.AddString(lpszString, crTextColor);
-	if( nIndex == LB_ERR || nIndex == LB_ERRSPACE ) return FALSE;
+	if( nIndex == LB_ERR || nIndex == LB_ERRSPACE ) {
+		m_lstConsoleOutput.SetRedraw(TRUE);
+		return FALSE;
+	}
 
 	CRect rectClient; m_lstConsoleOutput.GetClientRect( & rectClient );
 	CRect rectItem; m_lstConsoleOutput.GetItemRect(nIndex, & rectItem);
@@ -230,6 +240,8 @@ BOOL COutputWindow::AddStringToTheLast(LPCTSTR lpszString, COLORREF crTextColor)
 	INT nTop = m_lstConsoleOutput.GetTopIndex();
 	if( nIndex - nTop + 1 > nLineCount ) m_lstConsoleOutput.SetTopIndex( nIndex - nLineCount + 1);
 
+	m_lstConsoleOutput.SetRedraw(TRUE);
+	m_lstConsoleOutput.Invalidate();
 	return TRUE;
 }
 
@@ -273,9 +285,10 @@ BOOL COutputWindow::PreTranslateMessage(MSG* pMsg)
 	return TRUE;
 }
 
-void COutputWindow::OnOutputWindowClear() 
+void COutputWindow::OnOutputWindowClear()
 {
 	m_lstConsoleOutput.ResetContent();
+	m_bContentsTruncated = FALSE;
 }
 
 void COutputWindow::OnOutputWindowCopyAll()

@@ -3055,6 +3055,7 @@ BEGIN
     IDS_OUT_SEARCH_NOT_FOUND "> '%s' 문자열을 찾지 못했습니다."
     IDS_OUT_SEARCH_RESULT   "> %d개의 일치하는 문자열을 찾았습니다.."
     IDS_OUT_SEARCH_CANCELLED "> 검색이 중단되었습니다. 지금까지 %d개를 찾았습니다."
+    IDS_OUT_SEARCH_TRUNCATED "> (출력은 최근 %d줄만 표시합니다. 이전 결과는 목록에 없습니다.)"
     IDS_OUT_SEARCH_SKIP_BINARY "- 바이너리 파일은 건너뜁니다 '%s'."
     IDS_OUT_SEARCH_LINE_EXCEED 
                             "- 한 줄에 %d개의 문자가 포함되어 있습니다 '%s(%d)'."

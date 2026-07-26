@@ -106,6 +106,14 @@ BOOL CCedtApp::DoFindInFiles(LPCTSTR lpszFindString, LPCTSTR lpszFileType, LPCTS
 	else szMessage.Format(IDS_OUT_SEARCH_NOT_FOUND, lpszFindString);
 	pFrame->AddStringToOutputWindow( szMessage, RGB(0, 0, 128) );
 
+	// The output window keeps only the most recent OUTPUT_MAX_LINE_COUNT lines. When a search
+	// matches more than that, the earliest results have already scrolled out of the buffer, so
+	// say so — otherwise the count above and the visible list silently disagree.
+	if( pFrame->WereOutputWindowContentsTruncated() ) {
+		szMessage.Format(IDS_OUT_SEARCH_TRUNCATED, OUTPUT_MAX_LINE_COUNT);
+		pFrame->AddStringToOutputWindow( szMessage, RGB(128, 0, 0) );
+	}
+
 	pFrame->SetOutputWindowOccupied(FALSE);
 	pFrame->EnableOutputWindowInput(FALSE);
 
