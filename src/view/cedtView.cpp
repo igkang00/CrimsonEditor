@@ -596,10 +596,20 @@ void CCedtView::UpdateCaretPosition()
 	// to, in which a Hangul syllable is two. It comes straight from the caret pixel: the
 	// caret is grid-aligned in column mode, and a pixel still has an answer in the virtual
 	// space past the end of the line, where there is no character index to convert.
-	// Outside column mode the field keeps its meaning: the character position, counting that
-	// same syllable once. Two coordinates, each shown where it is the one that matters.
+	//
+	// Outside column mode the field is the CHARACTER position, counted the same way the Summary
+	// dialog counts characters: a surrogate pair (an emoji / astral character) is one character,
+	// as is a Hangul syllable. nIdxX is the code-UNIT index — it drives caret positioning and is
+	// left untouched — so derive a display-only code-POINT column from it by not counting the
+	// low half of any surrogate pair that sits before the caret.
 	CMainFrame * pMainFrame = (CMainFrame *)AfxGetMainWnd();
-	INT nColumnInfo = m_bColumnMode ? ( m_nCaretPosX / GetSpaceWidth() ) : nIdxX;
+	INT nCharCol = nIdxX;
+	if( ! m_bColumnMode ) {
+		CAnalyzedString & rAnaLine = GetLineFromIdxY(nIdxY);
+		INT nScan = ( nIdxX < rAnaLine.GetLength() ) ? nIdxX : rAnaLine.GetLength();
+		for( INT i = 0; i < nScan; i++ ) if( IsLowSurrogate(rAnaLine[i]) ) nCharCol--;
+	}
+	INT nColumnInfo = m_bColumnMode ? ( m_nCaretPosX / GetSpaceWidth() ) : nCharCol;
 	pMainFrame->SetCaretPositionInfo(nIdxY+1, nColumnInfo+1, nMaxY+1);
 }
 
