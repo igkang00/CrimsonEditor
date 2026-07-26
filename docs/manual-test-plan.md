@@ -363,8 +363,11 @@ from findings 14–19, which the shipped 3.93 did not carry).
 - [x] Join Lines `Alt+J` · Split Line `Alt+K` — `[wrap]`. Fine with wrap on.
 - [x] Make Comment `Ctrl+M` — `[col]` (→ A3), and in a language with **no** block comment (`.py`).
       Line-comments a `.py` block; column case covered in A3.
-- [x] Column Mode `Alt+C` — the toggle now always reformats; check on a big file `[big]` `[wrap]`.
-      Toggles on `big.txt` without a visible stall.
+- [x] Column Mode `Alt+C` — the toggle always **invalidates** the layout (`RemoveAll` +
+      `InsertGap`), so no stale grid geometry survives; visible rows are then re-laid-out
+      lazily, with no full-document pass while unwrapped — and column mode is always unwrapped.
+      `[big]` `[wrap]`. Toggles on `big.txt` with no visible stall, which is the lazy path
+      working as intended, not a missing reformat.
 
 ### Search
 
