@@ -3149,6 +3149,7 @@ BEGIN
     IDS_ERR_INSERT_PRJ_ITEM "Insert project item failed."
     IDS_ERR_PARSE_PRJ_ATTR  "Error in parsing project attribute."
     IDS_ERR_WRONG_PRJ_FILE  "Wrong project file."
+    IDS_ERR_PRJ_VERSION     "This project file's version (%s) is not compatible with this edition and cannot be opened.\n\nRe-create the project in this version."
     IDS_ERR_COPY_PRJ_ITEM1  "Cannot copy '%s' project item.\nDestination category is the same category of the item."
     IDS_ERR_COPY_PRJ_ITEM2  "Cannot copy '%s' project item.\nDestination category is the sub category of the item."
     IDS_ERR_MOVE_PRJ_ITEM1  "Cannot move '%s' project item.\nDestination category is the same category of the item."

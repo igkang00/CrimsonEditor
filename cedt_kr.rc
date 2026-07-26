@@ -3133,6 +3133,7 @@ BEGIN
     IDS_ERR_INSERT_PRJ_ITEM "프로젝트 항목을 추가하지 못했습니다."
     IDS_ERR_PARSE_PRJ_ATTR  "프로젝트 속성을 읽어들이면서 에러가 발생했습니다."
     IDS_ERR_WRONG_PRJ_FILE  "잘못된 프로젝트 파일입니다."
+    IDS_ERR_PRJ_VERSION     "이 프로젝트 파일의 버전(%s)은 현재 판과 호환되지 않아 열 수 없습니다.\n\n현재 버전에서 프로젝트를 다시 만드세요."
     IDS_ERR_COPY_PRJ_ITEM1  "'%s' 프로젝트 항목을 복사할 수 없습니다.\n대상 카테고리가 원본 카테고리와 같습니다."
     IDS_ERR_COPY_PRJ_ITEM2  "'%s' 프로젝트 항목을 복사할 수 없습니다.\n대상 카테고리가 원본 카테고리의 하위 카테고리입니다."
     IDS_ERR_MOVE_PRJ_ITEM1  "'%s' 프로젝트 항목을 이동할 수 없습니다.\n대상 카테고리가 원본 카테고리와 같습니다."

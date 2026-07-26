@@ -1,0 +1,21 @@
+<project version="Crimson Editor 3.72">
+	<category name="class A" expanded="yes">
+		<localfile path="E:\Work\CrimsonEditor\tests\data\haha.txt" />
+	</category>
+	<category name="class B" expanded="yes">
+		<localfile path="E:\Work\CrimsonEditor\tests\data\big.txt" />
+		<localfile path="E:\tmp\한글폴더\테스트.c" />
+	</category>
+	<localfile path="E:\Work\CrimsonEditor\tests\data\astral.txt" />
+	<localfile path="E:\Work\CrimsonEditor\tests\data\emoji.c" />
+	<localfile path="E:\Work\CrimsonEditor\tests\data\korean.c" />
+</project>
+
+<workspace version="Crimson Editor 3.90">
+	<localfile path="E:\Work\CrimsonEditor\tests\data\korean.c" linenum="1" placement="0:1:-1:-1:-8:-31:156:156:937:490" />
+	<localfile path="E:\Work\CrimsonEditor\tests\data\astral.txt" linenum="7" placement="0:1:-1:-1:-8:-31:26:26:811:364" />
+	<localfile path="E:\Work\CrimsonEditor\tests\data\big.txt" linenum="1" placement="0:1:-1:-1:-1:-1:130:130:911:464" />
+	<localfile path="E:\Work\CrimsonEditor\tests\data\emoji.c" linenum="11" placement="0:1:-1:-1:-1:-1:156:156:937:490" />
+	<localfile path="E:\tmp\한글폴더\테스트.c" linenum="1" placement="0:1:-1:-1:-1:-1:26:26:807:360" />
+</workspace>
+

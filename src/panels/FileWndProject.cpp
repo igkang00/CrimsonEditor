@@ -95,6 +95,15 @@ BOOL CFileWindow::OpenProjectWorkspace(LPCTSTR lpszPathName)
 		CString szVersion; BOOL bLookup = mapAttr.Lookup(_T("version"), szVersion);
 		if( ! bLookup ) { AfxMessageBox(IDS_ERR_WRONG_PRJ_FILE); fin.close(); return FALSE; }
 
+		// Only files written in the current format version are read. The version attribute used
+		// to be parsed and ignored, so an old file loaded anyway — and, being written in CP949 by
+		// the pre-Unicode editor, its Korean paths silently broke against this UTF-8 reader. Refuse
+		// an unrecognised version with a clear message instead of loading a mangled project.
+		if( szVersion.Compare(STRING_PROJECTFILEVER) != 0 ) {
+			CString szMsg; szMsg.Format(IDS_ERR_PRJ_VERSION, (LPCTSTR)szVersion);
+			AfxMessageBox(szMsg); fin.close(); return FALSE;
+		}
+
 		HTREEITEM hItem = InsertProjectTreeItem(TVI_ROOT, GetFileName(lpszPathName), PROJECT_ITEM_PROJECT, 0, lpszPathName);
 		fin.width(kProjectTokenBufSize); fin >> szText; // get next token
 
@@ -116,6 +125,15 @@ BOOL CFileWindow::OpenProjectWorkspace(LPCTSTR lpszPathName)
 
 		CString szVersion; BOOL bLookup = mapAttr.Lookup(_T("version"), szVersion);
 		if( ! bLookup ) { AfxMessageBox(IDS_ERR_WRONG_PRJ_FILE); fin.close(); return FALSE; }
+
+		// Only files written in the current format version are read. The version attribute used
+		// to be parsed and ignored, so an old file loaded anyway — and, being written in CP949 by
+		// the pre-Unicode editor, its Korean paths silently broke against this UTF-8 reader. Refuse
+		// an unrecognised version with a clear message instead of loading a mangled project.
+		if( szVersion.Compare(STRING_PROJECTFILEVER) != 0 ) {
+			CString szMsg; szMsg.Format(IDS_ERR_PRJ_VERSION, (LPCTSTR)szVersion);
+			AfxMessageBox(szMsg); fin.close(); return FALSE;
+		}
 
 		CCedtApp * pApp = (CCedtApp *)AfxGetApp();
 		fin.width(kProjectTokenBufSize); fin >> szText; // get next token
@@ -178,6 +196,15 @@ BOOL CFileWindow::OpenRegularWorkspace(LPCTSTR lpszPathName)
 
 		CString szVersion; BOOL bLookup = mapAttr.Lookup(_T("version"), szVersion);
 		if( ! bLookup ) { AfxMessageBox(IDS_ERR_WRONG_PRJ_FILE); fin.close(); return FALSE; }
+
+		// Only files written in the current format version are read. The version attribute used
+		// to be parsed and ignored, so an old file loaded anyway — and, being written in CP949 by
+		// the pre-Unicode editor, its Korean paths silently broke against this UTF-8 reader. Refuse
+		// an unrecognised version with a clear message instead of loading a mangled project.
+		if( szVersion.Compare(STRING_PROJECTFILEVER) != 0 ) {
+			CString szMsg; szMsg.Format(IDS_ERR_PRJ_VERSION, (LPCTSTR)szVersion);
+			AfxMessageBox(szMsg); fin.close(); return FALSE;
+		}
 
 		CCedtApp * pApp = (CCedtApp *)AfxGetApp();
 		fin.width(kProjectTokenBufSize); fin >> szText; // get next token
@@ -1107,7 +1134,11 @@ BOOL CFileWindow::OpenProjectItem(LPPROJECTITEMINFO lpInfo)
 		CCedtApp * pApp = (CCedtApp *)AfxGetApp(); if( ! pApp ) return FALSE;
 		return pApp->PostOpenRemoteDocumentFile( lpInfo->nFtpAccount, lpInfo->szPathName, 0 );
 	} else if( lpInfo->nItemType == PROJECT_ITEM_LOCAL_FILE ) { // local file
-		if( ! VerifyFilePath( lpInfo->szPathName ) ) return FALSE;
+		if( ! VerifyFilePath( lpInfo->szPathName ) ) {
+			CString szMessage; szMessage.Format(IDS_ERR_FILE_NOT_FOUND, (LPCTSTR)lpInfo->szPathName);
+			AfxMessageBox(szMessage, MB_OK | MB_ICONSTOP);
+			return FALSE;
+		}
 		CCedtApp * pApp = (CCedtApp *)AfxGetApp(); if( ! pApp ) return FALSE;
 		return pApp->PostOpenDocumentFile( lpInfo->szPathName, 0 );
 	} else return FALSE;
@@ -1118,7 +1149,11 @@ BOOL CFileWindow::ExecuteProjectItem(LPPROJECTITEMINFO lpInfo)
 	if( lpInfo->nItemType != PROJECT_ITEM_LOCAL_FILE ) return FALSE;
 
 	CString szPath = lpInfo->szPathName;
-	if( ! VerifyFilePath( szPath ) ) return FALSE;
+	if( ! VerifyFilePath( szPath ) ) {
+		CString szMessage; szMessage.Format(IDS_ERR_FILE_NOT_FOUND, (LPCTSTR)szPath);
+		AfxMessageBox(szMessage, MB_OK | MB_ICONSTOP);
+		return FALSE;
+	}
 
 	CWnd * pWnd = AfxGetMainWnd(); if( ! pWnd ) return FALSE;
 	HINSTANCE hResult = ::ShellExecute(NULL, _T("open"), szPath, NULL, NULL, SW_SHOWNORMAL);
@@ -1130,7 +1165,11 @@ BOOL CFileWindow::ShowPropProjectItem(LPPROJECTITEMINFO lpInfo)
 	if( lpInfo->nItemType != PROJECT_ITEM_LOCAL_FILE ) return FALSE;
 
 	CString szPath = lpInfo->szPathName;
-	if( ! VerifyFilePath( szPath ) ) return FALSE;
+	if( ! VerifyFilePath( szPath ) ) {
+		CString szMessage; szMessage.Format(IDS_ERR_FILE_NOT_FOUND, (LPCTSTR)szPath);
+		AfxMessageBox(szMessage, MB_OK | MB_ICONSTOP);
+		return FALSE;
+	}
 
 	SHELLEXECUTEINFO sei; ZeroMemory( & sei, sizeof(sei) );
 	sei.cbSize = sizeof(sei);

@@ -430,7 +430,6 @@
 #define IDC_ENCODING_TYPE               1257
 #define IDC_TREE_DIRECTORY              1258
 #define IDC_BYTE_COUNT                  1258
-#define IDC_CHAR_COUNT                  1307
 #define IDC_MACRO_LOAD_MACROS           1258
 #define IDC_DIRECTORY_TREE              1259
 #define IDC_FWIN_DIRECTORY_TREE         1259
@@ -471,6 +470,7 @@
 #define IDC_INDENTATION_SIZE_BOX        1304
 #define IDC_SAVE_SETTINGS_BOX           1305
 #define IDC_DEF_DOCTYPE_BOX             1306
+#define IDC_CHAR_COUNT                  1307
 #define ID_TIMER_AUTO_SCROLL            32781
 #define ID_HELP_TOPICS                  32792
 #define ID_HELP_FEEDBACK                32793
@@ -979,14 +979,14 @@
 #define IDS_OUT_SEARCH_SKIP_BINARY      53044
 #define IDS_OUT_SEARCH_LINE_EXCEED      53045
 #define IDS_OUT_SEARCH_CANNOT_OPEN      53046
-#define IDS_OUT_SEARCH_CANCELLED        53090
-#define IDS_OUT_SEARCH_TRUNCATED        53091
 #define IDS_OUT_REPLACE_TITLE           53047
 #define IDS_OUT_REPLACE_NOT_FOUND       53048
 #define IDS_OUT_REPLACE_RESULT          53049
 #define IDS_OUT_COMMAND_TITLE           53050
 #define IDS_OUT_COMMAND_COMMAND         53051
 #define IDS_OUT_COMMAND_TERMINATED      53052
+#define IDS_OUT_SEARCH_CANCELLED        53090
+#define IDS_OUT_SEARCH_TRUNCATED        53091
 #define IDS_ERR_REGISTRY_INSTALL_DIR    54000
 #define IDS_ERR_CORRUPT_CONFIG_FILE     54001
 #define IDS_ERR_PREF_TOOLS_APPLY        54002
@@ -1029,6 +1029,7 @@
 #define IDS_ERR_COPY_PRJ_ITEM2          54364
 #define IDS_ERR_MOVE_PRJ_ITEM1          54365
 #define IDS_ERR_MOVE_PRJ_ITEM2          54366
+#define IDS_ERR_PRJ_VERSION             54367
 #define IDS_ERR_NO_PRJ_ITEM_SELECTED    54368
 #define IDS_ERR_DUPLICATE_PRJ_ITEM      54369
 
