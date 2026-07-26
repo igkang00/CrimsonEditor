@@ -413,11 +413,15 @@ from findings 14–19, which the shipped 3.93 did not carry).
       set but matches no named language. `.txt` mapped (via `link/extension.txt`) to
       `DEFAULT.SPC`/`DEFAULT.KEY` — empty keywords, so no colour, yet Auto Detect showed checked,
       which read as "auto-detect but nothing happened". **Decision:** removed `link/extension.txt`
-      so `.txt` now falls through to an empty spec and reads as **Plain Text**. Trade-off
-      accepted: word delimiters have a built-in default (`CLangSpec::ResetContents`) so word
-      selection is unaffected, but bracket-pair matching (`()[]{}`) is off for `.txt` without a
-      spec. Not a bug — a deliberate default-mapping change. (The `link/` files ship in the
-      installer; the installed copy must be removed separately to see it on an installed build.)
+      so `.txt` now falls through to an empty spec and reads as **Plain Text**. Word delimiters
+      have a built-in default (`CLangSpec::ResetContents`) so word selection is unaffected, and
+      `ResetContents` now also seeds default bracket pairs `()[]{}`, so pair matching keeps
+      working on a spec-less `.txt`. Not a bug — a deliberate default-mapping change. (The `link/`
+      files ship in the installer; the installed copy must be removed separately to see it on an
+      installed build.) Audit while here: only `default.spc` actually set `$PAIRS4=<>`, and the
+      loader has only ever supported three pair slots, so `<>` matching never worked and no
+      language depends on it — the dead `$PAIRS4` lines were removed from `default.spc`, `d.spc`
+      and the `langspec.key` directive list.
 - [ ] Properties · Reload Document · Lock Document
 - [ ] Encoding Type (5 items) → A4
 - [ ] File Format: DOS / Unix / Mac → A4

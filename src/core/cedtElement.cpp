@@ -254,7 +254,14 @@ void CLangSpec::ResetContents()
 	m_szRange2Beg = m_szRange2End = _T("");
 
 	m_chIndentationOn = m_chIndentationOff = 0x00;
-	m_szPairs1 = m_szPairs2 = m_szPairs3 = _T("");
+
+	// Default bracket pairs, so pair matching (Ctrl+[ / Ctrl+]) works on a file with no syntax
+	// spec — e.g. a plain .txt. A spec's $PAIRS1..3 overrides these. Only three slots exist
+	// (m_szPairs1..3, and PAIRS[3] in the matcher), so <> is intentionally left out: it never
+	// had a slot, and matching it would misfire on the < / > comparison operators.
+	m_szPairs1 = _T("()");
+	m_szPairs2 = _T("[]");
+	m_szPairs3 = _T("{}");
 }
 
 BOOL CLangSpec::FileLoad(LPCTSTR lpszPathName) 
