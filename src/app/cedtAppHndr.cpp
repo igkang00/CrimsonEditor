@@ -86,9 +86,20 @@ void CCedtApp::OnViewLineSpacing(INT nSpacing)
 
 	CCedtView::m_nLineSpacing = nSpacing;
 
+	// Line spacing scales the line height (GetLineHeight = tmHeight * m_nLineSpacing / 100), and
+	// each view's active-line highlight buffer is sized from that line height in
+	// OnScreenFontChange. ApplyCurrentScreenFont is what drives OnScreenFontChange across every
+	// view, so applying line spacing has to go through it too — the Preferences dialog and the
+	// screen-font commands already do. Without it the buffer kept its old height, so the
+	// current-line highlight stayed clipped once spacing dropped below 100% and did not recover
+	// when it was raised back. The font is unchanged; this only rebuilds the line-height-
+	// dependent buffers, then reformats.
+	CCedtView::ApplyCurrentScreenFont();
+	FormatScreenTextAllViews();
+
 	RestoreCaretAndAnchorPosAllViews();
 	UpdateAllViews();
-	
+
 	SaveUserConfiguration(m_szAppDataDirectory + "\\" STRING_CONFFILENAME);
 }
 
