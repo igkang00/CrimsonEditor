@@ -49,7 +49,7 @@ msbuild cedt.sln /p:Configuration=Debug-US   /p:Platform=x64
 .\scripts\build_installer.ps1
 ```
 
-Build artifacts land in `build\x64\<Configuration>\` (e.g. `build\x64\Release-KR\cedt_kr.exe`); the installer lands in `dist\cedt-393-setup.exe`. Both `build\` and `dist\` are gitignored.
+Build artifacts land in `build\x64\<Configuration>\` (e.g. `build\x64\Release-KR\cedt_kr.exe`); the installer lands in `dist\cedt-394-setup.exe`. Both `build\` and `dist\` are gitignored.
 
 ### Prerequisites
 
@@ -199,6 +199,6 @@ scaling** because the legacy UI predates high-DPI:
 
 ---
 
-- **Version**: 3.93
+- **Version**: 3.94
 - **Copyright**: © 1999–2026 Ingyu Kang
 - **License**: see [LICENSE](LICENSE)
