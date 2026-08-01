@@ -158,16 +158,15 @@ CString GetFileDirectory(LPCTSTR lpszPath)
 
 CString GetFileName(LPCTSTR lpszPath)
 {
-	CString szTemp = lpszPath; 
-	INT nLen = szTemp.GetLength(); if( ! nLen ) return _T("");
-	if( szTemp[nLen-1] == '\\' ) szTemp.SetAt(nLen-1, '\0');
-	if( szTemp[nLen-1] == '/'  ) szTemp.SetAt(nLen-1, '\0');
+	CString szTemp = lpszPath;
+	szTemp.TrimRight( _T("\\/") ); // drop trailing separators; SetAt('\0') left an embedded null instead of shortening
+	if( szTemp.IsEmpty() ) return _T("");
 
 	INT nPos = szTemp.ReverseFind( '\\' );
 	if( nPos <  0 ) nPos = szTemp.ReverseFind( '/' );
 
 	if( nPos >= 0 ) return szTemp.Mid( nPos + 1 );
-	return lpszPath;
+	return szTemp;
 }
 
 CString GetFileTitle(LPCTSTR lpszPath)

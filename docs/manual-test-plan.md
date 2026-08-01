@@ -433,13 +433,14 @@ from findings 14–19, which the shipped 3.93 did not carry).
 
 ### Tools
 
-- [ ] Preferences — open, change something, OK. This writes the whole config (x64 smoke list).
-      Then restart and confirm it stuck.
-- [ ] Evaluate Line `Ctrl+Enter` `[trunc]` `[cjk]`
-- [ ] MS-DOS Shell `F10` · View in Browser `Alt+B` `[trunc]` (paths)
-- [ ] Load User Tools · Conf. User Tools — configure **one** slot, run it, capture output
-      `[trunc]`, then confirm a second slot runs
-- [ ] Menu labels render correctly — `- Empty -` once printed *"`- Empty -\t<garbage wchars>`"*
+- [x] Preferences — open, change something, OK; restart and confirm it stuck. Works. Spotted the
+      dialog's right margin was clipped (finding 30, fixed).
+- [x] Evaluate Line `Ctrl+Enter` `[trunc]` `[cjk]` — covered by findings 10–11 (§A7).
+- [x] MS-DOS Shell `F10` · View in Browser `Alt+B` `[trunc]` (paths) — work.
+- [x] Load User Tools · Conf. User Tools — configure **one** slot, run it, capture output
+      `[trunc]`, then confirm a second slot runs. Works (capture output was finding 12).
+- [x] Menu labels render correctly — verified by inspection (all CString-based, no fixed buffer);
+      the old `- Empty -\t<garbage wchars>` hazard does not reproduce. Renders cleanly.
 
 ### Macros
 
@@ -524,3 +525,4 @@ where not to look again.
 | — | §B Document · **Convert Spaces↔Tabs** marks the document modified with no net change | **Investigated — pre-existing, deferred.** On `korean.c`, Convert Spaces to Tabs set the modified (red-bullet) flag but nothing looked different. Traced live: the file's leading tabs round-trip — `FastConvertSpacesToTabs` first expands every tab to spaces (`FastConvertTabsToSpaces`) then re-collapses, so a leading tab becomes 4 spaces and back to a tab. The result is **byte-identical** (verified 491→491 bytes), but each edit primitive (`FastInsertChar`/`FastDeleteString`) unconditionally calls `SetModifiedFlag(TRUE)` and records an undo step, so the doc is flagged dirty and the undo buffer gets no-op edits. Not `[cjk]`-specific (Korean is never touched) and not a Unicode regression — it happens on any tab-indented file. A proper fix (compute the target per line, edit only if different) is ~30 lines across the convert functions plus undo testing; out of scope here. Recorded so it is not re-investigated. | 3.94 Debug-KR | pre-existing — out of scope |
 | 28 | §B Project · open a `.prj` / `.wks` written by an **older format version** | **Not a bug — a hardening change.** The `version` attribute in a project/workspace file was parsed and then **ignored**, so a file from any earlier version loaded regardless. Because pre-Unicode editors wrote these files in CP949 while this build reads them as UTF-8, an old file's Korean paths broke silently against the reader — the same class of failure as finding 5. | 3.94 Release-KR | **fixed (compatibility check)** — all three load sites (`<project>`, `<workspace>`, and the workspace-item root) now compare the file's `version` against `STRING_PROJECTFILEVER` (`"Crimson Editor 3.90"`); a mismatched or missing version is refused with a clear message — new `IDS_ERR_PRJ_VERSION` "This project file's version (%s) is not compatible…" ([FileWndProject.cpp](../src/panels/FileWndProject.cpp)). Save writes the same `STRING_PROJECTFILEVER`, so files created by this build round-trip; only genuinely older files are rejected. Verified with a hand-edited old-version `.prj`. For 3.94. |
 | 29 | §B Project · open / execute / properties on a project item whose file was **deleted from disk** | **BUG (silent no-op).** A file still listed in the project but removed in Explorer did nothing when opened — no window, no error — because `OpenProjectItem` returns FALSE when `VerifyFilePath` fails and nobody reported it. The right-click **Execute** and **Properties** actions failed the same silent way. Same shape as finding 19 (directory panel). | 3.94 Debug-KR **and** Release-KR | **fixed (reporting only)** — all three handlers (`OpenProjectItem`, `ExecuteProjectItem`, `ShowPropProjectItem`) now show `IDS_ERR_FILE_NOT_FOUND` with the path and a STOP icon on a missing file ([FileWndProject.cpp](../src/panels/FileWndProject.cpp)), reusing the existing string so neither `.rc` was touched. `VerifyFilePath` is kept as the existence check (it rejects directories, which the directory helper's `GetFileAttributes` would accept). For 3.94. |
+| 30 | §B Tools · **Preferences** dialog — right margin clipped | **BUG (layout).** The dialog's content sits flush against the right edge with no margin, while the categories tree on the left has an 8px margin and the buttons have room below. `SizeAllPrefPages` lays out every page to `x=538` in client coordinates but sized the dialog with `MoveWindow(…, 546, 440)` — 546 is a **window** width, so the frame ate ~8px and the client came out ~538 wide, leaving zero margin on the right. Pre-existing; more visible now that the frame/DPI metrics differ from the original. | 3.94 Release-KR | **fixed** — size the window from the intended **client** width via `CalcWindowRect` on a `546`-wide client rect, so the client is exactly 546 and the right margin matches the left 8px regardless of theme/DPI border ([prefdialog.cpp](../src/dialogs/preferences/prefdialog.cpp)). Height left at 440 (vertical spacing was already fine). For 3.94. |

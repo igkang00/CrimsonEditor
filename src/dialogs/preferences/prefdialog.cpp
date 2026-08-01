@@ -638,8 +638,13 @@ void CPreferenceDialog::InitAllPrefPages()
 
 void CPreferenceDialog::SizeAllPrefPages()
 {
-	RECT rect; GetWindowRect( & rect ); 
-	MoveWindow( rect.left, rect.top, 546, 440 );
+	RECT rect; GetWindowRect( & rect );
+	// The layout below runs to x=538 in client coordinates, so the client area has to be 546 wide
+	// to leave the same 8px margin on the right as the categories tree leaves on the left. MoveWindow
+	// sizes the *window*, and 546 as a window width left the frame eating the whole right margin.
+	// Grow the 546-wide client by this dialog's actual (theme/DPI-dependent) border via CalcWindowRect.
+	CRect rcClient( 0, 0, 546, 440 ); CalcWindowRect( & rcClient );
+	MoveWindow( rect.left, rect.top, rcClient.Width(), 440 );
 
 	// categories & buttons
 	INT nPosY;
