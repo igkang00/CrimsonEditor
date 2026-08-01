@@ -23,6 +23,13 @@ static UCHAR _uchar_temp;
 #define _READ_WIDE_STR(fin, buf, nChars) \
 	do { if( (nChars) > 0 ) (fin).read((char *)(buf), (nChars) * (INT)sizeof(TCHAR)); } while(0)
 
+// A char count read from a possibly-corrupt .command / .macro file must be bounded before it
+// drives _READ_WIDE_STR into the TCHAR[4096] stack buffer and then indexes buf[nLength] for the
+// null terminator. Without this, a garbage length overruns the stack (the load-path hazard of
+// findings 14-16). nLength must leave room for the terminator, so the ceiling is 4095.
+#define _WIDE_STR_BUFCHARS 4096
+#define _CHECK_WIDE_LEN(nChars) do { if( (nChars) < 0 || (nChars) > _WIDE_STR_BUFCHARS - 1 ) return FALSE; } while(0)
+
 #define _INITIAL_TYPES(types, atype)	{ types[0] = types[1] = types[2] = atype; types[3] = 0x00; }
 #define _COMPOSE_TYPES(types)			( MAKELONG( MAKEWORD(types[0], types[1]), MAKEWORD(types[2], types[3]) ) )
 #define _EXTRACT_TYPES(types, dword)	{ \
@@ -1329,18 +1336,22 @@ BOOL CUserCommand::StreamLoad(ifstream & fin)
 	fin.read((char *)(& m_wModifiers), sizeof(WORD));
 
 	fin.read((char *)(& nLength), sizeof(nLength));
+	_CHECK_WIDE_LEN(nLength);
 	_READ_WIDE_STR(fin, szBuffer, nLength);
 	szBuffer[nLength] = _T('\0'); m_szName = szBuffer;
 
 	fin.read((char *)(& nLength), sizeof(nLength));
+	_CHECK_WIDE_LEN(nLength);
 	_READ_WIDE_STR(fin, szBuffer, nLength);
 	szBuffer[nLength] = _T('\0'); m_szCommand = szBuffer;
 
 	fin.read((char *)(& nLength), sizeof(nLength));
+	_CHECK_WIDE_LEN(nLength);
 	_READ_WIDE_STR(fin, szBuffer, nLength);
 	szBuffer[nLength] = _T('\0'); m_szArgument = szBuffer;
 
 	fin.read((char *)(& nLength), sizeof(nLength));
+	_CHECK_WIDE_LEN(nLength);
 	_READ_WIDE_STR(fin, szBuffer, nLength);
 	szBuffer[nLength] = _T('\0'); m_szDirectory = szBuffer;
 
@@ -1452,6 +1463,7 @@ BOOL CMacroBuffer::StreamLoad(ifstream & fin)
 	fin.read((char *)(& m_wModifiers), sizeof(WORD));
 
 	fin.read((char *)(& nLength), sizeof(nLength));
+	_CHECK_WIDE_LEN(nLength);
 	_READ_WIDE_STR(fin, szBuffer, nLength);
 	szBuffer[nLength] = _T('\0'); m_szName = szBuffer;
 
@@ -1480,6 +1492,7 @@ BOOL CMacroBuffer::StreamLoad(ifstream & fin)
 	m_lstString.RemoveAll();
 	while( nCount-- ) {
 		fin.read((char *)(& nLength), sizeof(nLength));
+		_CHECK_WIDE_LEN(nLength);
 		_READ_WIDE_STR(fin, szBuffer, nLength);
 		szBuffer[nLength] = _T('\0');
 		m_lstString.AddTail(szBuffer);

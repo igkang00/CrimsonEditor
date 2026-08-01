@@ -164,7 +164,13 @@ void CPreferenceDialog::OnMacroLoadMacros()
 	if( dlg.DoModal() != IDOK ) return;
 
 	SetCurrentDirectory( szCurrentDirectory );
-	FileLoadMacroBuffers( dlg.GetPathName() );
+
+	CString szPathName = dlg.GetPathName();
+	if( ! FileLoadMacroBuffers( szPathName ) ) {
+		CString szMsg; szMsg.Format(IDS_ERR_LOAD_USER_FILE, (LPCTSTR)szPathName);
+		AfxMessageBox(szMsg, MB_OK | MB_ICONSTOP);
+		return;
+	}
 
 	for( INT i = 1; i < 11; i++ ) DispMacroText(i-1);
 }

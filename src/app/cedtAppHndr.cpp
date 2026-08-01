@@ -334,14 +334,40 @@ void CCedtApp::OnUpdateCommandUserFile0(CCmdUI* pCmdUI)
 	pCmdUI->Enable( CCedtView::m_szUserCommandFilePath[0].GetLength() );
 }
 
-void CCedtApp::OnCommandUserFile0() { LoadUserCommands(CCedtView::m_szUserCommandFilePath[0]); SaveUserCommands(m_szAppDataDirectory + "\\cedt.tools"); }
-void CCedtApp::OnCommandUserFile1() { LoadUserCommands(CCedtView::m_szUserCommandFilePath[1]); SaveUserCommands(m_szAppDataDirectory + "\\cedt.tools"); }
-void CCedtApp::OnCommandUserFile2() { LoadUserCommands(CCedtView::m_szUserCommandFilePath[2]); SaveUserCommands(m_szAppDataDirectory + "\\cedt.tools"); }
-void CCedtApp::OnCommandUserFile3() { LoadUserCommands(CCedtView::m_szUserCommandFilePath[3]); SaveUserCommands(m_szAppDataDirectory + "\\cedt.tools"); }
-void CCedtApp::OnCommandUserFile4() { LoadUserCommands(CCedtView::m_szUserCommandFilePath[4]); SaveUserCommands(m_szAppDataDirectory + "\\cedt.tools"); }
-void CCedtApp::OnCommandUserFile5() { LoadUserCommands(CCedtView::m_szUserCommandFilePath[5]); SaveUserCommands(m_szAppDataDirectory + "\\cedt.tools"); }
-void CCedtApp::OnCommandUserFile6() { LoadUserCommands(CCedtView::m_szUserCommandFilePath[6]); SaveUserCommands(m_szAppDataDirectory + "\\cedt.tools"); }
-void CCedtApp::OnCommandUserFile7() { LoadUserCommands(CCedtView::m_szUserCommandFilePath[7]); SaveUserCommands(m_szAppDataDirectory + "\\cedt.tools"); }
+// Load a user tool / macro file the user picked from the menu, and report if it could not be
+// loaded (missing, wrong version, or corrupt) instead of failing silently. Only save the merged
+// set back to the AppData copy when the load actually succeeded. The startup auto-load path does
+// NOT go through here, so a missing config on first run stays silent.
+void CCedtApp::LoadUserToolFile(INT nIndex)
+{
+	CString szPath = CCedtView::m_szUserCommandFilePath[nIndex];
+	if( ! LoadUserCommands(szPath) ) {
+		CString szMsg; szMsg.Format(IDS_ERR_LOAD_USER_FILE, (LPCTSTR)szPath);
+		AfxMessageBox(szMsg, MB_OK | MB_ICONSTOP);
+		return;
+	}
+	SaveUserCommands(m_szAppDataDirectory + _T("\\cedt.tools"));
+}
+
+void CCedtApp::LoadUserMacroFile(INT nIndex)
+{
+	CString szPath = CCedtView::m_szMacroBufferFilePath[nIndex];
+	if( ! LoadMacroBuffers(szPath) ) {
+		CString szMsg; szMsg.Format(IDS_ERR_LOAD_USER_FILE, (LPCTSTR)szPath);
+		AfxMessageBox(szMsg, MB_OK | MB_ICONSTOP);
+		return;
+	}
+	SaveMacroBuffers(m_szAppDataDirectory + _T("\\cedt.macro"));
+}
+
+void CCedtApp::OnCommandUserFile0() { LoadUserToolFile(0); }
+void CCedtApp::OnCommandUserFile1() { LoadUserToolFile(1); }
+void CCedtApp::OnCommandUserFile2() { LoadUserToolFile(2); }
+void CCedtApp::OnCommandUserFile3() { LoadUserToolFile(3); }
+void CCedtApp::OnCommandUserFile4() { LoadUserToolFile(4); }
+void CCedtApp::OnCommandUserFile5() { LoadUserToolFile(5); }
+void CCedtApp::OnCommandUserFile6() { LoadUserToolFile(6); }
+void CCedtApp::OnCommandUserFile7() { LoadUserToolFile(7); }
 
 void CCedtApp::OnCommandConfigure() 
 {
@@ -357,14 +383,14 @@ void CCedtApp::OnUpdateMacroUserFile0(CCmdUI* pCmdUI)
 	pCmdUI->Enable( CCedtView::m_szMacroBufferFilePath[0].GetLength() );
 }
 
-void CCedtApp::OnMacroUserFile0() { LoadMacroBuffers(CCedtView::m_szMacroBufferFilePath[0]); SaveMacroBuffers(m_szAppDataDirectory + "\\cedt.macro"); }
-void CCedtApp::OnMacroUserFile1() { LoadMacroBuffers(CCedtView::m_szMacroBufferFilePath[1]); SaveMacroBuffers(m_szAppDataDirectory + "\\cedt.macro"); }
-void CCedtApp::OnMacroUserFile2() { LoadMacroBuffers(CCedtView::m_szMacroBufferFilePath[2]); SaveMacroBuffers(m_szAppDataDirectory + "\\cedt.macro"); }
-void CCedtApp::OnMacroUserFile3() { LoadMacroBuffers(CCedtView::m_szMacroBufferFilePath[3]); SaveMacroBuffers(m_szAppDataDirectory + "\\cedt.macro"); }
-void CCedtApp::OnMacroUserFile4() { LoadMacroBuffers(CCedtView::m_szMacroBufferFilePath[4]); SaveMacroBuffers(m_szAppDataDirectory + "\\cedt.macro"); }
-void CCedtApp::OnMacroUserFile5() { LoadMacroBuffers(CCedtView::m_szMacroBufferFilePath[5]); SaveMacroBuffers(m_szAppDataDirectory + "\\cedt.macro"); }
-void CCedtApp::OnMacroUserFile6() { LoadMacroBuffers(CCedtView::m_szMacroBufferFilePath[6]); SaveMacroBuffers(m_szAppDataDirectory + "\\cedt.macro"); }
-void CCedtApp::OnMacroUserFile7() { LoadMacroBuffers(CCedtView::m_szMacroBufferFilePath[7]); SaveMacroBuffers(m_szAppDataDirectory + "\\cedt.macro"); }
+void CCedtApp::OnMacroUserFile0() { LoadUserMacroFile(0); }
+void CCedtApp::OnMacroUserFile1() { LoadUserMacroFile(1); }
+void CCedtApp::OnMacroUserFile2() { LoadUserMacroFile(2); }
+void CCedtApp::OnMacroUserFile3() { LoadUserMacroFile(3); }
+void CCedtApp::OnMacroUserFile4() { LoadUserMacroFile(4); }
+void CCedtApp::OnMacroUserFile5() { LoadUserMacroFile(5); }
+void CCedtApp::OnMacroUserFile6() { LoadUserMacroFile(6); }
+void CCedtApp::OnMacroUserFile7() { LoadUserMacroFile(7); }
 
 void CCedtApp::OnMacroConfigure() 
 {

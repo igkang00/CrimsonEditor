@@ -94,8 +94,10 @@ BOOL CPreferenceDialog::FileLoadUserCommands(LPCTSTR lpszPathName)
 	ifstream fin(lpszPathName, ios::in | ios::binary);
 	if( ! fin.is_open() ) return FALSE;
 
-	TCHAR szBuffer[2048]; INT nLength = (INT)_tcslen(STRING_USERTOOLSVER); fin.read((char *)szBuffer, nLength); szBuffer[nLength] = '\0';
-	if( _tcscmp(szBuffer, STRING_USERTOOLSVER) ) { fin.close(); return FALSE; }
+	CStringA sVer(STRING_USERTOOLSVER);
+	char szBuffer[2048]; INT nLength = sVer.GetLength();
+	fin.read(szBuffer, nLength); szBuffer[nLength] = '\0';
+	if( strcmp(szBuffer, (LPCSTR)sVer) ) { fin.close(); return FALSE; }
 
 	for(INT i = 0; i < 11; i++) {
 		if( ! m_clsUserCommand[i].StreamLoad(fin) ) { fin.close(); return FALSE; }
@@ -110,8 +112,9 @@ BOOL CPreferenceDialog::FileSaveUserCommands(LPCTSTR lpszPathName)
 	ofstream fout(lpszPathName, ios::out | ios::binary);
 	if( ! fout.is_open() ) return FALSE;
 
-	INT nLength = (INT)_tcslen(STRING_USERTOOLSVER);
-	fout.write((const char *)STRING_USERTOOLSVER, nLength);
+	CStringA sVer(STRING_USERTOOLSVER);
+	INT nLength = sVer.GetLength();
+	fout.write((LPCSTR)sVer, nLength);
 
 	for( INT i = 0; i < 11; i++ ) {
 		if( ! m_clsUserCommand[i].StreamSave(fout) ) { fout.close(); return FALSE; }
@@ -182,7 +185,13 @@ void CPreferenceDialog::OnCommandLoadTools()
 	if( dlg.DoModal() != IDOK ) return;
 
 	SetCurrentDirectory( szCurrentDirectory );
-	FileLoadUserCommands( dlg.GetPathName() );
+
+	CString szPathName = dlg.GetPathName();
+	if( ! FileLoadUserCommands( szPathName ) ) {
+		CString szMsg; szMsg.Format(IDS_ERR_LOAD_USER_FILE, (LPCTSTR)szPathName);
+		AfxMessageBox(szMsg, MB_OK | MB_ICONSTOP);
+		return;
+	}
 
 	for( INT i = 1; i < 11; i++ ) DispCommandText(i-1);
 }

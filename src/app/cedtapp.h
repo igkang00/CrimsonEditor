@@ -203,6 +203,9 @@ public: // *** cedtAppConf.cpp ***
 	static BOOL SaveMacroBuffers(LPCTSTR lpszPathName);
 	static BOOL LoadMacroBuffers(LPCTSTR lpszPathName);
 
+	void LoadUserToolFile(INT nIndex);   // load Load-User-Tools slot nIndex, reporting on failure
+	void LoadUserMacroFile(INT nIndex);  // load Load-User-Macros slot nIndex, reporting on failure
+
 	static BOOL SetPredefinedColorScheme(INT nScheme);
 	static BOOL LoadColorScheme(LPCTSTR lpszPathName);
 	static BOOL SaveColorScheme(LPCTSTR lpszPathName);
