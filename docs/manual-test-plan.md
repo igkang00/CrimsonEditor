@@ -454,9 +454,10 @@ from findings 14–19, which the shipped 3.93 did not carry).
 
 ### Window / Help
 
-- [ ] Window: new window, split, cascade, tile, arrange, close — `[big]` `[wrap]` (a second view
-      of the same document reformats independently)
-- [ ] Help: contents/index (the x64 work swapped in the SDK `HtmlHelp.lib`), About
+- [x] Window: new window, split, cascade, tile, arrange, close — `[big]` `[wrap]` (a second view
+      of the same document reformats independently). All work; second view reformats independently.
+- [x] Help: contents/index, About. Help Topics opens the online docs URL (locale-aware); About
+      shows 3.94. The `HtmlHelp.lib` swap only affects user tools opening a `.chm` (covered in Tools).
 
 ---
 
