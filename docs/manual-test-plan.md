@@ -477,8 +477,9 @@ from findings 14–19, which the shipped 3.93 did not carry).
 
 ## D. English edition
 
-- [ ] Run `cedt_us.exe` and repeat §A4 and one pass of §B. Both `.rc` files carry the same
-      resources; the KR one is CP949 and is the one that gets hand-edited.
+- [x] Run `cedt_us.exe` and repeat §A4 and one pass of §B. Smoke-tested — works. US/KR resource
+      parity verified in code too: identical set of 206 `IDS_` string symbols in both `.rc` files
+      (none missing on either side), and this session's new strings present with matching `%s` in both.
 
 ---
 
