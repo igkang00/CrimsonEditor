@@ -229,7 +229,7 @@ void CCedtApp::OnViewColorScheme(INT nScheme)
 {
 	SetPredefinedColorScheme(nScheme);
 	UpdateAllViews();
-	SaveColorScheme(m_szAppDataDirectory + "\\cedt.color");
+	SaveColorScheme(m_szAppDataDirectory + "\\cedt.colors");
 }
 
 void CCedtApp::OnViewColorSchemeSaved() 
@@ -252,7 +252,7 @@ void CCedtApp::OnViewColorSchemeSaved()
 
 	LoadColorScheme( dlg.GetPathName() );
 	UpdateAllViews();
-	SaveColorScheme(m_szAppDataDirectory + "\\cedt.color");
+	SaveColorScheme(m_szAppDataDirectory + "\\cedt.colors");
 }
 
 void CCedtApp::OnViewEmboldenKeywords() 
@@ -357,7 +357,7 @@ void CCedtApp::LoadUserMacroFile(INT nIndex)
 		AfxMessageBox(szMsg, MB_OK | MB_ICONSTOP);
 		return;
 	}
-	SaveMacroBuffers(m_szAppDataDirectory + _T("\\cedt.macro"));
+	SaveMacroBuffers(m_szAppDataDirectory + _T("\\cedt.macros"));
 }
 
 void CCedtApp::OnCommandUserFile0() { LoadUserToolFile(0); }

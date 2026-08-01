@@ -707,9 +707,9 @@ BOOL CPreferenceDialog::SaveAllPrefSettings()
 	pApp->ApplyPreferencesToAllViews();
 
 	CCedtApp::SaveUserConfiguration(CCedtApp::m_szAppDataDirectory + "\\" STRING_CONFFILENAME);
-	CCedtApp::SaveColorScheme    (CCedtApp::m_szAppDataDirectory + "\\cedt.color");
+	CCedtApp::SaveColorScheme    (CCedtApp::m_szAppDataDirectory + "\\cedt.colors");
 	CCedtApp::SaveUserCommands   (CCedtApp::m_szAppDataDirectory + "\\cedt.tools");
-	CCedtApp::SaveMacroBuffers   (CCedtApp::m_szAppDataDirectory + "\\cedt.macro");
+	CCedtApp::SaveMacroBuffers   (CCedtApp::m_szAppDataDirectory + "\\cedt.macros");
 
 	return TRUE;
 }

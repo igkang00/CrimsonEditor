@@ -2997,9 +2997,9 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_FILTER_PROJECT      "Project Files (*.prj)|*.prj||"
-    IDS_FILTER_COLOR_SCHEME "Color Scheme Files (*.color)|*.color||"
+    IDS_FILTER_COLOR_SCHEME "Color Scheme Files (*.colors)|*.colors||"
     IDS_FILTER_USER_TOOL    "User Tool Files (*.tools)|*.tools||"
-    IDS_FILTER_MACRO_BUFFER "User Macro Files (*.macro)|*.macro||"
+    IDS_FILTER_MACRO_BUFFER "User Macro Files (*.macros)|*.macros||"
     IDS_FILTER_COMMAND_BROWSE 
                             "Executable Files (*.exe;*.com;*.bat;*.cmd)|*.exe;*.com;*.bat;*.cmd|Help Files (*.hlp;*.chm)|*.hlp;*.chm|All Files (*.*)|*.*||"
     IDS_FILTER_LANGSPEC_BROWSE "Lang Spec Files (*.spc)|*.spc||"

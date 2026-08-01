@@ -2978,9 +2978,9 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_FILTER_PROJECT      "프로젝트 파일 (*.prj)|*.prj||"
-    IDS_FILTER_COLOR_SCHEME "색상 구성 파일 (*.color)|*.color||"
+    IDS_FILTER_COLOR_SCHEME "색상 구성 파일 (*.colors)|*.colors||"
     IDS_FILTER_USER_TOOL    "사용자 도구 파일 (*.tools)|*.tools||"
-    IDS_FILTER_MACRO_BUFFER "매크로 파일 (*.macro)|*.macro||"
+    IDS_FILTER_MACRO_BUFFER "매크로 파일 (*.macros)|*.macros||"
     IDS_FILTER_COMMAND_BROWSE 
                             "실행 파일 (*.exe;*.com;*.bat;*.cmd)|*.exe;*.com;*.bat;*.cmd|도움말 파일 (*.hlp;*.chm)|*.hlp;*.chm|모든 파일 (*.*)|*.*||"
     IDS_FILTER_LANGSPEC_BROWSE "언어 명세 파일 (*.spc)|*.spc||"

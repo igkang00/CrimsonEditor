@@ -610,7 +610,7 @@ void CPreferenceDialog::OnSaveColorScheme()
 {
 	DWORD dwFlags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
 	CString szFilter; szFilter.LoadString(IDS_FILTER_COLOR_SCHEME);
-	CFileDialog dlg(FALSE, _T(".color"), NULL, dwFlags, szFilter);
+	CFileDialog dlg(FALSE, _T(".colors"), NULL, dwFlags, szFilter);
 
 	CString szTitle; szTitle.LoadString(IDS_DLG_SAVE_COLOR_SCHEME);
 	CString szInitialDirectory = CCedtApp::m_szInstallDirectory + _T("\\schemes");

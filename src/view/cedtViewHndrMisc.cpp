@@ -293,7 +293,7 @@ void CCedtView::OnMacroEndRecording()
 {
 	EndMacroRecording();
 
-	CCedtApp::SaveMacroBuffers(CCedtApp::m_szAppDataDirectory + "\\cedt.macro");
+	CCedtApp::SaveMacroBuffers(CCedtApp::m_szAppDataDirectory + "\\cedt.macros");
 }
 
 void CCedtView::OnUpdateMacroBeginRecording(CCmdUI* pCmdUI) { pCmdUI->Enable( ! IsMacroRecording() ); }

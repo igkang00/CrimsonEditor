@@ -179,7 +179,7 @@ void CPreferenceDialog::OnMacroSaveMacros()
 {
 	DWORD dwFlags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
 	CString szFilter; szFilter.LoadString(IDS_FILTER_MACRO_BUFFER);
-	CFileDialog dlg(FALSE, _T(".macro"), NULL, dwFlags, szFilter);
+	CFileDialog dlg(FALSE, _T(".macros"), NULL, dwFlags, szFilter);
 
 	CString szTitle; szTitle.LoadString(IDS_DLG_SAVE_MACRO_BUFFERS);
 	CString szInitialDirectory = CCedtApp::m_szInstallDirectory + _T("\\tools");

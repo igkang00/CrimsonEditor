@@ -355,10 +355,10 @@ BOOL CCedtApp::InitInstance()
 	}
 
 	// load color settings
-	if( ! LoadColorScheme(m_szAppDataDirectory + _T("\\cedt.color")) ) {
-		if( ! LoadColorScheme(m_szInstallDirectory + _T("\\cedt.color")) ) 
+	if( ! LoadColorScheme(m_szAppDataDirectory + _T("\\cedt.colors")) ) {
+		if( ! LoadColorScheme(m_szInstallDirectory + _T("\\cedt.colors")) ) 
 			SetPredefinedColorScheme(COLOR_SCHEME_DEFAULT);
-		SaveColorScheme(m_szAppDataDirectory + _T("\\cedt.color"));
+		SaveColorScheme(m_szAppDataDirectory + _T("\\cedt.colors"));
 	}
 
 	// load FTP account information
@@ -366,7 +366,7 @@ BOOL CCedtApp::InitInstance()
 
 	// load command & macro
 	LoadUserCommands(m_szAppDataDirectory + _T("\\cedt.tools"));
-	LoadMacroBuffers(m_szAppDataDirectory + _T("\\cedt.macro"));
+	LoadMacroBuffers(m_szAppDataDirectory + _T("\\cedt.macros"));
 
 //	SetRegistryKey(STRING_COMPANYNAME); // Change the registry key under which our settings are stored.
 	LoadStdProfileSettings(8); // Load standard INI file options (including MRU)
