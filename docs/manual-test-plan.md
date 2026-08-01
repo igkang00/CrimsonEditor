@@ -463,14 +463,17 @@ from findings 14–19, which the shipped 3.93 did not carry).
 
 ## C. Cross-cutting
 
-- [ ] **Two documents open with different syntax types.** `GetCharType` reads the table of
-      *"whichever document `AnalyzeText` last ran on"* — colour one `.c` and one `.py` and switch
-      between them.
-- [ ] **Two views of one document** (Window > New Window), one wrapped and one not.
-- [ ] A file that is **modified on disk** while open → reload prompt.
+- [x] **Two documents open with different syntax types.** Colour one `.c` and one `.py` and switch.
+      Each keeps its own colouring. Verified by code too — **not a bug**: the global analysis state
+      (`_charTable`, `DEL`, …) is transient scratch, reloaded from the active document at the top of
+      every `AnalyzeText` pass; results are cached per-line in `rLine.m_pWord[]`, and the painter reads
+      only those (the globals are read nowhere outside `cedtDocAnal.cpp`). See the `—` row below.
+- [x] **Two views of one document** (Window > New Window), one wrapped and one not. Each view
+      reformats independently; edits in one reflect in the other.
+- [x] A file that is **modified on disk** while open → reload prompt. Prompt appears; reload works.
 - [x] **Read-only** file: open, edit, save. Editing is allowed; on save the editor now explains the
       file is read-only and saves under a new name instead of silently popping Save As (finding 35).
-- [ ] Drag and drop: a file onto the editor; text between two views; text to another app.
+- [x] Drag and drop: a file onto the editor; text between two views; text to another app. All work.
 
 ## D. English edition
 
@@ -536,3 +539,4 @@ where not to look again.
 | 33 | §B Macros · user macro file extension `.macro` → `.macros` | **Consistency change (not a bug).** User **tools** save as `.tools` (plural) but macros saved as `.macro` (singular). Renamed the macro extension to `.macros` everywhere it is user-facing: the Save/Load filter (`IDS_FILTER_MACRO_BUFFER`, US + KR `.rc`), the Save dialog's default extension, and the Load User Macros menu scan (`\tools\*.macros`). The internal AppData store was also renamed `cedt.macro` → `cedt.macros` to match `cedt.tools`. No backward-compat migration: 3.90 is the only public release, so no post-3.90 `cedt.macro` files exist to preserve. | 3.94 Release-KR | **changed** — extension + filter + default ext + menu scan + AppData store (the three save sites and the startup load all use `cedt.macros`) ([cedtapp.cpp](../src/app/cedtapp.cpp), [cedtViewMacro.cpp](../src/view/cedtViewMacro.cpp), [PrefDialogMacros.cpp](../src/dialogs/preferences/PrefDialogMacros.cpp), [cedtAppHndr.cpp](../src/app/cedtAppHndr.cpp), [prefdialog.cpp](../src/dialogs/preferences/prefdialog.cpp), [cedtViewHndrMisc.cpp](../src/view/cedtViewHndrMisc.cpp)). For 3.94. |
 | 34 | §B View · color scheme file extension `.color` → `.colors` | **Consistency change (not a bug).** Same as finding 33, for color scheme files — `.color` → `.colors`, matching `.tools` / `.macros`. Renamed the Save/Load filter (`IDS_FILTER_COLOR_SCHEME`, US + KR `.rc`), the Save dialog's default extension, and the AppData/install store `cedt.color` → `cedt.colors` (startup load, its install-dir fallback, and every save site). Color schemes have no directory menu scan and no `.color` file is shipped in the repo, so nothing else needs touching; no backward-compat migration (3.90 is the only public release). | 3.94 Release-KR | **changed** — filter + default ext + `cedt.colors` at every load/save site ([cedtapp.cpp](../src/app/cedtapp.cpp), [cedtAppHndr.cpp](../src/app/cedtAppHndr.cpp), [prefdialog.cpp](../src/dialogs/preferences/prefdialog.cpp), [PrefDialogColors.cpp](../src/dialogs/preferences/PrefDialogColors.cpp)). For 3.94. |
 | 35 | §C · **Save** a **read-only** (or hidden / system) file | **BUG (confusing UX).** Saving a read-only file jumped straight to the Save As dialog with no explanation — it reads as a glitch ("why is it suddenly asking for a new name?"). `FileSave` returns `FileSaveAs()` when `IsReadOnlyFile() || IsHiddenFile() || IsSystemFile()`, with no message. | 3.94 Release-KR | **fixed** — ask first with an OK/Cancel prompt (new `IDS_MSG_SAVE_READONLY_AS`: "%s … this file cannot be overwritten because it is read-only, hidden, or a system file. Save it under a different name?"): **OK** proceeds to Save As, **Cancel** aborts the save entirely ([cedtDocFile.cpp](../src/doc/cedtDocFile.cpp)). The original is never overwritten either way. Chosen over clearing the read-only attribute so the original file is never modified behind the user's back. For 3.94. |
+| — | §C · two documents of different syntax types share the global analysis state | **Investigated — not a bug.** The syntax analyser keeps its working state in file-scope `static` globals in `cedtDocAnal.cpp` (`_charTable[0x10000]`, `DEL`, `QU1`, `_pKEY`, comment/quote markers…), which looks like cross-document contamination waiting to happen. It is not: those globals are **transient scratch**, not stored colouring. `AnalyzeText` is a `CCedtDoc` member that reloads every global from the *active* document's `m_clsLangSpec` at the top of the pass, before any line is walked; `_AnalyzeLine` (the only consumer) is called **only** from inside `AnalyzeText`, so a line is always classified under its own document's spec. The **result** is cached per-line in `rLine.m_pWord[]`, and the painter reads only that plus the colour palette — `_charTable` / `DEL` are read **nowhere outside `cedtDocAnal.cpp`**. Single-threaded UI, so no two passes interleave. Colour a `.c` and a `.py`, switch between them: each holds its own colouring, confirmed in the GUI and by the code. | 3.94 Release-KR | not a bug — verified |
