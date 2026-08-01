@@ -83,7 +83,7 @@ BOOL DownloadRemoteFileWinInet(CFtpAccount & rFtpAccount, LPCTSTR lpszRemoteFile
 			ex->Delete(); return FALSE;
 		}
 
-		if( fcnCallback && dwSize ) bContinue = fcnCallback(100U * nTotalRead / dwSize);
+		if( fcnCallback && dwSize ) bContinue = fcnCallback((UINT)((ULONGLONG)nTotalRead * 100 / dwSize)); // 64-bit: 100*bytes overflows UINT past ~43MB
 		if( ! bContinue || nRead < FTP_TRANSFER_BUFFER_SIZE ) break;
 	}
 	bTransferCompleted = bContinue;
@@ -116,14 +116,12 @@ BOOL DownloadRemoteFileFtpClnt(CFtpAccount & rFtpAccount, LPCTSTR lpszRemoteFile
 
 	DWORD dwSize = 0;
 
-/*	Do not use client.GetFileSize() function because SIZE command is not the standard of FTP protocol (RFC-959).
- 	We will use response message of the OpenFile member function to get the file size instead... */
-
-/*	if( ! client.GetFileSize(lpszRemoteFile, dwSize) ) {
-		CString szMessage; szMessage.Format(IDS_ERR_FTP_FIND_REMOTE1, client.GetResponseMessage());
-		AfxMessageBox( szMessage, MB_OK | MB_ICONSTOP );
-		client.LogOff(); client.Close(); return FALSE;
-	} */
+	// Ask the server for the size up front (SIZE, RFC 3659) so the progress callback is accurate.
+	// Many servers (FileZilla included) refuse SIZE in ASCII mode, so switch to binary first;
+	// OpenFile sets the real transfer type again below. A server that still refuses SIZE is not
+	// fatal — leave dwSize at 0 and download without a percentage.
+	client.SetFileTransferType(TRUE);
+	client.GetFileSize(lpszRemoteFile, dwSize);
 
 	CFile localFile; TCHAR szBuffer[FTP_TRANSFER_BUFFER_SIZE];
 	BOOL bTransferCompleted = FALSE;
@@ -134,14 +132,13 @@ BOOL DownloadRemoteFileFtpClnt(CFtpAccount & rFtpAccount, LPCTSTR lpszRemoteFile
 		client.LogOff(); client.Close(); return FALSE;
 	}
 
-	// Retrieve file size from the response message of the OpenFile()
-	CString szResponse = client.GetResponseMessage();
-	INT nFound = szResponse.Find('(');
-	if( nFound >= 0 ) {
-		dwSize = _ttoi( szResponse.Mid(nFound+1) );
-	} else {
-		AfxMessageBox(IDS_ERR_FTP_FIND_REMOTE, MB_OK | MB_ICONSTOP);
-		client.LogOff(); client.Close(); return FALSE;
+	// Fallback if SIZE gave nothing: some servers report the size wu-ftpd-style in the RETR reply
+	// ("150 ... (NNNN bytes)"); FileZilla just says "150 Starting data transfer." Either way a
+	// missing size only means no percentage — the download proceeds.
+	if( dwSize == 0 ) {
+		CString szResponse = client.GetResponseMessage();
+		INT nFound = szResponse.Find('(');
+		if( nFound >= 0 ) dwSize = _ttoi( szResponse.Mid(nFound+1) );
 	}
 
 	if( ! localFile.Open(lpszLocalFile, CFile::modeReadWrite | CFile::modeCreate) ) {
@@ -160,7 +157,7 @@ BOOL DownloadRemoteFileFtpClnt(CFtpAccount & rFtpAccount, LPCTSTR lpszRemoteFile
 			localFile.Close(); client.Close(); ex->Delete(); return FALSE;
 		}
 
-		if( fcnCallback && dwSize ) bContinue = fcnCallback(100U * nTotalRead / dwSize);
+		if( fcnCallback && dwSize ) bContinue = fcnCallback((UINT)((ULONGLONG)nTotalRead * 100 / dwSize)); // 64-bit: 100*bytes overflows UINT past ~43MB
 		if( ! bContinue || nRead < FTP_TRANSFER_BUFFER_SIZE ) break;
 	}
 	bTransferCompleted = bContinue;
@@ -241,7 +238,7 @@ BOOL UploadLocalFileWinInet(CFtpAccount & rFtpAccount, LPCTSTR lpszLocalFile, LP
 			ex->Delete(); return FALSE;
 		}
 
-		if( fcnCallback && dwSize ) bContinue = fcnCallback(100U * nTotalRead / dwSize);
+		if( fcnCallback && dwSize ) bContinue = fcnCallback((UINT)((ULONGLONG)nTotalRead * 100 / dwSize)); // 64-bit: 100*bytes overflows UINT past ~43MB
 		if( ! bContinue || nRead < FTP_TRANSFER_BUFFER_SIZE ) break;
 	}
 	bTransferCompleted = bContinue;
@@ -305,7 +302,7 @@ BOOL UploadLocalFileFtpClnt(CFtpAccount & rFtpAccount, LPCTSTR lpszLocalFile, LP
 			localFile.Close(); client.Close(); ex->Delete(); return FALSE;
 		}
 
-		if( fcnCallback && dwSize ) bContinue = fcnCallback(100L * nTotalRead / dwSize);
+		if( fcnCallback && dwSize ) bContinue = fcnCallback((UINT)((ULONGLONG)nTotalRead * 100 / dwSize)); // 64-bit: 100*bytes overflows UINT past ~43MB
 		if( ! bContinue || nRead < FTP_TRANSFER_BUFFER_SIZE ) break;
 	}
 	bTransferCompleted = bContinue;

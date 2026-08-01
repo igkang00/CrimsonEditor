@@ -2,6 +2,56 @@
 #include "FtpClnt.h"
 
 
+// FTP is a byte protocol: ASCII commands with filenames in the server's encoding, and this build
+// speaks to servers in UTF-8 (FileZilla and friends run "UTF8 mode" by default). CArchive's
+// ReadString/WriteString move TCHARs, which under _UNICODE are 2-byte wide chars — so the old code
+// sent commands as UTF-16 (unparseable) and read the reply bytes back as wide chars (mojibake, and
+// a response code that no longer began with three digits, so every connection "failed"). Move the
+// control channel and the directory listing over the wire as UTF-8 bytes instead.
+
+static CStringA _ToUtf8(LPCTSTR lpsz)
+{
+	CStringA out;
+	INT nWide = (INT)_tcslen(lpsz);
+	INT nByte = WideCharToMultiByte(CP_UTF8, 0, lpsz, nWide, NULL, 0, NULL, NULL);
+	if( nByte > 0 ) {
+		WideCharToMultiByte(CP_UTF8, 0, lpsz, nWide, out.GetBuffer(nByte), nByte, NULL, NULL);
+		out.ReleaseBuffer(nByte);
+	}
+	return out;
+}
+
+static void _FromUtf8(CString & rString, LPCSTR psz, INT nByte)
+{
+	INT nWide = ( nByte > 0 ) ? MultiByteToWideChar(CP_UTF8, 0, psz, nByte, NULL, 0) : 0;
+	if( nWide > 0 ) {
+		MultiByteToWideChar(CP_UTF8, 0, psz, nByte, rString.GetBuffer(nWide), nWide);
+		rString.ReleaseBuffer(nWide);
+	} else {
+		rString.Empty();
+	}
+}
+
+// Read one CRLF-terminated line of raw bytes from the archive and decode it as UTF-8. Splitting on
+// the '\n' byte is safe: UTF-8 is self-synchronising, so 0x0A never appears inside a multi-byte
+// character. Returns FALSE only at end of stream with nothing read (how the listing loop stops).
+static BOOL _ReadLineUtf8(CArchive * pArchive, CString & rString)
+{
+	CStringA bytes; char ch; BOOL bGotAny = FALSE;
+	while( pArchive->Read(&ch, 1) == 1 ) {
+		bGotAny = TRUE;
+		if( ch == '\n' ) break;
+		bytes += ch;
+	}
+	if( ! bGotAny ) { rString.Empty(); return FALSE; }
+
+	INT nLen = bytes.GetLength();
+	if( nLen > 0 && bytes[nLen-1] == '\r' ) bytes.Truncate(nLen-1); // strip the CR of CRLF
+	_FromUtf8(rString, (LPCSTR)bytes, bytes.GetLength());
+	return TRUE;
+}
+
+
 CFtpClient::CFtpClient()
 {
 	m_pControlSocket = NULL;
@@ -423,7 +473,8 @@ BOOL CFtpClient::WriteToControlChannel(LPCTSTR lpszString)
 {
 	if( ! m_pControlWriteArchive ) return FALSE;
 
-	m_pControlWriteArchive->WriteString(lpszString);
+	CStringA utf8 = _ToUtf8(lpszString); // send the command line as UTF-8 bytes, not UTF-16
+	m_pControlWriteArchive->Write((LPCSTR)utf8, utf8.GetLength());
 	m_pControlWriteArchive->Flush();
 
 	// lpszString already contains linefeed
@@ -440,15 +491,15 @@ BOOL CFtpClient::ReadFromControlChannel()
 	// The client can identify the last line of the response as follows:
 	// it begins with three ASCII digits and a space;
 	// previous lines do not. The three digits form a code.
-	if( ! m_pControlReadArchive->ReadString(szResponseMessage) ) return FALSE;
-	m_szResponseMessage = szResponseMessage; 
+	if( ! _ReadLineUtf8(m_pControlReadArchive, szResponseMessage) ) return FALSE;
+	m_szResponseMessage = szResponseMessage;
 	szCode = szResponseMessage.Mid(0,3); m_nResponseCode = _ttoi(szCode);
 
 	// Codes between 100 and 199 indicate marks;
 	// codes between 200 and 399 indicate acceptance;
 	// codes between 400 and 599 indicate rejection.
-	while( szResponseMessage[3] != ' ' || szCode.Compare(_T("100")) < 0 || szCode.Compare(_T("999")) > 0 ) {
-		if( ! m_pControlReadArchive->ReadString(szResponseMessage) ) return FALSE;
+	while( szResponseMessage.GetLength() < 4 || szResponseMessage[3] != ' ' || szCode.Compare(_T("100")) < 0 || szCode.Compare(_T("999")) > 0 ) {
+		if( ! _ReadLineUtf8(m_pControlReadArchive, szResponseMessage) ) return FALSE;
 		m_szResponseMessage += CString(_T("\n")) + szResponseMessage;
 		szCode = szResponseMessage.Mid(0,3); m_nResponseCode = _ttoi(szCode);
 	}
@@ -461,7 +512,7 @@ BOOL CFtpClient::ReadFromControlChannel()
 BOOL CFtpClient::ReadFromDataChannel(CString & rString)
 {
 	if( ! m_pDataReadArchive ) return FALSE;
-	return m_pDataReadArchive->ReadString(rString);
+	return _ReadLineUtf8(m_pDataReadArchive, rString); // LIST lines carry UTF-8 filenames
 }
 
 UINT CFtpClient::ReadFromDataChannel(VOID * lpBuf, UINT nMax)
