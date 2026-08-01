@@ -106,7 +106,13 @@ BOOL CCedtDoc::FileSave()
 	if( IsNewFileNotSaved() ) return FileSaveAs();
 
 	m_dwFileAttribute = GetFileAttributes( GetPathName() ); // get attribute again just before
-	if( IsReadOnlyFile() || IsHiddenFile() || IsSystemFile() ) return FileSaveAs();
+	if( IsReadOnlyFile() || IsHiddenFile() || IsSystemFile() ) {
+		// The original cannot be overwritten. Ask before falling through to Save As — jumping
+		// straight to the dialog with no explanation reads as a bug. Cancel aborts the save.
+		CString szMessage; szMessage.Format( IDS_MSG_SAVE_READONLY_AS, (LPCTSTR)GetPathName() );
+		if( AfxMessageBox( szMessage, MB_OKCANCEL | MB_ICONQUESTION ) != IDOK ) return FALSE;
+		return FileSaveAs();
+	}
 
 	if( IsRemoteFile() ) {
 		// we need to copy these, because m_szRemotePathName will be changed in OnDocumentSave()

@@ -3059,8 +3059,10 @@ BEGIN
                             "Do you want to close all document windows?"
     IDS_MSG_CONFIRM_TO_RELOAD 
                             "%s\n\nDo you really want to reload this file? You will lose all your changes."
-    IDS_MSG_FILE_MODIFIED_OUTSIDE 
+    IDS_MSG_FILE_MODIFIED_OUTSIDE
                             "%s\n\nThis file has been modified outside. Do you want to reload it?"
+    IDS_MSG_SAVE_READONLY_AS
+                            "%s\n\nThis file cannot be overwritten because it is read-only, hidden, or a system file. Save it under a different name?"
     IDS_MSG_SEARCH_NOT_FOUND "Cannot find the string '%s'."
     IDS_MSG_REPLACE_RESULT  "%d occurrence(s) have been replaced."
     IDS_MSG_SEARCH_RESULT   "%d occurrence(s) have been found."
