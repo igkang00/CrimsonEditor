@@ -105,6 +105,11 @@ BOOL CCedtDoc::FileSave()
 {
 	if( IsNewFileNotSaved() ) return FileSaveAs();
 
+	// Nothing changed since the last save: do nothing — no disk rewrite (which would only bump the
+	// timestamp), and no read-only prompt for a file the user never touched. Matches VS Code / Visual
+	// Studio. The new-unsaved case above still goes to Save As, since it has no file on disk yet.
+	if( ! IsModified() ) return TRUE;
+
 	m_dwFileAttribute = GetFileAttributes( GetPathName() ); // get attribute again just before
 	if( IsReadOnlyFile() || IsHiddenFile() || IsSystemFile() ) {
 		// The original cannot be overwritten. Ask before falling through to Save As — jumping
