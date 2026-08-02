@@ -152,10 +152,15 @@ Source: "dist\redist\vc_redist.x64.exe";                DestDir: "{tmp}"; Flags:
 ; D2Coding coding font — optional (see the installd2coding task). Registered
 ; into the system Fonts folder via FontInstall. onlyifdoesntexist leaves any
 ; version the user already installed untouched; uninsneveruninstall keeps the
-; shared font in place on uninstall (other programs may rely on it). The OFL
-; license text ships alongside the app as required by SIL OFL 1.1.
+; shared font in place on uninstall (other programs may rely on it). The font
+; file and its OFL license text also ship under {app}\fonts, and unlike the
+; system registration they are installed unconditionally — even if the user
+; declines the font task — so the source is always bundled with the app for
+; reference and manual install. The app uses D2Coding by name from the system;
+; it does not load this copy privately (SIL OFL 1.1).
 Source: "runtime\fonts\D2Coding.ttf";  DestDir: "{autofonts}"; FontInstall: "D2Coding"; Flags: onlyifdoesntexist uninsneveruninstall; Tasks: installd2coding
-Source: "runtime\fonts\OFL.txt";       DestDir: "{app}\fonts";                          Flags: ignoreversion;                       Tasks: installd2coding
+Source: "runtime\fonts\D2Coding.ttf";  DestDir: "{app}\fonts";                          Flags: ignoreversion
+Source: "runtime\fonts\OFL.txt";       DestDir: "{app}\fonts";                          Flags: ignoreversion
 
 
 [Icons]
