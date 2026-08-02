@@ -155,7 +155,7 @@ void CPreferenceDialog::OnMacroLoadMacros()
 	CFileDialog dlg(TRUE, NULL, NULL, dwFlags, szFilter);
 
 	CString szTitle; szTitle.LoadString(IDS_DLG_LOAD_MACRO_BUFFERS);
-	CString szInitialDirectory = CCedtApp::m_szInstallDirectory + _T("\\tools");
+	CString szInitialDirectory = CCedtApp::m_szAppDataDirectory + _T("\\macros");
 
 	TCHAR szCurrentDirectory[MAX_PATH];
 	GetCurrentDirectory( MAX_PATH, szCurrentDirectory );
@@ -182,7 +182,7 @@ void CPreferenceDialog::OnMacroSaveMacros()
 	CFileDialog dlg(FALSE, _T(".macros"), NULL, dwFlags, szFilter);
 
 	CString szTitle; szTitle.LoadString(IDS_DLG_SAVE_MACRO_BUFFERS);
-	CString szInitialDirectory = CCedtApp::m_szInstallDirectory + _T("\\tools");
+	CString szInitialDirectory = CCedtApp::m_szAppDataDirectory + _T("\\macros");
 
 	TCHAR szCurrentDirectory[MAX_PATH];
 	GetCurrentDirectory( MAX_PATH, szCurrentDirectory );
@@ -191,7 +191,12 @@ void CPreferenceDialog::OnMacroSaveMacros()
 	if( dlg.DoModal() != IDOK ) return;
 
 	SetCurrentDirectory( szCurrentDirectory );
-	FileSaveMacroBuffers( dlg.GetPathName() );
+
+	CString szPathName = dlg.GetPathName();
+	if( ! FileSaveMacroBuffers( szPathName ) ) {
+		CString szMsg; szMsg.Format(IDS_ERR_SAVE_USER_FILE, (LPCTSTR)szPathName);
+		AfxMessageBox(szMsg, MB_OK | MB_ICONSTOP);
+	}
 }
 
 void CPreferenceDialog::OnMacroRemove() 

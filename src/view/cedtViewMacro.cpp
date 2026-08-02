@@ -9,7 +9,7 @@ BOOL CCedtView::RefreshMacroBufferFilePathForMenu()
 	for( INT i = 0; i < 8; i++ ) m_szMacroBufferFilePath[i] = "";
 
 	CSortStringArray arrPathName;
-	CString szPathName = CCedtApp::m_szInstallDirectory + "\\tools\\*.macros";
+	CString szPathName = CCedtApp::m_szAppDataDirectory + "\\macros\\*.macros";
 
 	BOOL bFound = FindAllFilePath(arrPathName, szPathName);
 	arrPathName.QuickSort();

@@ -176,7 +176,7 @@ void CPreferenceDialog::OnCommandLoadTools()
 	CFileDialog dlg(TRUE, NULL, NULL, dwFlags, szFilter);
 
 	CString szTitle; szTitle.LoadString(IDS_DLG_LOAD_USER_TOOLS);
-	CString szInitialDirectory = CCedtApp::m_szInstallDirectory + _T("\\tools");
+	CString szInitialDirectory = CCedtApp::m_szAppDataDirectory + _T("\\tools");
 
 	TCHAR szCurrentDirectory[MAX_PATH];
 	GetCurrentDirectory( MAX_PATH, szCurrentDirectory );
@@ -203,7 +203,7 @@ void CPreferenceDialog::OnCommandSaveTools()
 	CFileDialog dlg(FALSE, _T(".tools"), NULL, dwFlags, szFilter);
 
 	CString szTitle; szTitle.LoadString(IDS_DLG_SAVE_USER_TOOLS);
-	CString szInitialDirectory = CCedtApp::m_szInstallDirectory + _T("\\tools");
+	CString szInitialDirectory = CCedtApp::m_szAppDataDirectory + _T("\\tools");
 
 	TCHAR szCurrentDirectory[MAX_PATH];
 	GetCurrentDirectory( MAX_PATH, szCurrentDirectory );
@@ -212,7 +212,12 @@ void CPreferenceDialog::OnCommandSaveTools()
 	if( dlg.DoModal() != IDOK ) return;
 
 	SetCurrentDirectory( szCurrentDirectory );
-	FileSaveUserCommands( dlg.GetPathName() );
+
+	CString szPathName = dlg.GetPathName();
+	if( ! FileSaveUserCommands( szPathName ) ) {
+		CString szMsg; szMsg.Format(IDS_ERR_SAVE_USER_FILE, (LPCTSTR)szPathName);
+		AfxMessageBox(szMsg, MB_OK | MB_ICONSTOP);
+	}
 }
 
 void CPreferenceDialog::OnCommandRemove() 

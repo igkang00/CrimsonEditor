@@ -11,7 +11,7 @@ BOOL CCedtView::RefreshUserCommandFilePathForMenu()
 	for( INT i = 0; i < 8; i++ ) m_szUserCommandFilePath[i] = _T("");
 
 	CSortStringArray arrPathName;
-	CString szPathName = CCedtApp::m_szInstallDirectory + _T("\\tools\\*.tools");
+	CString szPathName = CCedtApp::m_szAppDataDirectory + _T("\\tools\\*.tools");
 
 	BOOL bFound = FindAllFilePath(arrPathName, szPathName);
 	arrPathName.QuickSort();

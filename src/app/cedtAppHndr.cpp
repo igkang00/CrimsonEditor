@@ -239,7 +239,7 @@ void CCedtApp::OnViewColorSchemeSaved()
 	CFileDialog dlg(TRUE, NULL, NULL, dwFlags, szFilter);
 
 	CString szTitle; szTitle.LoadString(IDS_DLG_LOAD_COLOR_SCHEME);
-	CString szInitialDirectory = CCedtApp::m_szInstallDirectory + "\\schemes";
+	CString szInitialDirectory = CCedtApp::m_szAppDataDirectory + "\\colors";
 
 	TCHAR szCurrentDirectory[MAX_PATH];
 	GetCurrentDirectory( MAX_PATH, szCurrentDirectory );

@@ -3125,6 +3125,7 @@ BEGIN
                             "Failed to save file.\n%s\n- access denied (hidden or system file?)"
     IDS_ERR_FILE_BACKUP_FAILED "Failed to create backup file."
     IDS_ERR_LOAD_USER_FILE "Could not load '%s'.\n\nThe file may be of an incompatible version or corrupt."
+    IDS_ERR_SAVE_USER_FILE "Could not save to '%s'.\n\nYou may not have permission to write there. Choose a different location."
 END
 
 STRINGTABLE DISCARDABLE 

@@ -588,7 +588,7 @@ void CPreferenceDialog::OnLoadColorScheme()
 		CFileDialog dlg(TRUE, NULL, NULL, dwFlags, szFilter);
 
 		CString szTitle; szTitle.LoadString(IDS_DLG_LOAD_COLOR_SCHEME);
-		CString szInitialDirectory = CCedtApp::m_szInstallDirectory + "\\schemes";
+		CString szInitialDirectory = CCedtApp::m_szAppDataDirectory + "\\colors";
 
 		TCHAR szCurrentDirectory[MAX_PATH];
 		GetCurrentDirectory( MAX_PATH, szCurrentDirectory );
@@ -613,7 +613,7 @@ void CPreferenceDialog::OnSaveColorScheme()
 	CFileDialog dlg(FALSE, _T(".colors"), NULL, dwFlags, szFilter);
 
 	CString szTitle; szTitle.LoadString(IDS_DLG_SAVE_COLOR_SCHEME);
-	CString szInitialDirectory = CCedtApp::m_szInstallDirectory + _T("\\schemes");
+	CString szInitialDirectory = CCedtApp::m_szAppDataDirectory + _T("\\colors");
 
 	TCHAR szCurrentDirectory[MAX_PATH];
 	GetCurrentDirectory( MAX_PATH, szCurrentDirectory );
@@ -624,5 +624,9 @@ void CPreferenceDialog::OnSaveColorScheme()
 	SetCurrentDirectory( szCurrentDirectory );
 	if( nResult != IDOK ) return;
 
-	SaveColorScheme( dlg.GetPathName() );
+	CString szPathName = dlg.GetPathName();
+	if( ! SaveColorScheme( szPathName ) ) {
+		CString szMsg; szMsg.Format(IDS_ERR_SAVE_USER_FILE, (LPCTSTR)szPathName);
+		AfxMessageBox(szMsg, MB_OK | MB_ICONSTOP);
+	}
 }

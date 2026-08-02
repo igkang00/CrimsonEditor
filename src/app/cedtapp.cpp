@@ -285,6 +285,14 @@ BOOL CCedtApp::InitInstance()
 	if( bResul2 ) m_szAppDataDirectory.Format(_T("%s\\Crimson Editor"), szTmp2);
 	TRACE1("AppDataDirectory: \"%s\"\n", m_szAppDataDirectory);
 
+	// User-saved tools / macros / colour schemes go under the writable AppData tree, not the
+	// read-only install dir. Make sure the folders exist so the Save dialogs open there and the
+	// Load menus can scan them. CreateDirectory is a harmless no-op when a folder already exists.
+	::CreateDirectory(m_szAppDataDirectory, NULL);
+	::CreateDirectory(m_szAppDataDirectory + _T("\\tools"), NULL);
+	::CreateDirectory(m_szAppDataDirectory + _T("\\macros"), NULL);
+	::CreateDirectory(m_szAppDataDirectory + _T("\\colors"), NULL);
+
 
 	// load multi-instance flag
 	m_bAllowMultiInstances = FALSE;
