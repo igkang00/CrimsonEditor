@@ -1,1 +1,0 @@
-schemes folder will contain user defined color scheme files

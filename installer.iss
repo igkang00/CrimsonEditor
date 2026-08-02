@@ -131,8 +131,9 @@ Source: "tools\launch\build\x64\Release\launch.exe";    DestDir: "{app}"; Flags:
 Source: "tools\shellext\build\x64\Release\ShellExt.dll"; DestDir: "{app}"; Flags: ignoreversion 64bit restartreplace uninsrestartdelete
 
 ; Runtime assets — always installed, the support files cedt looks up
-; under <InstallDir> at runtime (dictionaries, syntax specs, color
-; schemes, templates, docs, ...).
+; under <InstallDir> at runtime (dictionaries, syntax specs, templates,
+; docs, ...). User tools / macros / colour schemes are NOT here: they live
+; under %APPDATA%\Crimson Editor\{tools,macros,colors}\, created at startup.
 Source: "runtime\cedt.ico";                             DestDir: "{app}";          Flags: ignoreversion
 Source: "runtime\cedt.dic";                             DestDir: "{app}";          Flags: ignoreversion
 Source: "runtime\user.dic";                             DestDir: "{app}";          Flags: ignoreversion onlyifdoesntexist
@@ -140,10 +141,8 @@ Source: "runtime\LICENSE.txt";                          DestDir: "{app}";       
 Source: "runtime\README.txt";                           DestDir: "{app}";          Flags: ignoreversion
 Source: "runtime\docs\*";                               DestDir: "{app}\docs";     Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "runtime\link\*";                               DestDir: "{app}\link";     Flags: ignoreversion
-Source: "runtime\schemes\*";                            DestDir: "{app}\schemes";  Flags: ignoreversion
 Source: "runtime\spec\*";                               DestDir: "{app}\spec";     Flags: ignoreversion
 Source: "runtime\template\*";                           DestDir: "{app}\template"; Flags: ignoreversion
-Source: "runtime\tools\*";                              DestDir: "{app}\tools";    Flags: ignoreversion
 
 ; Visual C++ x64 runtime redistributable — copied to {tmp}, run from
 ; [Run], deleted afterwards. build_installer.ps1 downloads this into
