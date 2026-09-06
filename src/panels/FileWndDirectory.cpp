@@ -3,6 +3,8 @@
 #include "SortStringArray.h"
 #include "FolderDialog.h"
 
+#include <shlobj.h>   // SHParseDisplayName / SHGetNameFromIDList, for localised folder names
+
 
 BOOL CFileWindow::InitLocalDriveList(LPCTSTR lpszInitialDriveName)
 {
@@ -384,14 +386,29 @@ BOOL CFileWindow::DirectoryHasChildren(LPCTSTR lpszPath)
 	return FALSE;
 }
 
+CString CFileWindow::GetDirectoryItemRealName(HTREEITEM hItem)
+{
+	if( ! hItem ) return _T("");
+
+	// Set only on items whose label is a localised folder name; every ordinary item is its own
+	// name, so the label is the answer.
+	CString * pszRealName = (CString *)m_treDirectoryTree.GetItemData( hItem );
+	if( pszRealName ) return * pszRealName;
+
+	return m_treDirectoryTree.GetItemText( hItem );
+}
+
 CString CFileWindow::GetDirectoryItemPathName(HTREEITEM hItem)
 {
 	HTREEITEM hRoot = m_treDirectoryTree.GetRootItem();
 	CString szTemp, szReturn = _T("");
 
 	while( hItem ) {
+		// The root already shows a display name ("로컬 디스크 (C:)"), which is why it has always
+		// taken its path component from the drive rather than the label; localised folders below
+		// it now need the same separation.
 		if( hItem == hRoot ) szTemp = GetActiveLocalDriveName();
-		else szTemp = m_treDirectoryTree.GetItemText( hItem );
+		else szTemp = GetDirectoryItemRealName( hItem );
 
 		if( ! szReturn.GetLength() ) szReturn = szTemp;
 		else szReturn = szTemp + _T("\\") + szReturn;
@@ -581,6 +598,58 @@ HTREEITEM CFileWindow::InsertDirectoryTreeRoot(LPCTSTR lpszPath)
 	return m_treDirectoryTree.InsertItem( shFinfo.szDisplayName, shFinfo.iIcon, shFinfo.iIcon, TVI_ROOT );
 }
 
+// The name Explorer shows for a folder that carries one, or an empty string for the ordinary
+// folders that do not. On a Korean Windows, C:\Users reads "사용자" and Pictures reads "사진";
+// the name on disk is unchanged, and the shell resolves the label from the folder's desktop.ini.
+//
+// SHGetFileInfo(SHGFI_DISPLAYNAME) is deliberately *not* used here. It answers "사용자" for
+// C:\Users but hands back an empty string for the folders inside a user profile — which is exactly
+// where Pictures, Documents and Music live, so it misses the common case. Going through a PIDL and
+// asking for SIGDN_NORMALDISPLAY answers both correctly.
+//
+// Reading desktop.ini's LocalizedResourceName directly and resolving it with SHLoadIndirectString
+// would be several times faster, but it produces *different* names: OneDrive takes its label from
+// its cloud-provider registration rather than desktop.ini, so that route would show something
+// Explorer does not. Matching Explorer is the whole point, so the slower call wins.
+//
+// The shell round-trip is not free (fractions of a millisecond per folder), so two cheap filters
+// come first: a folder with no desktop.ini cannot carry a localised name, and answers are cached
+// per path — the tree asks again on every refresh and re-expand.
+static CString _GetLocalizedFolderName(LPCTSTR lpszPath)
+{
+	static CMap<CString, LPCTSTR, CString, LPCTSTR> mapCache;
+
+	CString szPath = lpszPath; szPath.TrimRight(_T("\\/"));
+	if( szPath.IsEmpty() ) return _T("");
+
+	// The shell parser refuses a path with mixed separators and then silently drops the
+	// localisation rather than failing, so normalise before asking.
+	szPath.Replace(_T('/'), _T('\\'));
+
+	CString szKey = szPath; szKey.MakeLower();
+	CString szCached;
+	if( mapCache.Lookup(szKey, szCached) ) return szCached;
+
+	CString szName; // empty means "this folder has no localised name"
+
+	if( GetFileAttributes(szPath + _T("\\desktop.ini")) != INVALID_FILE_ATTRIBUTES ) {
+		PIDLIST_ABSOLUTE pidl = NULL;
+		if( SUCCEEDED(SHParseDisplayName(szPath, NULL, & pidl, 0, NULL)) && pidl ) {
+			PWSTR pszShown = NULL;
+			if( SUCCEEDED(SHGetNameFromIDList(pidl, SIGDN_NORMALDISPLAY, & pszShown)) && pszShown ) {
+				// Most desktop.ini files only set an icon. Keep the label only when it actually
+				// differs, so the caller can tell a localised item from an ordinary one.
+				if( GetFileName(szPath).Compare(pszShown) ) szName = pszShown;
+				CoTaskMemFree(pszShown);
+			}
+			CoTaskMemFree(pidl);
+		}
+	}
+
+	mapCache.SetAt(szKey, szName);
+	return szName;
+}
+
 HTREEITEM CFileWindow::InsertDirectoryTreeItem(HTREEITEM hParent, LPCTSTR lpszPath)
 {
 	// See InsertDirectoryTreeRoot for why this is a CString. Concretely: a file whose full path
@@ -596,14 +665,35 @@ HTREEITEM CFileWindow::InsertDirectoryTreeItem(HTREEITEM hParent, LPCTSTR lpszPa
 	INT nLen = szTemp.GetLength();   // drop the one trailing '\\' added above, as before
 	if( nLen > 0 && szTemp[nLen-1] == _T('\\') ) szTemp = szTemp.Left(nLen-1);
 
-	return m_treDirectoryTree.InsertItem( GetFileName(szTemp), shFinfo.iIcon, shFinfo.iIcon, hParent );
+	CString szRealName = GetFileName(szTemp);
+
+	// Only folders are asked. A file has no localised name to find, and the shell would also apply
+	// "hide extensions for known file types" to its display name — the last thing a source editor
+	// wants, since it would turn main.cpp into main.
+	CString szLocalized;
+	DWORD dwAttrib = GetFileAttributes(szTemp);
+	if( dwAttrib != INVALID_FILE_ATTRIBUTES && (dwAttrib & FILE_ATTRIBUTE_DIRECTORY) )
+		szLocalized = _GetLocalizedFolderName(szTemp);
+
+	if( szLocalized.IsEmpty() )
+		return m_treDirectoryTree.InsertItem( szRealName, shFinfo.iIcon, shFinfo.iIcon, hParent );
+
+	// The label is the localised name, so the item has to carry the name on disk itself: paths are
+	// built from it, and a rename must not offer "사진" as the old name and create a folder by that
+	// name when the user confirms. OnDeleteitemDirectoryTree frees this.
+	HTREEITEM hItem = m_treDirectoryTree.InsertItem( szLocalized, shFinfo.iIcon, shFinfo.iIcon, hParent );
+	if( hItem ) m_treDirectoryTree.SetItemData( hItem, (DWORD_PTR) new CString(szRealName) );
+
+	return hItem;
 }
 
 HTREEITEM CFileWindow::FindDirectoryTreeChildItem(HTREEITEM hParent, LPCTSTR lpszText)
 {
 	HTREEITEM hFound = m_treDirectoryTree.GetChildItem(hParent);
 	while( hFound ) {
-		CString szText = m_treDirectoryTree.GetItemText( hFound );
+		// Callers search by the name on disk (a path component, a file name), so match against
+		// that and not against a localised label.
+		CString szText = GetDirectoryItemRealName( hFound );
 		if( ! szText.CompareNoCase(lpszText) ) return hFound;
 		hFound = m_treDirectoryTree.GetNextSiblingItem( hFound );
 	}
@@ -754,17 +844,37 @@ void CFileWindow::OnEndlabeleditDirectoryTree(NMHDR* pNMHDR, LRESULT* pResult)
 	NMTVDISPINFO* pNMTVDISPINFO = (NMTVDISPINFO*)pNMHDR;
 	HTREEITEM hItem = pNMTVDISPINFO->item.hItem;
 
-	CString szOldName = m_treDirectoryTree.GetItemText(hItem);
+	// Compare against the name on disk, not the label: for a localised folder the label is "사진"
+	// while the folder is Pictures, and taking the label as the old name would rename the folder
+	// to its own translation the moment the user pressed Enter.
+	CString szOldName = GetDirectoryItemRealName(hItem);
 	CString szNewName = pNMTVDISPINFO->item.pszText;
 	if( szNewName.GetLength() && szOldName.CompareNoCase(szNewName) ) {
 		CString szPathName = GetDirectoryItemPathName(hItem);
 		if( VerifyDirectoryItemReachable(szPathName)
 		 && RenameDirectoryItem(szPathName, szNewName) && ! VerifyPathName(szPathName) ) {
+			// Renamed on disk, so the label is now the real name again and the stored copy goes.
+			CString * pszRealName = (CString *)m_treDirectoryTree.GetItemData(hItem);
+			if( pszRealName ) { delete pszRealName; m_treDirectoryTree.SetItemData(hItem, 0); }
+
 			m_treDirectoryTree.SetItemText(hItem, szNewName);
 		}
 	}
 
 	m_bLabelEditing = FALSE;
+
+	* pResult = 0;
+}
+
+void CFileWindow::OnDeleteitemDirectoryTree(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	NMTREEVIEW* pNMTREEVIEW = (NMTREEVIEW*)pNMHDR;
+
+	// An item whose label is a localised folder name owns a copy of its real name. Freeing it here
+	// covers every way an item goes away — collapsing a branch, a refresh, DeleteAllItems on a
+	// drive change — with one handler, instead of a delete beside each of those call sites.
+	CString * pszRealName = (CString *)pNMTREEVIEW->itemOld.lParam;
+	if( pszRealName ) delete pszRealName;
 
 	* pResult = 0;
 }

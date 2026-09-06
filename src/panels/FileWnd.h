@@ -162,6 +162,12 @@ protected: // tree control handling
 	HTREEITEM InsertDirectoryTreeItem(HTREEITEM hParent, LPCTSTR lpszPath);
 	HTREEITEM FindDirectoryTreeChildItem(HTREEITEM hParent, LPCTSTR lpszText);
 
+	// A tree item shows the shell's display name, which for folders carrying a desktop.ini
+	// LocalizedResourceName is localised ("Users" -> "사용자"). Paths must still be built from the
+	// name on disk, so items whose two names differ keep the real one in their item data; this
+	// returns that, falling back to the label for every ordinary item.
+	CString GetDirectoryItemRealName(HTREEITEM hItem);
+
 protected: // Handlers
 	DROPEFFECT OnDragOverDirectoryTree(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point);
 	BOOL OnDropDirectoryTree(COleDataObject* pDataObject, DROPEFFECT dropEffect, CPoint point);
@@ -290,6 +296,7 @@ protected:
 	afx_msg void OnRclickDirectoryTree(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnBeginlabeleditDirectoryTree(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnEndlabeleditDirectoryTree(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnDeleteitemDirectoryTree(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnBegindragDirectoryTree(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnItemexpandingProjectTree(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnClickProjectTree(NMHDR* pNMHDR, LRESULT* pResult);
