@@ -3,8 +3,6 @@
 #include "SortStringArray.h"
 #include "FolderDialog.h"
 
-#include <shlobj.h>   // SHParseDisplayName / SHGetNameFromIDList, for localised folder names
-
 
 BOOL CFileWindow::InitLocalDriveList(LPCTSTR lpszInitialDriveName)
 {
@@ -602,19 +600,24 @@ HTREEITEM CFileWindow::InsertDirectoryTreeRoot(LPCTSTR lpszPath)
 // folders that do not. On a Korean Windows, C:\Users reads "사용자" and Pictures reads "사진";
 // the name on disk is unchanged, and the shell resolves the label from the folder's desktop.ini.
 //
-// SHGetFileInfo(SHGFI_DISPLAYNAME) is deliberately *not* used here. It answers "사용자" for
-// C:\Users but hands back an empty string for the folders inside a user profile — which is exactly
-// where Pictures, Documents and Music live, so it misses the common case. Going through a PIDL and
-// asking for SIGDN_NORMALDISPLAY answers both correctly.
+// This needs COM on the calling thread. Without it SHGetFileInfo still *succeeds* and merely
+// leaves the name empty — no error, no log, the localisation quietly disappears. That symptom is
+// what once made this API look unable to handle the folders inside a user profile, and sent this
+// code down a PIDL route (SHParseDisplayName + SIGDN_NORMALDISPLAY) instead. The API handles them
+// fine: with COM up the two answer identically, so the extra hop bought nothing. C++ is the
+// language that does not put COM up for you — the CLR and pythoncom do, which is why the sibling
+// projects never saw this — so the call depends on the AfxOleInit() in InitInstance, which fails
+// startup outright if it cannot. Move this lookup to a worker thread and the localisation goes
+// away silently unless that thread initialises COM too.
 //
 // Reading desktop.ini's LocalizedResourceName directly and resolving it with SHLoadIndirectString
 // would be several times faster, but it produces *different* names: OneDrive takes its label from
 // its cloud-provider registration rather than desktop.ini, so that route would show something
-// Explorer does not. Matching Explorer is the whole point, so the slower call wins.
+// Explorer does not. Matching Explorer is the whole point, so the shell call wins.
 //
-// The shell round-trip is not free (fractions of a millisecond per folder), so two cheap filters
-// come first: a folder with no desktop.ini cannot carry a localised name, and answers are cached
-// per path — the tree asks again on every refresh and re-expand.
+// The shell round-trip is not free, so two cheap filters come first: a folder with no desktop.ini
+// cannot carry a localised name, and answers are cached per path — the tree asks again on every
+// refresh and re-expand.
 static CString _GetLocalizedFolderName(LPCTSTR lpszPath)
 {
 	static CMap<CString, LPCTSTR, CString, LPCTSTR> mapCache;
@@ -622,8 +625,8 @@ static CString _GetLocalizedFolderName(LPCTSTR lpszPath)
 	CString szPath = lpszPath; szPath.TrimRight(_T("\\/"));
 	if( szPath.IsEmpty() ) return _T("");
 
-	// The shell parser refuses a path with mixed separators and then silently drops the
-	// localisation rather than failing, so normalise before asking.
+	// The shell refuses a path with mixed separators and returns an empty name rather than
+	// failing, so normalise before asking.
 	szPath.Replace(_T('/'), _T('\\'));
 
 	CString szKey = szPath; szKey.MakeLower();
@@ -633,16 +636,13 @@ static CString _GetLocalizedFolderName(LPCTSTR lpszPath)
 	CString szName; // empty means "this folder has no localised name"
 
 	if( GetFileAttributes(szPath + _T("\\desktop.ini")) != INVALID_FILE_ATTRIBUTES ) {
-		PIDLIST_ABSOLUTE pidl = NULL;
-		if( SUCCEEDED(SHParseDisplayName(szPath, NULL, & pidl, 0, NULL)) && pidl ) {
-			PWSTR pszShown = NULL;
-			if( SUCCEEDED(SHGetNameFromIDList(pidl, SIGDN_NORMALDISPLAY, & pszShown)) && pszShown ) {
-				// Most desktop.ini files only set an icon. Keep the label only when it actually
-				// differs, so the caller can tell a localised item from an ordinary one.
-				if( GetFileName(szPath).Compare(pszShown) ) szName = pszShown;
-				CoTaskMemFree(pszShown);
-			}
-			CoTaskMemFree(pidl);
+		SHFILEINFO shFinfo; ZeroMemory( & shFinfo, sizeof(shFinfo) );
+		if( SHGetFileInfo(szPath, 0, & shFinfo, sizeof(shFinfo), SHGFI_DISPLAYNAME) ) {
+			// Most desktop.ini files only set an icon, so keep the label only when it actually
+			// differs — that is what lets the caller tell a localised item from an ordinary one.
+			// An empty name is a lookup that found nothing (see the COM note above) and drops out
+			// through the same test.
+			if( GetFileName(szPath).Compare(shFinfo.szDisplayName) ) szName = shFinfo.szDisplayName;
 		}
 	}
 
