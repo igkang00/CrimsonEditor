@@ -81,6 +81,7 @@
 #define WM_ANOTHER_INSTANCE					(WM_USER+1)
 #define WM_SIZE_MAIN_WINDOW					(WM_USER+2)
 #define WM_BEGINDRAG_TAB_CTRL				(WM_USER+3)
+// WM_USER+4 is WM_CLOSE_TAB_ITEM, defined in XPTabCtrl.h (the control that sends it)
 
 
 // DRAG_OBJECT_TYPE

@@ -29,6 +29,9 @@ protected: // drag and drop
 	INT m_nDragObjectType, m_nDragItemCount;
 	INT m_nDragCurSel, m_nDropPosition;
 
+protected: // middle-click close
+	CMDIChildWnd * m_pMButtonChild;	// tab pressed with the middle button; compared, never dereferenced
+
 
 protected: // Operations
 	void OnLButtonDownTabCtrl(UINT nFlags, CPoint point);
@@ -37,6 +40,7 @@ protected: // Operations
 	void OnMButtonUpTabCtrl(UINT nFlags, CPoint point);
 
 	void OnBegindragTabCtrl(UINT nFlags, CPoint point);
+	BOOL IsOnCloseButton(MSG * pMsg);
 
 public: // drag and drop
 	DROPEFFECT OnDragEnter(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point);
@@ -90,6 +94,7 @@ protected:
 	afx_msg void OnSelchangeFileTab(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg BOOL OnNeedtextFileTab(UINT id, NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnFileTabRefresh();
+	afx_msg LRESULT OnCloseTabItem(WPARAM wParam, LPARAM lParam);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -21,7 +21,7 @@ Run the installer and accept the UAC prompt. It installs to `Program Files\Crims
 ## Features
 
 - **Source-aware editing** — syntax highlighting for ~50 languages, configurable color schemes, word autocompletion from a dictionary
-- **Multi-document interface (MDI)** — file tabs along the top, split views, drag-and-drop between tabs
+- **Multi-document interface (MDI)** — file tabs along the top with a close button on each (middle-click closes too), split views, drag-and-drop between tabs
 - **Project workspace** — group related files and folders, switch between projects from the side panel
 - **Find / Replace** — including regex and Find-in-Files across a folder tree
 - **Integrated FTP** — open and save remote files directly, browse a remote tree

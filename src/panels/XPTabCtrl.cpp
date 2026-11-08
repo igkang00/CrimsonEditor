@@ -42,6 +42,16 @@ static char THIS_FILE[] = __FILE__;
 #define IDS_UTIL_THEMEACT       _T("IsThemeActive")
 #define IDS_UTIL_THEMEOPN       _T("OpenThemeData")
 #define IDS_UTIL_THEMEBCKG      _T("DrawThemeBackground")
+
+// close button geometry, in pixels: a square box inset from the tab's right edge
+#define CLOSE_BTN_SIZE          14
+#define CLOSE_BTN_MARGIN        5
+#define CLOSE_BTN_RESERVE       (CLOSE_BTN_SIZE+4)	// taken off the text area's right side
+// The control spends its horizontal padding three times -- before the icon, between icon and text,
+// and after the text -- so the tab grows by three times the extra padding. Growing it by exactly the
+// reserve keeps the text where it was without the button; any more is slack that the centred text
+// spreads to both sides, pushing it away from the icon.
+#define CLOSE_BTN_PADDING       (CLOSE_BTN_RESERVE/3)
 /***********************************************************************************************************/
 // CXPTabCtrl
 /***********************************************************************************************************/
@@ -50,6 +60,10 @@ CXPTabCtrl::CXPTabCtrl()
 	m_bTabExtended=TRUE;			// default is to use extended tab (if it is Themes XP)
 	m_eTabOrientation=e_tabBottom;	// default initial orientation is: bottom
 	m_ixSelOld=-1;
+	m_bCloseButtons=FALSE;
+	m_ixCloseHot=-1;
+	m_ixClosePressed=-1;
+	m_bTrackingLeave=FALSE;
 }
 //----------------------------------------------------------------------------------------------------------
 // nBitmapID Resource IDs of the bitmap to be associated with the image list.
@@ -67,6 +81,12 @@ BEGIN_MESSAGE_MAP(CXPTabCtrl, CTabCtrl)
 	ON_WM_PAINT()
 	ON_NOTIFY_REFLECT(TCN_SELCHANGING,OnTabSelChanging)
 	ON_NOTIFY_REFLECT_EX(TCN_SELCHANGE, OnTabSelChanged) //<----- CHANGED
+	ON_WM_LBUTTONDOWN()
+	ON_WM_LBUTTONDBLCLK()
+	ON_WM_LBUTTONUP()
+	ON_WM_MOUSEMOVE()
+	ON_MESSAGE(WM_MOUSELEAVE, OnMouseLeave)
+	ON_WM_CAPTURECHANGED()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 //----------------------------------------------------------------------------------------------------------
@@ -114,6 +134,7 @@ void CXPTabCtrl::OnPaint()
 		if(m_eTabOrientation==e_tabLeft) rcItem.right++;
 		uiFlags=uiVertBottm|(ixTab==ixHot?4:0);		// 4= hot
 		DrawThemesXpTabItem(&dc,ixTab,rcItem,uiFlags);
+		DrawCloseButton(&dc,ixTab);
 	}
 	// 3rd paint the active selected tab
 	VERIFY(GetItemRect(ixSel, &rcItem));			// now selected tab
@@ -121,6 +142,7 @@ void CXPTabCtrl::OnPaint()
 	if(m_eTabOrientation==e_tabTop) rcItem.bottom--;
 	uiFlags=uiVertBottm|2;							// 2= selected
 	DrawThemesXpTabItem(&dc, ixSel, rcItem,uiFlags);
+	DrawCloseButton(&dc,ixSel);
 }
 //----------------------------------------------------------------------------------------------------------
 // This function draws Themes Tab control parts: a) Tab-Body and b) Tab-tabs
@@ -306,6 +328,8 @@ void CXPTabCtrl::DrawTabItem(CDC* pDC, int ixItem, const CRect& rcItemC, UINT ui
 
 		CFont* pOldFont=pDC->SelectObject(GetFont());		// prepare dc
 		rcItem.right-=3;						// text
+		if(m_bCloseButtons && m_eTabOrientation==e_tabTop)
+			rcItem.right-=CLOSE_BTN_RESERVE;	// keep the text clear of the close button
 		CRect rect(0,0,rcItem.Width(),20);
 		::DrawText(pDC->GetSafeHdc(),sText.GetBuffer(sText.GetLength()+4),-1,rect,DT_CALCRECT|DT_SINGLELINE|DT_MODIFYSTRING|DT_END_ELLIPSIS);
 		sText.ReleaseBuffer();
@@ -367,6 +391,145 @@ void CXPTabCtrl::OnTabSelChanged(NMHDR* pNMHDR, LRESULT* pResult)
 	}	}
 	*pResult=1L;
 } */
+/***********************************************************************************************************/
+// Close buttons -- added by Ingyu Kang
+//
+// Drawn only on the themed path above (OnPaint falls back to Default() otherwise), so hit-testing
+// is gated the same way: an unthemed tab gets no button, and no invisible one to click either.
+// A click on the button is a real button press: it captures the mouse, closes only if released on
+// the same button, and never reaches the tab control -- so a background tab closes without being
+// activated first.
+/***********************************************************************************************************/
+void CXPTabCtrl::EnableCloseButtons()
+{
+	m_bCloseButtons=TRUE;
+	SetPadding(CSize(6+CLOSE_BTN_PADDING, 3));	// 6,3 is the control's default padding
+}
+//----------------------------------------------------------------------------------------------------------
+// The box sits where DrawTabItem puts the icon vertically: a selected tab is drawn 2px higher.
+BOOL CXPTabCtrl::GetCloseButtonRect(int ixItem, CRect& rcButton)
+{
+	if(!m_bCloseButtons || m_eTabOrientation!=e_tabTop) return FALSE;
+	if(ixItem<0 || ixItem>=GetItemCount()) return FALSE;
+
+	CRect rcItem; if(!GetItemRect(ixItem, &rcItem)) return FALSE;
+	int nTop=rcItem.top+(ixItem==GetCurSel()?2:4);
+	rcButton.SetRect(rcItem.right-CLOSE_BTN_MARGIN-CLOSE_BTN_SIZE, nTop, rcItem.right-CLOSE_BTN_MARGIN, nTop+CLOSE_BTN_SIZE);
+	return TRUE;
+}
+//----------------------------------------------------------------------------------------------------------
+int CXPTabCtrl::HitTestCloseButton(CPoint point)
+{
+	if(!m_bCloseButtons || !IsExtendedTabTheamedXP()) return -1;
+
+	int nTab=GetItemCount();
+	for(int ixTab=0; ixTab<nTab; ixTab++)
+	{	CRect rcButton;
+		if(GetCloseButtonRect(ixTab, rcButton) && rcButton.PtInRect(point)) return ixTab;
+	}
+	return -1;
+}
+//----------------------------------------------------------------------------------------------------------
+void CXPTabCtrl::DrawCloseButton(CDC* pDC, int ixItem)
+{
+	CRect rcButton; if(!GetCloseButtonRect(ixItem, rcButton)) return;
+
+	BOOL bHot    =(ixItem==m_ixCloseHot);
+	BOOL bPressed=(ixItem==m_ixClosePressed && bHot);
+	if(bHot)
+	{	COLORREF crFill=bPressed?RGB(0xB4,0xB4,0xB4):RGB(0xD8,0xD8,0xD8);
+		CBrush brFill(crFill); CPen pnFill(PS_SOLID, 1, crFill);
+		CBrush* pOldBrush=pDC->SelectObject(&brFill);
+		CPen*   pOldPen  =pDC->SelectObject(&pnFill);
+		pDC->RoundRect(rcButton, CPoint(4,4));
+		pDC->SelectObject(pOldPen); pDC->SelectObject(pOldBrush);
+	}
+
+	// a 9x8 cross: each diagonal is two 1px lines side by side, which reads as one bold stroke
+	BOOL bStrong=bHot || ixItem==GetCurSel();
+	CPen pnGlyph(PS_SOLID, 1, ::GetSysColor(bStrong?COLOR_BTNTEXT:COLOR_GRAYTEXT));
+	CPen* pOldPen=pDC->SelectObject(&pnGlyph);
+	int x0=rcButton.left+(CLOSE_BTN_SIZE-9)/2, y0=rcButton.top+(CLOSE_BTN_SIZE-8)/2;
+	for(int dx=0; dx<2; dx++)
+	{	pDC->MoveTo(x0+dx, y0  ); pDC->LineTo(x0+dx+8, y0+8);	// LineTo leaves out the end pixel
+		pDC->MoveTo(x0+dx, y0+7); pDC->LineTo(x0+dx+8, y0-1);
+	}
+	pDC->SelectObject(pOldPen);
+}
+//----------------------------------------------------------------------------------------------------------
+void CXPTabCtrl::InvalidateCloseButton(int ixItem)
+{
+	CRect rcButton;
+	if(GetCloseButtonRect(ixItem, rcButton)) InvalidateRect(rcButton, FALSE);
+}
+//----------------------------------------------------------------------------------------------------------
+void CXPTabCtrl::SetCloseHot(int ixItem)
+{
+	if(ixItem==m_ixCloseHot) return;
+	InvalidateCloseButton(m_ixCloseHot);
+	m_ixCloseHot=ixItem;
+	InvalidateCloseButton(m_ixCloseHot);
+}
+//----------------------------------------------------------------------------------------------------------
+void CXPTabCtrl::OnLButtonDown(UINT nFlags, CPoint point)
+{
+	int ixItem=HitTestCloseButton(point);
+	if(ixItem<0) { CTabCtrl::OnLButtonDown(nFlags, point); return; }
+
+	m_ixClosePressed=ixItem;
+	SetCapture();
+	SetCloseHot(ixItem); InvalidateCloseButton(ixItem);
+}
+//----------------------------------------------------------------------------------------------------------
+// Clicking close buttons in quick succession turns every second press into a double click.
+void CXPTabCtrl::OnLButtonDblClk(UINT nFlags, CPoint point)
+{
+	if(HitTestCloseButton(point)>=0) { OnLButtonDown(nFlags, point); return; }
+	CTabCtrl::OnLButtonDblClk(nFlags, point);
+}
+//----------------------------------------------------------------------------------------------------------
+void CXPTabCtrl::OnLButtonUp(UINT nFlags, CPoint point)
+{
+	if(m_ixClosePressed<0) { CTabCtrl::OnLButtonUp(nFlags, point); return; }
+
+	int ixItem=m_ixClosePressed;
+	BOOL bClose=(HitTestCloseButton(point)==ixItem);
+	m_ixClosePressed=-1;	// before ReleaseCapture, so OnCaptureChanged has nothing to undo
+	ReleaseCapture();
+	InvalidateCloseButton(ixItem);
+
+	if(bClose && GetParent()) GetParent()->SendMessage(WM_CLOSE_TAB_ITEM, (WPARAM)ixItem, 0L);
+}
+//----------------------------------------------------------------------------------------------------------
+void CXPTabCtrl::OnMouseMove(UINT nFlags, CPoint point)
+{
+	int ixItem=HitTestCloseButton(point);
+	if(m_ixClosePressed>=0)		// while pressed, only the pressed button lights up
+		SetCloseHot(ixItem==m_ixClosePressed?ixItem:-1);
+	else SetCloseHot(ixItem);
+
+	if(!m_bTrackingLeave)
+	{	TRACKMOUSEEVENT tme={ sizeof(TRACKMOUSEEVENT), TME_LEAVE, m_hWnd, 0 };
+		if(::TrackMouseEvent(&tme)) m_bTrackingLeave=TRUE;
+	}
+	CTabCtrl::OnMouseMove(nFlags, point);
+}
+//----------------------------------------------------------------------------------------------------------
+LRESULT CXPTabCtrl::OnMouseLeave(WPARAM wParam, LPARAM lParam)
+{
+	m_bTrackingLeave=FALSE;
+	if(m_ixClosePressed<0) SetCloseHot(-1);
+	return Default();	// the control tracks its own hot tab with the same message
+}
+//----------------------------------------------------------------------------------------------------------
+void CXPTabCtrl::OnCaptureChanged(CWnd* pWnd)
+{
+	if(m_ixClosePressed>=0)		// capture taken away mid-press: cancel, do not close
+	{	InvalidateCloseButton(m_ixClosePressed);
+		m_ixClosePressed=-1;
+	}
+	CTabCtrl::OnCaptureChanged(pWnd);
+}
 /***********************************************************************************************************/
 // Helper functions
 /***********************************************************************************************************/

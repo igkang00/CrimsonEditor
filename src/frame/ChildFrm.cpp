@@ -84,8 +84,9 @@ int CChildFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 // MDI close button showed it.
 //
 // The view cannot tell, from a WM_SIZE alone, that it is on its way out. So it is told,
-// from each of the three doors out of a document -- here (WM_CLOSE: the file tab, when the
-// close-on-double-click preference is on), OnWindowClose (the MDI close button), and
+// from each of the three doors out of a document -- here (WM_CLOSE: the file tab's close
+// button, a middle click on a tab, or a double click when that preference is on), OnWindowClose
+// (the MDI close button), and
 // CCedtDoc::OnCloseDocument (the File menu, and shutdown).
 void CChildFrame::OnClose()
 {

@@ -33,6 +33,9 @@
 #endif // _MSC_VER > 1000
 
 /////////////////////////////////////////////////////////////////////////////
+// Sent to the parent when a tab's close button is clicked; wParam = tab index.
+#define WM_CLOSE_TAB_ITEM	(WM_USER+4)
+/////////////////////////////////////////////////////////////////////////////
 enum ETabOrientation
 {	
 	e_tabTop=0,
@@ -49,6 +52,10 @@ class CXPTabCtrl : public CTabCtrl
 	CImageList		m_ilTabs; 			// possible tab image list
 	BOOL			m_bTabExtended;		// Use extended Themes functionalities
 	int				m_ixSelOld;			// used to redraw deselected tab background
+	BOOL			m_bCloseButtons;	// draw a close button on every tab (top orientation only)
+	int				m_ixCloseHot;		// tab whose close button is under the mouse, or -1
+	int				m_ixClosePressed;	// tab whose close button holds the capture, or -1
+	BOOL			m_bTrackingLeave;	// TrackMouseEvent(TME_LEAVE) is pending
 // Construction
 public:
 	CXPTabCtrl();
@@ -60,17 +67,30 @@ public:
 	void SetExtended(BOOL bTabExtended) { m_bTabExtended=bTabExtended; }
 	void InitImageList(UINT nBitmapID);
 
+	void EnableCloseButtons();
+	int  HitTestCloseButton(CPoint point);	// client coordinates; tab index or -1
+
 	// Generated message map functions
 protected:
 	//{{AFX_MSG(CXPTabCtrl)
 	afx_msg void OnPaint();
 	afx_msg void OnTabSelChanging(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg BOOL OnTabSelChanged (NMHDR* pNMHDR, LRESULT* pResult); //<--- change returntype to BOOL
+	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
+	afx_msg LRESULT OnMouseLeave(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnCaptureChanged(CWnd* pWnd);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
 	void DrawThemesXpTabItem(CDC* pDC, int ixItem, const CRect& rcItem, UINT uiFlag);
 	void DrawTabItem(CDC* pDC, int ixItem, const CRect& rcItemC, UINT uiFlags);
+	void DrawCloseButton(CDC* pDC, int ixItem);
+	BOOL GetCloseButtonRect(int ixItem, CRect& rcButton);
+	void InvalidateCloseButton(int ixItem);
+	void SetCloseHot(int ixItem);
 	BOOL IsExtendedTabTheamedXP();
 };
 /////////////////////////////////////////////////////////////////////////////

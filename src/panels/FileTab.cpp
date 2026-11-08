@@ -15,6 +15,7 @@ static char THIS_FILE[] = __FILE__;
 
 CMDIFileTab::CMDIFileTab()
 {
+	m_pMButtonChild = NULL;
 }
 
 CMDIFileTab::~CMDIFileTab()
@@ -29,6 +30,7 @@ BEGIN_MESSAGE_MAP(CMDIFileTab, CDialogBar)
 	ON_NOTIFY(TCN_SELCHANGE, IDC_FILE_TAB, OnSelchangeFileTab)
 	ON_NOTIFY_EX(TTN_NEEDTEXT, 0, OnNeedtextFileTab)
 	ON_COMMAND(ID_FILE_TAB_REFRESH, OnFileTabRefresh)
+	ON_MESSAGE(WM_CLOSE_TAB_ITEM, OnCloseTabItem)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -46,6 +48,7 @@ BOOL CMDIFileTab::Create(CWnd * pParentWnd)
 
 	m_lstImage.Create(IDB_MDI_FILE_TAB, 16, 0, RGB(255, 0, 255));
 	m_ctlXPTab.SubclassDlgItem(IDC_FILE_TAB, this);
+	m_ctlXPTab.EnableCloseButtons();
 
 	m_ctlToolTip.Create( & m_ctlXPTab, TTS_NOPREFIX );
 	m_ctlXPTab.SetToolTips( & m_ctlToolTip );
@@ -161,6 +164,18 @@ void CMDIFileTab::OnFileTabRefresh()
 	Invalidate();
 }
 
+// The tab's close button was clicked. WM_CLOSE is the same door the close-on-double-click
+// preference uses, so the "save changes?" prompt and CChildFrame::OnClose bookkeeping apply.
+LRESULT CMDIFileTab::OnCloseTabItem(WPARAM wParam, LPARAM lParam)
+{
+	INT nTab = (INT)wParam;
+	if( nTab < 0 || nTab >= GetMDIFileTabCount() ) return 0L;
+
+	CMDIChildWnd * pChild = GetFileTabItem(nTab);
+	if( pChild ) pChild->PostMessage(WM_CLOSE, 0, 0L);
+	return 0L;
+}
+
 BOOL CMDIFileTab::PreTranslateMessage(MSG* pMsg) 
 {
 	CRect rect; CPoint point;
@@ -168,6 +183,7 @@ BOOL CMDIFileTab::PreTranslateMessage(MSG* pMsg)
 
 	switch( pMsg->message ) {
 	case WM_LBUTTONDOWN:
+		if( IsOnCloseButton(pMsg) ) break; // the close button owns this click: no drag, no double-click action
 		pTabCtrl = (CTabCtrl *)GetDlgItem(IDC_FILE_TAB); ASSERT( pTabCtrl );
 		pTabCtrl->GetWindowRect( & rect ); ScreenToClient( & rect );
 
@@ -176,6 +192,7 @@ BOOL CMDIFileTab::PreTranslateMessage(MSG* pMsg)
 		break;
 
 	case WM_LBUTTONDBLCLK:
+		if( IsOnCloseButton(pMsg) ) break;
 		pTabCtrl = (CTabCtrl *)GetDlgItem(IDC_FILE_TAB); ASSERT( pTabCtrl );
 		pTabCtrl->GetWindowRect( & rect ); ScreenToClient( & rect );
 
@@ -197,6 +214,9 @@ BOOL CMDIFileTab::PreTranslateMessage(MSG* pMsg)
 
 		point.x = LOWORD(pMsg->lParam); point.y = HIWORD(pMsg->lParam);
 		if( rect.PtInRect( point ) ) OnMButtonUpTabCtrl( (UINT)pMsg->wParam, point );
+		// released anywhere -- on a tab or off it -- ends the press
+		m_pMButtonChild = NULL;
+		if( GetCapture() == pTabCtrl ) ReleaseCapture();
 		break;
 
 	case WM_BEGINDRAG_TAB_CTRL:
@@ -209,6 +229,13 @@ BOOL CMDIFileTab::PreTranslateMessage(MSG* pMsg)
 	}
 	
 	return CDialogBar::PreTranslateMessage(pMsg);
+}
+
+BOOL CMDIFileTab::IsOnCloseButton(MSG * pMsg)
+{
+	if( pMsg->hwnd != m_ctlXPTab.GetSafeHwnd() ) return FALSE;
+	CPoint point( (SHORT)LOWORD(pMsg->lParam), (SHORT)HIWORD(pMsg->lParam) ); // tab control client coordinates
+	return m_ctlXPTab.HitTestCloseButton(point) >= 0;
 }
 
 void CMDIFileTab::OnLButtonDownTabCtrl(UINT nFlags, CPoint point) 
@@ -267,12 +294,16 @@ void CMDIFileTab::OnMButtonDownTabCtrl(UINT nFlags, CPoint point)
 	ClientToScreen( & info.pt ); pTabCtrl->ScreenToClient( & info.pt );
 	INT nTab = pTabCtrl->HitTest( & info );
 
+	// Press and release on the same tab closes it, like a button; activating it first would only
+	// flash the document the user is about to close. Capture so a release elsewhere is still seen.
+	m_pMButtonChild = NULL;
+
 	if( nTab >= 0 ) {
 		TCITEM item; item.mask = TCIF_PARAM;
 		pTabCtrl->GetItem(nTab, & item);
 
-		CMDIChildWnd * pChild = (CMDIChildWnd *)item.lParam;
-		pFrame->SetActiveFileTab(pChild);
+		m_pMButtonChild = (CMDIChildWnd *)item.lParam;
+		pTabCtrl->SetCapture();
 	}
 }
 
@@ -286,11 +317,12 @@ void CMDIFileTab::OnMButtonUpTabCtrl(UINT nFlags, CPoint point)
 	INT nTab = pTabCtrl->HitTest( & info );
 
 	if( nTab >= 0 ) {
-	/*	TCITEM item; item.mask = TCIF_PARAM;
+		TCITEM item; item.mask = TCIF_PARAM;
 		pTabCtrl->GetItem(nTab, & item);
 
+		// the tab under the release is live; the remembered pointer is only compared against it
 		CMDIChildWnd * pChild = (CMDIChildWnd *)item.lParam;
-		pChild->PostMessage(WM_CLOSE, 0, 0L); */
+		if( pChild == m_pMButtonChild ) pChild->PostMessage(WM_CLOSE, 0, 0L);
 	}
 }
 
