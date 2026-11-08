@@ -19,6 +19,7 @@
     <ClCompile Include="..\src\util\registry.cpp"><Filter>Sources Under Test</Filter></ClCompile>
     <ClCompile Include="..\src\core\cedtElement.cpp"><Filter>Sources Under Test</Filter></ClCompile>
     <ClCompile Include="..\src\core\cedtBackup.cpp"><Filter>Sources Under Test</Filter></ClCompile>
+    <ClCompile Include="..\src\core\cedtBookmarks.cpp"><Filter>Sources Under Test</Filter></ClCompile>
     <ClCompile Include="RegExp_test.cpp"><Filter>Tests</Filter></ClCompile>
     <ClCompile Include="evaluate_test.cpp"><Filter>Tests</Filter></ClCompile>
     <ClCompile Include="date_test.cpp"><Filter>Tests</Filter></ClCompile>
@@ -33,5 +34,6 @@
     <ClCompile Include="CAnalyzedString_test.cpp"><Filter>Tests</Filter></ClCompile>
     <ClCompile Include="CharWidth_test.cpp"><Filter>Tests</Filter></ClCompile>
     <ClCompile Include="cedtBackup_test.cpp"><Filter>Tests</Filter></ClCompile>
+    <ClCompile Include="cedtBookmarks_test.cpp"><Filter>Tests</Filter></ClCompile>
   </ItemGroup>
 </Project>

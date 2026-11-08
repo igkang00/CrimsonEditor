@@ -109,6 +109,48 @@ static CString _HashKey(const CString & szKey)
 }
 
 
+// The small settings files -- backup headers, session.xml, bookmarks.xml -- share one syntax:
+// lines of <tag name="value" ... />, in UTF-8.
+
+CString EscapeTagValue(LPCTSTR lpszValue)
+{
+	return _Escape(lpszValue);
+}
+
+BOOL WriteUtf8TextFile(LPCTSTR lpszPathName, const CString & szText)
+{
+	std::string utf8 = _ToUtf8(szText, szText.GetLength());
+	CString szTempPath = CString(lpszPathName) + _T(".tmp");
+
+	HANDLE hFile = CreateFile(szTempPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if( hFile == INVALID_HANDLE_VALUE ) return FALSE;
+	DWORD dwWritten = 0;
+	BOOL bOK = utf8.empty() || ( ::WriteFile(hFile, utf8.data(), (DWORD)utf8.size(), & dwWritten, NULL) && dwWritten == utf8.size() );
+	CloseHandle(hFile);
+
+	if( bOK ) bOK = MoveFileEx(szTempPath, lpszPathName, MOVEFILE_REPLACE_EXISTING);
+	if( ! bOK ) DeleteFile(szTempPath);
+	return bOK;
+}
+
+BOOL ReadUtf8TextFile(LPCTSTR lpszPathName, CString & szText)
+{
+	szText.Empty();
+	HANDLE hFile = CreateFile(lpszPathName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	if( hFile == INVALID_HANDLE_VALUE ) return FALSE;
+	std::string utf8; CHAR chunk[4096]; DWORD dwRead = 0;
+	while( ::ReadFile(hFile, chunk, sizeof(chunk), & dwRead, NULL) && dwRead ) utf8.append(chunk, dwRead);
+	CloseHandle(hFile);
+
+	INT nChars = MultiByteToWideChar(CP_UTF8, 0, utf8.data(), (INT)utf8.size(), NULL, 0);
+	if( nChars > 0 ) {
+		MultiByteToWideChar(CP_UTF8, 0, utf8.data(), (INT)utf8.size(), szText.GetBuffer(nChars), nChars);
+		szText.ReleaseBuffer(nChars);
+	}
+	return TRUE;
+}
+
+
 CBackupInfo::CBackupInfo()
 {
 	nKind = 0; nAccount = 0;
@@ -134,16 +176,25 @@ CString FormatBackupHeader(const CBackupInfo & info)
 		szHeader += _T(" title=\"") + _Escape(info.szTitle) + _T("\"");
 	}
 
-	szAttr.Format(_T(" encoding=\"%d\" format=\"%d\" mtime=\"%I64d\" size=\"%I64u\" linenum=\"%d\" />"),
+	szAttr.Format(_T(" encoding=\"%d\" format=\"%d\" mtime=\"%I64d\" size=\"%I64u\" linenum=\"%d\""),
 		info.nEncodingType, info.nFileFormat, info.nModifiedTime, info.nFileSize, info.nLineNum);
 	szHeader += szAttr;
 
+	if( ! info.bookmarks.empty() ) {
+		szHeader += _T(" bookmarks=\"");
+		for( size_t i = 0; i < info.bookmarks.size(); i++ ) {
+			szAttr.Format(i ? _T(",%d") : _T("%d"), info.bookmarks[i]); szHeader += szAttr;
+		}
+		szHeader += _T("\"");
+	}
+
+	szHeader += _T(" />");
 	return szHeader;
 }
 
 // Parse one self-closing tag line, <tag name="value" ... />, into its attributes (values
 // unescaped). FALSE when the line is another tag or is malformed.
-static BOOL _ParseTagLine(LPCTSTR lpszLine, LPCTSTR lpszTag, CMapStringToString & mapAttr)
+BOOL ParseTagLine(LPCTSTR lpszLine, LPCTSTR lpszTag, CMapStringToString & mapAttr)
 {
 	mapAttr.RemoveAll();
 	CString szLine = lpszLine; szLine.Trim();
@@ -181,7 +232,7 @@ static BOOL _ParseTagLine(LPCTSTR lpszLine, LPCTSTR lpszTag, CMapStringToString 
 BOOL ParseBackupHeader(LPCTSTR lpszLine, CBackupInfo & info)
 {
 	CMapStringToString mapAttr;
-	if( ! _ParseTagLine(lpszLine, BACKUP_TAG, mapAttr) ) return FALSE;
+	if( ! ParseTagLine(lpszLine, BACKUP_TAG, mapAttr) ) return FALSE;
 
 	CBackupInfo result; INT nVersion = 0; CString szValue;
 	if( mapAttr.Lookup(_T("version"), szValue) ) nVersion = _ttoi(szValue);
@@ -195,6 +246,10 @@ BOOL ParseBackupHeader(LPCTSTR lpszLine, CBackupInfo & info)
 	if( mapAttr.Lookup(_T("mtime"), szValue) ) result.nModifiedTime = _ttoi64(szValue);
 	if( mapAttr.Lookup(_T("size"), szValue) ) result.nFileSize = _tcstoui64(szValue, NULL, 10);
 	if( mapAttr.Lookup(_T("linenum"), szValue) ) result.nLineNum = _ttoi(szValue);
+	if( mapAttr.Lookup(_T("bookmarks"), szValue) ) {
+		INT nPos = 0; CString szToken = szValue.Tokenize(_T(","), nPos);
+		while( ! szToken.IsEmpty() ) { result.bookmarks.push_back(_ttoi(szToken)); szToken = szValue.Tokenize(_T(","), nPos); }
+	}
 	// any other attribute is from a later build and is ignored
 
 	if( nVersion < 1 || nVersion > BACKUP_FORMAT_VERSION ) return FALSE;
@@ -423,11 +478,11 @@ BOOL ReadBackupSession(LPCTSTR lpszPathName, CSessionTabArray & arrTabs, INT & n
 		if( szLine.Trim().IsEmpty() ) continue;
 
 		if( nLine++ == 0 ) {	// the header: right tag, a version this build reads
-			if( ! _ParseTagLine(szLine, SESSION_TAG, mapAttr) ) return FALSE;
+			if( ! ParseTagLine(szLine, SESSION_TAG, mapAttr) ) return FALSE;
 			INT nVersion = mapAttr.Lookup(_T("version"), szValue) ? _ttoi(szValue) : 0;
 			if( nVersion < 1 || nVersion > BACKUP_FORMAT_VERSION ) return FALSE;
 			if( mapAttr.Lookup(_T("active"), szValue) ) nActive = _ttoi(szValue);
-		} else if( _ParseTagLine(szLine, SESSION_TAB_TAG, mapAttr) && mapAttr.Lookup(_T("key"), szValue) ) {
+		} else if( ParseTagLine(szLine, SESSION_TAB_TAG, mapAttr) && mapAttr.Lookup(_T("key"), szValue) ) {
 			CSessionTab tab; tab.szKey = szValue;
 			if( mapAttr.Lookup(_T("line"), szValue) ) tab.nCaretLine = _ttoi(szValue);
 			if( mapAttr.Lookup(_T("col"), szValue) ) tab.nCaretCol = _ttoi(szValue);

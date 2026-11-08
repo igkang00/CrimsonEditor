@@ -167,6 +167,26 @@ TEST(BackupHeaderTest, RejectsANewerVersion)
 	EXPECT_FALSE(ParseBackupHeader(_T("<cedtbackup version=\"99\" kind=\"file\" path=\"C:\\a.txt\" />"), out));
 }
 
+TEST(BackupHeaderTest, BookmarksTravelWithTheBackup)
+{
+	// An unsaved document's bookmarks refer to its unsaved text, so they ride in its backup.
+	CBackupInfo in = SampleFileInfo(), out;
+	in.bookmarks = { 0, 11, 56 };
+
+	ASSERT_TRUE(ParseBackupHeader(FormatBackupHeader(in), out));
+	EXPECT_EQ((std::vector<INT>{ 0, 11, 56 }), out.bookmarks);
+}
+
+TEST(BackupHeaderTest, NoBookmarksNoAttribute)
+{
+	CBackupInfo in = SampleFileInfo(), out;
+	CString szHeader = FormatBackupHeader(in);
+	EXPECT_EQ(-1, szHeader.Find(_T("bookmarks=")));
+
+	ASSERT_TRUE(ParseBackupHeader(szHeader, out));
+	EXPECT_TRUE(out.bookmarks.empty());
+}
+
 TEST(BackupHeaderTest, IgnoresUnknownAttributes)
 {
 	CBackupInfo out;

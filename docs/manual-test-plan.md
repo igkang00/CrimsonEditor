@@ -536,6 +536,23 @@ The design and the reasons are in [hot-exit.md](hot-exit.md). Backups live in
 - [x] Start the server, save → uploads; the backup is gone; the server holds the edit.
 - [x] With the server running, edit, quit and restart → still no download.
 
+## F. Persistent bookmarks
+
+The design is in [bookmarks.md](bookmarks.md); the record is
+`%APPDATA%\Crimson Editor\bookmarks.xml`. Bookmarks: **Ctrl+F2** toggles, **F2** / **Shift+F2** jump.
+All passed on Debug-KR (`feature/bookmarks`).
+
+- [x] Bookmark a few lines **without editing**, close the tab, reopen → they are back. Quit and
+      restart → they are back. `bookmarks.xml` has an entry for the file.
+- [x] With the editor closed, add lines **above** the bookmarks in another editor → each bookmark
+      follows its line down.
+- [x] Change the **text** of a bookmarked line while closed → that bookmark alone is gone.
+- [x] Change only its **indentation** → the bookmark stays.
+- [x] With the file open, add lines above in another editor, reload at the *modified outside*
+      prompt → the bookmarks follow their lines.
+- [x] An unsaved document with bookmarks, quit and restart (hot exit) → text and bookmarks come back
+      together.
+
 ---
 
 ## The test environment

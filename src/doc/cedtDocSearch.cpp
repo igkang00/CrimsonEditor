@@ -101,6 +101,10 @@ void CCedtDoc::ToggleBookmark(INT nIdxY)
 
 	if( rLine.m_usLineInfo & LI_HAVEBOOKMARK ) rLine.m_usLineInfo &= ~LI_HAVEBOOKMARK;
 	else rLine.m_usLineInfo |= LI_HAVEBOOKMARK;
+
+	// An unsaved document's bookmarks ride in its hot-exit backup: rewrite it, as an edit would,
+	// so a crash keeps them too. (Not an edit: the document does not become modified.)
+	if( IsModified() ) m_clsBackupState.Changed(::GetTickCount64());
 }
 
 BOOL CCedtDoc::FindNextBookmark(INT & nIdxY)

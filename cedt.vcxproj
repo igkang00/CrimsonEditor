@@ -191,6 +191,7 @@
     <ClCompile Include="src\doc\cedtDocAnal.cpp" />
     <ClCompile Include="src\doc\cedtDocDictionary.cpp" />
     <ClCompile Include="src\doc\cedtDocBackup.cpp" />
+    <ClCompile Include="src\doc\cedtDocBookmarks.cpp" />
     <ClCompile Include="src\doc\cedtDocEdit.cpp" />
     <ClCompile Include="src\doc\cedtDocEditAdv.cpp" />
     <ClCompile Include="src\doc\cedtDocFile.cpp" />
@@ -201,6 +202,7 @@
     <ClCompile Include="src\doc\cedtDocUndo.cpp" />
     <ClCompile Include="src\doc\cedtDocView.cpp" />
     <ClCompile Include="src\core\cedtBackup.cpp" />
+    <ClCompile Include="src\core\cedtBookmarks.cpp" />
     <ClCompile Include="src\core\cedtElement.cpp" />
     <ClCompile Include="src\view\cedtView.cpp" />
     <ClCompile Include="src\view\cedtViewAction.cpp" />
@@ -300,6 +302,7 @@
     <ClInclude Include="src\include\cedtColors.h" />
     <ClInclude Include="src\doc\cedtDoc.h" />
     <ClInclude Include="src\core\cedtBackup.h" />
+    <ClInclude Include="src\core\cedtBookmarks.h" />
     <ClInclude Include="src\core\cedtElement.h" />
     <ClInclude Include="src\include\cedtHeader.h" />
     <ClInclude Include="src\view\cedtView.h" />

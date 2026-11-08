@@ -299,6 +299,9 @@ BOOL CCedtApp::InitInstance()
 	::CreateDirectory(m_szAppDataDirectory + _T("\\backup\\remote"), NULL);
 	::CreateDirectory(m_szAppDataDirectory + _T("\\backup\\untitled"), NULL);
 
+	// bookmarks kept per file across sessions (docs/bookmarks.md)
+	CCedtDoc::LoadBookmarkStore();
+
 
 	// load multi-instance flag
 	m_bAllowMultiInstances = FALSE;

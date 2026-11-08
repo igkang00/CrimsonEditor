@@ -16,7 +16,7 @@ Unit tests for Crimson Editor live in [../tests/](../tests/) as a separate `cedt
 | Subsystem | Console |
 | Entry point | `gtest_main` (no custom `main()` yet — see §3) |
 
-Current coverage: **232 tests across 27 suites, all green.**
+Current coverage: **256 tests across 30 suites, all green.**
 
 ---
 
@@ -60,6 +60,7 @@ see [hot-exit.md](hot-exit.md):
 | Module | Test file |
 | --- | --- |
 | [../src/core/cedtBackup.cpp](../src/core/cedtBackup.cpp) — backup file format, timing, per-document state, folder scan, tab-order session | [../tests/cedtBackup_test.cpp](../tests/cedtBackup_test.cpp) |
+| [../src/core/cedtBookmarks.cpp](../src/core/cedtBookmarks.cpp) — persistent bookmarks: line hash, re-finding by content, `bookmarks.xml` store ([bookmarks.md](bookmarks.md)) | [../tests/cedtBookmarks_test.cpp](../tests/cedtBookmarks_test.cpp) |
 
 The remaining "hard" group is the Doc / View / Frame / Dialog layer; it needs a UI-simulation strategy and is not covered yet — see §3.
 

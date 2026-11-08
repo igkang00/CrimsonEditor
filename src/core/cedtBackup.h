@@ -11,6 +11,8 @@
 #pragma once
 #endif // _MSC_VER >= 1000
 
+#include <vector>
+
 #define BACKUP_FORMAT_VERSION			1
 
 #define BACKUP_KIND_FILE				1	// a local file
@@ -26,6 +28,13 @@
 
 class CAnalyzedText;
 
+// The small settings files -- backup headers, session.xml, bookmarks.xml -- share one syntax:
+// lines of <tag name="value" ... />, in UTF-8, values escaped so any path fits on one line.
+CString EscapeTagValue(LPCTSTR lpszValue);
+BOOL ParseTagLine(LPCTSTR lpszLine, LPCTSTR lpszTag, CMapStringToString & mapAttr);	// FALSE: another tag, or malformed
+BOOL WriteUtf8TextFile(LPCTSTR lpszPathName, const CString & szText);	// via a .tmp renamed into place
+BOOL ReadUtf8TextFile(LPCTSTR lpszPathName, CString & szText);
+
 class CBackupInfo
 {
 public:
@@ -39,6 +48,7 @@ public:
 	__int64   nModifiedTime;	// original file's last-write time, CTime seconds
 	ULONGLONG nFileSize;		// original file's size in bytes
 	INT       nLineNum;			// caret line, 1-based
+	std::vector<INT> bookmarks;	// 0-based bookmarked lines of the backed-up text
 
 	CBackupInfo();
 };
