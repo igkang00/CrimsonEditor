@@ -168,6 +168,13 @@ workspace reload in `InitInstance`:
 4. **The tab order** from `session.xml`: tabs it knows go to their recorded places, the rest follow
    in their own order, and the recorded tab is activated.
 
+A document shown in several windows (*Window > New Window*) has its key in `session.xml` once per
+window. Its n-th tab goes back to its n-th recorded place, and the n-th window is the one
+activated. A backup is one per document, so an untitled or FTP document is restored in one window;
+the windows `session.xml` counts beyond those open are reopened onto it before the order is applied.
+Saved files need none — the workspace already reopens each of their windows — and the rule is the
+same for every kind of document: open only what is missing, never close what is extra.
+
 | Situation | Result |
 | --- | --- |
 | Original file unchanged | Opened if not already open, text replaced from the backup, marked modified |
@@ -194,13 +201,14 @@ modified flag and delete the backup of a document that still differs from the di
 
 ## Testing
 
-**Unit** ([tests/cedtBackup_test.cpp](../tests/cedtBackup_test.cpp), 60 tests, written before the
+**Unit** ([tests/cedtBackup_test.cpp](../tests/cedtBackup_test.cpp), 66 tests, written before the
 code they test): the header round trip with quotes, line breaks, Korean and 64-bit values; rejecting
 foreign, malformed and newer headers; the body round trip with empty lines, a trailing empty line,
 surrogate pairs and characters the original encoding cannot hold; a failed write returning FALSE
 quietly and keeping the previous backup; file names; the 1 s / 1 MB / 30 s timing; `CBackupState`
 including Save As and adoption; `IsBackedUp`; the folder scan skipping `.tmp` and foreign files;
-the session file and tab ordering; `CSessionRecord`.
+the session file and tab ordering, including several windows onto one document; the missing-window
+count; `CSessionRecord`.
 
 **Manual** (all passed): quit with modified local, untitled and FTP documents and restart; quit with
 the FTP server stopped and restart (no download, no password prompt, no second window); save a
@@ -223,3 +231,7 @@ exercises crash recovery.
 - **No separate `bom` attribute** — the encoding value already carries it.
 - **The header parser is the backup module's own**, not the project file's `ParseItemAttribute`,
   which lives in a panel class the unit tests cannot link.
+- **Several windows onto one document keep their own places.** The first tab-order version ranked
+  every tab of a document by the document's first entry, so the windows bunched together, and an
+  untitled document shown twice came back once. Found in manual testing; the n-th-to-n-th matching
+  and the reopening of missing windows replaced it.

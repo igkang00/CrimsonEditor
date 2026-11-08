@@ -778,10 +778,79 @@ TEST(BackupSessionTest, SessionEntriesWithNoTabAreIgnored)
 	EXPECT_EQ((std::vector<int>{ 1, 0 }), Order({ _T("a"), _T("b") }, { _T("gone"), _T("b"), _T("a") }));
 }
 
-TEST(BackupSessionTest, TwoWindowsOntoOneDocumentStayTogetherInOrder)
+// A document shown in two windows (Window > New Window) has two tabs with the same key.
+// Each goes back to its own place: the n-th tab of a document takes the place of that
+// document's n-th entry in the session.
+
+TEST(BackupSessionTest, TwoWindowsOntoOneDocumentKeepTheirOwnPlaces)
 {
-	// A document split into two windows has two tabs with the same key.
-	EXPECT_EQ((std::vector<int>{ 1, 0, 2 }), Order({ _T("a"), _T("b"), _T("a") }, { _T("b"), _T("a") }));
+	EXPECT_EQ((std::vector<int>{ 0, 1, 2 }), Order({ _T("a"), _T("b"), _T("a") }, { _T("a"), _T("b"), _T("a") }));
+}
+
+TEST(BackupSessionTest, TwoWindowsOpenedTogetherAreSpreadBackOut)
+{
+	// The restore opened both windows of a before b; at exit, b sat between them.
+	EXPECT_EQ((std::vector<int>{ 0, 2, 1 }), Order({ _T("a"), _T("a"), _T("b") }, { _T("a"), _T("b"), _T("a") }));
+	EXPECT_EQ((std::vector<int>{ 1, 0, 2 }), Order({ _T("b"), _T("a"), _T("a") }, { _T("a"), _T("b"), _T("a") }));
+}
+
+TEST(BackupSessionTest, AWindowBeyondTheSessionCountGoesLast)
+{
+	// A third window onto a, which the session never saw.
+	EXPECT_EQ((std::vector<int>{ 0, 1, 2, 3 }), Order({ _T("a"), _T("b"), _T("a"), _T("a") }, { _T("a"), _T("b"), _T("a") }));
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Windows missing after the restore
+//
+// A backup is one per document, so restoring an untitled or FTP document opens it
+// in one window, even if it was shown in two at exit. (Saved files get every window
+// back from the workspace.) Whatever the session counts beyond what is open is
+// reopened -- onto documents that are open; one that did not come back gets none.
+
+namespace {
+
+std::vector<CString> Missing(std::vector<LPCTSTR> current, std::vector<LPCTSTR> session)
+{
+	CStringArray cur, ses, missing;
+	for( LPCTSTR s : current ) cur.Add(s);
+	for( LPCTSTR s : session ) ses.Add(s);
+	CountMissingWindows(cur, ses, missing);
+	std::vector<CString> v;
+	for( INT i = 0; i < missing.GetSize(); i++ ) v.push_back(missing[i]);
+	return v;
+}
+
+} // namespace
+
+TEST(BackupSessionTest, ASecondWindowThatDidNotComeBackIsMissing)
+{
+	std::vector<CString> v = Missing({ _T("a"), _T("b"), _T("u") }, { _T("a"), _T("u"), _T("b"), _T("u") });
+	ASSERT_EQ(1u, v.size());
+	EXPECT_STREQ(_T("u"), (LPCTSTR)v[0]);
+}
+
+TEST(BackupSessionTest, OneEntryPerMissingWindow)
+{
+	std::vector<CString> v = Missing({ _T("u"), _T("r") }, { _T("u"), _T("u"), _T("u"), _T("r"), _T("r") });
+	ASSERT_EQ(3u, v.size());
+	EXPECT_STREQ(_T("u"), (LPCTSTR)v[0]);
+	EXPECT_STREQ(_T("u"), (LPCTSTR)v[1]);
+	EXPECT_STREQ(_T("r"), (LPCTSTR)v[2]);
+}
+
+TEST(BackupSessionTest, NothingMissingWhenEveryWindowIsBack)
+{
+	EXPECT_EQ(0u, Missing({ _T("a"), _T("b"), _T("a") }, { _T("a"), _T("b"), _T("a") }).size());
+	EXPECT_EQ(0u, Missing({ _T("a"), _T("a"), _T("a") }, { _T("a"), _T("a") }).size());		// more than recorded: left alone
+	EXPECT_EQ(0u, Missing({ _T("a") }, { }).size());
+}
+
+TEST(BackupSessionTest, ADocumentThatIsNotOpenGetsNoWindows)
+{
+	// "gone" failed to restore: there is no document to open a window onto.
+	EXPECT_EQ(0u, Missing({ _T("a") }, { _T("a"), _T("gone"), _T("gone") }).size());
 }
 
 TEST(BackupSessionTest, NoSessionKeepsTheCurrentOrder)

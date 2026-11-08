@@ -422,14 +422,40 @@ BOOL ReadBackupSession(LPCTSTR lpszPathName, CStringArray & arrKeys, INT & nActi
 	return TRUE;
 }
 
+static INT _CountOf(const CStringArray & arr, const CString & szKey, INT nUpTo)
+{
+	INT nCount = 0;
+	for( INT i = 0; i < nUpTo; i++ ) if( arr[i] == szKey ) nCount++;
+	return nCount;
+}
+
+void CountMissingWindows(const CStringArray & arrCurrent, const CStringArray & arrSession, CStringArray & arrMissing)
+{
+	arrMissing.RemoveAll();
+
+	// Walk the session; each entry beyond the number of windows open for its key is missing.
+	// Counting up to the entry, not overall, reports the extras in session order.
+	for( INT j = 0; j < arrSession.GetSize(); j++ ) {
+		const CString & szKey = arrSession[j];
+		INT nOpen = _CountOf(arrCurrent, szKey, (INT)arrCurrent.GetSize());
+		if( nOpen == 0 ) continue;									// nothing to open a window onto
+		if( _CountOf(arrSession, szKey, j) >= nOpen ) arrMissing.Add(szKey);	// this is entry #n, n >= open
+	}
+}
+
 void OrderBySession(const CStringArray & arrCurrent, const CStringArray & arrSession, CArray<INT, INT> & arrOrder)
 {
-	// rank: the key's first position in the session, or past the end for keys it lacks
+	// rank: where this tab's key occurs in the session for the n-th time, n being how many
+	// earlier tabs share the key -- or past the end when the session has no n-th occurrence
 	INT nCount = (INT)arrCurrent.GetSize(), nSession = (INT)arrSession.GetSize();
 	CArray<INT, INT> arrRank; arrRank.SetSize(nCount);
 	for( INT i = 0; i < nCount; i++ ) {
+		INT nNth = _CountOf(arrCurrent, arrCurrent[i], i);
 		arrRank[i] = nSession;
-		for( INT j = 0; j < nSession; j++ ) if( arrSession[j] == arrCurrent[i] ) { arrRank[i] = j; break; }
+		for( INT j = 0, nSeen = 0; j < nSession; j++ ) {
+			if( arrSession[j] != arrCurrent[i] ) continue;
+			if( nSeen++ == nNth ) { arrRank[i] = j; break; }
+		}
 	}
 
 	// stable insertion by rank, so equal ranks keep their current order

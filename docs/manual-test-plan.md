@@ -515,6 +515,10 @@ The design and the reasons are in [hot-exit.md](hot-exit.md). Backups live in
       *and* tab order come back. Task Manager's *End task* is not a crash test: it asks the window
       to close first, so it takes the clean-exit path.
 - [x] Save everything → `session.xml` is gone; it never survives a restart.
+- [x] **Two windows onto one document** (Window > New Window). A saved file as `[A] [B] [A:2]`,
+      edited → comes back as `A, B, A:2`. An untitled `U` as `[A] [U] [B] [U:2]` with `U:2` active →
+      both windows come back, in place, `U:2` active, an edit in one showing in the other. Also
+      after `taskkill /F`.
 
 **FTP** (local FileZilla Server)
 - [x] Edit a remote file → a `.bak` in `backup\remote\`. Quit, **stop the server**, restart → the

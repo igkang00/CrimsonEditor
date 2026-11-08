@@ -95,15 +95,35 @@ void CCedtApp::ApplyBackupSession()
 	if( ! bRead ) return;
 
 	CMainFrame * pFrame = (CMainFrame *)AfxGetMainWnd();
-	INT nCount = pFrame->GetChildFrameCount();
-
 	CArray<CMDIChildWnd *, CMDIChildWnd *> arrChild; CStringArray arrCurrent;
-	for( INT nTab = 0; nTab < nCount; nTab++ ) {
-		CMDIChildWnd * pChild = pFrame->GetChildFrame(nTab);
-		CCedtDoc * pDoc = pChild ? (CCedtDoc *)pChild->GetActiveDocument() : NULL;
-		arrChild.Add(pChild);
-		arrCurrent.Add(pDoc ? pDoc->GetBackupKey() : CString());
+
+	auto collect = [&]() {
+		arrChild.RemoveAll(); arrCurrent.RemoveAll();
+		for( INT nTab = 0; nTab < pFrame->GetChildFrameCount(); nTab++ ) {
+			CMDIChildWnd * pChild = pFrame->GetChildFrame(nTab);
+			CCedtDoc * pDoc = pChild ? (CCedtDoc *)pChild->GetActiveDocument() : NULL;
+			arrChild.Add(pChild);
+			arrCurrent.Add(pDoc ? pDoc->GetBackupKey() : CString());
+		}
+	};
+	collect();
+
+	// A document shown in two windows at exit comes back in one when it was restored from its
+	// backup (untitled, FTP); saved files get all of theirs from the workspace. Reopen the
+	// missing ones -- another window onto the same document, as Window > New Window makes.
+	CStringArray arrMissing;
+	CountMissingWindows(arrCurrent, arrSession, arrMissing);
+	for( INT i = 0; i < arrMissing.GetSize(); i++ ) {
+		INT nTab = 0; while( nTab < arrCurrent.GetSize() && arrCurrent[nTab] != arrMissing[i] ) nTab++;
+		CCedtDoc * pDoc = (nTab < arrChild.GetSize() && arrChild[nTab]) ? (CCedtDoc *)arrChild[nTab]->GetActiveDocument() : NULL;
+		if( ! pDoc ) continue;
+
+		CDocTemplate * pTemplate = pDoc->GetDocTemplate();
+		CFrameWnd * pNewFrame = pTemplate ? pTemplate->CreateNewFrame(pDoc, arrChild[nTab]) : NULL;
+		if( pNewFrame ) pTemplate->InitialUpdateFrame(pNewFrame, pDoc);
 	}
+	if( arrMissing.GetSize() ) collect();
+	INT nCount = (INT)arrChild.GetSize();
 
 	CArray<INT, INT> arrOrder;
 	OrderBySession(arrCurrent, arrSession, arrOrder);
@@ -117,9 +137,14 @@ void CCedtApp::ApplyBackupSession()
 		pFrame->UpdateMDIFileTab(pChild);
 	}
 
+	// The active tab may be one of several windows onto a document: activate the same one, the
+	// n-th of its key, as OrderBySession matches them.
 	if( nActive >= 0 && nActive < arrSession.GetSize() ) {
-		for( INT nTab = 0; nTab < nCount; nTab++ ) {
-			if( arrCurrent[nTab] == arrSession[nActive] && arrChild[nTab] ) { arrChild[nTab]->MDIActivate(); break; }
+		INT nNth = 0;
+		for( INT j = 0; j < nActive; j++ ) if( arrSession[j] == arrSession[nActive] ) nNth++;
+		for( INT nTab = 0, nSeen = 0; nTab < nCount; nTab++ ) {
+			if( arrCurrent[nTab] != arrSession[nActive] ) continue;
+			if( nSeen++ == nNth ) { if( arrChild[nTab] ) arrChild[nTab]->MDIActivate(); break; }
 		}
 	}
 }

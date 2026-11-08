@@ -16,7 +16,7 @@ Unit tests for Crimson Editor live in [../tests/](../tests/) as a separate `cedt
 | Subsystem | Console |
 | Entry point | `gtest_main` (no custom `main()` yet — see §3) |
 
-Current coverage: **223 tests across 27 suites, all green.**
+Current coverage: **229 tests across 27 suites, all green.**
 
 ---
 

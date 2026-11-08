@@ -92,8 +92,14 @@ BOOL WriteBackupSession(LPCTSTR lpszPathName, const CStringArray & arrKeys, INT 
 BOOL ReadBackupSession(LPCTSTR lpszPathName, CStringArray & arrKeys, INT & nActive);	// FALSE: no usable session
 
 // arrOrder[i] = which of arrCurrent goes to position i: tabs the session knows, in session
-// order (first entry for a key wins); then the rest, in their current order.
+// order; then the rest, in their current order. A document open in several windows has the
+// same key several times: its n-th tab takes the place of its n-th session entry.
 void OrderBySession(const CStringArray & arrCurrent, const CStringArray & arrSession, CArray<INT, INT> & arrOrder);
+
+// The windows the session recorded that are not open again: one key per missing window, for
+// documents that are open at least once. A document restored from its backup opens in one
+// window, however many showed it at exit.
+void CountMissingWindows(const CStringArray & arrCurrent, const CStringArray & arrSession, CStringArray & arrMissing);
 
 // Keeping session.xml current while the editor runs, so the tab order survives a crash too.
 // Update() is asked on every backup-timer tick and says what to do with the file; it assumes
