@@ -421,3 +421,111 @@ TEST(BackupDueTest, FirstBackupOfAnyDocumentWaitsOnlyForQuiet)
 	EXPECT_FALSE(IsBackupDue(5999, 5000, 0, 0, TRUE));
 	EXPECT_TRUE (IsBackupDue(6000, 5000, 0, 0, TRUE));
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Per-document backup state
+//
+// What a document remembers between timer ticks: when it last changed, when and
+// how large its last backup was, and which file that backup went to -- so a Save As
+// or a save can say exactly which file to delete.
+
+TEST(BackupStateTest, AFreshDocumentHasNothingToDo)
+{
+	CBackupState state;
+	EXPECT_FALSE(state.IsDue(100000));
+	EXPECT_FALSE(state.HasBackup());
+	EXPECT_STREQ(_T(""), (LPCTSTR)state.Discard());
+}
+
+TEST(BackupStateTest, AnEditBecomesDueAfterOneSecondOfQuiet)
+{
+	CBackupState state;
+	state.Changed(5000);
+	EXPECT_FALSE(state.IsDue(5999));
+	EXPECT_TRUE (state.IsDue(6000));
+}
+
+TEST(BackupStateTest, WritingSettlesItUntilTheNextEdit)
+{
+	CBackupState state;
+	state.Changed(5000);
+	state.Written(6000, 100, _T("C:\\b\\file\\1.bak"));
+
+	EXPECT_TRUE (state.HasBackup());
+	EXPECT_FALSE(state.IsDue(60000));
+
+	state.Changed(61000);
+	EXPECT_TRUE (state.IsDue(62000));
+}
+
+TEST(BackupStateTest, AnEditDuringTheWriteIsNotLost)
+{
+	// The timer reads the time, writes, then reports. An edit stamped after that
+	// time stays pending.
+	CBackupState state;
+	state.Changed(5000);
+	state.Changed(6500);						// typed again while the write was running
+	state.Written(6000, 100, _T("C:\\b\\file\\1.bak"));
+	EXPECT_TRUE(state.IsDue(7500));
+}
+
+TEST(BackupStateTest, ALargeBackupSpacesTheNextOneThirtySeconds)
+{
+	CBackupState state;
+	state.Changed(5000);
+	state.Written(6000, BACKUP_LARGE_BYTES + 1, _T("C:\\b\\file\\1.bak"));
+
+	state.Changed(7000);
+	EXPECT_FALSE(state.IsDue(35999));
+	EXPECT_TRUE (state.IsDue(36000));
+}
+
+TEST(BackupStateTest, DiscardHandsBackTheFileToDeleteAndClearsThePending)
+{
+	CBackupState state;
+	state.Changed(5000);
+	state.Written(6000, 100, _T("C:\\b\\file\\1.bak"));
+	state.Changed(7000);						// edited, then saved before the next backup
+
+	EXPECT_STREQ(_T("C:\\b\\file\\1.bak"), (LPCTSTR)state.Discard());
+	EXPECT_FALSE(state.HasBackup());
+	EXPECT_FALSE(state.IsDue(100000));			// saved: nothing left to back up
+	EXPECT_STREQ(_T(""), (LPCTSTR)state.Discard());
+
+	state.Changed(200000);						// edited again after the save
+	EXPECT_TRUE(state.IsDue(201000));
+}
+
+TEST(BackupStateTest, WritingUnderANewNameHandsBackTheStaleFile)
+{
+	// Save As to another path, then more edits: the backup moves to a new name, and
+	// the old one must not be left behind to be restored as a phantom next time.
+	CBackupState state;
+	state.Changed(5000);
+	EXPECT_STREQ(_T(""), (LPCTSTR)state.Written(6000, 100, _T("C:\\b\\untitled\\x.bak")));
+
+	state.Changed(7000);
+	EXPECT_STREQ(_T(""), (LPCTSTR)state.Written(8000, 100, _T("C:\\b\\untitled\\x.bak")));	// same name: nothing stale
+
+	state.Changed(9000);
+	EXPECT_STREQ(_T("C:\\b\\untitled\\x.bak"), (LPCTSTR)state.Written(10000, 100, _T("C:\\b\\file\\2.bak")));
+	EXPECT_STREQ(_T("C:\\b\\file\\2.bak"), (LPCTSTR)state.Discard());
+}
+
+TEST(BackupStateTest, AdoptingARestoredBackupKeepsItOnRecord)
+{
+	// After a restart the document comes back modified, its backup already on disk.
+	// The state takes that file over, so a save deletes it and a further edit
+	// rewrites it in place.
+	CBackupState state;
+	state.Adopt(_T("C:\\b\\file\\1.bak"));
+
+	EXPECT_TRUE (state.HasBackup());
+	EXPECT_FALSE(state.IsDue(100000));			// the file on disk is already current
+
+	state.Changed(200000);
+	EXPECT_TRUE(state.IsDue(201000));
+	EXPECT_STREQ(_T(""), (LPCTSTR)state.Written(201000, 100, _T("C:\\b\\file\\1.bak")));
+	EXPECT_STREQ(_T("C:\\b\\file\\1.bak"), (LPCTSTR)state.Discard());
+}

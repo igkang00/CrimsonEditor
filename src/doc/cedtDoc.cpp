@@ -161,6 +161,7 @@ CCedtDoc::~CCedtDoc()
 void CCedtDoc::OnCloseDocument()
 {
 	m_bClosing = TRUE;
+	DiscardBackup();                // closed: its unsaved changes were saved or discarded on purpose
 	CDocument::OnCloseDocument();   // usually deletes this
 }
 

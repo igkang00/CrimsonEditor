@@ -299,3 +299,48 @@ BOOL IsBackupDue(ULONGLONG nNow, ULONGLONG nLastChange, ULONGLONG nLastBackup, U
 
 	return TRUE;
 }
+
+
+CBackupState::CBackupState()
+{
+	m_nLastChange = m_nLastBackup = m_nLastBackupBytes = 0;
+	m_bPending = FALSE;
+}
+
+void CBackupState::Changed(ULONGLONG nNow)
+{
+	m_nLastChange = nNow;
+	m_bPending = TRUE;
+}
+
+BOOL CBackupState::IsDue(ULONGLONG nNow) const
+{
+	return IsBackupDue(nNow, m_nLastChange, m_nLastBackup, m_nLastBackupBytes, m_bPending);
+}
+
+CString CBackupState::Written(ULONGLONG nNow, ULONGLONG nBytes, LPCTSTR lpszPath)
+{
+	CString szStale;
+	if( ! m_szPath.IsEmpty() && m_szPath.CompareNoCase(lpszPath) ) szStale = m_szPath;
+
+	m_szPath = lpszPath;
+	m_nLastBackup = nNow;
+	m_nLastBackupBytes = nBytes;
+	m_bPending = ( m_nLastChange > nNow );		// an edit stamped after the write began is still owed
+
+	return szStale;
+}
+
+CString CBackupState::Discard()
+{
+	CString szPath = m_szPath;
+	m_szPath.Empty();
+	m_bPending = FALSE;
+	return szPath;
+}
+
+void CBackupState::Adopt(LPCTSTR lpszPath)
+{
+	m_szPath = lpszPath;
+	m_bPending = FALSE;
+}

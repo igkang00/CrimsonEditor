@@ -293,6 +293,12 @@ BOOL CCedtApp::InitInstance()
 	::CreateDirectory(m_szAppDataDirectory + _T("\\macros"), NULL);
 	::CreateDirectory(m_szAppDataDirectory + _T("\\colors"), NULL);
 
+	// hot-exit backups of unsaved documents (docs/hot-exit.md)
+	::CreateDirectory(m_szAppDataDirectory + _T("\\backup"), NULL);
+	::CreateDirectory(m_szAppDataDirectory + _T("\\backup\\file"), NULL);
+	::CreateDirectory(m_szAppDataDirectory + _T("\\backup\\remote"), NULL);
+	::CreateDirectory(m_szAppDataDirectory + _T("\\backup\\untitled"), NULL);
+
 
 	// load multi-instance flag
 	m_bAllowMultiInstances = FALSE;

@@ -129,6 +129,7 @@
 #include "Utility.h"
 
 #include "cedtElement.h"
+#include "cedtBackup.h"
 #include "StatusBarEx.h"
 #include "SplitterWndEx.h"
 #include "FileTabDropTarget.h"

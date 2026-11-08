@@ -68,4 +68,36 @@ CString GetBackupRelativePath(const CBackupInfo & info);
 // means never. nLastBackupBytes is the size of the previous backup (0 if none).
 BOOL IsBackupDue(ULONGLONG nNow, ULONGLONG nLastChange, ULONGLONG nLastBackup, ULONGLONG nLastBackupBytes, BOOL bChangedSinceBackup);
 
+// What one document remembers between backup-timer ticks. Pure bookkeeping -- the caller
+// does the file work and passes in the time (milliseconds, e.g. GetTickCount64()).
+class CBackupState
+{
+public:
+	CBackupState();
+
+	void Changed(ULONGLONG nNow);				// the document was edited
+	BOOL IsDue(ULONGLONG nNow) const;
+
+	// A backup was written to lpszPath. Returns the previous backup's path when it was a
+	// different file (the document was renamed by Save As), which the caller deletes;
+	// otherwise an empty string.
+	CString Written(ULONGLONG nNow, ULONGLONG nBytes, LPCTSTR lpszPath);
+
+	// The document needs no backup any more: saved, reloaded, or closed. Returns the backup
+	// file to delete, or an empty string when there is none.
+	CString Discard();
+
+	// Take over a backup restored from a previous session; it is current as it stands.
+	void Adopt(LPCTSTR lpszPath);
+
+	BOOL HasBackup() const { return ! m_szPath.IsEmpty(); }
+
+protected:
+	ULONGLONG m_nLastChange;
+	ULONGLONG m_nLastBackup;		// 0: never backed up in this session
+	ULONGLONG m_nLastBackupBytes;
+	BOOL      m_bPending;			// changed since the last backup
+	CString   m_szPath;				// the backup file on disk, or empty
+};
+
 #endif // !defined(_CEDT_BACKUP_H_)

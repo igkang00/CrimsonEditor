@@ -40,6 +40,7 @@
     <ClCompile Include="src\doc\cedtDoc.cpp"><Filter>Source Files</Filter></ClCompile>
     <ClCompile Include="src\doc\cedtDocAnal.cpp"><Filter>Source Files</Filter></ClCompile>
     <ClCompile Include="src\doc\cedtDocDictionary.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="src\doc\cedtDocBackup.cpp"><Filter>Source Files</Filter></ClCompile>
     <ClCompile Include="src\doc\cedtDocEdit.cpp"><Filter>Source Files</Filter></ClCompile>
     <ClCompile Include="src\doc\cedtDocEditAdv.cpp"><Filter>Source Files</Filter></ClCompile>
     <ClCompile Include="src\doc\cedtDocFile.cpp"><Filter>Source Files</Filter></ClCompile>
@@ -49,6 +50,7 @@
     <ClCompile Include="src\doc\cedtDocSyntax.cpp"><Filter>Source Files</Filter></ClCompile>
     <ClCompile Include="src\doc\cedtDocUndo.cpp"><Filter>Source Files</Filter></ClCompile>
     <ClCompile Include="src\doc\cedtDocView.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="src\core\cedtBackup.cpp"><Filter>Source Files</Filter></ClCompile>
     <ClCompile Include="src\core\cedtElement.cpp"><Filter>Source Files</Filter></ClCompile>
     <ClCompile Include="src\view\cedtView.cpp"><Filter>Source Files</Filter></ClCompile>
     <ClCompile Include="src\view\cedtViewAction.cpp"><Filter>Source Files</Filter></ClCompile>
@@ -145,6 +147,7 @@
     <ClInclude Include="src\app\cedtapp.h"><Filter>Header Files</Filter></ClInclude>
     <ClInclude Include="src\include\cedtColors.h"><Filter>Header Files</Filter></ClInclude>
     <ClInclude Include="src\doc\cedtDoc.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="src\core\cedtBackup.h"><Filter>Header Files</Filter></ClInclude>
     <ClInclude Include="src\core\cedtElement.h"><Filter>Header Files</Filter></ClInclude>
     <ClInclude Include="src\include\cedtHeader.h"><Filter>Header Files</Filter></ClInclude>
     <ClInclude Include="src\view\cedtView.h"><Filter>Header Files</Filter></ClInclude>

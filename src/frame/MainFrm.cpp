@@ -34,6 +34,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	ON_COMMAND(ID_WINDOW_NEXT, OnWindowNext)
 	ON_COMMAND(ID_WINDOW_PREV, OnWindowPrev)
 	ON_WM_SIZE()
+	ON_WM_TIMER()
 	ON_COMMAND(ID_FILE_WINDOW_HIDE, OnFileWindowHide)
 	ON_COMMAND(ID_FILE_WINDOW_SYNC, OnFileWindowSync)
 	ON_COMMAND(ID_OUTPUT_WINDOW_HIDE, OnOutputWindowHide)
@@ -165,7 +166,31 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	SetCaretPositionInfo(0, 0, 0);
 
+	// hot-exit backups: each tick writes the documents whose backup has fallen due
+	SetTimer(ID_TIMER_BACKUP, 500, NULL);
+
 	return 0;
+}
+
+void CMainFrame::OnTimer(UINT_PTR nIDEvent)
+{
+	if( nIDEvent == ID_TIMER_BACKUP ) { BackupModifiedDocuments(); return; }
+	CMDIFrameWnd::OnTimer(nIDEvent);
+}
+
+// Backups belong to the hot exit, which rides on "Reload working files on startup"; with that
+// off, exit prompts as it always did and no backup is kept. Only the first instance takes part:
+// it is the one whose workspace is reloaded, and two instances would share one backup folder.
+void CMainFrame::BackupModifiedDocuments()
+{
+	if( ! CCedtApp::m_bReloadWorkingFilesOnStartup || ! CCedtApp::m_bFirstInstance ) return;
+
+	ULONGLONG nNow = ::GetTickCount64();
+	CCedtApp * pApp = (CCedtApp *)AfxGetApp(); POSITION pos = pApp->GetFirstDocPosition();
+	while( pos ) {
+		CCedtDoc * pDoc = (CCedtDoc *)pApp->GetNextDoc(pos);
+		pDoc->WriteBackupIfDue(nNow);
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////

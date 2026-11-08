@@ -62,6 +62,10 @@ public: // file contents & status
 	// frame takes.
 	BOOL m_bClosing;
 
+protected: // hot-exit backup (cedtDocBackup.cpp)
+	CBackupState m_clsBackupState;
+	CString m_szUntitledBackupId;	// names an untitled document's backup; assigned on its first one
+
 public: // shared remote path name
 	static INT m_nCurrentFtpAccount;
 	static CString m_szCurrentRemotePathName;
@@ -127,6 +131,18 @@ protected:
 	BOOL OnReloadDocument(LPCTSTR lpszPathName, INT nEncodingType);
 //	BOOL OnOpenDocument(LPCTSTR lpszPathName);
 //	BOOL OnSaveDocument(LPCTSTR lpszPathName);
+
+
+public: // *** cedtDocBackup.cpp ***
+	static CString GetBackupDirectory();
+
+	virtual void SetModifiedFlag(BOOL bModified = TRUE);
+
+	BOOL WriteBackupIfDue(ULONGLONG nNow);
+	BOOL WriteBackup(ULONGLONG nNow);
+	void DiscardBackup();
+protected:
+	void FillBackupInfo(CBackupInfo & info);
 
 
 public: // *** cedtDocView.cpp ***
