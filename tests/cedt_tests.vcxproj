@@ -132,6 +132,7 @@
     <ClCompile Include="..\src\util\Utility.cpp" />
     <ClCompile Include="..\src\util\registry.cpp" />
     <ClCompile Include="..\src\core\cedtElement.cpp" />
+    <ClCompile Include="..\src\core\cedtBackup.cpp" />
     <ClCompile Include="RegExp_test.cpp" />
     <ClCompile Include="evaluate_test.cpp" />
     <ClCompile Include="date_test.cpp" />
@@ -149,6 +150,7 @@
     <ClCompile Include="CAnalyzedTextBulk_test.cpp" />
     <ClCompile Include="CLineList_test.cpp" />
     <ClCompile Include="CAnalyzedTextFile_test.cpp" />
+    <ClCompile Include="cedtBackup_test.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

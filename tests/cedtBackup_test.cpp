@@ -1,0 +1,423 @@
+#include "StdAfx.h"
+#include "cedtElement.h"
+#include "cedtBackup.h"
+#include <gtest/gtest.h>
+#include <string>
+#include <vector>
+
+// Hot-exit backups (docs/hot-exit.md).
+//
+// A backup is one file per unsaved document: a single header line describing the
+// document, then its text in UTF-8. These tests pin down the parts that have to be
+// right before any of it is wired into the document: the header survives every
+// value a document can hold, the body survives every character, a failed write
+// never disturbs the backup already on disk, and the timing rule decides "now"
+// exactly where the design says.
+
+namespace {
+
+CString TempPath(LPCTSTR lpszName)
+{
+	TCHAR szDir[MAX_PATH]; GetTempPath(MAX_PATH, szDir);
+	return CString(szDir) + lpszName;
+}
+
+std::vector<unsigned char> ReadBytes(LPCTSTR lpszPath)
+{
+	std::vector<unsigned char> v;
+	FILE * fp = NULL;
+	_tfopen_s(&fp, lpszPath, _T("rb"));
+	if( ! fp ) return v;
+	unsigned char buf[4096]; size_t n;
+	while( (n = fread(buf, 1, sizeof(buf), fp)) > 0 ) v.insert(v.end(), buf, buf + n);
+	fclose(fp);
+	return v;
+}
+
+void WriteBytes(LPCTSTR lpszPath, const std::string & s)
+{
+	FILE * fp = NULL;
+	_tfopen_s(&fp, lpszPath, _T("wb"));
+	ASSERT_NE(nullptr, fp);
+	if( s.size() ) fwrite(s.data(), 1, s.size(), fp);
+	fclose(fp);
+}
+
+BOOL FileExists(LPCTSTR lpszPath)
+{
+	return GetFileAttributes(lpszPath) != INVALID_FILE_ATTRIBUTES;
+}
+
+void FillText(CAnalyzedText & text, const std::vector<CString> & lines)
+{
+	text.RemoveAll();
+	for( size_t i = 0; i < lines.size(); i++ ) text.AddTail((LPCTSTR)lines[i]);
+}
+
+std::vector<CString> TextLines(CAnalyzedText & text)
+{
+	std::vector<CString> v;
+	POSITION pos = text.GetHeadPosition();
+	while( pos ) v.push_back(CString((LPCTSTR)text.GetNext(pos)));
+	return v;
+}
+
+CBackupInfo SampleFileInfo()
+{
+	CBackupInfo info;
+	info.nKind = BACKUP_KIND_FILE;
+	info.szPath = _T("E:\\Work\\project dir\\\xD55C\xAE00.txt");	// a space and Korean in the path
+	info.nEncodingType = ENCODING_TYPE_UTF8_WBOM;
+	info.nFileFormat = FILE_FORMAT_UNIX;
+	info.nModifiedTime = 1767225600;									// 2026-01-01, as CTime seconds
+	info.nFileSize = 5120;
+	info.nLineNum = 42;
+	return info;
+}
+
+} // namespace
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Header line
+
+TEST(BackupHeaderTest, IsOneLineStartingWithTheTag)
+{
+	CString szHeader = FormatBackupHeader(SampleFileInfo());
+
+	EXPECT_EQ(0, szHeader.Find(_T("<cedtbackup ")));
+	EXPECT_EQ(-1, szHeader.Find(_T('\n')));
+	EXPECT_EQ(-1, szHeader.Find(_T('\r')));
+}
+
+TEST(BackupHeaderTest, LocalFileRoundTrips)
+{
+	CBackupInfo in = SampleFileInfo(), out;
+	ASSERT_TRUE(ParseBackupHeader(FormatBackupHeader(in), out));
+
+	EXPECT_EQ(BACKUP_KIND_FILE, out.nKind);
+	EXPECT_STREQ((LPCTSTR)in.szPath, (LPCTSTR)out.szPath);
+	EXPECT_EQ(ENCODING_TYPE_UTF8_WBOM, out.nEncodingType);
+	EXPECT_EQ(FILE_FORMAT_UNIX, out.nFileFormat);
+	EXPECT_EQ(in.nModifiedTime, out.nModifiedTime);
+	EXPECT_EQ(in.nFileSize, out.nFileSize);
+	EXPECT_EQ(42, out.nLineNum);
+}
+
+TEST(BackupHeaderTest, RemoteFileRoundTrips)
+{
+	CBackupInfo in;
+	in.nKind = BACKUP_KIND_REMOTE;
+	in.nAccount = 3;
+	in.szPath = _T("/home/user/my \"quoted\" dir/a&b <c>.txt");	// remote names may hold anything
+	in.nEncodingType = ENCODING_TYPE_ASCII;
+	in.nFileFormat = FILE_FORMAT_DOS;
+
+	CBackupInfo out;
+	ASSERT_TRUE(ParseBackupHeader(FormatBackupHeader(in), out));
+
+	EXPECT_EQ(BACKUP_KIND_REMOTE, out.nKind);
+	EXPECT_EQ(3, out.nAccount);
+	EXPECT_STREQ((LPCTSTR)in.szPath, (LPCTSTR)out.szPath);
+}
+
+TEST(BackupHeaderTest, UntitledRoundTripsWithItsIdAndTitle)
+{
+	CBackupInfo in;
+	in.nKind = BACKUP_KIND_UNTITLED;
+	in.szId = _T("20261108-0001");
+	in.szTitle = _T("Untitled2 \"draft\" & <notes>\r\n\xD55C\xAE00");	// characters that must be escaped
+
+	CBackupInfo out;
+	CString szHeader = FormatBackupHeader(in);
+	EXPECT_EQ(-1, szHeader.Find(_T('\n')));		// the line break in the title is escaped too
+	ASSERT_TRUE(ParseBackupHeader(szHeader, out));
+
+	EXPECT_EQ(BACKUP_KIND_UNTITLED, out.nKind);
+	EXPECT_STREQ(_T("20261108-0001"), (LPCTSTR)out.szId);
+	EXPECT_STREQ((LPCTSTR)in.szTitle, (LPCTSTR)out.szTitle);
+}
+
+TEST(BackupHeaderTest, LargeTimeAndSizeSurvive)
+{
+	CBackupInfo in = SampleFileInfo(), out;
+	in.nModifiedTime = 32503680000;					// year 3000: past 32 bits
+	in.nFileSize = 5ULL * 1024 * 1024 * 1024;		// 5 GB: past 32 bits
+
+	ASSERT_TRUE(ParseBackupHeader(FormatBackupHeader(in), out));
+	EXPECT_EQ(in.nModifiedTime, out.nModifiedTime);
+	EXPECT_EQ(in.nFileSize, out.nFileSize);
+}
+
+TEST(BackupHeaderTest, RejectsLinesThatAreNotBackupHeaders)
+{
+	CBackupInfo out;
+	EXPECT_FALSE(ParseBackupHeader(_T(""), out));
+	EXPECT_FALSE(ParseBackupHeader(_T("hello world"), out));
+	EXPECT_FALSE(ParseBackupHeader(_T("<localfile path=\"C:\\a.txt\" />"), out));
+	EXPECT_FALSE(ParseBackupHeader(_T("<cedtbackup version=\"1\" path=\"C:\\a.txt\" />"), out));	// no kind
+	EXPECT_FALSE(ParseBackupHeader(_T("<cedtbackup version=\"1\" kind=\"file\" path=\"C:\\a.txt"), out));	// unterminated
+}
+
+TEST(BackupHeaderTest, RejectsANewerVersion)
+{
+	// A backup from a future build may mean something this build cannot honour;
+	// leaving it alone is safer than restoring it wrongly.
+	CBackupInfo out;
+	EXPECT_FALSE(ParseBackupHeader(_T("<cedtbackup version=\"99\" kind=\"file\" path=\"C:\\a.txt\" />"), out));
+}
+
+TEST(BackupHeaderTest, IgnoresUnknownAttributes)
+{
+	CBackupInfo out;
+	ASSERT_TRUE(ParseBackupHeader(_T("<cedtbackup version=\"1\" kind=\"file\" path=\"C:\\a.txt\" future=\"x\" />"), out));
+	EXPECT_STREQ(_T("C:\\a.txt"), (LPCTSTR)out.szPath);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Backup file
+
+TEST(BackupFileTest, TextRoundTripsExactly)
+{
+	std::vector<CString> lines = {
+		_T("first line"),
+		_T(""),													// an empty line in the middle
+		_T("\xD55C\xAE00 Korean"),
+		_T("emoji \xD83D\xDE00 here"),							// a surrogate pair
+		_T("\ttabs and   spaces  "),							// trailing blanks kept
+		_T(""),													// a trailing empty line
+	};
+	CAnalyzedText text; FillText(text, lines);
+
+	CString szPath = TempPath(_T("cedt_backup_roundtrip.bak"));
+	ASSERT_TRUE(WriteBackupFile(szPath, SampleFileInfo(), text));
+
+	CBackupInfo out; CAnalyzedText back;
+	ASSERT_TRUE(ReadBackupFile(szPath, out, back));
+
+	EXPECT_STREQ((LPCTSTR)SampleFileInfo().szPath, (LPCTSTR)out.szPath);
+	std::vector<CString> got = TextLines(back);
+	ASSERT_EQ(lines.size(), got.size());
+	for( size_t i = 0; i < lines.size(); i++ ) EXPECT_STREQ((LPCTSTR)lines[i], (LPCTSTR)got[i]) << "line " << i;
+
+	_tremove(szPath);
+}
+
+TEST(BackupFileTest, AnEmptyDocumentRoundTrips)
+{
+	CAnalyzedText text; FillText(text, { _T("") });		// an empty document is one empty line
+
+	CString szPath = TempPath(_T("cedt_backup_empty.bak"));
+	ASSERT_TRUE(WriteBackupFile(szPath, SampleFileInfo(), text));
+
+	CBackupInfo out; CAnalyzedText back;
+	ASSERT_TRUE(ReadBackupFile(szPath, out, back));
+	ASSERT_EQ(1, (int)back.GetCount());
+	EXPECT_STREQ(_T(""), (LPCTSTR)back.GetHead());
+
+	_tremove(szPath);
+}
+
+TEST(BackupFileTest, BodyIsUtf8WhateverTheDocumentEncoding)
+{
+	// An ANSI (CP949/CP1252) document can hold characters its own encoding cannot
+	// write. The backup must not go through that encoding, or they turn into '?'.
+	CBackupInfo info = SampleFileInfo();
+	info.nEncodingType = ENCODING_TYPE_ASCII;
+
+	CAnalyzedText text; FillText(text, { _T("\x20AC \xD83D\xDE00") });	// euro sign, emoji
+
+	CString szPath = TempPath(_T("cedt_backup_utf8.bak"));
+	ASSERT_TRUE(WriteBackupFile(szPath, info, text));
+
+	std::vector<unsigned char> bytes = ReadBytes(szPath);
+	std::string s(bytes.begin(), bytes.end());
+	size_t nBody = s.find('\n');
+	ASSERT_NE(std::string::npos, nBody);
+	EXPECT_EQ("\xE2\x82\xAC \xF0\x9F\x98\x80", s.substr(nBody + 1));		// UTF-8, no BOM
+
+	CBackupInfo out; CAnalyzedText back;
+	ASSERT_TRUE(ReadBackupFile(szPath, out, back));
+	EXPECT_EQ(ENCODING_TYPE_ASCII, out.nEncodingType);		// the document keeps its own encoding
+	EXPECT_STREQ(_T("\x20AC \xD83D\xDE00"), (LPCTSTR)back.GetHead());
+
+	_tremove(szPath);
+}
+
+TEST(BackupFileTest, RewritingReplacesAndLeavesNoTemporaryFile)
+{
+	CString szPath = TempPath(_T("cedt_backup_rewrite.bak"));
+	CAnalyzedText text;
+
+	FillText(text, { _T("old") });
+	ASSERT_TRUE(WriteBackupFile(szPath, SampleFileInfo(), text));
+	FillText(text, { _T("new") });
+	ASSERT_TRUE(WriteBackupFile(szPath, SampleFileInfo(), text));
+
+	CBackupInfo out; CAnalyzedText back;
+	ASSERT_TRUE(ReadBackupFile(szPath, out, back));
+	EXPECT_STREQ(_T("new"), (LPCTSTR)back.GetHead());
+	EXPECT_FALSE(FileExists(szPath + _T(".tmp")));
+
+	_tremove(szPath);
+}
+
+TEST(BackupFileTest, AFailedWriteReportsFalseQuietly)
+{
+	// Backups are written from a timer every second; a failure must come back as a
+	// return value, never as a message box.
+	CAnalyzedText text; FillText(text, { _T("x") });
+	EXPECT_FALSE(WriteBackupFile(TempPath(_T("no_such_dir_cedt\\a.bak")), SampleFileInfo(), text));
+}
+
+TEST(BackupFileTest, AFailedWriteKeepsThePreviousBackup)
+{
+	CString szPath = TempPath(_T("cedt_backup_keep.bak"));
+	CAnalyzedText text; FillText(text, { _T("kept") });
+	ASSERT_TRUE(WriteBackupFile(szPath, SampleFileInfo(), text));
+
+	// Hold the temporary file open with no sharing, so the next write cannot create it.
+	HANDLE hBlock = CreateFile(szPath + _T(".tmp"), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
+	ASSERT_NE(INVALID_HANDLE_VALUE, hBlock);
+
+	FillText(text, { _T("lost") });
+	EXPECT_FALSE(WriteBackupFile(szPath, SampleFileInfo(), text));
+
+	CloseHandle(hBlock);
+	_tremove(szPath + _T(".tmp"));
+
+	CBackupInfo out; CAnalyzedText back;
+	ASSERT_TRUE(ReadBackupFile(szPath, out, back));
+	EXPECT_STREQ(_T("kept"), (LPCTSTR)back.GetHead());
+
+	_tremove(szPath);
+}
+
+TEST(BackupFileTest, ReportsTheBytesWritten)
+{
+	CAnalyzedText text; FillText(text, { _T("abc") });
+	CString szPath = TempPath(_T("cedt_backup_bytes.bak"));
+
+	ULONGLONG nBytes = 0;
+	ASSERT_TRUE(WriteBackupFile(szPath, SampleFileInfo(), text, & nBytes));
+	EXPECT_EQ((ULONGLONG)ReadBytes(szPath).size(), nBytes);
+
+	_tremove(szPath);
+}
+
+TEST(BackupFileTest, ReadingAMissingOrForeignFileFails)
+{
+	CBackupInfo out; CAnalyzedText back;
+	EXPECT_FALSE(ReadBackupFile(TempPath(_T("cedt_backup_missing.bak")), out, back));
+
+	CString szPath = TempPath(_T("cedt_backup_foreign.bak"));
+	WriteBytes(szPath, "just some text\nsecond line");
+	EXPECT_FALSE(ReadBackupFile(szPath, out, back));
+	_tremove(szPath);
+}
+
+TEST(BackupFileTest, HeaderCanBeReadWithoutTheBody)
+{
+	// The restore pass scans every backup's header before deciding what to open.
+	CString szPath = TempPath(_T("cedt_backup_headeronly.bak"));
+	CAnalyzedText text; FillText(text, { _T("body") });
+	ASSERT_TRUE(WriteBackupFile(szPath, SampleFileInfo(), text));
+
+	CBackupInfo out;
+	ASSERT_TRUE(ReadBackupHeader(szPath, out));
+	EXPECT_STREQ((LPCTSTR)SampleFileInfo().szPath, (LPCTSTR)out.szPath);
+
+	_tremove(szPath);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Where a backup lives, relative to the backup directory
+
+TEST(BackupPathTest, LocalFilesGoUnderFileByHashedPath)
+{
+	CBackupInfo a; a.nKind = BACKUP_KIND_FILE; a.szPath = _T("C:\\Work\\a.txt");
+	CString szRel = GetBackupRelativePath(a);
+
+	EXPECT_EQ(0, szRel.Find(_T("file\\")));
+	EXPECT_EQ(szRel.GetLength() - 4, szRel.Find(_T(".bak")));
+	EXPECT_EQ(-1, szRel.Find(_T("a.txt")));		// a hash, not the name
+}
+
+TEST(BackupPathTest, LocalPathsAreCaseAndSlashInsensitive)
+{
+	CBackupInfo a; a.nKind = BACKUP_KIND_FILE; a.szPath = _T("C:\\Work\\A.txt");
+	CBackupInfo b; b.nKind = BACKUP_KIND_FILE; b.szPath = _T("c:/work/a.TXT");
+	EXPECT_STREQ((LPCTSTR)GetBackupRelativePath(a), (LPCTSTR)GetBackupRelativePath(b));
+}
+
+TEST(BackupPathTest, DifferentLocalPathsDiffer)
+{
+	CBackupInfo a; a.nKind = BACKUP_KIND_FILE; a.szPath = _T("C:\\Work\\a.txt");
+	CBackupInfo b; b.nKind = BACKUP_KIND_FILE; b.szPath = _T("C:\\Work\\b.txt");
+	EXPECT_STRNE((LPCTSTR)GetBackupRelativePath(a), (LPCTSTR)GetBackupRelativePath(b));
+}
+
+TEST(BackupPathTest, RemotePathsAreCaseSensitiveAndPerAccount)
+{
+	CBackupInfo a; a.nKind = BACKUP_KIND_REMOTE; a.nAccount = 0; a.szPath = _T("/home/a.txt");
+	CBackupInfo b = a; b.szPath = _T("/home/A.txt");		// a different file on a Unix server
+	CBackupInfo c = a; c.nAccount = 1;						// same path, another server
+
+	EXPECT_EQ(0, GetBackupRelativePath(a).Find(_T("remote\\")));
+	EXPECT_STRNE((LPCTSTR)GetBackupRelativePath(a), (LPCTSTR)GetBackupRelativePath(b));
+	EXPECT_STRNE((LPCTSTR)GetBackupRelativePath(a), (LPCTSTR)GetBackupRelativePath(c));
+}
+
+TEST(BackupPathTest, UntitledUsesItsId)
+{
+	CBackupInfo a; a.nKind = BACKUP_KIND_UNTITLED; a.szId = _T("20261108-0001");
+	EXPECT_STREQ(_T("untitled\\20261108-0001.bak"), (LPCTSTR)GetBackupRelativePath(a));
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// When a backup is due
+//
+// IsBackupDue(now, lastChange, lastBackup, lastBackupBytes, changedSinceBackup),
+// all times in milliseconds; lastBackup == 0 means "never backed up".
+
+TEST(BackupDueTest, NothingChangedMeansNothingToDo)
+{
+	EXPECT_FALSE(IsBackupDue(100000, 1000, 2000, 10, FALSE));
+}
+
+TEST(BackupDueTest, SmallDocumentWaitsOneSecondOfQuiet)
+{
+	ULONGLONG nChange = 50000;
+	EXPECT_FALSE(IsBackupDue(nChange + 999,  nChange, 40000, 1000, TRUE));
+	EXPECT_TRUE (IsBackupDue(nChange + 1000, nChange, 40000, 1000, TRUE));
+}
+
+TEST(BackupDueTest, OneMegabyteStillCountsAsSmall)
+{
+	ULONGLONG nChange = 50000;
+	EXPECT_TRUE(IsBackupDue(nChange + 1000, nChange, nChange - 1, BACKUP_LARGE_BYTES, TRUE));
+}
+
+TEST(BackupDueTest, LargeDocumentWaitsThirtySecondsSinceItsLastBackup)
+{
+	ULONGLONG nBackup = 100000, nBytes = BACKUP_LARGE_BYTES + 1;
+	EXPECT_FALSE(IsBackupDue(nBackup + 29999, nBackup + 5000, nBackup, nBytes, TRUE));	// quiet, but too soon
+	EXPECT_TRUE (IsBackupDue(nBackup + 30000, nBackup + 5000, nBackup, nBytes, TRUE));
+}
+
+TEST(BackupDueTest, LargeDocumentStillWaitsForQuiet)
+{
+	ULONGLONG nBackup = 100000, nBytes = BACKUP_LARGE_BYTES + 1;
+	EXPECT_FALSE(IsBackupDue(nBackup + 60000, nBackup + 59500, nBackup, nBytes, TRUE));	// still typing
+	EXPECT_TRUE (IsBackupDue(nBackup + 60500, nBackup + 59500, nBackup, nBytes, TRUE));
+}
+
+TEST(BackupDueTest, FirstBackupOfAnyDocumentWaitsOnlyForQuiet)
+{
+	// The size is only known from a previous backup; the first one is written as if small.
+	EXPECT_FALSE(IsBackupDue(5999, 5000, 0, 0, TRUE));
+	EXPECT_TRUE (IsBackupDue(6000, 5000, 0, 0, TRUE));
+}

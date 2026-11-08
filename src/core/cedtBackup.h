@@ -1,0 +1,71 @@
+// cedtBackup.h : hot-exit backup files (see docs/hot-exit.md)
+//
+// One file per unsaved document: a single header line describing the document, then its
+// text in UTF-8. Kept free of CCedtDoc so the format can be tested on its own; the document
+// layer fills a CBackupInfo and hands over its CAnalyzedText.
+
+#if !defined(_CEDT_BACKUP_H_)
+#define _CEDT_BACKUP_H_
+
+#if _MSC_VER >= 1000
+#pragma once
+#endif // _MSC_VER >= 1000
+
+#define BACKUP_FORMAT_VERSION			1
+
+#define BACKUP_KIND_FILE				1	// a local file
+#define BACKUP_KIND_REMOTE				2	// an FTP document
+#define BACKUP_KIND_UNTITLED			3	// a new document that was never saved
+
+// Timing (milliseconds, bytes). A backup waits for typing to pause; a document whose last
+// backup was larger than BACKUP_LARGE_BYTES is also backed up no more often than every
+// BACKUP_LARGE_INTERVAL. About 1.4 ms per MB is spent writing one.
+#define BACKUP_IDLE_DELAY				1000
+#define BACKUP_LARGE_BYTES				(1024 * 1024)
+#define BACKUP_LARGE_INTERVAL			30000
+
+class CAnalyzedText;
+
+class CBackupInfo
+{
+public:
+	INT       nKind;			// BACKUP_KIND_*
+	CString   szPath;			// local path, or remote path for BACKUP_KIND_REMOTE
+	INT       nAccount;			// FTP account number (remote only)
+	CString   szTitle;			// tab title (untitled only)
+	CString   szId;				// stable id, names the backup file (untitled only)
+	INT       nEncodingType;	// ENCODING_TYPE_* the document saves with
+	INT       nFileFormat;		// FILE_FORMAT_* the document saves with
+	__int64   nModifiedTime;	// original file's last-write time, CTime seconds
+	ULONGLONG nFileSize;		// original file's size in bytes
+	INT       nLineNum;			// caret line, 1-based
+
+	CBackupInfo();
+};
+
+// The header line, without a line break. Attribute values are escaped, so any path or
+// title fits on one line.
+CString FormatBackupHeader(const CBackupInfo & info);
+
+// FALSE when the line is not a backup header this build understands: another tag, no kind,
+// malformed, or a newer format version.
+BOOL ParseBackupHeader(LPCTSTR lpszLine, CBackupInfo & info);
+
+// Writes header and text to a temporary file beside lpszPathName, then renames it into place,
+// so a failed write leaves the previous backup intact. Never shows UI; failure is the return
+// value. pBytesWritten receives the file size on success.
+BOOL WriteBackupFile(LPCTSTR lpszPathName, const CBackupInfo & info, CAnalyzedText & rText, ULONGLONG * pBytesWritten = NULL);
+
+BOOL ReadBackupHeader(LPCTSTR lpszPathName, CBackupInfo & info);
+BOOL ReadBackupFile(LPCTSTR lpszPathName, CBackupInfo & info, CAnalyzedText & rText);
+
+// Where the backup lives under the backup directory: file\<hash>.bak, remote\<hash>.bak, or
+// untitled\<id>.bak. Local paths are compared case- and slash-insensitively; remote paths
+// are case-sensitive and per account.
+CString GetBackupRelativePath(const CBackupInfo & info);
+
+// Whether a document's backup should be written now. Times in milliseconds; nLastBackup == 0
+// means never. nLastBackupBytes is the size of the previous backup (0 if none).
+BOOL IsBackupDue(ULONGLONG nNow, ULONGLONG nLastChange, ULONGLONG nLastBackup, ULONGLONG nLastBackupBytes, BOOL bChangedSinceBackup);
+
+#endif // !defined(_CEDT_BACKUP_H_)

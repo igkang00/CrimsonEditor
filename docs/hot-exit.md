@@ -48,7 +48,7 @@ that index, and a crash between the two writes would leave them disagreeing. A f
 itself cannot disagree with anything.
 
 ```
-<cedtbackup version="1" kind="file" path="E:\Work\a.txt" encoding="2" bom="1" format="0" mtime="133771234567890000" size="5120" linenum="42" />
+<cedtbackup version="1" kind="file" path="E:\Work\a.txt" encoding="4" format="1" mtime="1767225600" size="5120" linenum="42" />
 ...body, always UTF-8...
 ```
 
@@ -58,7 +58,8 @@ itself cannot disagree with anything.
 - `kind="remote"` — an FTP document: `account="0" path="/home/..."` (account number and remote path,
   as the workspace stores them).
 - `kind="untitled"` — a new document: `title="Untitled2"`.
-- `encoding`, `bom`, `format` (line endings) are the document's own settings. The body is written
+- `encoding` and `format` (line endings) are the document's own settings. The encoding value
+  already tells a UTF-8 file with a BOM from one without, so there is no separate flag. The body is written
   in UTF-8 regardless, so a CP949 document holding a character CP949 cannot express loses nothing.
   The original encoding is applied again only when the user saves.
 - `mtime` and `size` are the original file's status as last loaded or saved (`m_clsFileStatus`).
