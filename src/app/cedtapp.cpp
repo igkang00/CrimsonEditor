@@ -458,7 +458,7 @@ BOOL CCedtApp::InitInstance()
 	BOOL bReloadLastWorkingFiles = ( m_bReloadWorkingFilesOnStartup && m_bFirstInstance );
 	if( bReloadLastWorkingFiles ) ReloadLastWorkingFiles();
 
-	if( m_bFirstInstance ) RestoreLocalBackups();
+	if( m_bFirstInstance ) { RestoreLocalBackups(); ApplyBackupSession(); }
 
 	// Parse command line for standard shell commands, DDE, file open
 	if( _tcslen(m_lpCmdLine) && VerifyFilePath(m_lpCmdLine) ) {

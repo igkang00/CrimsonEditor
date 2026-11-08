@@ -141,6 +141,8 @@ protected:
 
 public: // *** cedtDocBackup.cpp ***
 	static CString GetBackupDirectory();
+	static CString GetSessionPathName();
+	CString GetBackupKey();
 
 	virtual void SetModifiedFlag(BOOL bModified = TRUE);
 

@@ -132,6 +132,7 @@ protected:
 public: // *** cedtAppBackup.cpp ***
 	INT RestoreRemoteBackups();		// before the workspace reload
 	INT RestoreLocalBackups();		// after it
+	void ApplyBackupSession();		// then the tab order recorded at exit
 
 	CDocument * GetRemoteDocument(INT nAccount, LPCTSTR lpszRemotePathName);
 	CString GetRemoteCachePathName(INT nAccount, LPCTSTR lpszRemotePathName);

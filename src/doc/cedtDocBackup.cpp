@@ -20,6 +20,19 @@ CString CCedtDoc::GetBackupDirectory()
 	return CCedtApp::m_szAppDataDirectory + _T("\\backup");
 }
 
+CString CCedtDoc::GetSessionPathName()
+{
+	return GetBackupDirectory() + _T("\\session.xml");
+}
+
+// How session.xml names this document: the same key its backup gets, so a tab recorded at exit
+// and the document restored from its backup match.
+CString CCedtDoc::GetBackupKey()
+{
+	CBackupInfo info; FillBackupInfo(info);
+	return ::GetBackupKey(info);
+}
+
 // Every edit in cedtDocEdit.cpp ends here with TRUE; open, new, reload and save end here with
 // FALSE, and so does undoing back to the saved state. That makes this the one place to tell
 // "has unsaved changes" from "matches the disk".

@@ -130,6 +130,7 @@ public: // child window
 protected: // hot-exit backup
 	void BackupModifiedDocuments();
 	void BeginHotExit();
+	void CancelHotExit();
 	void SaveSessionState();
 
 protected:

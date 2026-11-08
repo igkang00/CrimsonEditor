@@ -86,6 +86,14 @@ static std::string _ToUtf8(LPCWSTR lpsz, INT nLength)
 	return s;
 }
 
+// Windows paths are case-insensitive and take either slash.
+static CString _NormalizeLocalPath(LPCTSTR lpszPath)
+{
+	CString szPath = lpszPath;
+	szPath.Replace(_T('/'), _T('\\')); szPath.MakeLower();
+	return szPath;
+}
+
 // 64-bit FNV-1a over the UTF-16 code units: stable across runs and builds, which a
 // pointer- or seed-based hash would not be.
 static CString _HashKey(const CString & szKey)
@@ -133,17 +141,19 @@ CString FormatBackupHeader(const CBackupInfo & info)
 	return szHeader;
 }
 
-BOOL ParseBackupHeader(LPCTSTR lpszLine, CBackupInfo & info)
+// Parse one self-closing tag line, <tag name="value" ... />, into its attributes (values
+// unescaped). FALSE when the line is another tag or is malformed.
+static BOOL _ParseTagLine(LPCTSTR lpszLine, LPCTSTR lpszTag, CMapStringToString & mapAttr)
 {
-	CString szLine = lpszLine; szLine.TrimRight();
+	mapAttr.RemoveAll();
+	CString szLine = lpszLine; szLine.Trim();
 
-	INT nTagLength = (INT)_tcslen(BACKUP_TAG);
-	if( szLine.Left(nTagLength) != BACKUP_TAG ) return FALSE;
+	INT nTagLength = (INT)_tcslen(lpszTag);
+	if( szLine.Left(nTagLength) != lpszTag ) return FALSE;
 	if( szLine.GetLength() <= nTagLength || szLine[nTagLength] != _T(' ') ) return FALSE;
 	if( szLine.Right(2) != _T("/>") ) return FALSE;
 
 	CString szBody = szLine.Mid(nTagLength, szLine.GetLength() - nTagLength - 2);
-	CBackupInfo result; INT nVersion = 0;
 
 	INT i = 0, nLength = szBody.GetLength();
 	for( ;; ) {
@@ -163,19 +173,29 @@ BOOL ParseBackupHeader(LPCTSTR lpszLine, CBackupInfo & info)
 		CString szValue; if( ! _Unescape(szBody.Mid(i, nValueEnd - i), szValue) ) return FALSE;
 		i = nValueEnd + 1;
 
-		if( szName == _T("version") ) nVersion = _ttoi(szValue);
-		else if( szName == _T("kind") ) result.nKind = _KindFromName(szValue);
-		else if( szName == _T("path") ) result.szPath = szValue;
-		else if( szName == _T("account") ) result.nAccount = _ttoi(szValue);
-		else if( szName == _T("id") ) result.szId = szValue;
-		else if( szName == _T("title") ) result.szTitle = szValue;
-		else if( szName == _T("encoding") ) result.nEncodingType = _ttoi(szValue);
-		else if( szName == _T("format") ) result.nFileFormat = _ttoi(szValue);
-		else if( szName == _T("mtime") ) result.nModifiedTime = _ttoi64(szValue);
-		else if( szName == _T("size") ) result.nFileSize = _tcstoui64(szValue, NULL, 10);
-		else if( szName == _T("linenum") ) result.nLineNum = _ttoi(szValue);
-		// anything else is from a later build and is ignored
+		mapAttr.SetAt(szName, szValue);
 	}
+	return TRUE;
+}
+
+BOOL ParseBackupHeader(LPCTSTR lpszLine, CBackupInfo & info)
+{
+	CMapStringToString mapAttr;
+	if( ! _ParseTagLine(lpszLine, BACKUP_TAG, mapAttr) ) return FALSE;
+
+	CBackupInfo result; INT nVersion = 0; CString szValue;
+	if( mapAttr.Lookup(_T("version"), szValue) ) nVersion = _ttoi(szValue);
+	if( mapAttr.Lookup(_T("kind"), szValue) ) result.nKind = _KindFromName(szValue);
+	if( mapAttr.Lookup(_T("path"), szValue) ) result.szPath = szValue;
+	if( mapAttr.Lookup(_T("account"), szValue) ) result.nAccount = _ttoi(szValue);
+	if( mapAttr.Lookup(_T("id"), szValue) ) result.szId = szValue;
+	if( mapAttr.Lookup(_T("title"), szValue) ) result.szTitle = szValue;
+	if( mapAttr.Lookup(_T("encoding"), szValue) ) result.nEncodingType = _ttoi(szValue);
+	if( mapAttr.Lookup(_T("format"), szValue) ) result.nFileFormat = _ttoi(szValue);
+	if( mapAttr.Lookup(_T("mtime"), szValue) ) result.nModifiedTime = _ttoi64(szValue);
+	if( mapAttr.Lookup(_T("size"), szValue) ) result.nFileSize = _tcstoui64(szValue, NULL, 10);
+	if( mapAttr.Lookup(_T("linenum"), szValue) ) result.nLineNum = _ttoi(szValue);
+	// any other attribute is from a later build and is ignored
 
 	if( nVersion < 1 || nVersion > BACKUP_FORMAT_VERSION ) return FALSE;
 	if( result.nKind == BACKUP_KIND_FILE || result.nKind == BACKUP_KIND_REMOTE ) {
@@ -274,10 +294,8 @@ BOOL ReadBackupFile(LPCTSTR lpszPathName, CBackupInfo & info, CAnalyzedText & rT
 CString GetBackupRelativePath(const CBackupInfo & info)
 {
 	switch( info.nKind ) {
-	case BACKUP_KIND_FILE: {
-		CString szKey = info.szPath;
-		szKey.Replace(_T('/'), _T('\\')); szKey.MakeLower();
-		return _T("file\\") + _HashKey(szKey) + _T(".bak"); }
+	case BACKUP_KIND_FILE:
+		return _T("file\\") + _HashKey(_NormalizeLocalPath(info.szPath)) + _T(".bak");
 	case BACKUP_KIND_REMOTE: {
 		CString szKey; szKey.Format(_T("%d:%s"), info.nAccount, (LPCTSTR)info.szPath);
 		return _T("remote\\") + _HashKey(szKey) + _T(".bak"); }
@@ -331,6 +349,95 @@ void FindBackupFiles(LPCTSTR lpszBackupDir, CArray<CBackupEntry, CBackupEntry &>
 		} while( FindNextFile(hFind, & fd) );
 
 		FindClose(hFind);
+	}
+}
+
+
+#define SESSION_TAG		_T("<cedtsession")
+#define SESSION_TAB_TAG	_T("<tab")
+
+CString GetBackupKey(const CBackupInfo & info)
+{
+	CString szKey;
+	switch( info.nKind ) {
+	case BACKUP_KIND_FILE:		szKey = _T("file:") + _NormalizeLocalPath(info.szPath); break;
+	case BACKUP_KIND_REMOTE:	szKey.Format(_T("remote:%d:%s"), info.nAccount, (LPCTSTR)info.szPath); break;
+	case BACKUP_KIND_UNTITLED:	szKey = _T("untitled:") + info.szId; break;
+	}
+	return szKey;
+}
+
+BOOL WriteBackupSession(LPCTSTR lpszPathName, const CStringArray & arrKeys, INT nActive)
+{
+	CString szText;
+	szText.Format(_T("%s version=\"%d\" active=\"%d\" />\n"), SESSION_TAG, BACKUP_FORMAT_VERSION, nActive);
+	for( INT i = 0; i < arrKeys.GetSize(); i++ )
+		szText += CString(SESSION_TAB_TAG) + _T(" key=\"") + _Escape(arrKeys[i]) + _T("\" />\n");
+
+	std::string utf8 = _ToUtf8(szText, szText.GetLength());
+
+	HANDLE hFile = CreateFile(lpszPathName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if( hFile == INVALID_HANDLE_VALUE ) return FALSE;
+	DWORD dwWritten = 0;
+	BOOL bOK = ::WriteFile(hFile, utf8.data(), (DWORD)utf8.size(), & dwWritten, NULL) && dwWritten == utf8.size();
+	CloseHandle(hFile);
+	return bOK;
+}
+
+BOOL ReadBackupSession(LPCTSTR lpszPathName, CStringArray & arrKeys, INT & nActive)
+{
+	arrKeys.RemoveAll(); nActive = -1;
+
+	HANDLE hFile = CreateFile(lpszPathName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	if( hFile == INVALID_HANDLE_VALUE ) return FALSE;
+	std::string utf8; CHAR chunk[4096]; DWORD dwRead = 0;
+	while( ::ReadFile(hFile, chunk, sizeof(chunk), & dwRead, NULL) && dwRead ) utf8.append(chunk, dwRead);
+	CloseHandle(hFile);
+
+	CString szText;
+	INT nChars = MultiByteToWideChar(CP_UTF8, 0, utf8.data(), (INT)utf8.size(), NULL, 0);
+	if( nChars > 0 ) {
+		MultiByteToWideChar(CP_UTF8, 0, utf8.data(), (INT)utf8.size(), szText.GetBuffer(nChars), nChars);
+		szText.ReleaseBuffer(nChars);
+	}
+
+	CMapStringToString mapAttr; CString szValue;
+	INT nStart = 0, nLine = 0;
+	while( nStart < szText.GetLength() ) {
+		INT nEnd = szText.Find(_T('\n'), nStart); if( nEnd < 0 ) nEnd = szText.GetLength();
+		CString szLine = szText.Mid(nStart, nEnd - nStart); nStart = nEnd + 1;
+		if( szLine.Trim().IsEmpty() ) continue;
+
+		if( nLine++ == 0 ) {	// the header: right tag, a version this build reads
+			if( ! _ParseTagLine(szLine, SESSION_TAG, mapAttr) ) return FALSE;
+			INT nVersion = mapAttr.Lookup(_T("version"), szValue) ? _ttoi(szValue) : 0;
+			if( nVersion < 1 || nVersion > BACKUP_FORMAT_VERSION ) return FALSE;
+			if( mapAttr.Lookup(_T("active"), szValue) ) nActive = _ttoi(szValue);
+		} else if( _ParseTagLine(szLine, SESSION_TAB_TAG, mapAttr) && mapAttr.Lookup(_T("key"), szValue) ) {
+			arrKeys.Add(szValue);
+		}
+	}
+
+	if( nLine == 0 ) { nActive = -1; return FALSE; }
+	return TRUE;
+}
+
+void OrderBySession(const CStringArray & arrCurrent, const CStringArray & arrSession, CArray<INT, INT> & arrOrder)
+{
+	// rank: the key's first position in the session, or past the end for keys it lacks
+	INT nCount = (INT)arrCurrent.GetSize(), nSession = (INT)arrSession.GetSize();
+	CArray<INT, INT> arrRank; arrRank.SetSize(nCount);
+	for( INT i = 0; i < nCount; i++ ) {
+		arrRank[i] = nSession;
+		for( INT j = 0; j < nSession; j++ ) if( arrSession[j] == arrCurrent[i] ) { arrRank[i] = j; break; }
+	}
+
+	// stable insertion by rank, so equal ranks keep their current order
+	arrOrder.RemoveAll();
+	for( INT i = 0; i < nCount; i++ ) {
+		INT nAt = (INT)arrOrder.GetSize();
+		while( nAt > 0 && arrRank[ arrOrder[nAt-1] ] > arrRank[i] ) nAt--;
+		arrOrder.InsertAt(nAt, i);
 	}
 }
 

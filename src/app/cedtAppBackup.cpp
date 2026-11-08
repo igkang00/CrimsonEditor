@@ -83,6 +83,47 @@ INT CCedtApp::RestoreRemoteBackups()
 	return nRestored;
 }
 
+// Put the tabs back in the order session.xml recorded at exit, and activate the tab that was
+// active. Without it the reopened files come in workspace order and every restored document
+// trails after them. The file is read once and deleted: after a crash there is none, and a
+// stale one would impose an old order.
+void CCedtApp::ApplyBackupSession()
+{
+	CStringArray arrSession; INT nActive = -1;
+	BOOL bRead = ReadBackupSession(CCedtDoc::GetSessionPathName(), arrSession, nActive);
+	::DeleteFile(CCedtDoc::GetSessionPathName());
+	if( ! bRead ) return;
+
+	CMainFrame * pFrame = (CMainFrame *)AfxGetMainWnd();
+	INT nCount = pFrame->GetChildFrameCount();
+
+	CArray<CMDIChildWnd *, CMDIChildWnd *> arrChild; CStringArray arrCurrent;
+	for( INT nTab = 0; nTab < nCount; nTab++ ) {
+		CMDIChildWnd * pChild = pFrame->GetChildFrame(nTab);
+		CCedtDoc * pDoc = pChild ? (CCedtDoc *)pChild->GetActiveDocument() : NULL;
+		arrChild.Add(pChild);
+		arrCurrent.Add(pDoc ? pDoc->GetBackupKey() : CString());
+	}
+
+	CArray<INT, INT> arrOrder;
+	OrderBySession(arrCurrent, arrSession, arrOrder);
+
+	// Re-append every tab in the new order -- the same moves a tab drag makes.
+	for( INT i = 0; i < arrOrder.GetSize(); i++ ) {
+		CMDIChildWnd * pChild = arrChild[ arrOrder[i] ];
+		if( ! pChild ) continue;
+		pFrame->DeleteMDIFileTab(pChild);
+		pFrame->InsertMDIFileTab(pChild);
+		pFrame->UpdateMDIFileTab(pChild);
+	}
+
+	if( nActive >= 0 && nActive < arrSession.GetSize() ) {
+		for( INT nTab = 0; nTab < nCount; nTab++ ) {
+			if( arrCurrent[nTab] == arrSession[nActive] && arrChild[nTab] ) { arrChild[nTab]->MDIActivate(); break; }
+		}
+	}
+}
+
 INT CCedtApp::RestoreLocalBackups()
 {
 	CArray<CBackupEntry, CBackupEntry &> arrFound;

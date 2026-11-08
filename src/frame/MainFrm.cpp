@@ -282,7 +282,7 @@ void CMainFrame::OnClose()
 
 	// Still a window? Then the exit was cancelled at a "save changes?" prompt, and the
 	// documents must go back to asking before they close.
-	if( ::IsWindow(hWnd) ) CCedtDoc::m_bHotExiting = FALSE;
+	if( ::IsWindow(hWnd) ) CancelHotExit();
 }
 
 void CMainFrame::SaveSessionState()
@@ -324,7 +324,27 @@ void CMainFrame::BeginHotExit()
 		if( pDoc->IsModified() && ! pDoc->IsBackedUp() ) pDoc->WriteBackup(nNow);
 	}
 
+	// The tab order, so the restored documents can take their places among the reopened ones.
+	CStringArray arrKeys; INT nActive = -1;
+	CMDIChildWnd * pActive = MDIGetActive();
+	for( INT nTab = 0; nTab < GetChildFrameCount(); nTab++ ) {
+		CMDIChildWnd * pChild = GetChildFrame(nTab);
+		CCedtDoc * pDoc = pChild ? (CCedtDoc *)pChild->GetActiveDocument() : NULL;
+		if( ! pDoc ) continue;
+		if( pChild == pActive ) nActive = (INT)arrKeys.GetSize();
+		arrKeys.Add(pDoc->GetBackupKey());
+	}
+	WriteBackupSession(CCedtDoc::GetSessionPathName(), arrKeys, nActive);
+
 	CCedtDoc::m_bHotExiting = TRUE;
+}
+
+// The exit did not happen after all: documents ask before closing again, and the tab order
+// written for a restore that will not come is dropped.
+void CMainFrame::CancelHotExit()
+{
+	CCedtDoc::m_bHotExiting = FALSE;
+	::DeleteFile(CCedtDoc::GetSessionPathName());
 }
 
 // Windows is signing out or shutting down. MFC answers this by running the same "save
@@ -337,14 +357,14 @@ BOOL CMainFrame::OnQueryEndSession()
 	BeginHotExit();
 	BOOL bEnd = CMDIFrameWnd::OnQueryEndSession();
 	if( bEnd ) SaveSessionState();
-	else CCedtDoc::m_bHotExiting = FALSE;
+	else CancelHotExit();
 	return bEnd;
 }
 
 void CMainFrame::OnEndSession(BOOL bEnding)
 {
 	// Another application vetoed the shutdown: back to normal prompts.
-	if( ! bEnding ) CCedtDoc::m_bHotExiting = FALSE;
+	if( ! bEnding ) CancelHotExit();
 	CMDIFrameWnd::OnEndSession(bEnding);
 }
 

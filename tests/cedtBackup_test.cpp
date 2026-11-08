@@ -687,3 +687,104 @@ TEST(BackupScanTest, OlderBackupsComeFirst)
 	EXPECT_STREQ(_T("zzz-first"), (LPCTSTR)found[0].info.szId);
 	EXPECT_STREQ(_T("aaa-second"), (LPCTSTR)found[1].info.szId);
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Tab order across a hot exit
+//
+// session.xml records every tab, in order, by a key that names the document the
+// same way whether it was a tab before the exit or a restored document after it.
+
+TEST(BackupKeyTest, NamesEachKindOfDocument)
+{
+	CBackupInfo f; f.nKind = BACKUP_KIND_FILE; f.szPath = _T("C:\\Work\\A.txt");
+	CBackupInfo r; r.nKind = BACKUP_KIND_REMOTE; r.nAccount = 2; r.szPath = _T("/srv/A.txt");
+	CBackupInfo u; u.nKind = BACKUP_KIND_UNTITLED; u.szId = _T("abc");
+
+	EXPECT_STREQ(_T("file:c:\\work\\a.txt"), (LPCTSTR)GetBackupKey(f));	// local: case- and slash-insensitive
+	EXPECT_STREQ(_T("remote:2:/srv/A.txt"), (LPCTSTR)GetBackupKey(r));	// remote: as is
+	EXPECT_STREQ(_T("untitled:abc"), (LPCTSTR)GetBackupKey(u));
+}
+
+TEST(BackupKeyTest, LocalPathsMatchWhateverTheSpelling)
+{
+	CBackupInfo a; a.nKind = BACKUP_KIND_FILE; a.szPath = _T("C:\\Work\\A.txt");
+	CBackupInfo b; b.nKind = BACKUP_KIND_FILE; b.szPath = _T("c:/work/a.TXT");
+	EXPECT_STREQ((LPCTSTR)GetBackupKey(a), (LPCTSTR)GetBackupKey(b));
+}
+
+TEST(BackupSessionTest, RoundTripsTheOrderAndTheActiveTab)
+{
+	CStringArray keys;
+	keys.Add(_T("file:c:\\work\\a.txt"));
+	keys.Add(_T("untitled:abc"));
+	keys.Add(_T("remote:0:/home/\"q\" & <x>.txt"));		// characters that need escaping
+	keys.Add(_T("file:c:\\\xD55C\xAE00\\b.txt"));			// Korean
+
+	CString szPath = TempPath(_T("cedt_session.xml"));
+	ASSERT_TRUE(WriteBackupSession(szPath, keys, 2));
+
+	CStringArray back; INT nActive = -1;
+	ASSERT_TRUE(ReadBackupSession(szPath, back, nActive));
+	ASSERT_EQ(keys.GetSize(), back.GetSize());
+	for( INT i = 0; i < keys.GetSize(); i++ ) EXPECT_STREQ((LPCTSTR)keys[i], (LPCTSTR)back[i]) << "tab " << i;
+	EXPECT_EQ(2, nActive);
+
+	_tremove(szPath);
+}
+
+TEST(BackupSessionTest, AMissingOrForeignFileReadsAsNoSession)
+{
+	CStringArray back; INT nActive = 5;
+	EXPECT_FALSE(ReadBackupSession(TempPath(_T("cedt_session_missing.xml")), back, nActive));
+	EXPECT_EQ(0, (int)back.GetSize());
+
+	CString szPath = TempPath(_T("cedt_session_foreign.xml"));
+	WriteBytes(szPath, "<project version=\"3.94\">\n");
+	EXPECT_FALSE(ReadBackupSession(szPath, back, nActive));
+	EXPECT_EQ(0, (int)back.GetSize());
+	_tremove(szPath);
+}
+
+namespace {
+
+std::vector<int> Order(std::vector<LPCTSTR> current, std::vector<LPCTSTR> session)
+{
+	CStringArray cur, ses;
+	for( LPCTSTR s : current ) cur.Add(s);
+	for( LPCTSTR s : session ) ses.Add(s);
+	CArray<INT, INT> order; OrderBySession(cur, ses, order);
+	return std::vector<int>(order.GetData(), order.GetData() + order.GetSize());
+}
+
+} // namespace
+
+TEST(BackupSessionTest, RestoredTabsReturnToTheirPlaces)
+{
+	// The workspace reopened a and b; the untitled u was restored after them.
+	// Before the exit, u sat between them.
+	EXPECT_EQ((std::vector<int>{ 0, 2, 1 }), Order({ _T("a"), _T("b"), _T("u") }, { _T("a"), _T("u"), _T("b") }));
+}
+
+TEST(BackupSessionTest, TabsTheSessionDoesNotKnowGoLastInTheirOwnOrder)
+{
+	// x and y were opened from the command line this time.
+	EXPECT_EQ((std::vector<int>{ 2, 3, 0, 1 }), Order({ _T("x"), _T("y"), _T("b"), _T("a") }, { _T("b"), _T("a") }));
+}
+
+TEST(BackupSessionTest, SessionEntriesWithNoTabAreIgnored)
+{
+	// A document that failed to restore, or a clean untitled one that left no backup.
+	EXPECT_EQ((std::vector<int>{ 1, 0 }), Order({ _T("a"), _T("b") }, { _T("gone"), _T("b"), _T("a") }));
+}
+
+TEST(BackupSessionTest, TwoWindowsOntoOneDocumentStayTogetherInOrder)
+{
+	// A document split into two windows has two tabs with the same key.
+	EXPECT_EQ((std::vector<int>{ 1, 0, 2 }), Order({ _T("a"), _T("b"), _T("a") }, { _T("b"), _T("a") }));
+}
+
+TEST(BackupSessionTest, NoSessionKeepsTheCurrentOrder)
+{
+	EXPECT_EQ((std::vector<int>{ 0, 1, 2 }), Order({ _T("a"), _T("b"), _T("c") }, { }));
+}

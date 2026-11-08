@@ -82,6 +82,19 @@ public:
 // out -- and left on disk.
 void FindBackupFiles(LPCTSTR lpszBackupDir, CArray<CBackupEntry, CBackupEntry &> & arrFound);
 
+// Tab order across a hot exit: backup\session.xml lists every tab by key, in order.
+//
+// The key names a document the same way before the exit (from its open tab) and after it
+// (from its restored backup): file:<lower-cased path>, remote:<account>:<path>, untitled:<id>.
+CString GetBackupKey(const CBackupInfo & info);
+
+BOOL WriteBackupSession(LPCTSTR lpszPathName, const CStringArray & arrKeys, INT nActive);
+BOOL ReadBackupSession(LPCTSTR lpszPathName, CStringArray & arrKeys, INT & nActive);	// FALSE: no usable session
+
+// arrOrder[i] = which of arrCurrent goes to position i: tabs the session knows, in session
+// order (first entry for a key wins); then the rest, in their current order.
+void OrderBySession(const CStringArray & arrCurrent, const CStringArray & arrSession, CArray<INT, INT> & arrOrder);
+
 // What one document remembers between backup-timer ticks. Pure bookkeeping -- the caller
 // does the file work and passes in the time (milliseconds, e.g. GetTickCount64()).
 class CBackupState
