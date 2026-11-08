@@ -90,7 +90,17 @@ ordinary UTF-8 loader — the header is simply the first line, dropped afterward
   tells `a.txt` from `A.txt`.
 - `session.xml` lists every tab by a key — `file:<lower-cased path>`, `remote:<account>:<path>`,
   `untitled:<id>` — that names a document the same way from its open tab and from its restored
-  backup. It is a convenience, not a source of truth: without it every backup is still restored,
+  backup, together with where that window stood:
+
+  ```
+  <cedtsession version="1" active="2" />
+  <tab key="file:c:\work\a.txt" line="120" col="15" anchorline="118" anchorcol="3" top="98" left="0" />
+  ```
+
+  `line`/`col` is the caret and `anchorline`/`anchorcol` the other end of the selection (absent
+  when nothing is selected), both as 0-based line and character indexes, not screen rows or
+  pixels, so they survive a change of font, tab size or wrap. `top` is the first line in view and
+  `left` the horizontal scroll in pixels. A missing attribute reads as "not recorded". It is a convenience, not a source of truth: without it every backup is still restored,
   only the tab order differs. It is kept current while the editor runs (see *Lifecycle*), read once
   at startup and deleted, so a stale one is never applied.
 - No per-workspace subfolder as in VS Code. VS Code runs many windows at once. Crimson Editor saves
@@ -120,9 +130,11 @@ source files are almost always below 1 MB; larger ones are logs, dumps and gener
 do not need second-by-second backups. The backup runs only once typing has paused, so the only cost
 a user can feel is when typing resumes during a large write.
 
-The same tick keeps `session.xml` in step with the tabs: it is rewritten when a tab opens, closes,
-moves or is activated while any backup exists, and deleted once none is left. So a crash, a power
-cut or `taskkill /F` restores the tab order too, not only a clean exit.
+The same tick keeps `session.xml` in step with the tabs: while any backup exists it is rewritten
+when a tab opens, closes, moves or is activated, or a caret, selection or scroll moves — a file of
+a few hundred bytes, at most twice a second, and only when something changed — and it is deleted
+once no backup is left. So a crash, a power cut or `taskkill /F` restores the tab order and
+positions too, not only a clean exit.
 
 **On save, revert, or close.** The document's backup file is deleted. A document that goes back to
 unmodified through undo also loses its backup. A Save As that renames a document moves its backup
@@ -165,8 +177,11 @@ workspace reload in `InitInstance`:
 3. **Local and untitled documents, after the workspace.** The workspace opens files through
    `SpawnDocumentFile`, which gives an already-open document a *second* window, so these must not be
    open before it runs. A document the workspace opened just has its text replaced.
-4. **The tab order** from `session.xml`: tabs it knows go to their recorded places, the rest follow
-   in their own order, and the recorded tab is activated.
+4. **The tabs** from `session.xml`: tabs it knows go to their recorded places, the rest follow in
+   their own order, each window gets back its caret, selection and scroll — clamped to the
+   document as it is now, which may have changed on disk — and the recorded tab is activated.
+   These positions override the caret line a backup header or the workspace supplied. A clean
+   exit records every tab, so unmodified files get their positions back too.
 
 A document shown in several windows (*Window > New Window*) has its key in `session.xml` once per
 window. Its n-th tab goes back to its n-th recorded place, and the n-th window is the one
@@ -201,14 +216,14 @@ modified flag and delete the backup of a document that still differs from the di
 
 ## Testing
 
-**Unit** ([tests/cedtBackup_test.cpp](../tests/cedtBackup_test.cpp), 66 tests, written before the
+**Unit** ([tests/cedtBackup_test.cpp](../tests/cedtBackup_test.cpp), 69 tests, written before the
 code they test): the header round trip with quotes, line breaks, Korean and 64-bit values; rejecting
 foreign, malformed and newer headers; the body round trip with empty lines, a trailing empty line,
 surrogate pairs and characters the original encoding cannot hold; a failed write returning FALSE
 quietly and keeping the previous backup; file names; the 1 s / 1 MB / 30 s timing; `CBackupState`
 including Save As and adoption; `IsBackedUp`; the folder scan skipping `.tmp` and foreign files;
-the session file and tab ordering, including several windows onto one document; the missing-window
-count; `CSessionRecord`.
+the session file and tab ordering, including several windows onto one document and per-window
+caret, selection and scroll; the missing-window count; `CSessionRecord`.
 
 **Manual** (all passed): quit with modified local, untitled and FTP documents and restart; quit with
 the FTP server stopped and restart (no download, no password prompt, no second window); save a
@@ -235,3 +250,6 @@ exercises crash recovery.
   every tab of a document by the document's first entry, so the windows bunched together, and an
   untitled document shown twice came back once. Found in manual testing; the n-th-to-n-th matching
   and the reopening of missing windows replaced it.
+- **Caret column, selection and scroll are restored per window**, not just the caret line per
+  document. They live in `session.xml`, the per-window record, rather than in the backup header,
+  which is one per document.

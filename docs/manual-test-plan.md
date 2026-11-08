@@ -520,6 +520,15 @@ The design and the reasons are in [hot-exit.md](hot-exit.md). Backups live in
       both windows come back, in place, `U:2` active, an edit in one showing in the other. Also
       after `taskkill /F`.
 
+**Caret, selection and scroll**
+- [x] Caret mid-line, scrolled down, quit → caret line and column and the scroll come back.
+- [x] A multi-line selection, made downward and made upward → the same range comes back selected.
+- [x] An unmodified saved file, caret and scroll moved, clean exit → its position comes back too.
+- [x] Two windows onto one document at different places → each comes back to its own.
+- [x] Word wrap off, scrolled right on a long line → the horizontal scroll comes back.
+- [x] Move the caret, wait a second, `taskkill /F` → the moved position comes back.
+- [x] Shorten the file in another editor while closed → restored near the end, no error.
+
 **FTP** (local FileZilla Server)
 - [x] Edit a remote file → a `.bak` in `backup\remote\`. Quit, **stop the server**, restart → the
       document is back with its edits and remote path: no download, no password prompt, no second

@@ -260,6 +260,9 @@ public: // *** cedtViewCaret.cpp ***
 	void SaveCaretAndAnchorPos();
 	void RestoreCaretAndAnchorPos();
 
+	void GetSessionPosition(CSessionTab & tab);			// hot exit: where this window stands
+	void ApplySessionPosition(const CSessionTab & tab);
+
 	void GetSelectedPosition(INT & nBegX, INT & nBegY, INT & nEndX, INT & nEndY);
 	void GetSelectedIndex(INT & nBegX, INT & nBegY, INT & nEndX, INT & nEndY);
 

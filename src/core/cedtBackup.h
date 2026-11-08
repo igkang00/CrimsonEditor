@@ -88,8 +88,29 @@ void FindBackupFiles(LPCTSTR lpszBackupDir, CArray<CBackupEntry, CBackupEntry &>
 // (from its restored backup): file:<lower-cased path>, remote:<account>:<path>, untitled:<id>.
 CString GetBackupKey(const CBackupInfo & info);
 
-BOOL WriteBackupSession(LPCTSTR lpszPathName, const CStringArray & arrKeys, INT nActive);
-BOOL ReadBackupSession(LPCTSTR lpszPathName, CStringArray & arrKeys, INT & nActive);	// FALSE: no usable session
+// One tab in session.xml: which document, and where its window stood. Lines and columns are
+// 0-based line and character indexes -- not screen rows or pixels -- so they survive a change
+// of font, tab size or wrap. -1 means not recorded (no selection, or an older file).
+class CSessionTab
+{
+public:
+	CString szKey;
+	INT nCaretLine, nCaretCol;
+	INT nAnchorLine, nAnchorCol;	// the other end of the selection, or -1 for none
+	INT nTopLine;					// first line in view
+	INT nScrollX;					// horizontal scroll, pixels
+
+	CSessionTab() { nCaretLine = nCaretCol = nAnchorLine = nAnchorCol = nTopLine = nScrollX = -1; }
+	BOOL operator==(const CSessionTab & o) const {
+		return szKey == o.szKey && nCaretLine == o.nCaretLine && nCaretCol == o.nCaretCol
+			&& nAnchorLine == o.nAnchorLine && nAnchorCol == o.nAnchorCol
+			&& nTopLine == o.nTopLine && nScrollX == o.nScrollX;
+	}
+};
+typedef CArray<CSessionTab, const CSessionTab &> CSessionTabArray;
+
+BOOL WriteBackupSession(LPCTSTR lpszPathName, const CSessionTabArray & arrTabs, INT nActive);
+BOOL ReadBackupSession(LPCTSTR lpszPathName, CSessionTabArray & arrTabs, INT & nActive);	// FALSE: no usable session
 
 // arrOrder[i] = which of arrCurrent goes to position i: tabs the session knows, in session
 // order; then the rest, in their current order. A document open in several windows has the
@@ -114,13 +135,13 @@ public:
 	CSessionRecord() { Forget(); }
 
 	// bAnyBackup: some document has a backup on disk, i.e. there is something to restore.
-	INT  Update(const CStringArray & arrKeys, INT nActive, BOOL bAnyBackup);
+	INT  Update(const CSessionTabArray & arrTabs, INT nActive, BOOL bAnyBackup);
 	void Forget();
 
 protected:
-	BOOL         m_bOnDisk;		// what the last Update told the caller to leave on disk
-	CStringArray m_arrKeys;
-	INT          m_nActive;
+	BOOL             m_bOnDisk;		// what the last Update told the caller to leave on disk
+	CSessionTabArray m_arrTabs;
+	INT              m_nActive;
 };
 
 // What one document remembers between backup-timer ticks. Pure bookkeeping -- the caller

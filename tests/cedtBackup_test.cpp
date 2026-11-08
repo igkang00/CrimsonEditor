@@ -713,29 +713,97 @@ TEST(BackupKeyTest, LocalPathsMatchWhateverTheSpelling)
 	EXPECT_STREQ((LPCTSTR)GetBackupKey(a), (LPCTSTR)GetBackupKey(b));
 }
 
+namespace {
+
+CSessionTab Tab(LPCTSTR lpszKey, INT nLine = -1, INT nCol = -1, INT nAnchorLine = -1, INT nAnchorCol = -1, INT nTop = -1, INT nLeft = -1)
+{
+	CSessionTab tab;
+	tab.szKey = lpszKey;
+	tab.nCaretLine = nLine; tab.nCaretCol = nCol;
+	tab.nAnchorLine = nAnchorLine; tab.nAnchorCol = nAnchorCol;
+	tab.nTopLine = nTop; tab.nScrollX = nLeft;
+	return tab;
+}
+
+CSessionTabArray & Tabs(CSessionTabArray & arr, std::vector<CSessionTab> tabs)
+{
+	arr.RemoveAll();
+	for( const CSessionTab & t : tabs ) arr.Add(t);
+	return arr;
+}
+
+} // namespace
+
 TEST(BackupSessionTest, RoundTripsTheOrderAndTheActiveTab)
 {
-	CStringArray keys;
-	keys.Add(_T("file:c:\\work\\a.txt"));
-	keys.Add(_T("untitled:abc"));
-	keys.Add(_T("remote:0:/home/\"q\" & <x>.txt"));		// characters that need escaping
-	keys.Add(_T("file:c:\\\xD55C\xAE00\\b.txt"));			// Korean
+	CSessionTabArray tabs;
+	Tabs(tabs, {
+		Tab(_T("file:c:\\work\\a.txt")),
+		Tab(_T("untitled:abc")),
+		Tab(_T("remote:0:/home/\"q\" & <x>.txt")),		// characters that need escaping
+		Tab(_T("file:c:\\\xD55C\xAE00\\b.txt")),		// Korean
+	});
 
 	CString szPath = TempPath(_T("cedt_session.xml"));
-	ASSERT_TRUE(WriteBackupSession(szPath, keys, 2));
+	ASSERT_TRUE(WriteBackupSession(szPath, tabs, 2));
 
-	CStringArray back; INT nActive = -1;
+	CSessionTabArray back; INT nActive = -1;
 	ASSERT_TRUE(ReadBackupSession(szPath, back, nActive));
-	ASSERT_EQ(keys.GetSize(), back.GetSize());
-	for( INT i = 0; i < keys.GetSize(); i++ ) EXPECT_STREQ((LPCTSTR)keys[i], (LPCTSTR)back[i]) << "tab " << i;
+	ASSERT_EQ(tabs.GetSize(), back.GetSize());
+	for( INT i = 0; i < tabs.GetSize(); i++ ) EXPECT_STREQ((LPCTSTR)tabs[i].szKey, (LPCTSTR)back[i].szKey) << "tab " << i;
 	EXPECT_EQ(2, nActive);
+
+	_tremove(szPath);
+}
+
+TEST(BackupSessionTest, RoundTripsEachTabsCaretSelectionAndScroll)
+{
+	// Two windows onto one document keep separate positions.
+	CSessionTabArray tabs;
+	Tabs(tabs, {
+		Tab(_T("file:c:\\a.txt"), 120, 15, 118, 3, 98, 0),		// a selection from (118,3) to (120,15)
+		Tab(_T("file:c:\\a.txt"), 5, 0, -1, -1, 0, 240),			// no selection, scrolled right
+	});
+
+	CString szPath = TempPath(_T("cedt_session_pos.xml"));
+	ASSERT_TRUE(WriteBackupSession(szPath, tabs, 0));
+
+	CSessionTabArray back; INT nActive = -1;
+	ASSERT_TRUE(ReadBackupSession(szPath, back, nActive));
+	ASSERT_EQ(2, (int)back.GetSize());
+
+	EXPECT_EQ(120, back[0].nCaretLine);  EXPECT_EQ(15, back[0].nCaretCol);
+	EXPECT_EQ(118, back[0].nAnchorLine); EXPECT_EQ(3, back[0].nAnchorCol);
+	EXPECT_EQ(98, back[0].nTopLine);     EXPECT_EQ(0, back[0].nScrollX);
+
+	EXPECT_EQ(5, back[1].nCaretLine);    EXPECT_EQ(0, back[1].nCaretCol);
+	EXPECT_EQ(-1, back[1].nAnchorLine);  EXPECT_EQ(-1, back[1].nAnchorCol);
+	EXPECT_EQ(0, back[1].nTopLine);      EXPECT_EQ(240, back[1].nScrollX);
+
+	_tremove(szPath);
+}
+
+TEST(BackupSessionTest, ATabWithoutPositionsReadsAsUnrecorded)
+{
+	// A session file from before positions were recorded.
+	CString szPath = TempPath(_T("cedt_session_old.xml"));
+	WriteBytes(szPath, "<cedtsession version=\"1\" active=\"0\" />\n<tab key=\"file:c:\\a.txt\" />\n");
+
+	CSessionTabArray back; INT nActive = -1;
+	ASSERT_TRUE(ReadBackupSession(szPath, back, nActive));
+	ASSERT_EQ(1, (int)back.GetSize());
+	EXPECT_EQ(-1, back[0].nCaretLine);
+	EXPECT_EQ(-1, back[0].nCaretCol);
+	EXPECT_EQ(-1, back[0].nAnchorLine);
+	EXPECT_EQ(-1, back[0].nTopLine);
+	EXPECT_EQ(-1, back[0].nScrollX);
 
 	_tremove(szPath);
 }
 
 TEST(BackupSessionTest, AMissingOrForeignFileReadsAsNoSession)
 {
-	CStringArray back; INT nActive = 5;
+	CSessionTabArray back; INT nActive = 5;
 	EXPECT_FALSE(ReadBackupSession(TempPath(_T("cedt_session_missing.xml")), back, nActive));
 	EXPECT_EQ(0, (int)back.GetSize());
 
@@ -862,38 +930,51 @@ TEST(BackupSessionTest, NoSessionKeepsTheCurrentOrder)
 ///////////////////////////////////////////////////////////////////////////////
 // Keeping session.xml current while the editor runs
 //
-// So the tab order survives a crash, not only a clean exit. The backup timer asks
-// on every tick; the answer must be "write" only when something changed, so the
-// file is rewritten when a tab opens, closes, moves or is activated -- not twice a
-// second.
+// So the tab order and positions survive a crash, not only a clean exit. The backup
+// timer asks on every tick; the answer must be "write" only when something changed --
+// a tab opened, closed, moved or was activated, or a caret, selection or scroll
+// moved -- not twice a second regardless.
 
 namespace {
 
-CStringArray & Keys(CStringArray & arr, std::vector<LPCTSTR> keys)
+CSessionTabArray & Keys(CSessionTabArray & arr, std::vector<LPCTSTR> keys)
 {
 	arr.RemoveAll();
-	for( LPCTSTR s : keys ) arr.Add(s);
+	for( LPCTSTR s : keys ) arr.Add(Tab(s));
 	return arr;
 }
 
 } // namespace
 
+TEST(SessionRecordTest, RewritesWhenACaretSelectionOrScrollMoves)
+{
+	CSessionRecord rec; CSessionTabArray k;
+	rec.Update(Tabs(k, { Tab(_T("a"), 10, 2, -1, -1, 0, 0) }), 0, TRUE);
+	EXPECT_EQ(SESSION_KEEP,  rec.Update(Tabs(k, { Tab(_T("a"), 10, 2, -1, -1, 0, 0) }), 0, TRUE));
+
+	EXPECT_EQ(SESSION_WRITE, rec.Update(Tabs(k, { Tab(_T("a"), 10, 3, -1, -1, 0, 0) }), 0, TRUE));	// caret
+	EXPECT_EQ(SESSION_WRITE, rec.Update(Tabs(k, { Tab(_T("a"), 10, 3, 9, 0, 0, 0) }), 0, TRUE));	// selection
+	EXPECT_EQ(SESSION_WRITE, rec.Update(Tabs(k, { Tab(_T("a"), 10, 3, 9, 0, 4, 0) }), 0, TRUE));	// scroll down
+	EXPECT_EQ(SESSION_WRITE, rec.Update(Tabs(k, { Tab(_T("a"), 10, 3, 9, 0, 4, 80) }), 0, TRUE));	// scroll right
+	EXPECT_EQ(SESSION_KEEP,  rec.Update(Tabs(k, { Tab(_T("a"), 10, 3, 9, 0, 4, 80) }), 0, TRUE));
+}
+
 TEST(SessionRecordTest, NothingToKeepWithoutBackups)
 {
-	CSessionRecord rec; CStringArray k;
+	CSessionRecord rec; CSessionTabArray k;
 	EXPECT_EQ(SESSION_KEEP, rec.Update(Keys(k, { _T("a"), _T("b") }), 0, FALSE));
 }
 
 TEST(SessionRecordTest, WritesOnceWhenThereIsSomethingToRestore)
 {
-	CSessionRecord rec; CStringArray k;
+	CSessionRecord rec; CSessionTabArray k;
 	EXPECT_EQ(SESSION_WRITE, rec.Update(Keys(k, { _T("a"), _T("b") }), 0, TRUE));
 	EXPECT_EQ(SESSION_KEEP,  rec.Update(Keys(k, { _T("a"), _T("b") }), 0, TRUE));
 }
 
 TEST(SessionRecordTest, RewritesWhenTabsOpenCloseOrMove)
 {
-	CSessionRecord rec; CStringArray k;
+	CSessionRecord rec; CSessionTabArray k;
 	rec.Update(Keys(k, { _T("a"), _T("b") }), 0, TRUE);
 
 	EXPECT_EQ(SESSION_WRITE, rec.Update(Keys(k, { _T("a"), _T("b"), _T("c") }), 0, TRUE));	// opened
@@ -904,7 +985,7 @@ TEST(SessionRecordTest, RewritesWhenTabsOpenCloseOrMove)
 
 TEST(SessionRecordTest, RewritesWhenAnotherTabIsActivated)
 {
-	CSessionRecord rec; CStringArray k;
+	CSessionRecord rec; CSessionTabArray k;
 	rec.Update(Keys(k, { _T("a"), _T("b") }), 0, TRUE);
 	EXPECT_EQ(SESSION_WRITE, rec.Update(Keys(k, { _T("a"), _T("b") }), 1, TRUE));
 }
@@ -912,7 +993,7 @@ TEST(SessionRecordTest, RewritesWhenAnotherTabIsActivated)
 TEST(SessionRecordTest, DeletesOnceTheLastBackupIsGone)
 {
 	// Everything saved: nothing left to restore, so no order to restore it in.
-	CSessionRecord rec; CStringArray k;
+	CSessionRecord rec; CSessionTabArray k;
 	rec.Update(Keys(k, { _T("a") }), 0, TRUE);
 	EXPECT_EQ(SESSION_DELETE, rec.Update(Keys(k, { _T("a") }), 0, FALSE));
 	EXPECT_EQ(SESSION_KEEP,   rec.Update(Keys(k, { _T("a") }), 0, FALSE));
@@ -923,7 +1004,7 @@ TEST(SessionRecordTest, DeletesOnceTheLastBackupIsGone)
 TEST(SessionRecordTest, ForgetMakesTheNextTickWriteAgain)
 {
 	// After a failed write, or after someone else deleted the file.
-	CSessionRecord rec; CStringArray k;
+	CSessionRecord rec; CSessionTabArray k;
 	rec.Update(Keys(k, { _T("a") }), 0, TRUE);
 	rec.Forget();
 	EXPECT_EQ(SESSION_WRITE, rec.Update(Keys(k, { _T("a") }), 0, TRUE));

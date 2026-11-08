@@ -83,16 +83,19 @@ INT CCedtApp::RestoreRemoteBackups()
 	return nRestored;
 }
 
-// Put the tabs back in the order session.xml recorded at exit, and activate the tab that was
-// active. Without it the reopened files come in workspace order and every restored document
-// trails after them. The file is read once and deleted: after a crash there is none, and a
-// stale one would impose an old order.
+// Put the tabs back as session.xml recorded them: in order, each window with its caret,
+// selection and scroll, and the active one active. Without it the reopened files come in
+// workspace order, every restored document trails after them, and each sits on its first line.
+// The file is read once and deleted, so a stale one is never applied later.
 void CCedtApp::ApplyBackupSession()
 {
-	CStringArray arrSession; INT nActive = -1;
-	BOOL bRead = ReadBackupSession(CCedtDoc::GetSessionPathName(), arrSession, nActive);
+	CSessionTabArray arrSessionTabs; INT nActive = -1;
+	BOOL bRead = ReadBackupSession(CCedtDoc::GetSessionPathName(), arrSessionTabs, nActive);
 	::DeleteFile(CCedtDoc::GetSessionPathName());
 	if( ! bRead ) return;
+
+	CStringArray arrSession;
+	for( INT j = 0; j < arrSessionTabs.GetSize(); j++ ) arrSession.Add(arrSessionTabs[j].szKey);
 
 	CMainFrame * pFrame = (CMainFrame *)AfxGetMainWnd();
 	CArray<CMDIChildWnd *, CMDIChildWnd *> arrChild; CStringArray arrCurrent;
@@ -137,14 +140,29 @@ void CCedtApp::ApplyBackupSession()
 		pFrame->UpdateMDIFileTab(pChild);
 	}
 
-	// The active tab may be one of several windows onto a document: activate the same one, the
-	// n-th of its key, as OrderBySession matches them.
-	if( nActive >= 0 && nActive < arrSession.GetSize() ) {
-		INT nNth = 0;
-		for( INT j = 0; j < nActive; j++ ) if( arrSession[j] == arrSession[nActive] ) nNth++;
-		for( INT nTab = 0, nSeen = 0; nTab < nCount; nTab++ ) {
-			if( arrCurrent[nTab] != arrSession[nActive] ) continue;
-			if( nSeen++ == nNth ) { if( arrChild[nTab] ) arrChild[nTab]->MDIActivate(); break; }
+	// Which session entry each window is: the n-th window of a document is that document's n-th
+	// entry, as OrderBySession matches them. -1 for a window the session does not know.
+	CArray<INT, INT> arrMatch; arrMatch.SetSize(nCount);
+	for( INT nTab = 0; nTab < nCount; nTab++ ) {
+		INT nNth = 0; for( INT k = 0; k < nTab; k++ ) if( arrCurrent[k] == arrCurrent[nTab] ) nNth++;
+		arrMatch[nTab] = -1;
+		for( INT j = 0, nSeen = 0; j < arrSession.GetSize(); j++ ) {
+			if( arrSession[j] != arrCurrent[nTab] ) continue;
+			if( nSeen++ == nNth ) { arrMatch[nTab] = j; break; }
+		}
+	}
+
+	// Each window back where it stood. This overrides the caret line a restored backup or the
+	// workspace put it on, which is the best they knew.
+	for( INT nTab = 0; nTab < nCount; nTab++ ) {
+		if( arrMatch[nTab] < 0 || ! arrChild[nTab] ) continue;
+		CCedtView * pView = (CCedtView *)arrChild[nTab]->GetActiveView();
+		if( pView ) pView->ApplySessionPosition( arrSessionTabs[ arrMatch[nTab] ] );
+	}
+
+	if( nActive >= 0 ) {
+		for( INT nTab = 0; nTab < nCount; nTab++ ) {
+			if( arrMatch[nTab] == nActive && arrChild[nTab] ) { arrChild[nTab]->MDIActivate(); break; }
 		}
 	}
 }

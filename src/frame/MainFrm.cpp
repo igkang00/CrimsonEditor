@@ -195,14 +195,15 @@ void CMainFrame::BackupModifiedDocuments()
 		if( pDoc->HasBackup() ) bAnyBackup = TRUE;
 	}
 
-	// Keep session.xml in step with the tabs, so a crash restores the order too, not only a
-	// clean exit. CSessionRecord says "write" only when a tab opened, closed, moved or was
-	// activated, and "delete" once nothing is left to restore.
-	CStringArray arrKeys; INT nActive = -1;
-	CollectSessionKeys(arrKeys, nActive);
-	switch( m_clsSessionRecord.Update(arrKeys, nActive, bAnyBackup) ) {
+	// Keep session.xml in step with the tabs, so a crash restores the order and positions too,
+	// not only a clean exit. CSessionRecord says "write" only when a tab opened, closed, moved
+	// or was activated, or a caret, selection or scroll moved; "delete" once nothing is left to
+	// restore.
+	CSessionTabArray arrTabs; INT nActive = -1;
+	CollectSessionTabs(arrTabs, nActive);
+	switch( m_clsSessionRecord.Update(arrTabs, nActive, bAnyBackup) ) {
 	case SESSION_WRITE:
-		if( ! WriteBackupSession(CCedtDoc::GetSessionPathName(), arrKeys, nActive) ) m_clsSessionRecord.Forget();
+		if( ! WriteBackupSession(CCedtDoc::GetSessionPathName(), arrTabs, nActive) ) m_clsSessionRecord.Forget();
 		break;
 	case SESSION_DELETE:
 		::DeleteFile(CCedtDoc::GetSessionPathName());
@@ -339,11 +340,12 @@ void CMainFrame::BeginHotExit()
 		if( pDoc->IsModified() && ! pDoc->IsBackedUp() ) pDoc->WriteBackup(nNow);
 	}
 
-	// The tab order, so the restored documents can take their places among the reopened ones.
+	// The tab order and each window's position, so the restored documents take their places
+	// among the reopened ones -- and every window, saved or not, comes back where it stood.
 	// Written unconditionally: the backups just written may be the first this session.
-	CStringArray arrKeys; INT nActive = -1;
-	CollectSessionKeys(arrKeys, nActive);
-	WriteBackupSession(CCedtDoc::GetSessionPathName(), arrKeys, nActive);
+	CSessionTabArray arrTabs; INT nActive = -1;
+	CollectSessionTabs(arrTabs, nActive);
+	WriteBackupSession(CCedtDoc::GetSessionPathName(), arrTabs, nActive);
 
 	CCedtDoc::m_bHotExiting = TRUE;
 }
@@ -358,17 +360,23 @@ void CMainFrame::CancelHotExit()
 	m_clsSessionRecord.Forget();
 }
 
-// Every tab's key, in tab order, and which of them is active.
-void CMainFrame::CollectSessionKeys(CStringArray & arrKeys, INT & nActive)
+// Every tab, in tab order -- its document's key and where its window stands -- and which of
+// them is active.
+void CMainFrame::CollectSessionTabs(CSessionTabArray & arrTabs, INT & nActive)
 {
-	arrKeys.RemoveAll(); nActive = -1;
+	arrTabs.RemoveAll(); nActive = -1;
 	CMDIChildWnd * pActive = MDIGetActive();
 	for( INT nTab = 0; nTab < GetChildFrameCount(); nTab++ ) {
 		CMDIChildWnd * pChild = GetChildFrame(nTab);
 		CCedtDoc * pDoc = pChild ? (CCedtDoc *)pChild->GetActiveDocument() : NULL;
 		if( ! pDoc ) continue;
-		if( pChild == pActive ) nActive = (INT)arrKeys.GetSize();
-		arrKeys.Add(pDoc->GetBackupKey());
+
+		CSessionTab tab; tab.szKey = pDoc->GetBackupKey();
+		CCedtView * pView = (CCedtView *)pChild->GetActiveView();
+		if( pView ) pView->GetSessionPosition(tab);
+
+		if( pChild == pActive ) nActive = (INT)arrTabs.GetSize();
+		arrTabs.Add(tab);
 	}
 }
 

@@ -367,12 +367,26 @@ CString GetBackupKey(const CBackupInfo & info)
 	return szKey;
 }
 
-BOOL WriteBackupSession(LPCTSTR lpszPathName, const CStringArray & arrKeys, INT nActive)
+BOOL WriteBackupSession(LPCTSTR lpszPathName, const CSessionTabArray & arrTabs, INT nActive)
 {
 	CString szText;
 	szText.Format(_T("%s version=\"%d\" active=\"%d\" />\n"), SESSION_TAG, BACKUP_FORMAT_VERSION, nActive);
-	for( INT i = 0; i < arrKeys.GetSize(); i++ )
-		szText += CString(SESSION_TAB_TAG) + _T(" key=\"") + _Escape(arrKeys[i]) + _T("\" />\n");
+	for( INT i = 0; i < arrTabs.GetSize(); i++ ) {
+		const CSessionTab & tab = arrTabs[i];
+		szText += CString(SESSION_TAB_TAG) + _T(" key=\"") + _Escape(tab.szKey) + _T("\"");
+
+		// positions only when recorded; a missing attribute reads back as -1
+		struct { LPCTSTR name; INT value; } attrs[] = {
+			{ _T("line"), tab.nCaretLine }, { _T("col"), tab.nCaretCol },
+			{ _T("anchorline"), tab.nAnchorLine }, { _T("anchorcol"), tab.nAnchorCol },
+			{ _T("top"), tab.nTopLine }, { _T("left"), tab.nScrollX },
+		};
+		for( auto & a : attrs ) {
+			if( a.value < 0 ) continue;
+			CString szAttr; szAttr.Format(_T(" %s=\"%d\""), a.name, a.value); szText += szAttr;
+		}
+		szText += _T(" />\n");
+	}
 
 	std::string utf8 = _ToUtf8(szText, szText.GetLength());
 
@@ -384,9 +398,9 @@ BOOL WriteBackupSession(LPCTSTR lpszPathName, const CStringArray & arrKeys, INT 
 	return bOK;
 }
 
-BOOL ReadBackupSession(LPCTSTR lpszPathName, CStringArray & arrKeys, INT & nActive)
+BOOL ReadBackupSession(LPCTSTR lpszPathName, CSessionTabArray & arrTabs, INT & nActive)
 {
-	arrKeys.RemoveAll(); nActive = -1;
+	arrTabs.RemoveAll(); nActive = -1;
 
 	HANDLE hFile = CreateFile(lpszPathName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if( hFile == INVALID_HANDLE_VALUE ) return FALSE;
@@ -414,7 +428,14 @@ BOOL ReadBackupSession(LPCTSTR lpszPathName, CStringArray & arrKeys, INT & nActi
 			if( nVersion < 1 || nVersion > BACKUP_FORMAT_VERSION ) return FALSE;
 			if( mapAttr.Lookup(_T("active"), szValue) ) nActive = _ttoi(szValue);
 		} else if( _ParseTagLine(szLine, SESSION_TAB_TAG, mapAttr) && mapAttr.Lookup(_T("key"), szValue) ) {
-			arrKeys.Add(szValue);
+			CSessionTab tab; tab.szKey = szValue;
+			if( mapAttr.Lookup(_T("line"), szValue) ) tab.nCaretLine = _ttoi(szValue);
+			if( mapAttr.Lookup(_T("col"), szValue) ) tab.nCaretCol = _ttoi(szValue);
+			if( mapAttr.Lookup(_T("anchorline"), szValue) ) tab.nAnchorLine = _ttoi(szValue);
+			if( mapAttr.Lookup(_T("anchorcol"), szValue) ) tab.nAnchorCol = _ttoi(szValue);
+			if( mapAttr.Lookup(_T("top"), szValue) ) tab.nTopLine = _ttoi(szValue);
+			if( mapAttr.Lookup(_T("left"), szValue) ) tab.nScrollX = _ttoi(szValue);
+			arrTabs.Add(tab);
 		}
 	}
 
@@ -468,7 +489,7 @@ void OrderBySession(const CStringArray & arrCurrent, const CStringArray & arrSes
 }
 
 
-INT CSessionRecord::Update(const CStringArray & arrKeys, INT nActive, BOOL bAnyBackup)
+INT CSessionRecord::Update(const CSessionTabArray & arrTabs, INT nActive, BOOL bAnyBackup)
 {
 	if( ! bAnyBackup ) {
 		if( ! m_bOnDisk ) return SESSION_KEEP;
@@ -476,17 +497,17 @@ INT CSessionRecord::Update(const CStringArray & arrKeys, INT nActive, BOOL bAnyB
 		return SESSION_DELETE;
 	}
 
-	BOOL bSame = m_bOnDisk && m_nActive == nActive && m_arrKeys.GetSize() == arrKeys.GetSize();
-	for( INT i = 0; bSame && i < arrKeys.GetSize(); i++ ) bSame = ( m_arrKeys[i] == arrKeys[i] );
+	BOOL bSame = m_bOnDisk && m_nActive == nActive && m_arrTabs.GetSize() == arrTabs.GetSize();
+	for( INT i = 0; bSame && i < arrTabs.GetSize(); i++ ) bSame = ( m_arrTabs[i] == arrTabs[i] );
 	if( bSame ) return SESSION_KEEP;
 
-	m_bOnDisk = TRUE; m_arrKeys.Copy(arrKeys); m_nActive = nActive;
+	m_bOnDisk = TRUE; m_arrTabs.Copy(arrTabs); m_nActive = nActive;
 	return SESSION_WRITE;
 }
 
 void CSessionRecord::Forget()
 {
-	m_bOnDisk = FALSE; m_arrKeys.RemoveAll(); m_nActive = -1;
+	m_bOnDisk = FALSE; m_arrTabs.RemoveAll(); m_nActive = -1;
 }
 
 
