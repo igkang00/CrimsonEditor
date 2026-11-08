@@ -168,6 +168,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\app\cedtapp.cpp" />
+    <ClCompile Include="src\app\cedtAppBackup.cpp" />
     <ClCompile Include="src\app\cedtAppConf.cpp" />
     <ClCompile Include="src\app\cedtAppDirectory.cpp" />
     <ClCompile Include="src\app\cedtAppFile.cpp" />

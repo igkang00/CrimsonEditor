@@ -68,6 +68,20 @@ CString GetBackupRelativePath(const CBackupInfo & info);
 // means never. nLastBackupBytes is the size of the previous backup (0 if none).
 BOOL IsBackupDue(ULONGLONG nNow, ULONGLONG nLastChange, ULONGLONG nLastBackup, ULONGLONG nLastBackupBytes, BOOL bChangedSinceBackup);
 
+// One backup found on disk by FindBackupFiles.
+class CBackupEntry
+{
+public:
+	CString     szPath;			// full path of the .bak file
+	CBackupInfo info;			// its header
+	ULONGLONG   nWriteTime;		// last-write time (FILETIME as 64 bits), for ordering
+};
+
+// Every readable backup under lpszBackupDir's file\, remote\ and untitled\ folders, oldest
+// first. Unfinished writes (.tmp), other files, and files without a valid header are left
+// out -- and left on disk.
+void FindBackupFiles(LPCTSTR lpszBackupDir, CArray<CBackupEntry, CBackupEntry &> & arrFound);
+
 // What one document remembers between backup-timer ticks. Pure bookkeeping -- the caller
 // does the file work and passes in the time (milliseconds, e.g. GetTickCount64()).
 class CBackupState

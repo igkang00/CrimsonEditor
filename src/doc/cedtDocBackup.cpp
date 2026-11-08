@@ -58,6 +58,58 @@ void CCedtDoc::DiscardBackup()
 	if( ! szPath.IsEmpty() ) ::DeleteFile(szPath);
 }
 
+// Replace the text with a backup's from an earlier session and mark the document modified.
+// The document takes the backup file over (Adopt): a save deletes it, an edit rewrites it.
+BOOL CCedtDoc::RestoreFromBackup(const CBackupEntry & entry)
+{
+	CBackupInfo info;
+	if( ! ReadBackupFile(entry.szPath, info, m_clsAnalyzedText) ) {
+		// The header was fine when scanned, so this is rare; put back what the disk holds.
+		if( ! IsNewFileNotSaved() && VerifyFilePath(GetPathName()) ) OnReloadDocument(GetPathName(), m_nEncodingType);
+		return FALSE;
+	}
+
+	EmptyUndoBuffer();
+	EmptyRedoBuffer();
+	m_bRecordingUndo = TRUE;
+	m_nRecordingCount = 0;
+
+	// No undo step leads back to what is on disk: without this, editing and undoing once
+	// would count as "back to saved", clear the modified flag and delete the backup.
+	m_nSavedUndoCount = -1;
+
+	if( info.nEncodingType != ENCODING_TYPE_UNKNOWN ) m_nEncodingType = info.nEncodingType;
+	if( info.nFileFormat != FILE_FORMAT_UNKNOWN ) m_nFileFormat = info.nFileFormat;
+
+	if( info.nKind == BACKUP_KIND_FILE || info.nKind == BACKUP_KIND_REMOTE ) {
+		// The file's status when the edits began, so a file changed on disk since then is
+		// caught by the ordinary "modified outside" check.
+		m_clsFileStatus.m_mtime = CTime(info.nModifiedTime);
+		m_clsFileStatus.m_size = info.nFileSize;
+	}
+
+	if( info.nKind == BACKUP_KIND_UNTITLED ) {
+		m_szUntitledBackupId = info.szId;
+		if( ! info.szTitle.IsEmpty() ) SetTitle(info.szTitle);
+	}
+
+	// A file deleted while the editor was closed comes back as a new document with its path;
+	// give it the syntax colouring opening it would have.
+	if( info.nKind == BACKUP_KIND_FILE && m_szLangSpecFile.IsEmpty() && m_clsAnalyzedText.GetCount() ) {
+		if( DetectSyntaxType(info.szPath, m_clsAnalyzedText.GetHead()) ) LoadSyntaxInformation();
+	}
+
+	AnalyzeText();
+	ReinitializeAllViews();
+	UpdateAllViews(NULL);
+
+	CDocument::SetModifiedFlag(TRUE);	// not ours: that would schedule a rewrite of a current backup
+	m_clsBackupState.Adopt(entry.szPath);
+
+	GoToLineNumber(info.nLineNum);
+	return TRUE;
+}
+
 void CCedtDoc::FillBackupInfo(CBackupInfo & info)
 {
 	if( IsRemoteFile() ) {

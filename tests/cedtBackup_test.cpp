@@ -580,3 +580,110 @@ TEST(BackupStateTest, AnAdoptedBackupCountsAsBackedUp)
 	state.Adopt(_T("C:\\b\\file\\1.bak"));
 	EXPECT_TRUE(state.IsBackedUp());
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Finding the backups to restore
+
+namespace {
+
+// A scratch backup directory with the three kind folders, emptied on the way in.
+CString MakeBackupDir(LPCTSTR lpszName)
+{
+	CString szDir = TempPath(lpszName);
+	LPCTSTR kinds[] = { _T("file"), _T("remote"), _T("untitled") };
+	CreateDirectory(szDir, NULL);
+	for( LPCTSTR k : kinds ) {
+		CString szSub = szDir + _T("\\") + k;
+		CreateDirectory(szSub, NULL);
+		WIN32_FIND_DATA fd; HANDLE h = FindFirstFile(szSub + _T("\\*"), & fd);
+		if( h != INVALID_HANDLE_VALUE ) {
+			do { if( !(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ) DeleteFile(szSub + _T("\\") + fd.cFileName); }
+			while( FindNextFile(h, & fd) );
+			FindClose(h);
+		}
+	}
+	return szDir;
+}
+
+CString WriteSample(const CString & szDir, const CBackupInfo & info, LPCTSTR lpszLine)
+{
+	CAnalyzedText text; FillText(text, { lpszLine });
+	CString szPath = szDir + _T("\\") + GetBackupRelativePath(info);
+	EXPECT_TRUE(WriteBackupFile(szPath, info, text));
+	return szPath;
+}
+
+} // namespace
+
+TEST(BackupScanTest, FindsEveryKindWithItsHeader)
+{
+	CString szDir = MakeBackupDir(_T("cedt_backup_scan1"));
+
+	CBackupInfo f = SampleFileInfo();
+	CBackupInfo r; r.nKind = BACKUP_KIND_REMOTE; r.nAccount = 1; r.szPath = _T("/srv/a.txt");
+	CBackupInfo u; u.nKind = BACKUP_KIND_UNTITLED; u.szId = _T("abc"); u.szTitle = _T("Untitled1");
+	WriteSample(szDir, f, _T("f")); WriteSample(szDir, r, _T("r")); WriteSample(szDir, u, _T("u"));
+
+	CArray<CBackupEntry, CBackupEntry &> found;
+	FindBackupFiles(szDir, found);
+
+	ASSERT_EQ(3, (int)found.GetSize());
+	int nFile = 0, nRemote = 0, nUntitled = 0;
+	for( int i = 0; i < found.GetSize(); i++ ) {
+		switch( found[i].info.nKind ) {
+		case BACKUP_KIND_FILE:		nFile++;		EXPECT_STREQ((LPCTSTR)f.szPath, (LPCTSTR)found[i].info.szPath); break;
+		case BACKUP_KIND_REMOTE:	nRemote++;		EXPECT_EQ(1, found[i].info.nAccount); break;
+		case BACKUP_KIND_UNTITLED:	nUntitled++;	EXPECT_STREQ(_T("Untitled1"), (LPCTSTR)found[i].info.szTitle); break;
+		}
+		EXPECT_EQ(0, found[i].szPath.Find(szDir));		// full path to the backup file
+	}
+	EXPECT_EQ(1, nFile); EXPECT_EQ(1, nRemote); EXPECT_EQ(1, nUntitled);
+}
+
+TEST(BackupScanTest, SkipsTemporaryAndForeignFiles)
+{
+	CString szDir = MakeBackupDir(_T("cedt_backup_scan2"));
+	WriteSample(szDir, SampleFileInfo(), _T("kept"));
+
+	WriteBytes(szDir + _T("\\file\\half.bak.tmp"), "<cedtbackup version=\"1\" kind=\"file\" path=\"C:\\x\" />\nx");	// a write that never finished
+	WriteBytes(szDir + _T("\\file\\notes.txt"), "not a backup");
+	WriteBytes(szDir + _T("\\untitled\\broken.bak"), "garbage without a header");
+
+	CArray<CBackupEntry, CBackupEntry &> found;
+	FindBackupFiles(szDir, found);
+
+	ASSERT_EQ(1, (int)found.GetSize());
+	EXPECT_STREQ((LPCTSTR)SampleFileInfo().szPath, (LPCTSTR)found[0].info.szPath);
+}
+
+TEST(BackupScanTest, AnEmptyOrMissingDirectoryFindsNothing)
+{
+	CArray<CBackupEntry, CBackupEntry &> found;
+	FindBackupFiles(MakeBackupDir(_T("cedt_backup_scan3")), found);
+	EXPECT_EQ(0, (int)found.GetSize());
+
+	FindBackupFiles(TempPath(_T("cedt_backup_no_such_dir")), found);
+	EXPECT_EQ(0, (int)found.GetSize());
+}
+
+TEST(BackupScanTest, OlderBackupsComeFirst)
+{
+	// Without a session file to give the tab order, restored tabs follow the order the
+	// backups were written in -- which is roughly the order the documents were edited.
+	CString szDir = MakeBackupDir(_T("cedt_backup_scan4"));
+	CBackupInfo a; a.nKind = BACKUP_KIND_UNTITLED; a.szId = _T("zzz-first");
+	CBackupInfo b; b.nKind = BACKUP_KIND_UNTITLED; b.szId = _T("aaa-second");
+	CString szA = WriteSample(szDir, a, _T("a"));
+	CString szB = WriteSample(szDir, b, _T("b"));
+
+	// Make the order unmistakable regardless of file-system timestamp resolution.
+	HANDLE h = CreateFile(szA, FILE_WRITE_ATTRIBUTES, 0, NULL, OPEN_EXISTING, 0, NULL);
+	FILETIME ft = { 0x10000000, 0x01D00000 }; SetFileTime(h, NULL, NULL, & ft); CloseHandle(h);
+
+	CArray<CBackupEntry, CBackupEntry &> found;
+	FindBackupFiles(szDir, found);
+	ASSERT_EQ(2, (int)found.GetSize());
+	EXPECT_STREQ(_T("zzz-first"), (LPCTSTR)found[0].info.szId);
+	EXPECT_STREQ(_T("aaa-second"), (LPCTSTR)found[1].info.szId);
+}

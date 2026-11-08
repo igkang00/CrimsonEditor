@@ -148,6 +148,8 @@ public: // *** cedtDocBackup.cpp ***
 	BOOL WriteBackup(ULONGLONG nNow);
 	void DiscardBackup();
 
+	BOOL RestoreFromBackup(const CBackupEntry & entry);
+
 	BOOL IsBackedUp() const { return m_clsBackupState.IsBackedUp(); }
 	BOOL IsKeptByHotExit() const { return m_bHotExiting && IsBackedUp(); }
 protected:

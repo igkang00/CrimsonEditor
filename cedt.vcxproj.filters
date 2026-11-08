@@ -28,6 +28,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\app\cedtapp.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="src\app\cedtAppBackup.cpp"><Filter>Source Files</Filter></ClCompile>
     <ClCompile Include="src\app\cedtAppConf.cpp"><Filter>Source Files</Filter></ClCompile>
     <ClCompile Include="src\app\cedtAppDirectory.cpp"><Filter>Source Files</Filter></ClCompile>
     <ClCompile Include="src\app\cedtAppFile.cpp"><Filter>Source Files</Filter></ClCompile>

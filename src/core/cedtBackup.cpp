@@ -301,6 +301,40 @@ BOOL IsBackupDue(ULONGLONG nNow, ULONGLONG nLastChange, ULONGLONG nLastBackup, U
 }
 
 
+void FindBackupFiles(LPCTSTR lpszBackupDir, CArray<CBackupEntry, CBackupEntry &> & arrFound)
+{
+	arrFound.RemoveAll();
+
+	LPCTSTR kinds[] = { _T("file"), _T("remote"), _T("untitled") };
+	for( INT k = 0; k < (INT)(sizeof(kinds) / sizeof(kinds[0])); k++ ) {
+		CString szFolder = CString(lpszBackupDir) + _T("\\") + kinds[k];
+
+		WIN32_FIND_DATA fd; HANDLE hFind = FindFirstFile(szFolder + _T("\\*"), & fd);
+		if( hFind == INVALID_HANDLE_VALUE ) continue;
+
+		do {
+			if( fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ) continue;
+
+			// Match the extension exactly: a wildcard would also let 8.3 short names through.
+			CString szName = fd.cFileName;
+			if( szName.GetLength() < 5 || szName.Right(4).CompareNoCase(_T(".bak")) ) continue;
+
+			CBackupEntry entry;
+			entry.szPath = szFolder + _T("\\") + szName;
+			entry.nWriteTime = ((ULONGLONG)fd.ftLastWriteTime.dwHighDateTime << 32) | fd.ftLastWriteTime.dwLowDateTime;
+			if( ! ReadBackupHeader(entry.szPath, entry.info) ) continue;
+
+			// insert in write-time order, oldest first; ties keep the order found
+			INT nAt = (INT)arrFound.GetSize();
+			while( nAt > 0 && arrFound[nAt-1].nWriteTime > entry.nWriteTime ) nAt--;
+			arrFound.InsertAt(nAt, entry);
+		} while( FindNextFile(hFind, & fd) );
+
+		FindClose(hFind);
+	}
+}
+
+
 CBackupState::CBackupState()
 {
 	m_nLastChange = m_nLastBackup = m_nLastBackupBytes = 0;
