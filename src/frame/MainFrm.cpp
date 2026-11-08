@@ -35,6 +35,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	ON_COMMAND(ID_WINDOW_PREV, OnWindowPrev)
 	ON_WM_SIZE()
 	ON_WM_TIMER()
+	ON_WM_QUERYENDSESSION()
+	ON_WM_ENDSESSION()
 	ON_COMMAND(ID_FILE_WINDOW_HIDE, OnFileWindowHide)
 	ON_COMMAND(ID_FILE_WINDOW_SYNC, OnFileWindowSync)
 	ON_COMMAND(ID_OUTPUT_WINDOW_HIDE, OnOutputWindowHide)
@@ -270,30 +272,80 @@ void CMainFrame::OnClose()
 	// user can *CANCEL* termination of mainframe window if there is any 
 	// unsaved document and select *CANCEL* from dialog box
 	// so, don't call any termination procedure in this function.
-	if( ! m_bPrintPreviewMode ) {
-		// Save window placement & bar state
-		SaveBarState(REGKEY_BAR_STATE);
-		SaveWindowPlacement(REGKEY_WINDOW_PLACEMENT);
+	if( m_bPrintPreviewMode ) { CMDIFrameWnd::OnClose(); return; }	// this only leaves the preview
 
-		CCedtApp::SaveUserConfiguration(CCedtApp::m_szAppDataDirectory + _T("\\") STRING_CONFFILENAME);
+	SaveSessionState();
+	BeginHotExit();
 
-		CCedtApp * pApp = (CCedtApp *)AfxGetApp(); // get application pointer
-		pApp->SaveBrowsingDirectory(REGKEY_BROWSING_DIRECTORY);
+	HWND hWnd = m_hWnd;
+	CMDIFrameWnd::OnClose();	// if this closes us, `this` is gone when it returns
 
-		// current working directory might differ from browsing directory
-		pApp->SaveWorkingDirectory(REGKEY_WORKING_DIRECTORY);
+	// Still a window? Then the exit was cancelled at a "save changes?" prompt, and the
+	// documents must go back to asking before they close.
+	if( ::IsWindow(hWnd) ) CCedtDoc::m_bHotExiting = FALSE;
+}
 
-		if( CCedtApp::m_bFirstInstance ) {
-			// save workspace file path
-			pApp->SaveWorkspaceFilePath(REGKEY_LAST_WORKSPACE);
+void CMainFrame::SaveSessionState()
+{
+	// Save window placement & bar state
+	SaveBarState(REGKEY_BAR_STATE);
+	SaveWindowPlacement(REGKEY_WINDOW_PLACEMENT);
 
-			// save working file list and user configuration
-			if( pApp->IsProjectLoaded() ) pApp->SaveProjectWorkspace();
-			else pApp->SaveRegularWorkspace();
-		}
+	CCedtApp::SaveUserConfiguration(CCedtApp::m_szAppDataDirectory + _T("\\") STRING_CONFFILENAME);
+
+	CCedtApp * pApp = (CCedtApp *)AfxGetApp(); // get application pointer
+	pApp->SaveBrowsingDirectory(REGKEY_BROWSING_DIRECTORY);
+
+	// current working directory might differ from browsing directory
+	pApp->SaveWorkingDirectory(REGKEY_WORKING_DIRECTORY);
+
+	if( CCedtApp::m_bFirstInstance ) {
+		// save workspace file path
+		pApp->SaveWorkspaceFilePath(REGKEY_LAST_WORKSPACE);
+
+		// save working file list and user configuration
+		if( pApp->IsProjectLoaded() ) pApp->SaveProjectWorkspace();
+		else pApp->SaveRegularWorkspace();
+	}
+}
+
+// The start of an exit that keeps unsaved documents (docs/hot-exit.md). Brings every modified
+// document's backup up to date now, rather than waiting for the timer, then lets the documents
+// whose backup is current skip their prompt. A document whose backup cannot be written is left
+// alone, and asks as it always did.
+void CMainFrame::BeginHotExit()
+{
+	if( ! CCedtApp::m_bReloadWorkingFilesOnStartup || ! CCedtApp::m_bFirstInstance ) return;
+
+	ULONGLONG nNow = ::GetTickCount64();
+	CCedtApp * pApp = (CCedtApp *)AfxGetApp(); POSITION pos = pApp->GetFirstDocPosition();
+	while( pos ) {
+		CCedtDoc * pDoc = (CCedtDoc *)pApp->GetNextDoc(pos);
+		if( pDoc->IsModified() && ! pDoc->IsBackedUp() ) pDoc->WriteBackup(nNow);
 	}
 
-	CMDIFrameWnd::OnClose();
+	CCedtDoc::m_bHotExiting = TRUE;
+}
+
+// Windows is signing out or shutting down. MFC answers this by running the same "save
+// changes?" prompts as an exit -- which holds up the shutdown -- so it gets the same treatment,
+// and the state OnClose would have saved is saved here, since OnClose never runs on this path.
+BOOL CMainFrame::OnQueryEndSession()
+{
+	if( m_bPrintPreviewMode ) return CMDIFrameWnd::OnQueryEndSession();
+
+	BeginHotExit();
+	BOOL bEnd = CMDIFrameWnd::OnQueryEndSession();
+	if( bEnd ) SaveSessionState();
+	else CCedtDoc::m_bHotExiting = FALSE;
+	return bEnd;
+}
+
+void CMainFrame::OnEndSession(BOOL bEnding)
+{
+	// Another application vetoed the shutdown: back to normal prompts.
+	if( ! bEnding ) CCedtDoc::m_bHotExiting = FALSE;
+	CMDIFrameWnd::OnEndSession(bEnding);
 }
 
 void CMainFrame::OnActivateApp(BOOL bActive, DWORD dwThreadID)

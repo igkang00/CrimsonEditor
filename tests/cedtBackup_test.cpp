@@ -529,3 +529,54 @@ TEST(BackupStateTest, AdoptingARestoredBackupKeepsItOnRecord)
 	EXPECT_STREQ(_T(""), (LPCTSTR)state.Written(201000, 100, _T("C:\\b\\file\\1.bak")));
 	EXPECT_STREQ(_T("C:\\b\\file\\1.bak"), (LPCTSTR)state.Discard());
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// IsBackedUp: may exit skip the "save changes?" prompt for this document?
+//
+// Only when the backup on disk holds exactly what is in the editor. The modified
+// flag says nothing about that, so it is not consulted.
+
+TEST(BackupStateTest, NotBackedUpBeforeAnyBackup)
+{
+	CBackupState state;
+	EXPECT_FALSE(state.IsBackedUp());
+	state.Changed(5000);
+	EXPECT_FALSE(state.IsBackedUp());
+}
+
+TEST(BackupStateTest, BackedUpOnceWrittenUntilTheNextEdit)
+{
+	CBackupState state;
+	state.Changed(5000);
+	state.Written(6000, 100, _T("C:\\b\\file\\1.bak"));
+	EXPECT_TRUE(state.IsBackedUp());
+
+	state.Changed(7000);
+	EXPECT_FALSE(state.IsBackedUp());			// the file on disk is now behind
+}
+
+TEST(BackupStateTest, NotBackedUpWhenEditedDuringTheWrite)
+{
+	CBackupState state;
+	state.Changed(5000);
+	state.Changed(6500);
+	state.Written(6000, 100, _T("C:\\b\\file\\1.bak"));
+	EXPECT_FALSE(state.IsBackedUp());
+}
+
+TEST(BackupStateTest, NotBackedUpOnceDiscarded)
+{
+	CBackupState state;
+	state.Changed(5000);
+	state.Written(6000, 100, _T("C:\\b\\file\\1.bak"));
+	state.Discard();
+	EXPECT_FALSE(state.IsBackedUp());
+}
+
+TEST(BackupStateTest, AnAdoptedBackupCountsAsBackedUp)
+{
+	CBackupState state;
+	state.Adopt(_T("C:\\b\\file\\1.bak"));
+	EXPECT_TRUE(state.IsBackedUp());
+}

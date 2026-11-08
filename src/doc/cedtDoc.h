@@ -62,7 +62,13 @@ public: // file contents & status
 	// frame takes.
 	BOOL m_bClosing;
 
-protected: // hot-exit backup (cedtDocBackup.cpp)
+public: // hot-exit backup (cedtDocBackup.cpp)
+	// Set by the main frame for the length of an exit that keeps unsaved documents. While it is
+	// set, a document whose backup is current skips the "save changes?" prompt and keeps its
+	// backup when closed. Cleared again if the exit is cancelled.
+	static BOOL m_bHotExiting;
+
+protected:
 	CBackupState m_clsBackupState;
 	CString m_szUntitledBackupId;	// names an untitled document's backup; assigned on its first one
 
@@ -141,6 +147,9 @@ public: // *** cedtDocBackup.cpp ***
 	BOOL WriteBackupIfDue(ULONGLONG nNow);
 	BOOL WriteBackup(ULONGLONG nNow);
 	void DiscardBackup();
+
+	BOOL IsBackedUp() const { return m_clsBackupState.IsBackedUp(); }
+	BOOL IsKeptByHotExit() const { return m_bHotExiting && IsBackedUp(); }
 protected:
 	void FillBackupInfo(CBackupInfo & info);
 

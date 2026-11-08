@@ -92,6 +92,10 @@ public:
 
 	BOOL HasBackup() const { return ! m_szPath.IsEmpty(); }
 
+	// The backup on disk holds exactly what the editor holds: exit may skip the "save changes?"
+	// prompt for this document. Deliberately independent of the modified flag.
+	BOOL IsBackedUp() const { return HasBackup() && ! m_bPending; }
+
 protected:
 	ULONGLONG m_nLastChange;
 	ULONGLONG m_nLastBackup;		// 0: never backed up in this session

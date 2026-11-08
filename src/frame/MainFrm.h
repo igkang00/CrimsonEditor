@@ -129,6 +129,8 @@ public: // child window
 
 protected: // hot-exit backup
 	void BackupModifiedDocuments();
+	void BeginHotExit();
+	void SaveSessionState();
 
 protected:
 	void ActivateNextChildFrame();
@@ -173,6 +175,8 @@ protected:
 	afx_msg void OnWindowPrev();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg BOOL OnQueryEndSession();
+	afx_msg void OnEndSession(BOOL bEnding);
 	afx_msg void OnFileWindowHide();
 	afx_msg void OnFileWindowSync();
 	afx_msg void OnOutputWindowHide();
