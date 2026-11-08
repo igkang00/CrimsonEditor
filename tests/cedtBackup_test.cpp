@@ -788,3 +788,74 @@ TEST(BackupSessionTest, NoSessionKeepsTheCurrentOrder)
 {
 	EXPECT_EQ((std::vector<int>{ 0, 1, 2 }), Order({ _T("a"), _T("b"), _T("c") }, { }));
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Keeping session.xml current while the editor runs
+//
+// So the tab order survives a crash, not only a clean exit. The backup timer asks
+// on every tick; the answer must be "write" only when something changed, so the
+// file is rewritten when a tab opens, closes, moves or is activated -- not twice a
+// second.
+
+namespace {
+
+CStringArray & Keys(CStringArray & arr, std::vector<LPCTSTR> keys)
+{
+	arr.RemoveAll();
+	for( LPCTSTR s : keys ) arr.Add(s);
+	return arr;
+}
+
+} // namespace
+
+TEST(SessionRecordTest, NothingToKeepWithoutBackups)
+{
+	CSessionRecord rec; CStringArray k;
+	EXPECT_EQ(SESSION_KEEP, rec.Update(Keys(k, { _T("a"), _T("b") }), 0, FALSE));
+}
+
+TEST(SessionRecordTest, WritesOnceWhenThereIsSomethingToRestore)
+{
+	CSessionRecord rec; CStringArray k;
+	EXPECT_EQ(SESSION_WRITE, rec.Update(Keys(k, { _T("a"), _T("b") }), 0, TRUE));
+	EXPECT_EQ(SESSION_KEEP,  rec.Update(Keys(k, { _T("a"), _T("b") }), 0, TRUE));
+}
+
+TEST(SessionRecordTest, RewritesWhenTabsOpenCloseOrMove)
+{
+	CSessionRecord rec; CStringArray k;
+	rec.Update(Keys(k, { _T("a"), _T("b") }), 0, TRUE);
+
+	EXPECT_EQ(SESSION_WRITE, rec.Update(Keys(k, { _T("a"), _T("b"), _T("c") }), 0, TRUE));	// opened
+	EXPECT_EQ(SESSION_WRITE, rec.Update(Keys(k, { _T("c"), _T("a"), _T("b") }), 1, TRUE));	// moved
+	EXPECT_EQ(SESSION_WRITE, rec.Update(Keys(k, { _T("c"), _T("b") }), 1, TRUE));			// closed
+	EXPECT_EQ(SESSION_KEEP,  rec.Update(Keys(k, { _T("c"), _T("b") }), 1, TRUE));
+}
+
+TEST(SessionRecordTest, RewritesWhenAnotherTabIsActivated)
+{
+	CSessionRecord rec; CStringArray k;
+	rec.Update(Keys(k, { _T("a"), _T("b") }), 0, TRUE);
+	EXPECT_EQ(SESSION_WRITE, rec.Update(Keys(k, { _T("a"), _T("b") }), 1, TRUE));
+}
+
+TEST(SessionRecordTest, DeletesOnceTheLastBackupIsGone)
+{
+	// Everything saved: nothing left to restore, so no order to restore it in.
+	CSessionRecord rec; CStringArray k;
+	rec.Update(Keys(k, { _T("a") }), 0, TRUE);
+	EXPECT_EQ(SESSION_DELETE, rec.Update(Keys(k, { _T("a") }), 0, FALSE));
+	EXPECT_EQ(SESSION_KEEP,   rec.Update(Keys(k, { _T("a") }), 0, FALSE));
+
+	EXPECT_EQ(SESSION_WRITE,  rec.Update(Keys(k, { _T("a") }), 0, TRUE));		// edited again
+}
+
+TEST(SessionRecordTest, ForgetMakesTheNextTickWriteAgain)
+{
+	// After a failed write, or after someone else deleted the file.
+	CSessionRecord rec; CStringArray k;
+	rec.Update(Keys(k, { _T("a") }), 0, TRUE);
+	rec.Forget();
+	EXPECT_EQ(SESSION_WRITE, rec.Update(Keys(k, { _T("a") }), 0, TRUE));
+}

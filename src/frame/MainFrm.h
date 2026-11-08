@@ -131,6 +131,9 @@ protected: // hot-exit backup
 	void BackupModifiedDocuments();
 	void BeginHotExit();
 	void CancelHotExit();
+	void CollectSessionKeys(CStringArray & arrKeys, INT & nActive);
+
+	CSessionRecord m_clsSessionRecord;	// what session.xml on disk currently says
 	void SaveSessionState();
 
 protected:

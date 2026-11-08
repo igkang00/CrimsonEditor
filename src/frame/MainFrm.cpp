@@ -187,11 +187,26 @@ void CMainFrame::BackupModifiedDocuments()
 {
 	if( ! CCedtApp::m_bReloadWorkingFilesOnStartup || ! CCedtApp::m_bFirstInstance ) return;
 
-	ULONGLONG nNow = ::GetTickCount64();
+	ULONGLONG nNow = ::GetTickCount64(); BOOL bAnyBackup = FALSE;
 	CCedtApp * pApp = (CCedtApp *)AfxGetApp(); POSITION pos = pApp->GetFirstDocPosition();
 	while( pos ) {
 		CCedtDoc * pDoc = (CCedtDoc *)pApp->GetNextDoc(pos);
 		pDoc->WriteBackupIfDue(nNow);
+		if( pDoc->HasBackup() ) bAnyBackup = TRUE;
+	}
+
+	// Keep session.xml in step with the tabs, so a crash restores the order too, not only a
+	// clean exit. CSessionRecord says "write" only when a tab opened, closed, moved or was
+	// activated, and "delete" once nothing is left to restore.
+	CStringArray arrKeys; INT nActive = -1;
+	CollectSessionKeys(arrKeys, nActive);
+	switch( m_clsSessionRecord.Update(arrKeys, nActive, bAnyBackup) ) {
+	case SESSION_WRITE:
+		if( ! WriteBackupSession(CCedtDoc::GetSessionPathName(), arrKeys, nActive) ) m_clsSessionRecord.Forget();
+		break;
+	case SESSION_DELETE:
+		::DeleteFile(CCedtDoc::GetSessionPathName());
+		break;
 	}
 }
 
@@ -325,7 +340,28 @@ void CMainFrame::BeginHotExit()
 	}
 
 	// The tab order, so the restored documents can take their places among the reopened ones.
+	// Written unconditionally: the backups just written may be the first this session.
 	CStringArray arrKeys; INT nActive = -1;
+	CollectSessionKeys(arrKeys, nActive);
+	WriteBackupSession(CCedtDoc::GetSessionPathName(), arrKeys, nActive);
+
+	CCedtDoc::m_bHotExiting = TRUE;
+}
+
+// The exit did not happen after all: documents ask before closing again, and the tab order
+// written for a restore that will not come is dropped -- the next timer tick writes a current
+// one if there are backups to go with it.
+void CMainFrame::CancelHotExit()
+{
+	CCedtDoc::m_bHotExiting = FALSE;
+	::DeleteFile(CCedtDoc::GetSessionPathName());
+	m_clsSessionRecord.Forget();
+}
+
+// Every tab's key, in tab order, and which of them is active.
+void CMainFrame::CollectSessionKeys(CStringArray & arrKeys, INT & nActive)
+{
+	arrKeys.RemoveAll(); nActive = -1;
 	CMDIChildWnd * pActive = MDIGetActive();
 	for( INT nTab = 0; nTab < GetChildFrameCount(); nTab++ ) {
 		CMDIChildWnd * pChild = GetChildFrame(nTab);
@@ -334,17 +370,6 @@ void CMainFrame::BeginHotExit()
 		if( pChild == pActive ) nActive = (INT)arrKeys.GetSize();
 		arrKeys.Add(pDoc->GetBackupKey());
 	}
-	WriteBackupSession(CCedtDoc::GetSessionPathName(), arrKeys, nActive);
-
-	CCedtDoc::m_bHotExiting = TRUE;
-}
-
-// The exit did not happen after all: documents ask before closing again, and the tab order
-// written for a restore that will not come is dropped.
-void CMainFrame::CancelHotExit()
-{
-	CCedtDoc::m_bHotExiting = FALSE;
-	::DeleteFile(CCedtDoc::GetSessionPathName());
 }
 
 // Windows is signing out or shutting down. MFC answers this by running the same "save

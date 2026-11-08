@@ -153,6 +153,7 @@ public: // *** cedtDocBackup.cpp ***
 	BOOL RestoreFromBackup(const CBackupEntry & entry);
 
 	BOOL IsBackedUp() const { return m_clsBackupState.IsBackedUp(); }
+	BOOL HasBackup() const { return m_clsBackupState.HasBackup(); }
 	BOOL IsKeptByHotExit() const { return m_bHotExiting && IsBackedUp(); }
 protected:
 	void FillBackupInfo(CBackupInfo & info);

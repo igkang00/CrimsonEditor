@@ -442,6 +442,28 @@ void OrderBySession(const CStringArray & arrCurrent, const CStringArray & arrSes
 }
 
 
+INT CSessionRecord::Update(const CStringArray & arrKeys, INT nActive, BOOL bAnyBackup)
+{
+	if( ! bAnyBackup ) {
+		if( ! m_bOnDisk ) return SESSION_KEEP;
+		Forget();
+		return SESSION_DELETE;
+	}
+
+	BOOL bSame = m_bOnDisk && m_nActive == nActive && m_arrKeys.GetSize() == arrKeys.GetSize();
+	for( INT i = 0; bSame && i < arrKeys.GetSize(); i++ ) bSame = ( m_arrKeys[i] == arrKeys[i] );
+	if( bSame ) return SESSION_KEEP;
+
+	m_bOnDisk = TRUE; m_arrKeys.Copy(arrKeys); m_nActive = nActive;
+	return SESSION_WRITE;
+}
+
+void CSessionRecord::Forget()
+{
+	m_bOnDisk = FALSE; m_arrKeys.RemoveAll(); m_nActive = -1;
+}
+
+
 CBackupState::CBackupState()
 {
 	m_nLastChange = m_nLastBackup = m_nLastBackupBytes = 0;

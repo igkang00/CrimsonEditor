@@ -95,6 +95,28 @@ BOOL ReadBackupSession(LPCTSTR lpszPathName, CStringArray & arrKeys, INT & nActi
 // order (first entry for a key wins); then the rest, in their current order.
 void OrderBySession(const CStringArray & arrCurrent, const CStringArray & arrSession, CArray<INT, INT> & arrOrder);
 
+// Keeping session.xml current while the editor runs, so the tab order survives a crash too.
+// Update() is asked on every backup-timer tick and says what to do with the file; it assumes
+// the caller does it, and Forget() takes that back (a failed write, a file deleted elsewhere).
+#define SESSION_KEEP		0
+#define SESSION_WRITE		1
+#define SESSION_DELETE		2
+
+class CSessionRecord
+{
+public:
+	CSessionRecord() { Forget(); }
+
+	// bAnyBackup: some document has a backup on disk, i.e. there is something to restore.
+	INT  Update(const CStringArray & arrKeys, INT nActive, BOOL bAnyBackup);
+	void Forget();
+
+protected:
+	BOOL         m_bOnDisk;		// what the last Update told the caller to leave on disk
+	CStringArray m_arrKeys;
+	INT          m_nActive;
+};
+
 // What one document remembers between backup-timer ticks. Pure bookkeeping -- the caller
 // does the file work and passes in the time (milliseconds, e.g. GetTickCount64()).
 class CBackupState
