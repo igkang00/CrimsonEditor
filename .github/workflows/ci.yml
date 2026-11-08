@@ -36,8 +36,44 @@ env:
   FLAVOUR: ${{ github.event_name == 'pull_request' && 'Debug' || 'Release' }}
 
 jobs:
+  # Does this change touch anything but documentation? Docs-only changes (Markdown anywhere,
+  # docs/, LICENSE) skip the build and test jobs below. Skipping is done here rather than with
+  # paths-ignore because a workflow that never starts leaves a required check pending forever,
+  # and a docs-only pull request could then never merge.
+  changes:
+    name: Detect code changes
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.detect.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: detect
+        shell: bash
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.sha }}
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then
+            files=$(git diff --name-only "$PR_BASE...$PR_HEAD")
+          elif [ "$EVENT" = "push" ] && [ -n "$PUSH_BEFORE" ] && ! echo "$PUSH_BEFORE" | grep -qE '^0+$'; then
+            files=$(git diff --name-only "$PUSH_BEFORE" "$PUSH_AFTER")
+          else
+            echo "code=true" >> "$GITHUB_OUTPUT"; exit 0    # manual run, or no range to compare
+          fi
+          echo "Changed files:"; echo "$files"
+          code=$(echo "$files" | grep -vE '\.md$|^docs/|^LICENSE$' | grep -c . || true)
+          if [ "$code" -gt 0 ]; then echo "code=true" >> "$GITHUB_OUTPUT"; else echo "code=false" >> "$GITHUB_OUTPUT"; fi
+
   build:
     name: Build ${{ matrix.config }}
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: windows-2025-vs2026
     strategy:
       fail-fast: false
@@ -61,6 +97,8 @@ jobs:
 
   tools:
     name: Build launcher and shell extension (${{ github.event_name == 'pull_request' && 'Debug' || 'Release' }})
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: windows-2025-vs2026
     steps:
       - uses: actions/checkout@v4
@@ -75,6 +113,8 @@ jobs:
 
   test:
     name: Unit tests (${{ github.event_name == 'pull_request' && 'Debug' || 'Release' }})
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: windows-2025-vs2026
     env:
       # gtest comes from vcpkg in manifest mode (tests/vcpkg.json). Building it takes minutes;
@@ -112,3 +152,21 @@ jobs:
           name: test-results-${{ env.FLAVOUR }}
           path: test-results.xml
           retention-days: 7
+
+  # The one check branch protection requires. It always runs and passes when every job above
+  # succeeded or was skipped (a docs-only change), fails otherwise -- so jobs can be added or
+  # renamed without touching the protection rule.
+  ci-passed:
+    name: CI passed
+    needs: [changes, build, tools, test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if any job failed or was cancelled
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: |
+          echo "changes=${{ needs.changes.result }} build=${{ needs.build.result }} tools=${{ needs.tools.result }} test=${{ needs.test.result }}"
+          exit 1
+
+      - name: All jobs succeeded or were skipped
+        run: echo "code changed=${{ needs.changes.outputs.code }}"

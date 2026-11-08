@@ -92,7 +92,12 @@ it merges, and once in Release, after:
 | Pull request to `main` | Debug-KR, Debug-US, and `tools/launch` + `tools/shellext` in Debug | `cedt_tests` Debug |
 | Push to `main` (a merge, or a direct push), or a manual run | Release-KR, Release-US, and the tools in Release; the executables are kept as artifacts for 7 days | `cedt_tests` Release |
 
-Pushes to other branches run nothing, so an open PR is not built twice. Test results are kept as
+Pushes to other branches run nothing, so an open PR is not built twice. A change that touches only
+documentation — Markdown files, `docs/`, `LICENSE` — skips the build and test jobs. That is decided
+by a first job, not by `paths-ignore`: a workflow that never starts leaves a required check pending,
+and a docs-only PR could never merge. A last job, **CI passed**, fails if any job failed or was
+cancelled and passes if each succeeded or was skipped; it is the single check branch protection
+requires. Test results are kept as
 JUnit XML for 7 days, and gtest, which comes from vcpkg, is kept in a binary cache between runs. A
 run takes about four minutes.
 
@@ -107,7 +112,8 @@ any release, because the release workflow builds the installer from Release.
 - **The runner's ANSI code page is 1252, not 949.** Sources are read as UTF-8 everywhere
   (`/source-charset:utf-8`) and `cedt_kr.rc` declares `#pragma code_page(949)`, so the build does
   not depend on it; a test that assumes CP949 for `CP_ACP` would pass here and fail there.
-- **`main` is protected:** a pull request merges only once these checks pass.
+- **`main` is protected:** a pull request merges only once **CI passed** is green. Administrators
+  may still push to `main` directly; those pushes get the Release run like any other.
 - **Cost:** none. Standard GitHub-hosted runners are free for public repositories.
 
 [../.github/workflows/release.yml](../.github/workflows/release.yml) runs on a `v*` tag. It checks
