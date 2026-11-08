@@ -1,0 +1,172 @@
+# Build and test on pull requests to main and on pushes to main, each in one flavour:
+#
+#   pull request  ->  Debug:   Debug-KR, Debug-US, the helper tools, and the Debug unit tests
+#   push to main  ->  Release: Release-KR, Release-US, the helper tools, and the Release unit tests
+#
+# A change is checked in Debug before it merges and in Release once it has, so the same code is
+# never built twice. The price: something that breaks only in Release (an optimiser-only warning,
+# now an error) is found after the merge, as a red run on main -- still before any release,
+# since release.yml builds the installer from Release.
+#
+# The runner image is pinned (not windows-latest) so a GitHub image rollover cannot change the
+# toolset under us: the projects need Visual Studio 2026's v145 toolset with MFC, which this
+# image carries. All projects treat warnings as errors, so a new warning fails the run.
+#
+# Cost: free. Standard GitHub-hosted runners are free for public repositories.
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:        # run the main-branch (Release) checks by hand
+
+# A newer push to the same PR or branch supersedes the run in progress.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Debug for pull requests, Release for everything else (push to main, manual runs).
+  FLAVOUR: ${{ github.event_name == 'pull_request' && 'Debug' || 'Release' }}
+
+jobs:
+  # Does this change touch anything but documentation? Docs-only changes (Markdown anywhere,
+  # docs/, LICENSE) skip the build and test jobs below. Skipping is done here rather than with
+  # paths-ignore because a workflow that never starts leaves a required check pending forever,
+  # and a docs-only pull request could then never merge.
+  changes:
+    name: Detect code changes
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.detect.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: detect
+        shell: bash
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.sha }}
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then
+            files=$(git diff --name-only "$PR_BASE...$PR_HEAD")
+          elif [ "$EVENT" = "push" ] && [ -n "$PUSH_BEFORE" ] && ! echo "$PUSH_BEFORE" | grep -qE '^0+$'; then
+            files=$(git diff --name-only "$PUSH_BEFORE" "$PUSH_AFTER")
+          else
+            echo "code=true" >> "$GITHUB_OUTPUT"; exit 0    # manual run, or no range to compare
+          fi
+          echo "Changed files:"; echo "$files"
+          code=$(echo "$files" | grep -vE '\.md$|^docs/|^LICENSE$' | grep -c . || true)
+          if [ "$code" -gt 0 ]; then echo "code=true" >> "$GITHUB_OUTPUT"; else echo "code=false" >> "$GITHUB_OUTPUT"; fi
+
+  build:
+    name: Build ${{ matrix.config }}
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: windows-2025-vs2026
+    strategy:
+      fail-fast: false
+      matrix:
+        config: ${{ github.event_name == 'pull_request' && fromJSON('["Debug-KR", "Debug-US"]') || fromJSON('["Release-KR", "Release-US"]') }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: Build cedt (${{ matrix.config }})
+        run: msbuild cedt.vcxproj /p:Configuration=${{ matrix.config }} /p:Platform=x64 /m /nologo /v:minimal
+
+      - name: Upload the executable
+        if: startsWith(matrix.config, 'Release-')
+        uses: actions/upload-artifact@v4
+        with:
+          name: cedt-${{ matrix.config }}
+          path: build/x64/${{ matrix.config }}/cedt_*.exe
+          retention-days: 7
+
+  tools:
+    name: Build launcher and shell extension (${{ github.event_name == 'pull_request' && 'Debug' || 'Release' }})
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: windows-2025-vs2026
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: Build launch.exe
+        run: msbuild tools/launch/launch.vcxproj /p:Configuration=${{ env.FLAVOUR }} /p:Platform=x64 /nologo /v:minimal
+
+      - name: Build ShellExt.dll
+        run: msbuild tools/shellext/shellext.vcxproj /p:Configuration=${{ env.FLAVOUR }} /p:Platform=x64 /nologo /v:minimal
+
+  test:
+    name: Unit tests (${{ github.event_name == 'pull_request' && 'Debug' || 'Release' }})
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: windows-2025-vs2026
+    env:
+      # gtest comes from vcpkg in manifest mode (tests/vcpkg.json). Building it takes minutes;
+      # the binary cache keeps it across runs.
+      VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}\.vcpkg-binary-cache
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: Prepare the vcpkg binary cache
+        shell: pwsh
+        run: New-Item -ItemType Directory -Force -Path $env:VCPKG_DEFAULT_BINARY_CACHE | Out-Null
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+          key: vcpkg-${{ runner.os }}-${{ env.FLAVOUR }}-${{ hashFiles('tests/vcpkg.json') }}
+          restore-keys: vcpkg-${{ runner.os }}-${{ env.FLAVOUR }}-
+
+      - name: Hook vcpkg into MSBuild
+        shell: pwsh
+        run: '& "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" integrate install'
+
+      - name: Build cedt_tests (${{ env.FLAVOUR }})
+        run: msbuild tests/cedt_tests.vcxproj /p:Configuration=${{ env.FLAVOUR }} /p:Platform=x64 /m /nologo /v:minimal
+
+      - name: Run cedt_tests
+        run: tests\build\x64\${{ env.FLAVOUR }}\cedt_tests.exe --gtest_output=xml:test-results.xml
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ env.FLAVOUR }}
+          path: test-results.xml
+          retention-days: 7
+
+  # The one check branch protection requires. It always runs and passes when every job above
+  # succeeded or was skipped (a docs-only change), fails otherwise -- so jobs can be added or
+  # renamed without touching the protection rule.
+  ci-passed:
+    name: CI passed
+    needs: [changes, build, tools, test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if any job failed or was cancelled
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: |
+          echo "changes=${{ needs.changes.result }} build=${{ needs.build.result }} tools=${{ needs.tools.result }} test=${{ needs.test.result }}"
+          exit 1
+
+      - name: All jobs succeeded or were skipped
+        run: echo "code changed=${{ needs.changes.outputs.code }}"

@@ -166,6 +166,15 @@
       <PreprocessorDefinitions>CEDT_LANG_US;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
+  <!-- Every configuration: a warning fails the build, here and in CI, so none can accumulate. -->
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <TreatWarningAsError>true</TreatWarningAsError>
+    </ClCompile>
+    <Link>
+      <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\app\cedtapp.cpp" />
     <ClCompile Include="src\app\cedtAppBackup.cpp" />

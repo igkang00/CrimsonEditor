@@ -61,6 +61,18 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
+  <!-- Every configuration: read sources as UTF-8 whatever the machine's code page, as the other
+       projects do (without it, CP949 here and CP1252 on a CI runner read launch.cpp differently,
+       which is warning C4819); and a warning fails the build, so none can accumulate. -->
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalOptions>/source-charset:utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <TreatWarningAsError>true</TreatWarningAsError>
+    </ClCompile>
+    <Link>
+      <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="launch.cpp" />
   </ItemGroup>

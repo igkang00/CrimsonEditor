@@ -1,0 +1,52 @@
+# Pushing a version tag (v3.95, ...) builds the installer and opens a DRAFT GitHub Release with
+# the installer attached. The release notes are still written by hand on the draft, which is
+# then published from the GitHub UI -- nothing is published automatically.
+#
+# The tag must match MyAppVersion in installer.iss (v3.95 <-> "3.95"), or the run fails before
+# building anything: a release whose installer reports another version is worse than none.
+#
+# Cost: free. Standard GitHub-hosted runners are free for public repositories.
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write   # to create the draft release and upload the installer
+
+jobs:
+  installer:
+    name: Build installer and draft release
+    runs-on: windows-2025-vs2026
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the tag against installer.iss
+        id: version
+        shell: pwsh
+        run: |
+          $tag = '${{ github.ref_name }}'
+          $line = Select-String -Path installer.iss -Pattern '#define MyAppVersion\s+"([^"]+)"' | Select-Object -First 1
+          if (-not $line) { throw 'MyAppVersion not found in installer.iss' }
+          $ver = $line.Matches[0].Groups[1].Value
+          if ($tag -ne "v$ver") { throw "Tag $tag does not match installer.iss version $ver -- bump MyAppVersion or fix the tag." }
+          "version=$ver" >> $env:GITHUB_OUTPUT
+
+      - name: Build the installer
+        shell: pwsh
+        run: ./scripts/build_installer.ps1
+
+      - name: Create the draft release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $setup = Get-ChildItem dist -Filter 'cedt-*-setup.exe' | Select-Object -First 1
+          if (-not $setup) { throw 'No installer under dist\' }
+          gh release create '${{ github.ref_name }}' $setup.FullName `
+            --draft `
+            --verify-tag `
+            --title 'Crimson Editor ${{ steps.version.outputs.version }}' `
+            --notes 'Release notes to be written before publishing.'
