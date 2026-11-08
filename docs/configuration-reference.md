@@ -19,10 +19,10 @@ Excerpt of `CCedtApp::InitInstance()`, in order:
 5.  Single-instance check                               (IPC + ghost-exit if a previous instance is alive)
 6.  AfxOleInit / InitCommonControls / Enable3dControls
 7.  LoadUserConfiguration(cedt.conf)                    file
-    LoadColorScheme(cedt.color)                         file
+    LoadColorScheme(cedt.colors)                        file
     LoadFtpAccountInfo(cedt.ftp)                        file
     LoadUserCommands(cedt.tools)                        file
-    LoadMacroBuffers(cedt.macro)                        file
+    LoadMacroBuffers(cedt.macros)                       file
 8.  LoadStdProfileSettings(8)                           MFC MRU (registry)
 9.  Create CMainFrame
     LoadBrowsingDirectory / LoadWorkingDirectory        registry
@@ -61,10 +61,10 @@ Code for the registry helpers: [src/app/cedtAppRegistry.cpp](../src/app/cedtAppR
 | File | Contents | Loader |
 | --- | --- | --- |
 | `cedt_kr.conf` / `cedt_us.conf` | Main settings — fonts, view options, syntax options, print options. Most of the Preferences dialog ends up here. **Edition-specific**: the KR build reads/writes `cedt_kr.conf`, the US build reads/writes `cedt_us.conf`. See §9.1.3. | [`LoadUserConfiguration`](../src/app/cedtAppConf.cpp) |
-| `cedt.color` | Active color scheme (text/background/syntax category colors). | [`LoadColorScheme`](../src/app/cedtAppConf.cpp) |
+| `cedt.colors` | Active color scheme (text/background/syntax category colors). | [`LoadColorScheme`](../src/app/cedtAppConf.cpp) |
 | `cedt.ftp` | FTP account list. | [`LoadFtpAccountInfo`](../src/app/cedtAppConf.cpp) |
 | `cedt.tools` | User-defined external tools (the Tools menu). | [`LoadUserCommands`](../src/app/cedtAppConf.cpp) |
-| `cedt.macro` | Recorded macros. | [`LoadMacroBuffers`](../src/app/cedtAppConf.cpp) |
+| `cedt.macros` | Recorded macros. | [`LoadMacroBuffers`](../src/app/cedtAppConf.cpp) |
 
 All five are stored as **binary** files (opened with `ios::in | ios::binary`), with a version magic written at the top of each so the loader can reject schema mismatches. They are not meant to be hand-edited.
 
@@ -72,7 +72,7 @@ For brevity the rest of this document refers to the settings file as `cedt.conf`
 
 ### 2.3 InstallDir copies as factory defaults
 
-`cedt.conf` and `cedt.color` may also exist inside the install directory itself, shipped by the installer. They serve as the "factory default" that the loader falls back to before resorting to hardcoded defaults (see §3).
+`cedt.conf` and `cedt.colors` may also exist inside the install directory itself, shipped by the installer. They serve as the "factory default" that the loader falls back to before resorting to hardcoded defaults (see §3).
 
 ---
 
@@ -99,24 +99,24 @@ Behavior:
 
 > ⚠️ The dialog is the same for "file missing" and "file corrupted", which makes the very first launch (no AppData copy yet, no factory copy yet) display a "settings are corrupted" message even though nothing is actually wrong. See §6 for the implication.
 
-### 3.2 `cedt.color` — three-tier fallback **without** a dialog
+### 3.2 `cedt.colors` — three-tier fallback **without** a dialog
 
 ```cpp
-if( ! LoadColorScheme(AppData + "\\cedt.color") ) {
-    if( ! LoadColorScheme(InstallDir + "\\cedt.color") )
+if( ! LoadColorScheme(AppData + "\\cedt.colors") ) {
+    if( ! LoadColorScheme(InstallDir + "\\cedt.colors") )
         SetPredefinedColorScheme(COLOR_SCHEME_DEFAULT);
-    SaveColorScheme(AppData + "\\cedt.color");
+    SaveColorScheme(AppData + "\\cedt.colors");
 }
 ```
 
 Same shape as `cedt.conf` but quieter — when both file copies are absent, `SetPredefinedColorScheme(COLOR_SCHEME_DEFAULT)` silently installs the built-in default scheme and persists it to AppData.
 
-### 3.3 `cedt.ftp`, `cedt.tools`, `cedt.macro` — silent miss
+### 3.3 `cedt.ftp`, `cedt.tools`, `cedt.macros` — silent miss
 
 ```cpp
 LoadFtpAccountInfo(AppData + "\\cedt.ftp");
 LoadUserCommands  (AppData + "\\cedt.tools");
-LoadMacroBuffers  (AppData + "\\cedt.macro");
+LoadMacroBuffers  (AppData + "\\cedt.macros");
 ```
 
 Return value is not checked. There is no install-directory fallback for these three. If the file is missing or unreadable, the corresponding in-memory collection simply stays empty:
@@ -184,14 +184,14 @@ Triggered by:
 - **Preferences dialog OK** — `SaveAllPrefSettings()` in [../src/dialogs/preferences/prefdialog.cpp](../src/dialogs/preferences/prefdialog.cpp) calls `SaveUserConfiguration` after committing every page.
 - **Main frame close** — [../src/frame/MainFrm.cpp](../src/frame/MainFrm.cpp) at line 229 — a final write before exit.
 
-### 5.2 `cedt.color` — only by explicit color-scheme commands
+### 5.2 `cedt.colors` — only by explicit color-scheme commands
 
 Triggered by:
 
 - **View → Color Scheme → Default / Simplified / Reversed / Lightgray / Darkblue** (`OnViewColorScheme(nScheme)`) — picking a predefined scheme.
 - **View → Color Scheme → Saved...** (`OnViewColorSchemeSaved()`) — loading a `.scheme` file from disk.
 
-> ⚠️ **Pitfall**: `SaveAllPrefSettings()` in the Preferences dialog only updates **in-memory** colors via `SaveColorSettings()` ([../src/dialogs/preferences/PrefDialogColors.cpp](../src/dialogs/preferences/PrefDialogColors.cpp) line 109) — it does **not** write `cedt.color`. Colors edited on the Preferences → Colors page apply for the current session but are **lost on the next launch** unless the user also picks a scheme through the View → Color Scheme menu (which does call `SaveColorScheme`). The dedicated "Save Color Scheme" button on the Colors page writes to a user-chosen file, not to `cedt.color`.
+> ⚠️ **Pitfall**: `SaveAllPrefSettings()` in the Preferences dialog only updates **in-memory** colors via `SaveColorSettings()` ([../src/dialogs/preferences/PrefDialogColors.cpp](../src/dialogs/preferences/PrefDialogColors.cpp) line 109) — it does **not** write `cedt.colors`. Colors edited on the Preferences → Colors page apply for the current session but are **lost on the next launch** unless the user also picks a scheme through the View → Color Scheme menu (which does call `SaveColorScheme`). The dedicated "Save Color Scheme" button on the Colors page writes to a user-chosen file, not to `cedt.colors`.
 
 ### 5.3 `cedt.ftp` — after the FTP dialogs close
 
@@ -205,7 +205,7 @@ The save is unconditional after `DoModal()`, so even cancelling the dialog still
 - **Preferences dialog OK** — `SaveAllPrefSettings()` calls `SaveUserCommands`.
 - **Tools → Open User Command File N** (`OnCommandUserFile0..7`) — after loading the chosen `.tools` file, the merged set is re-saved.
 
-### 5.5 `cedt.macro` — when macros are modified
+### 5.5 `cedt.macros` — when macros are modified
 
 - **Preferences dialog OK** — same path as `cedt.tools`.
 - **Macros → Open Macro File N** (`OnMacroUserFile0..7`).
@@ -231,12 +231,12 @@ The save is unconditional after `DoModal()`, so even cancelling the dialog still
 | --- | --- |
 | View-menu option toggle / pick | `cedt.conf` |
 | Directory panel: set working directory | `cedt.conf` |
-| View → Color Scheme menu | `cedt.color` |
+| View → Color Scheme menu | `cedt.colors` |
 | FTP dialog close | `cedt.ftp` |
 | Tools → Open User Command File N | `cedt.tools` |
-| Macros → Open Macro File N | `cedt.macro` |
-| Macros → Stop Recording | `cedt.macro` |
-| Preferences dialog OK | `cedt.conf` + `cedt.tools` + `cedt.macro` + `REGKEY_ALLOW_MULTI_INSTANCES` (but **not** `cedt.color`) |
+| Macros → Open Macro File N | `cedt.macros` |
+| Macros → Stop Recording | `cedt.macros` |
+| Preferences dialog OK | `cedt.conf` + `cedt.tools` + `cedt.macros` + `REGKEY_ALLOW_MULTI_INSTANCES` (but **not** `cedt.colors`) |
 | Main frame close | `cedt.conf` + window placement + bar state + browsing dir + working dir + last workspace |
 | Opening / saving a document | MFC MRU (registry, automatic) |
 
@@ -252,7 +252,7 @@ Putting the file behaviors next to the registry behaviors:
 4. Read the multi-instance flag from the registry.
 5. If another instance is already running and multi-instance is disabled, forward the command line to that instance and exit silently.
 6. Initialize OLE, common controls, and the 3D control flag.
-7. Load `cedt.conf`, then `cedt.color`, then `cedt.ftp` / `cedt.tools` / `cedt.macro` — with the per-file fallback semantics described in §3.
+7. Load `cedt.conf`, then `cedt.colors`, then `cedt.ftp` / `cedt.tools` / `cedt.macros` — with the per-file fallback semantics described in §3.
 8. Load MFC standard registry items (MRU).
 9. Build the main MDI frame, then restore browsing directory, working directory, last workspace, window placement, and docking-bar state from the registry.
 
@@ -264,8 +264,8 @@ When neither the registry subtree nor any file in `%APPDATA%\Crimson Editor\` ex
 
 1. **Install directory** — HKLM is empty (no installer was run, or this is a fresh portable copy), so the code derives the install directory from the running EXE's own location via `GetModuleFileName` + `GetFileDirectory`. This derivation runs **every launch** rather than being cached anywhere, so moving the EXE to another folder or to a different drive letter (USB stick) is followed automatically with no stale-pointer risk. (Earlier versions popped up a folder-picker dialog at this point; that was removed so unzip-and-run setups work without prompting.)
 2. **`cedt.conf`** — both AppData and InstallDir copies are missing, so the user sees the `IDS_ERR_CORRUPT_CONFIG_FILE` message box, the hardcoded defaults (§4) are applied, and the result is written to AppData.
-3. **`cedt.color`** — both copies missing → the predefined default scheme is installed silently and persisted to AppData.
-4. **`cedt.ftp` / `cedt.tools` / `cedt.macro`** — all missing → start empty; nothing is shown to the user.
+3. **`cedt.colors`** — both copies missing → the predefined default scheme is installed silently and persisted to AppData.
+4. **`cedt.ftp` / `cedt.tools` / `cedt.macros`** — all missing → start empty; nothing is shown to the user.
 5. **Registry** — everything else falls back to its built-in default (empty MRU, default window placement, etc.).
 
 After this first run completes, every settings file exists in AppData, and the next launch is silent and instant.
@@ -321,7 +321,7 @@ Suggested fix: keep a "dirty" flag in memory, debounce with `SetTimer` (e.g. 1 s
 | --- | --- | --- |
 | 9.2.1 | All configuration files are binary | Users cannot diff, edit, or version-control them. Migrating to JSON / TOML / INI is a sizeable schema-definition exercise. |
 | 9.2.2 | `SetDefaultConfiguration` is hardcoded in C++ | Changing the shipped defaults requires a recompile. An `InstallDir\defaults.conf` seed file would let packagers tune without rebuilding. |
-| 9.2.3 | AppData folder is flat | `cedt.conf` / `cedt.color` / `cedt.ftp` / `cedt.tools` / `cedt.macro` all sit at the same level. Subdirectories (`config/`, `colors/`, `scripts/`) would make manual backup cleaner, but require migration. |
+| 9.2.3 | AppData folder is flat | `cedt.conf` / `cedt.colors` / `cedt.ftp` / `cedt.tools` / `cedt.macros` all sit at the same level. Subdirectories (`config/`, `colors/`, `scripts/`) would make manual backup cleaner, but require migration. |
 | 9.2.4 | No final flush in `ExitInstance` | If main-frame `OnClose` is bypassed (e.g. forced shutdown while modal dialogs are open) the last in-memory changes may be lost. Most settings are saved immediately so the window is narrow, but a defensive final save would close it. |
 | 9.2.5 | Registry-vs-file split is not documented as a rule | The unwritten convention "UI state in registry, user preferences in files" is mostly followed, but `BrowsingDirectory` / `WorkingDirectory` blur the line. A short guideline here would prevent drift when adding new state. |
 
