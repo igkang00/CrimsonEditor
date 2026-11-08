@@ -159,6 +159,23 @@ protected:
 	void FillBackupInfo(CBackupInfo & info);
 
 
+public: // *** cedtDocBookmarks.cpp ***
+	static void LoadBookmarkStore();
+	static CString GetBookmarkStorePathName();
+
+	std::vector<CBookmark> CollectBookmarks();
+	std::vector<INT> GetBookmarkLines();
+	void SetBookmarkLines(const std::vector<INT> & lines);
+	std::vector<ULONGLONG> HashAllLines();
+
+	CString GetBookmarkKey(LPCTSTR lpszPathName);
+	void RestoreBookmarks(LPCTSTR lpszPathName);	// after a file is opened from lpszPathName
+	void RecordBookmarks();							// when it is saved, reloaded or closed
+protected:
+	static CBookmarkStore m_clsBookmarkStore;
+	BOOL m_bBookmarksReady = FALSE;	// the document loaded, so its bookmarks may be recorded
+
+
 public: // *** cedtDocView.cpp ***
 	CCedtView * GetNextCedtView(POSITION & pos);
 	CCedtView * GetFirstView();

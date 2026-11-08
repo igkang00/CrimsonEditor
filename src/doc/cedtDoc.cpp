@@ -166,6 +166,7 @@ void CCedtDoc::OnCloseDocument()
 	// Closed: its changes were saved, or discarded on purpose -- unless this is an exit that is
 	// keeping them, in which case the backup is what brings them back next time.
 	if( ! IsKeptByHotExit() ) DiscardBackup();
+	RecordBookmarks();              // the file's bookmarks outlive the document (bookmarks.xml)
 	CDocument::OnCloseDocument();   // usually deletes this
 }
 
@@ -296,6 +297,9 @@ BOOL CCedtDoc::OnReloadDocument(LPCTSTR lpszPathName, INT nEncodingType)
 	// This code segment imitate CDocument::OnOpenDocument(lpszPathName)
 	if( IsModified() ) TRACE0("Warning: OnReloadDocument replaces an unsaved document.\n");
 
+	// The bookmarks as they stand, to be re-found by content in what the reload brings in.
+	std::vector<CBookmark> bookmarks = CollectBookmarks();
+
 	CFileException fe;
 	CFile * pFile = GetFile(lpszPathName, CFile::modeRead | CFile::shareDenyNone, &fe);
 	if( pFile == NULL ) {
@@ -337,6 +341,9 @@ BOOL CCedtDoc::OnReloadDocument(LPCTSTR lpszPathName, INT nEncodingType)
 
 //	if( DetectSyntaxType(lpszPathName, m_clsAnalyzedText.GetHead()) ) LoadSyntaxInformation();
 	AnalyzeText();
+
+	SetBookmarkLines(RefindBookmarks(bookmarks, HashAllLines(), FALSE));
+	RecordBookmarks();
 
 	ReinitializeAllViews();
 //	FormatScreenText();
@@ -397,10 +404,12 @@ BOOL CCedtDoc::OnOpenDocument(LPCTSTR lpszPathName)
 	if( DetectSyntaxType(lpszPathName, m_clsAnalyzedText.GetHead()) ) LoadSyntaxInformation();
 	AnalyzeText();
 
+	RestoreBookmarks(lpszPathName);	// the file's bookmarks from bookmarks.xml (cedtDocBookmarks.cpp)
+
 //	ReinitializeAllViews();
 //	FormatScreenText();
 //	UpdateAllViews(NULL);
-	
+
 	return TRUE;
 }
 

@@ -1,6 +1,7 @@
 # Persistent bookmarks — a design
 
-**Status:** design agreed, implementation not started (it will happen on its own branch).
+**Status:** implemented on `feature/bookmarks`. Written first as the design; the sections on
+writing, the code and testing record what the implementation found.
 
 A bookmark is one bit on a line (`LI_HAVEBOOKMARK` in `CAnalyzedString::m_usLineInfo`). Because it
 lives on the line object, it already follows its line through edits — insert or delete lines above
@@ -59,8 +60,14 @@ resolves them as well as anything can, and is right whenever the edit was elsewh
 
 ## When it is written
 
-- When a document closes, is saved, or is reloaded, and when the editor exits.
+- When a document closes, is saved, or is reloaded, and when the editor exits (which closes them).
+  Not on every toggle: a bookmark set on an unmodified file and followed by a crash, before the
+  file is closed, is lost.
 - A document with no bookmarks writes nothing — unless it had an entry, which is then removed.
+- A document whose lines do not match the file's status — modified, or an FTP document — is
+  recorded with `mtime="0"`, so the next open always re-finds its bookmarks by content.
+- Only a document that really loaded is recorded: one closing after a failed open (the file was
+  missing for a moment) does not wipe its entry.
 - Writes are whole-file and small (100 lines at most), to a temporary file renamed into place.
 
 ## Hot exit
@@ -68,23 +75,32 @@ resolves them as well as anything can, and is right whenever the edit was elsewh
 A modified document's line numbers refer to its unsaved text, not to the file on disk, so for a
 document with a hot-exit backup the bookmarks travel in the backup header instead (`bookmarks="11,56"`)
 and are restored together with the text. Untitled documents get theirs back the same way. Once the
-document is saved, its bookmarks move to `bookmarks.xml` like any other file's.
+document is saved, its bookmarks move to `bookmarks.xml` like any other file's. Toggling a bookmark
+on a modified document reschedules its backup, as an edit would, so a crash keeps it too.
 
-## Where the work lands
+## Where the code is
 
-| Area | Change |
+| File | What it holds |
 | --- | --- |
-| New `src/core/cedtBookmarks.{h,cpp}` | Everything testable without a document: the line hash, the file format, most-recently-used ordering and the 100-entry cap, and re-finding bookmarks by content |
-| `CCedtDoc` | Collect and apply bookmarks; apply after open and reload; record on close, save, reload |
-| Hot exit | `bookmarks` attribute in the backup header |
-| `CCedtApp` | Load `bookmarks.xml` at startup, write it when it changes |
+| [src/core/cedtBookmarks.{h,cpp}](../src/core/cedtBookmarks.cpp) | Everything testable without a document: the line hash, re-finding by content, and `CBookmarkStore` (the file format, most-recently-used order, the 100-entry cap) |
+| [src/doc/cedtDocBookmarks.cpp](../src/doc/cedtDocBookmarks.cpp) | The document side: collect and set bookmarks, `RestoreBookmarks` after an open, `RecordBookmarks` |
+| `CCedtDoc::OnOpenDocument` / `OnReloadDocument` | Restore after an open; re-find by content across a reload |
+| `SaveDocumentFile` / `SaveRemoteDocumentFile`, `OnCloseDocument` | Record — after a save only once the document carries its new name, which MFC sets after `OnSaveDocument` |
+| Hot exit (`cedtBackup`, `cedtDocBackup.cpp`) | The `bookmarks` attribute in the backup header |
+
+One trap, met in testing: MFC also sets a document's path only **after** `OnOpenDocument` returns,
+so during the open `GetPathName()` is empty and the document looks untitled. The key is therefore
+built from the path `OnOpenDocument` was given. The first version used `GetPathName()`, skipped every
+file as untitled, and recorded nothing.
 
 ## Testing
 
-- Unit, written first: hash stability and whitespace trimming; file round trip with Korean paths;
-  most-recently-used order and the cap; re-finding with lines inserted above, deleted above, a
-  bookmarked line edited (dropped), moved, duplicated and blank lines; an unchanged file applied by
-  index.
-- Manual: bookmark, close, reopen; bookmark, quit, restart; change the file in another editor while
-  it is closed; reload after an outside change; a bookmarked unsaved document across a hot exit; an
-  FTP document.
+- **Unit** ([tests/cedtBookmarks_test.cpp](../tests/cedtBookmarks_test.cpp), 24 tests, plus 2 for the
+  backup header; written first): hash stability and whitespace trimming; re-finding with lines
+  inserted above, deleted above, a bookmarked line edited (dropped), re-indented, duplicated and
+  blank lines, ties, and result order; an unchanged file applied by index; the store's round trip
+  with a Korean path and 64-bit values, most-recently-used order, the cap, and removal.
+- **Manual** (all passed, Debug-KR): bookmark only, no edit, close and reopen, and quit and restart;
+  lines added above in another editor while closed; a bookmarked line changed (that bookmark gone);
+  only its indentation changed (kept); reload after an outside change; an unsaved document's
+  bookmarks across a hot exit; `bookmarks.xml` gets an entry per file.

@@ -163,6 +163,10 @@ BOOL CCedtDoc::SaveDocumentFile(LPCTSTR lpszPathName)
 	if( ! OnSaveDocument( lpszPathName ) ) return FALSE;
 	SetPathName( lpszPathName );
 
+	// Recorded here, not in OnSaveDocument: only now does the document carry its new name after
+	// a Save As. An untitled document becomes recordable with its first save.
+	m_bBookmarksReady = TRUE; RecordBookmarks();
+
 	return TRUE;
 }
 
@@ -215,6 +219,8 @@ BOOL CCedtDoc::SaveRemoteDocumentFile(INT nAccount, LPCTSTR lpszPathName)
 
 	// operation successful, password verified
 	if( ! rFtpAccount.m_bSavePassword ) rFtpAccount.m_bPasswordVerified = TRUE;
+
+	m_bBookmarksReady = TRUE; RecordBookmarks();
 
 	return TRUE;
 }

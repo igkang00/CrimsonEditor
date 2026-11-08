@@ -113,6 +113,12 @@ BOOL CCedtDoc::RestoreFromBackup(const CBackupEntry & entry)
 	}
 
 	AnalyzeText();
+
+	// The bookmarks the backup carried belong to its text; they replace any bookmarks.xml put
+	// on the file as it is on disk.
+	SetBookmarkLines(info.bookmarks);
+	m_bBookmarksReady = TRUE;
+
 	ReinitializeAllViews();
 	UpdateAllViews(NULL);
 
@@ -155,4 +161,7 @@ void CCedtDoc::FillBackupInfo(CBackupInfo & info)
 
 	CCedtView * pView = GetFirstView();
 	info.nLineNum = pView ? pView->GetCurrentLineNumber() : 1;
+
+	// the unsaved text's bookmarks travel with it (docs/bookmarks.md)
+	info.bookmarks = GetBookmarkLines();
 }

@@ -130,6 +130,7 @@
 
 #include "cedtElement.h"
 #include "cedtBackup.h"
+#include "cedtBookmarks.h"
 #include "StatusBarEx.h"
 #include "SplitterWndEx.h"
 #include "FileTabDropTarget.h"
