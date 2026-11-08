@@ -343,7 +343,9 @@ from findings 14–19, which the shipped 3.93 did not carry).
       **Skipped — no server.**
 - [x] Recent Files (MRU) — including a path with Korean in it. Korean-path file lands in the MRU
       and reopens.
-- [x] Exit `Alt+F4` with unsaved changes. Save prompt appears.
+- [x] Exit `Alt+F4` with unsaved changes. Save prompt appears. *(Since hot exit, this holds only
+      with "Reload working files on startup" off; with it on, exit keeps the changes instead —
+      see section E.)*
 
 ### Edit
 
@@ -483,6 +485,43 @@ from findings 14–19, which the shipped 3.93 did not carry).
 - [x] Run `cedt_us.exe` and repeat §A4 and one pass of §B. Smoke-tested — works. US/KR resource
       parity verified in code too: identical set of 206 `IDS_` string symbols in both `.rc` files
       (none missing on either side), and this session's new strings present with matching `%s` in both.
+
+## E. Hot exit and backups
+
+The design and the reasons are in [hot-exit.md](hot-exit.md). Backups live in
+`%APPDATA%\Crimson Editor\backup\`; open a `.bak` in Notepad to see its header line. Run with
+**Reload working files on startup** on unless an item says otherwise. All passed on Debug-KR
+(`feature/hot-exit`).
+
+**Backups while editing**
+- [x] Edit a file, wait 1 s → a `.bak` appears in `backup\file\`. Save → it is gone.
+- [x] Edit, then undo back to the saved text → the backup is gone.
+- [x] Type into a new document → a `.bak` appears in `backup\untitled\`.
+
+**Exit and restore**
+- [x] Edit a file and quit at once, without waiting → no prompt; the backup holds the last keys typed.
+- [x] Quit with modified files and an untitled document, restart → all come back modified, caret
+      line kept; saving one deletes its backup.
+- [x] A restored document: edit once and undo → still modified (undo cannot reach "saved").
+- [x] Change a file in another program while the editor is closed → restored, then the *modified
+      outside* prompt.
+- [x] Delete a file while the editor is closed → restored under its path; saving recreates it.
+- [x] Option off → exit prompts per document, as before.
+
+**Tab order**
+- [x] Tabs A, untitled U, B with B active; quit and restart → A, U, B, with B active.
+- [x] Reorder by drag, or activate another tab, then quit → the new order and active tab come back.
+- [x] **Real crash** — `taskkill /F /IM cedt_kr.exe` a second after the last change → contents
+      *and* tab order come back. Task Manager's *End task* is not a crash test: it asks the window
+      to close first, so it takes the clean-exit path.
+- [x] Save everything → `session.xml` is gone; it never survives a restart.
+
+**FTP** (local FileZilla Server)
+- [x] Edit a remote file → a `.bak` in `backup\remote\`. Quit, **stop the server**, restart → the
+      document is back with its edits and remote path: no download, no password prompt, no second
+      window.
+- [x] Start the server, save → uploads; the backup is gone; the server holds the edit.
+- [x] With the server running, edit, quit and restart → still no download.
 
 ---
 

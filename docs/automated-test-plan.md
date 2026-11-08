@@ -16,7 +16,7 @@ Unit tests for Crimson Editor live in [../tests/](../tests/) as a separate `cedt
 | Subsystem | Console |
 | Entry point | `gtest_main` (no custom `main()` yet — see §3) |
 
-Current coverage: **150 tests across 18 suites, all green.**
+Current coverage: **223 tests across 27 suites, all green.**
 
 ---
 
@@ -53,6 +53,13 @@ Current coverage: **150 tests across 18 suites, all green.**
 | [../src/core/cedtLineList.h](../src/core/cedtLineList.h) — the array that replaced `CList` | [../tests/CLineList_test.cpp](../tests/CLineList_test.cpp) |
 | `CAnalyzedText` bulk range operations | [../tests/CAnalyzedTextBulk_test.cpp](../tests/CAnalyzedTextBulk_test.cpp) |
 | `CAnalyzedText` file load / save round-trips | [../tests/CAnalyzedTextFile_test.cpp](../tests/CAnalyzedTextFile_test.cpp) |
+
+**Hot exit** — the backup logic was split out of the document so it could be written test-first;
+see [hot-exit.md](hot-exit.md):
+
+| Module | Test file |
+| --- | --- |
+| [../src/core/cedtBackup.cpp](../src/core/cedtBackup.cpp) — backup file format, timing, per-document state, folder scan, tab-order session | [../tests/cedtBackup_test.cpp](../tests/cedtBackup_test.cpp) |
 
 The remaining "hard" group is the Doc / View / Frame / Dialog layer; it needs a UI-simulation strategy and is not covered yet — see §3.
 
