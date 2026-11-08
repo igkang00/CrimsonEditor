@@ -1,23 +1,23 @@
-# Hot exit and automatic backup — a design
+# Hot exit and automatic backup
 
-**Status:** design agreed, implementation not started (it will happen on its own branch).
+**Status:** implemented on `feature/hot-exit`. Written first as the design, then updated to
+record what the implementation changed — see [What changed from the plan](#what-changed-from-the-plan).
 
-Today, quitting with unsaved documents asks about each one: save, discard, or cancel. Modern
+Quitting with unsaved documents used to ask about each one: save, discard, or cancel. Modern
 editors (VS Code calls it *hot exit*, Notepad++ *session snapshot*) skip the question and simply
-bring every unsaved document back, edits included, on the next start. This records how Crimson
-Editor will do the same, and how the same mechanism also recovers work after a crash or a forced
-reboot.
+bring every unsaved document back, edits included, on the next start. Crimson Editor now does the
+same, and the same mechanism also recovers work after a crash or a forced reboot.
 
 ## Decisions
 
 | | |
 | --- | --- |
-| On / off | No new option. It follows **Reload working files on startup**: when that is on, unsaved documents are kept across exit; when it is off, exit prompts per document exactly as today |
+| On / off | No new option. It follows **Reload working files on startup**: when that is on, unsaved documents are kept across exit; when it is off, exit prompts per document exactly as before |
 | Automatic backup | Documents up to **1 MB**: 1 s after typing stops. Larger documents: once 30 s have passed since their last backup *and* typing has stopped |
 | Format | One file per document: a one-line metadata header, then the body in UTF-8. Written to a temporary file and renamed into place |
 | Location | `%APPDATA%\Crimson Editor\backup\`, with `file\`, `remote\` and `untitled\` subfolders and a `session.xml` |
 | Discarded | The moment the document is saved, its edits are reverted, or it is closed |
-| Scope | Local files, new (untitled) documents, FTP documents, and Windows shutdown / restart |
+| Scope | Local files, new (untitled) documents, FTP documents, and Windows sign-out / shutdown |
 
 Unchanged: closing one tab, *Close All*, or switching projects still asks about each unsaved
 document, as VS Code does. The undo history is not restored, also as in VS Code.
@@ -48,23 +48,32 @@ that index, and a crash between the two writes would leave them disagreeing. A f
 itself cannot disagree with anything.
 
 ```
-<cedtbackup version="1" kind="file" path="E:\Work\a.txt" encoding="2" bom="1" format="0" mtime="133771234567890000" size="5120" linenum="42" />
+<cedtbackup version="1" kind="file" path="E:\Work\a.txt" encoding="4" format="1" mtime="1767225600" size="5120" linenum="42" />
 ...body, always UTF-8...
 ```
 
-- The header uses the attribute syntax of the workspace and project files, so the existing
-  `ParseItemAttribute` reads it — no JSON parser needed.
+- The header uses the same `<tag name="value" />` attribute syntax as the workspace and project
+  files. Values are escaped (`&amp; &quot; &lt; &gt; &#13; &#10;`), so a remote path or an untitled
+  title holding quotes or line breaks still fits on one line.
 - `kind="file"` — a local file. `path` is the original path.
 - `kind="remote"` — an FTP document: `account="0" path="/home/..."` (account number and remote path,
   as the workspace stores them).
-- `kind="untitled"` — a new document: `title="Untitled2"`.
-- `encoding`, `bom`, `format` (line endings) are the document's own settings. The body is written
-  in UTF-8 regardless, so a CP949 document holding a character CP949 cannot express loses nothing.
-  The original encoding is applied again only when the user saves.
+- `kind="untitled"` — a new document: `id="..."` (a GUID that names its backup file) and
+  `title="Untitled2"`.
+- `encoding` and `format` (line endings) are the document's own settings. The encoding value
+  already tells a UTF-8 file with a BOM from one without, so there is no separate flag. The body is
+  written in UTF-8 regardless, so a CP949 document holding a character CP949 cannot express loses
+  nothing. The original encoding is applied again only when the user saves.
 - `mtime` and `size` are the original file's status as last loaded or saved (`m_clsFileStatus`).
   Restoring them is what lets the existing *modified outside* check notice a file that changed on
   disk while the editor was closed.
 - `linenum` is the caret line.
+- A header with a newer `version`, another tag, or no `kind` is not restored, and the file is left
+  on disk. Unknown attributes are ignored, so a later build can add some.
+
+Writing uses plain Win32 calls, not `CFile` and not the editor's own `FileSave`: those report a
+failure in a message box, and this runs from a timer every half second. Reading reuses the
+ordinary UTF-8 loader — the header is simply the first line, dropped afterwards.
 
 ## Directory layout
 
@@ -72,16 +81,28 @@ itself cannot disagree with anything.
 %APPDATA%\Crimson Editor\backup\
 ├── file\        <hash of the lower-cased local path>.bak
 ├── remote\      <hash of account + remote path>.bak
-├── untitled\    <document id>.bak        an id given to a new document on its first backup
-└── session.xml  written only on a clean exit: tab order and the active tab
+├── untitled\    <document id>.bak
+└── session.xml  the tab order and the active tab
 ```
 
-- Local paths are lower-cased before hashing, because Windows paths are case-insensitive.
-- `session.xml` is a convenience, not a source of truth. After a crash it is missing or stale; the
-  restore then appends every backup found in the folders after the restored workspace. Only the tab
-  order differs; no data is lost. Named files already keep their order in the workspace (the
-  project file or the regular workspace), so what `session.xml` really adds is where the untitled
-  documents sat.
+- Local paths are lower-cased and slash-normalised before hashing, because Windows paths are
+  case-insensitive. Remote paths are hashed as they are, with the account number: a Unix server
+  tells `a.txt` from `A.txt`.
+- `session.xml` lists every tab by a key — `file:<lower-cased path>`, `remote:<account>:<path>`,
+  `untitled:<id>` — that names a document the same way from its open tab and from its restored
+  backup, together with where that window stood:
+
+  ```
+  <cedtsession version="1" active="2" />
+  <tab key="file:c:\work\a.txt" line="120" col="15" anchorline="118" anchorcol="3" top="98" left="0" />
+  ```
+
+  `line`/`col` is the caret and `anchorline`/`anchorcol` the other end of the selection (absent
+  when nothing is selected), both as 0-based line and character indexes, not screen rows or
+  pixels, so they survive a change of font, tab size or wrap. `top` is the first line in view and
+  `left` the horizontal scroll in pixels. A missing attribute reads as "not recorded". It is a convenience, not a source of truth: without it every backup is still restored,
+  only the tab order differs. It is kept current while the editor runs (see *Lifecycle*), read once
+  at startup and deleted, so a stale one is never applied.
 - No per-workspace subfolder as in VS Code. VS Code runs many windows at once. Crimson Editor saves
   its workspace only from the first instance, so one set of backups is enough.
 - Roaming rather than Local AppData, as VS Code does. It keeps every piece of Crimson's data in one
@@ -91,69 +112,144 @@ itself cannot disagree with anything.
 
 ## Lifecycle
 
-**While editing.** A document change (re)arms a per-document backup timer. When it fires, the
-document is written to its backup file. Size decides the timer:
+**While editing.** Every edit goes through `CCedtDoc::SetModifiedFlag(TRUE)`, and every open, new,
+reload, save and undo-back-to-saved through `SetModifiedFlag(FALSE)`. The override there is the one
+hook: `TRUE` arms the document's backup, `FALSE` deletes it. A 500 ms main-frame timer writes the
+documents whose backup has fallen due:
 
-| Document size | When the backup is written |
+| Last backup | When the next one is written |
 | --- | --- |
-| ≤ 1 MB | 1 s after the last change |
-| > 1 MB | 1 s after the last change, but no sooner than 30 s after its previous backup |
+| none yet, or ≤ 1 MB | 1 s after the last change |
+| > 1 MB | 1 s after the last change, but no sooner than 30 s after the previous backup |
 
-The reasoning is from measured save speed. A 100 MB document saves in 0.14 s
-([refactoring-large-file-perf.md](refactoring-large-file-perf.md)), so a backup costs about
-1.4 ms per MB. That is invisible at 1 MB and nears one 16 ms frame at 10 MB. Hand-edited source
-files are almost always below 1 MB; larger ones are logs, dumps and generated files, which do not
-need second-by-second backups. The backup runs only once typing has paused, so the only cost a
-user can feel is when typing resumes during a large write.
+The size is that of the previous backup file, which is known for free once written — measuring the
+document would mean walking it. The reasoning is from measured save speed: a 100 MB document saves
+in 0.14 s ([refactoring-large-file-perf.md](refactoring-large-file-perf.md)), so a backup costs
+about 1.4 ms per MB. That is invisible at 1 MB and nears one 16 ms frame at 10 MB. Hand-edited
+source files are almost always below 1 MB; larger ones are logs, dumps and generated files, which
+do not need second-by-second backups. The backup runs only once typing has paused, so the only cost
+a user can feel is when typing resumes during a large write.
+
+The same tick keeps `session.xml` in step with the tabs: while any backup exists it is rewritten
+when a tab opens, closes, moves or is activated, or a caret, selection or scroll moves — a file of
+a few hundred bytes, at most twice a second, and only when something changed — and it is deleted
+once no backup is left. So a crash, a power cut or `taskkill /F` restores the tab order and
+positions too, not only a clean exit.
 
 **On save, revert, or close.** The document's backup file is deleted. A document that goes back to
-unmodified through undo also loses its backup.
+unmodified through undo also loses its backup. A Save As that renames a document moves its backup
+to the new name and deletes the old one.
 
 **On exit** (`CMainFrame::OnClose`), when *Reload working files on startup* is on:
 
-1. Bring every modified document's backup up to date (write any pending ones now).
+1. Write now every modified document's backup that is not current, so keys typed just before
+   quitting are kept.
 2. Write `session.xml`.
-3. Mark each document whose backup is on disk as unmodified, so MFC's `SaveAllModified` lets it go
-   without a prompt.
-4. **A document whose backup failed keeps its modified flag and gets today's prompt.** Losing data
-   is never an acceptable outcome of skipping a question.
+3. Set `CCedtDoc::m_bHotExiting`. While it is set, `SaveModified` skips the prompt for a document
+   whose backup is current, and `OnCloseDocument` keeps that backup instead of deleting it.
+4. **A document whose backup could not be written is not "backed up", so it simply prompts as
+   before.** Losing data is never an acceptable outcome of skipping a question.
+5. If the main window survives `OnClose`, the user cancelled at a prompt: clear the flag and delete
+   `session.xml`.
 
-When the option is off, the exit path is today's: no backups are kept, every document prompts.
+The decision rests on a separate "backed up" state (`IsBackedUp()`: a backup exists and nothing was
+typed since), never on the modified flag, which stays true throughout. A cancelled exit therefore
+has nothing to put back.
 
-**On Windows shutdown / restart** (`WM_QUERYENDSESSION`): the same steps. Today MFC answers that
-message by prompting, which holds up the shutdown. With backups in place it can answer at once.
+When the option is off, the exit path is the old one: no backups are kept, every document prompts.
+
+**On Windows sign-out or shutdown** (`WM_QUERYENDSESSION`): the same steps. MFC used to answer that
+message by prompting, which held up the shutdown. The state `OnClose` saves — bar layout,
+configuration, workspace — is saved here too, since `OnClose` never runs on this path; it was lost
+on shutdown before. If another application vetoes the shutdown, `WM_ENDSESSION(FALSE)` cancels as
+in step 5.
 
 ## Restore
 
-After the workspace has been reloaded at startup, each backup is applied:
+The restore runs in the first instance whenever backups are on disk — even if *Reload working files
+on startup* was turned off since, because they hold the user's unsaved work. It is split around the
+workspace reload in `InitInstance`:
+
+1. **FTP documents, before the workspace.** Opened from the local cache, not downloaded, then
+   given the backup's text. The workspace reload skips an FTP document that is already open —
+   otherwise it would download it again, possibly ask for a password, and open a second window.
+2. **The workspace**, as before.
+3. **Local and untitled documents, after the workspace.** The workspace opens files through
+   `SpawnDocumentFile`, which gives an already-open document a *second* window, so these must not be
+   open before it runs. A document the workspace opened just has its text replaced.
+4. **The tabs** from `session.xml`: tabs it knows go to their recorded places, the rest follow in
+   their own order, each window gets back its caret, selection and scroll — clamped to the
+   document as it is now, which may have changed on disk — and the recorded tab is activated.
+   These positions override the caret line a backup header or the workspace supplied. A clean
+   exit records every tab, so unmodified files get their positions back too.
+
+A document shown in several windows (*Window > New Window*) has its key in `session.xml` once per
+window. Its n-th tab goes back to its n-th recorded place, and the n-th window is the one
+activated. A backup is one per document, so an untitled or FTP document is restored in one window;
+the windows `session.xml` counts beyond those open are reopened onto it before the order is applied.
+Saved files need none — the workspace already reopens each of their windows — and the rule is the
+same for every kind of document: open only what is missing, never close what is extra.
 
 | Situation | Result |
 | --- | --- |
-| Original file unchanged | Opened if not already open, body replaced from the backup, marked modified |
+| Original file unchanged | Opened if not already open, text replaced from the backup, marked modified |
 | Original changed on disk meanwhile | Restored the same way, with `m_clsFileStatus` set from the backup's `mtime`/`size`, so the existing *modified outside* check reports it |
 | Original deleted | Restored as a modified document with that path; saving recreates the file |
-| Untitled | Recreated as a new document with its title |
-| FTP document | Restored from the backup with its account and remote path, **without downloading**; the server is contacted only on save |
+| Untitled | Recreated as a new document with its title and id |
+| FTP document | Restored with its account and remote path, **without downloading**; the server is contacted only on save |
+| FTP account since removed | Not restored; the backup stays on disk |
 
-The backup files are not deleted on restore. The documents are still modified, so the timers keep
-the backups current. If the editor crashes right after restoring, the backups are still there.
+A restored document adopts its backup file: it counts as backed up, a save deletes the file, and an
+edit rewrites it in place. The undo history starts empty, and `m_nSavedUndoCount` is set to `-1`, so
+no undo step counts as "back to saved" — without that, one edit and one undo would clear the
+modified flag and delete the backup of a document that still differs from the disk.
 
-## Where the work lands
+## Where the code is
 
-| Area | Change |
+| File | What it holds |
 | --- | --- |
-| `CCedtDoc` | Backup id and path, `WriteBackup()` / `DeleteBackup()`, last-backup time; hook the modify points (`SetModifiedFlag` callers in `cedtDocEdit.cpp`, `CheckIfAllActionsAreUndone`) to arm the timer; delete on save and close |
-| Timer | One frame-level timer that scans for documents due a backup, rather than one per document |
-| `CMainFrame::OnClose` | Steps 1–4 above, gated on `m_bReloadWorkingFilesOnStartup` |
-| `CMainFrame` | `OnQueryEndSession` / `OnEndSession` |
-| `CCedtApp::InitInstance` | Restore pass after the workspace reload |
-| Remote documents | Restore without a download, keeping account and remote path |
+| [src/core/cedtBackup.{h,cpp}](../src/core/cedtBackup.cpp) | Everything testable without a document: the header, writing and reading a backup, file names, `IsBackupDue`, `CBackupState` (per-document bookkeeping), `FindBackupFiles`, the `session.xml` format, `OrderBySession`, and `CSessionRecord` (when to rewrite `session.xml`) |
+| [src/doc/cedtDocBackup.cpp](../src/doc/cedtDocBackup.cpp) | The document side: the `SetModifiedFlag` hook, writing its backup, `RestoreFromBackup` |
+| [src/app/cedtAppBackup.cpp](../src/app/cedtAppBackup.cpp) | The restore pass, in its two halves, and `ApplyBackupSession` |
+| [src/frame/MainFrm.cpp](../src/frame/MainFrm.cpp) | The backup timer, `BeginHotExit` / `CancelHotExit`, `OnQueryEndSession` / `OnEndSession`, and `SaveSessionState` (split out of `OnClose`) |
+| `CCedtDoc::SaveModified`, `OnCloseDocument` | Skip the prompt / keep the backup while `m_bHotExiting` is set and the document is backed up |
 
 ## Testing
 
-- Unit: header write → parse round trip, including paths with spaces and Korean names, and a body
-  holding characters the original encoding cannot express.
-- Manual: quit with modified local, untitled and FTP documents and restart; kill the process from
-  Task Manager mid-edit and restart; change a file in another program while the editor is closed;
-  delete a file while the editor is closed; turn the option off and confirm the prompts return;
-  sign out of Windows with an unsaved document.
+**Unit** ([tests/cedtBackup_test.cpp](../tests/cedtBackup_test.cpp), 69 tests, written before the
+code they test): the header round trip with quotes, line breaks, Korean and 64-bit values; rejecting
+foreign, malformed and newer headers; the body round trip with empty lines, a trailing empty line,
+surrogate pairs and characters the original encoding cannot hold; a failed write returning FALSE
+quietly and keeping the previous backup; file names; the 1 s / 1 MB / 30 s timing; `CBackupState`
+including Save As and adoption; `IsBackedUp`; the folder scan skipping `.tmp` and foreign files;
+the session file and tab ordering, including several windows onto one document and per-window
+caret, selection and scroll; the missing-window count; `CSessionRecord`.
+
+**Manual** (all passed): quit with modified local, untitled and FTP documents and restart; quit with
+the FTP server stopped and restart (no download, no password prompt, no second window); save a
+restored document and see its backup go; edit and undo a restored document and stay modified;
+change and delete files while the editor is closed; `taskkill /F` mid-edit and restart, tab order
+included; turn the option off and see the prompts return. Note that Task Manager's *End task* asks
+the window to close first, so it takes the clean-exit path; only `taskkill /F` (or a real crash)
+exercises crash recovery.
+
+## What changed from the plan
+
+- **The exit no longer clears the modified flag.** The plan marked backed-up documents unmodified
+  so MFC would skip their prompt. That made the flag lie for the length of the exit, collided with
+  the `SetModifiedFlag(FALSE)` hook (which deletes backups), and left a cancelled exit with flags to
+  put back. A separate "backed up" state replaced it.
+- **The restore is split in two around the workspace reload**, rather than running after it: FTP
+  documents first, so the workspace does not download them again.
+- **`session.xml` is kept current while editing**, not only written at exit, so the tab order
+  survives a crash too.
+- **No separate `bom` attribute** — the encoding value already carries it.
+- **The header parser is the backup module's own**, not the project file's `ParseItemAttribute`,
+  which lives in a panel class the unit tests cannot link.
+- **Several windows onto one document keep their own places.** The first tab-order version ranked
+  every tab of a document by the document's first entry, so the windows bunched together, and an
+  untitled document shown twice came back once. Found in manual testing; the n-th-to-n-th matching
+  and the reopening of missing windows replaced it.
+- **Caret column, selection and scroll are restored per window**, not just the caret line per
+  document. They live in `session.xml`, the per-window record, rather than in the backup header,
+  which is one per document.

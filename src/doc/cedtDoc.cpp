@@ -137,6 +137,8 @@ CSyntaxType CCedtDoc::m_clsSyntaxTypes[MAX_SYNTAX_TYPE];
 CDictionary CCedtDoc::m_clsDictionary;
 BOOL CCedtDoc::m_bDictionaryLoaded = FALSE;
 
+BOOL CCedtDoc::m_bHotExiting = FALSE;
+
 INT CCedtDoc::m_nCurrentFtpAccount = -1;
 CString CCedtDoc::m_szCurrentRemotePathName = "";
 
@@ -161,6 +163,9 @@ CCedtDoc::~CCedtDoc()
 void CCedtDoc::OnCloseDocument()
 {
 	m_bClosing = TRUE;
+	// Closed: its changes were saved, or discarded on purpose -- unless this is an exit that is
+	// keeping them, in which case the backup is what brings them back next time.
+	if( ! IsKeptByHotExit() ) DiscardBackup();
 	CDocument::OnCloseDocument();   // usually deletes this
 }
 

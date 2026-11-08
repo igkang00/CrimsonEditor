@@ -40,6 +40,56 @@ void CCedtView::RestoreCaretAndAnchorPos()
 	SetScrollPosX( GetPosXFromIdxX( rLne3, m_nScrollIdxX ) );
 }
 
+// Where this window stands, for session.xml (hot exit): caret, selection anchor and first line
+// in view as line/character indexes -- the same conversion SaveCaretAndAnchorPos makes, without
+// touching its saved members -- and the horizontal scroll in pixels.
+void CCedtView::GetSessionPosition(CSessionTab & tab)
+{
+	tab.nCaretLine = GetIdxYFromPosY( m_nCaretPosY );
+	tab.nCaretCol = GetIdxXFromPosX( GetLineFromPosY( m_nCaretPosY ), m_nCaretPosX );
+
+	if( m_bSelected ) {
+		tab.nAnchorLine = GetIdxYFromPosY( m_nAnchorPosY );
+		tab.nAnchorCol = GetIdxXFromPosX( GetLineFromPosY( m_nAnchorPosY ), m_nAnchorPosX );
+	} else tab.nAnchorLine = tab.nAnchorCol = -1;
+
+	tab.nTopLine = GetIdxYFromPosY( m_nScrollPosY );
+	tab.nScrollX = m_nScrollPosX;
+}
+
+// Put a window back where session.xml says it stood. The document may have changed on disk
+// since (a reopened file, no backup), so every index is clamped to what is there now.
+void CCedtView::ApplySessionPosition(const CSessionTab & tab)
+{
+	if( tab.nCaretLine < 0 ) return;	// not recorded
+
+	INT nLastIdxY = GetLastIdxY();
+	auto clampY = [&](INT y) { return y < 0 ? 0 : ( y > nLastIdxY ? nLastIdxY : y ); };
+	auto clampX = [&](INT y, INT x) { INT n = GetLineFromIdxY(y).GetLength(); return x < 0 ? 0 : ( x > n ? n : x ); };
+
+	m_nCaretIdxY = clampY( tab.nCaretLine );
+	m_nCaretIdxX = clampX( m_nCaretIdxY, tab.nCaretCol );
+
+	BOOL bSelection = ( tab.nAnchorLine >= 0 && tab.nAnchorCol >= 0 );
+	if( bSelection ) {
+		m_nAnchorIdxY = clampY( tab.nAnchorLine );
+		m_nAnchorIdxX = clampX( m_nAnchorIdxY, tab.nAnchorCol );
+	} else {
+		m_nAnchorIdxY = m_nCaretIdxY; m_nAnchorIdxX = m_nCaretIdxX;
+	}
+
+	m_nScrollIdxY = ( tab.nTopLine >= 0 ) ? clampY( tab.nTopLine ) : m_nCaretIdxY;
+	m_nScrollIdxX = 0;
+
+	RestoreCaretAndAnchorPos();
+	if( tab.nScrollX > 0 ) SetScrollPosX( tab.nScrollX );
+
+	m_nCaretPosXFixed = m_nCaretPosX;
+	m_bSelected = bSelection && ( m_nAnchorIdxY != m_nCaretIdxY || m_nAnchorIdxX != m_nCaretIdxX );
+
+	Invalidate(); UpdateCaretPosition();
+}
+
 
 void CCedtView::GetSelectedPosition(INT & nBegX, INT & nBegY, INT & nEndX, INT & nEndY)
 {

@@ -557,11 +557,12 @@
 #define ID_SRCH_FIND_WHITE_SPACE        32918
 #define ID_TIMER_DRAG_SCROLL            32921
 #define ID_TIMER_SPLASH_MESSAGE         32928
-#define ID_TIMER_WRAP_REFORMAT          32934
 #define ID_CMD_ARG_PROJECT_PATH         32929
 #define ID_CMD_ARG_PROJECT_DIR          32930
 #define ID_CMD_ARG_PROJECT_TITLE        32931
 #define ID_CMD_DIR_PROJECT_DIR          32932
+#define ID_TIMER_WRAP_REFORMAT          32934
+#define ID_TIMER_BACKUP                 32935
 #define ID_FILE_NULL                    40000
 #define ID_FILE_SAVE_ALL                40001
 #define ID_FILE_OPEN_REMOTE             40002
@@ -1042,7 +1043,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        215
-#define _APS_NEXT_COMMAND_VALUE         32933
+#define _APS_NEXT_COMMAND_VALUE         32936
 #define _APS_NEXT_CONTROL_VALUE         1278
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

@@ -293,6 +293,12 @@ BOOL CCedtApp::InitInstance()
 	::CreateDirectory(m_szAppDataDirectory + _T("\\macros"), NULL);
 	::CreateDirectory(m_szAppDataDirectory + _T("\\colors"), NULL);
 
+	// hot-exit backups of unsaved documents (docs/hot-exit.md)
+	::CreateDirectory(m_szAppDataDirectory + _T("\\backup"), NULL);
+	::CreateDirectory(m_szAppDataDirectory + _T("\\backup\\file"), NULL);
+	::CreateDirectory(m_szAppDataDirectory + _T("\\backup\\remote"), NULL);
+	::CreateDirectory(m_szAppDataDirectory + _T("\\backup\\untitled"), NULL);
+
 
 	// load multi-instance flag
 	m_bAllowMultiInstances = FALSE;
@@ -445,8 +451,14 @@ BOOL CCedtApp::InitInstance()
 
 
 	// Reload last working files
+	// Unsaved documents kept by the last exit come back around the workspace reload; see
+	// cedtAppBackup.cpp for why it is split in two.
+	if( m_bFirstInstance ) RestoreRemoteBackups();
+
 	BOOL bReloadLastWorkingFiles = ( m_bReloadWorkingFilesOnStartup && m_bFirstInstance );
 	if( bReloadLastWorkingFiles ) ReloadLastWorkingFiles();
+
+	if( m_bFirstInstance ) { RestoreLocalBackups(); ApplyBackupSession(); }
 
 	// Parse command line for standard shell commands, DDE, file open
 	if( _tcslen(m_lpCmdLine) && VerifyFilePath(m_lpCmdLine) ) {

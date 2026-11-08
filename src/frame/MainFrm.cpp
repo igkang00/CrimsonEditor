@@ -34,6 +34,9 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	ON_COMMAND(ID_WINDOW_NEXT, OnWindowNext)
 	ON_COMMAND(ID_WINDOW_PREV, OnWindowPrev)
 	ON_WM_SIZE()
+	ON_WM_TIMER()
+	ON_WM_QUERYENDSESSION()
+	ON_WM_ENDSESSION()
 	ON_COMMAND(ID_FILE_WINDOW_HIDE, OnFileWindowHide)
 	ON_COMMAND(ID_FILE_WINDOW_SYNC, OnFileWindowSync)
 	ON_COMMAND(ID_OUTPUT_WINDOW_HIDE, OnOutputWindowHide)
@@ -165,7 +168,47 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	SetCaretPositionInfo(0, 0, 0);
 
+	// hot-exit backups: each tick writes the documents whose backup has fallen due
+	SetTimer(ID_TIMER_BACKUP, 500, NULL);
+
 	return 0;
+}
+
+void CMainFrame::OnTimer(UINT_PTR nIDEvent)
+{
+	if( nIDEvent == ID_TIMER_BACKUP ) { BackupModifiedDocuments(); return; }
+	CMDIFrameWnd::OnTimer(nIDEvent);
+}
+
+// Backups belong to the hot exit, which rides on "Reload working files on startup"; with that
+// off, exit prompts as it always did and no backup is kept. Only the first instance takes part:
+// it is the one whose workspace is reloaded, and two instances would share one backup folder.
+void CMainFrame::BackupModifiedDocuments()
+{
+	if( ! CCedtApp::m_bReloadWorkingFilesOnStartup || ! CCedtApp::m_bFirstInstance ) return;
+
+	ULONGLONG nNow = ::GetTickCount64(); BOOL bAnyBackup = FALSE;
+	CCedtApp * pApp = (CCedtApp *)AfxGetApp(); POSITION pos = pApp->GetFirstDocPosition();
+	while( pos ) {
+		CCedtDoc * pDoc = (CCedtDoc *)pApp->GetNextDoc(pos);
+		pDoc->WriteBackupIfDue(nNow);
+		if( pDoc->HasBackup() ) bAnyBackup = TRUE;
+	}
+
+	// Keep session.xml in step with the tabs, so a crash restores the order and positions too,
+	// not only a clean exit. CSessionRecord says "write" only when a tab opened, closed, moved
+	// or was activated, or a caret, selection or scroll moved; "delete" once nothing is left to
+	// restore.
+	CSessionTabArray arrTabs; INT nActive = -1;
+	CollectSessionTabs(arrTabs, nActive);
+	switch( m_clsSessionRecord.Update(arrTabs, nActive, bAnyBackup) ) {
+	case SESSION_WRITE:
+		if( ! WriteBackupSession(CCedtDoc::GetSessionPathName(), arrTabs, nActive) ) m_clsSessionRecord.Forget();
+		break;
+	case SESSION_DELETE:
+		::DeleteFile(CCedtDoc::GetSessionPathName());
+		break;
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -245,30 +288,117 @@ void CMainFrame::OnClose()
 	// user can *CANCEL* termination of mainframe window if there is any 
 	// unsaved document and select *CANCEL* from dialog box
 	// so, don't call any termination procedure in this function.
-	if( ! m_bPrintPreviewMode ) {
-		// Save window placement & bar state
-		SaveBarState(REGKEY_BAR_STATE);
-		SaveWindowPlacement(REGKEY_WINDOW_PLACEMENT);
+	if( m_bPrintPreviewMode ) { CMDIFrameWnd::OnClose(); return; }	// this only leaves the preview
 
-		CCedtApp::SaveUserConfiguration(CCedtApp::m_szAppDataDirectory + _T("\\") STRING_CONFFILENAME);
+	SaveSessionState();
+	BeginHotExit();
 
-		CCedtApp * pApp = (CCedtApp *)AfxGetApp(); // get application pointer
-		pApp->SaveBrowsingDirectory(REGKEY_BROWSING_DIRECTORY);
+	HWND hWnd = m_hWnd;
+	CMDIFrameWnd::OnClose();	// if this closes us, `this` is gone when it returns
 
-		// current working directory might differ from browsing directory
-		pApp->SaveWorkingDirectory(REGKEY_WORKING_DIRECTORY);
+	// Still a window? Then the exit was cancelled at a "save changes?" prompt, and the
+	// documents must go back to asking before they close.
+	if( ::IsWindow(hWnd) ) CancelHotExit();
+}
 
-		if( CCedtApp::m_bFirstInstance ) {
-			// save workspace file path
-			pApp->SaveWorkspaceFilePath(REGKEY_LAST_WORKSPACE);
+void CMainFrame::SaveSessionState()
+{
+	// Save window placement & bar state
+	SaveBarState(REGKEY_BAR_STATE);
+	SaveWindowPlacement(REGKEY_WINDOW_PLACEMENT);
 
-			// save working file list and user configuration
-			if( pApp->IsProjectLoaded() ) pApp->SaveProjectWorkspace();
-			else pApp->SaveRegularWorkspace();
-		}
+	CCedtApp::SaveUserConfiguration(CCedtApp::m_szAppDataDirectory + _T("\\") STRING_CONFFILENAME);
+
+	CCedtApp * pApp = (CCedtApp *)AfxGetApp(); // get application pointer
+	pApp->SaveBrowsingDirectory(REGKEY_BROWSING_DIRECTORY);
+
+	// current working directory might differ from browsing directory
+	pApp->SaveWorkingDirectory(REGKEY_WORKING_DIRECTORY);
+
+	if( CCedtApp::m_bFirstInstance ) {
+		// save workspace file path
+		pApp->SaveWorkspaceFilePath(REGKEY_LAST_WORKSPACE);
+
+		// save working file list and user configuration
+		if( pApp->IsProjectLoaded() ) pApp->SaveProjectWorkspace();
+		else pApp->SaveRegularWorkspace();
+	}
+}
+
+// The start of an exit that keeps unsaved documents (docs/hot-exit.md). Brings every modified
+// document's backup up to date now, rather than waiting for the timer, then lets the documents
+// whose backup is current skip their prompt. A document whose backup cannot be written is left
+// alone, and asks as it always did.
+void CMainFrame::BeginHotExit()
+{
+	if( ! CCedtApp::m_bReloadWorkingFilesOnStartup || ! CCedtApp::m_bFirstInstance ) return;
+
+	ULONGLONG nNow = ::GetTickCount64();
+	CCedtApp * pApp = (CCedtApp *)AfxGetApp(); POSITION pos = pApp->GetFirstDocPosition();
+	while( pos ) {
+		CCedtDoc * pDoc = (CCedtDoc *)pApp->GetNextDoc(pos);
+		if( pDoc->IsModified() && ! pDoc->IsBackedUp() ) pDoc->WriteBackup(nNow);
 	}
 
-	CMDIFrameWnd::OnClose();
+	// The tab order and each window's position, so the restored documents take their places
+	// among the reopened ones -- and every window, saved or not, comes back where it stood.
+	// Written unconditionally: the backups just written may be the first this session.
+	CSessionTabArray arrTabs; INT nActive = -1;
+	CollectSessionTabs(arrTabs, nActive);
+	WriteBackupSession(CCedtDoc::GetSessionPathName(), arrTabs, nActive);
+
+	CCedtDoc::m_bHotExiting = TRUE;
+}
+
+// The exit did not happen after all: documents ask before closing again, and the tab order
+// written for a restore that will not come is dropped -- the next timer tick writes a current
+// one if there are backups to go with it.
+void CMainFrame::CancelHotExit()
+{
+	CCedtDoc::m_bHotExiting = FALSE;
+	::DeleteFile(CCedtDoc::GetSessionPathName());
+	m_clsSessionRecord.Forget();
+}
+
+// Every tab, in tab order -- its document's key and where its window stands -- and which of
+// them is active.
+void CMainFrame::CollectSessionTabs(CSessionTabArray & arrTabs, INT & nActive)
+{
+	arrTabs.RemoveAll(); nActive = -1;
+	CMDIChildWnd * pActive = MDIGetActive();
+	for( INT nTab = 0; nTab < GetChildFrameCount(); nTab++ ) {
+		CMDIChildWnd * pChild = GetChildFrame(nTab);
+		CCedtDoc * pDoc = pChild ? (CCedtDoc *)pChild->GetActiveDocument() : NULL;
+		if( ! pDoc ) continue;
+
+		CSessionTab tab; tab.szKey = pDoc->GetBackupKey();
+		CCedtView * pView = (CCedtView *)pChild->GetActiveView();
+		if( pView ) pView->GetSessionPosition(tab);
+
+		if( pChild == pActive ) nActive = (INT)arrTabs.GetSize();
+		arrTabs.Add(tab);
+	}
+}
+
+// Windows is signing out or shutting down. MFC answers this by running the same "save
+// changes?" prompts as an exit -- which holds up the shutdown -- so it gets the same treatment,
+// and the state OnClose would have saved is saved here, since OnClose never runs on this path.
+BOOL CMainFrame::OnQueryEndSession()
+{
+	if( m_bPrintPreviewMode ) return CMDIFrameWnd::OnQueryEndSession();
+
+	BeginHotExit();
+	BOOL bEnd = CMDIFrameWnd::OnQueryEndSession();
+	if( bEnd ) SaveSessionState();
+	else CancelHotExit();
+	return bEnd;
+}
+
+void CMainFrame::OnEndSession(BOOL bEnding)
+{
+	// Another application vetoed the shutdown: back to normal prompts.
+	if( ! bEnding ) CancelHotExit();
+	CMDIFrameWnd::OnEndSession(bEnding);
 }
 
 void CMainFrame::OnActivateApp(BOOL bActive, DWORD dwThreadID)

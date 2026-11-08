@@ -62,6 +62,16 @@ public: // file contents & status
 	// frame takes.
 	BOOL m_bClosing;
 
+public: // hot-exit backup (cedtDocBackup.cpp)
+	// Set by the main frame for the length of an exit that keeps unsaved documents. While it is
+	// set, a document whose backup is current skips the "save changes?" prompt and keeps its
+	// backup when closed. Cleared again if the exit is cancelled.
+	static BOOL m_bHotExiting;
+
+protected:
+	CBackupState m_clsBackupState;
+	CString m_szUntitledBackupId;	// names an untitled document's backup; assigned on its first one
+
 public: // shared remote path name
 	static INT m_nCurrentFtpAccount;
 	static CString m_szCurrentRemotePathName;
@@ -127,6 +137,26 @@ protected:
 	BOOL OnReloadDocument(LPCTSTR lpszPathName, INT nEncodingType);
 //	BOOL OnOpenDocument(LPCTSTR lpszPathName);
 //	BOOL OnSaveDocument(LPCTSTR lpszPathName);
+
+
+public: // *** cedtDocBackup.cpp ***
+	static CString GetBackupDirectory();
+	static CString GetSessionPathName();
+	CString GetBackupKey();
+
+	virtual void SetModifiedFlag(BOOL bModified = TRUE);
+
+	BOOL WriteBackupIfDue(ULONGLONG nNow);
+	BOOL WriteBackup(ULONGLONG nNow);
+	void DiscardBackup();
+
+	BOOL RestoreFromBackup(const CBackupEntry & entry);
+
+	BOOL IsBackedUp() const { return m_clsBackupState.IsBackedUp(); }
+	BOOL HasBackup() const { return m_clsBackupState.HasBackup(); }
+	BOOL IsKeptByHotExit() const { return m_bHotExiting && IsBackedUp(); }
+protected:
+	void FillBackupInfo(CBackupInfo & info);
 
 
 public: // *** cedtDocView.cpp ***

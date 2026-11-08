@@ -539,7 +539,10 @@ BOOL CFileWindow::LoadWorkspaceItem(wistream & is, TCHAR szText[], CWinApp * pAp
 			wndpl.rcNormalPosition.bottom = _ttoi( szPlacement.Mid(nFound) ); nFound = szPlacement.Find(':', nFound) + 1;
 		}
 
-		pCedtApp->SpawnRemoteDocumentFile(_ttoi(szAccount), szPath, _ttoi(szLineNum), pwndpl);
+		// Already open means restored from a hot-exit backup just before the workspace was read
+		// (cedtAppBackup.cpp): spawning would download it again and open a second window.
+		if( ! pCedtApp->GetRemoteDocument(_ttoi(szAccount), szPath) )
+			pCedtApp->SpawnRemoteDocumentFile(_ttoi(szAccount), szPath, _ttoi(szLineNum), pwndpl);
 		is.width(kProjectTokenBufSize); is >> szText; // get next token
 
 	} else if( ! _tcsicmp(szText, _T("<localfile")) ) {

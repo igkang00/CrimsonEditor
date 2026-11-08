@@ -20,6 +20,8 @@ extern UINT g_uClipbrdFormatProjectItem;
 extern UINT g_uClipbrdFormatFileTabItem;
 
 
+class CCedtDoc;
+
 /////////////////////////////////////////////////////////////////////////////
 // CCedtApp:
 
@@ -125,6 +127,17 @@ public: // *** cedtAppFile.cpp ***
 
 protected:
 	CDocument * GetDocumentFromLocalPathName(LPCTSTR lpszPathName);
+
+
+public: // *** cedtAppBackup.cpp ***
+	INT RestoreRemoteBackups();		// before the workspace reload
+	INT RestoreLocalBackups();		// after it
+	void ApplyBackupSession();		// then the tab order recorded at exit
+
+	CDocument * GetRemoteDocument(INT nAccount, LPCTSTR lpszRemotePathName);
+	CString GetRemoteCachePathName(INT nAccount, LPCTSTR lpszRemotePathName);
+protected:
+	CCedtDoc * CreateEmptyDocument();
 
 
 public: // *** cedtAppView.cpp ***

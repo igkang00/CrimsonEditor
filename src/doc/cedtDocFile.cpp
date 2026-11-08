@@ -68,9 +68,13 @@ void CCedtDoc::OnFileSaveAll()
 	}
 }
 
-BOOL CCedtDoc::SaveModified() 
+BOOL CCedtDoc::SaveModified()
 {
 	if( ! IsModified() ) return TRUE;
+
+	// An exit that keeps unsaved documents: nothing to ask when the backup already holds
+	// exactly what is in the editor. One whose backup could not be written still asks.
+	if( IsKeptByHotExit() ) return TRUE;
 
 	CString szPathName = GetPathName();
 	if( IsRemoteFile() ) szPathName = GetFullRemotePathName();
