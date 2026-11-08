@@ -50,6 +50,13 @@ function Find-MSBuild {
         "C:\Program Files (x86)\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe"
     )
     foreach ($p in $candidates) { if (Test-Path $p) { return $p } }
+    # Any other edition or location -- the CI runner has Enterprise -- found the way the
+    # Visual Studio installer itself reports it.
+    $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+    if (Test-Path $vswhere) {
+        $found = & $vswhere -latest -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | Select-Object -First 1
+        if ($found) { return $found }
+    }
     $where = (Get-Command msbuild.exe -ErrorAction SilentlyContinue)
     if ($where) { return $where.Source }
     throw "MSBuild.exe not found. Install Visual Studio 2026 (v145 toolset) or run from a VS Developer prompt."
@@ -68,8 +75,9 @@ function Invoke-MSBuild {
     param([string]$msbuild, [string]$project, [string]$config, [string]$platform)
     Write-Host "  -> $project [$config|$platform]" -ForegroundColor DarkGray
     $out = & $msbuild $project /p:Configuration=$config /p:Platform=$platform /m /nologo /v:m 2>&1
+    $code = $LASTEXITCODE
     $errs = $out | Select-String -Pattern 'error C\d|error LNK|error MSB|error RC' -CaseSensitive:$false
-    if ($errs.Count -gt 0) {
+    if ($code -ne 0 -or $errs.Count -gt 0) {
         Write-Host ($out -join "`n") -ForegroundColor Red
         throw "MSBuild failed for $project [$config|$platform]"
     }

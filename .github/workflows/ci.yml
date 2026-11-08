@@ -1,0 +1,105 @@
+# Build every configuration and run the unit tests on every push and on pull requests to main.
+#
+# The runner image is pinned (not windows-latest) so a GitHub image rollover cannot change the
+# toolset under us: the projects need Visual Studio 2026's v145 toolset with MFC, which this
+# image carries. All projects treat warnings as errors, so a new warning fails the run.
+#
+# Cost: free. Standard GitHub-hosted runners are free for public repositories.
+
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+
+# A newer push to the same branch or PR supersedes the run in progress.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ matrix.config }}
+    runs-on: windows-2025-vs2026
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [Debug-KR, Debug-US, Release-KR, Release-US]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: Build cedt (${{ matrix.config }})
+        run: msbuild cedt.vcxproj /p:Configuration=${{ matrix.config }} /p:Platform=x64 /m /nologo /v:minimal
+
+      - name: Upload the executable
+        if: startsWith(matrix.config, 'Release-')
+        uses: actions/upload-artifact@v4
+        with:
+          name: cedt-${{ matrix.config }}
+          path: build/x64/${{ matrix.config }}/cedt_*.exe
+          retention-days: 7
+
+  tools:
+    name: Build launcher and shell extension
+    runs-on: windows-2025-vs2026
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: Build launch.exe
+        run: msbuild tools/launch/launch.vcxproj /p:Configuration=Release /p:Platform=x64 /nologo /v:minimal
+
+      - name: Build ShellExt.dll
+        run: msbuild tools/shellext/shellext.vcxproj /p:Configuration=Release /p:Platform=x64 /nologo /v:minimal
+
+  test:
+    name: Unit tests (${{ matrix.config }})
+    runs-on: windows-2025-vs2026
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [Debug, Release]
+    env:
+      # gtest comes from vcpkg in manifest mode (tests/vcpkg.json). Building it takes minutes;
+      # the binary cache keeps it across runs.
+      VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}\.vcpkg-binary-cache
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: Prepare the vcpkg binary cache
+        shell: pwsh
+        run: New-Item -ItemType Directory -Force -Path $env:VCPKG_DEFAULT_BINARY_CACHE | Out-Null
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+          key: vcpkg-${{ runner.os }}-${{ matrix.config }}-${{ hashFiles('tests/vcpkg.json') }}
+          restore-keys: vcpkg-${{ runner.os }}-${{ matrix.config }}-
+
+      - name: Hook vcpkg into MSBuild
+        shell: pwsh
+        run: '& "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" integrate install'
+
+      - name: Build cedt_tests (${{ matrix.config }})
+        run: msbuild tests/cedt_tests.vcxproj /p:Configuration=${{ matrix.config }} /p:Platform=x64 /m /nologo /v:minimal
+
+      - name: Run cedt_tests
+        run: tests\build\x64\${{ matrix.config }}\cedt_tests.exe --gtest_output=xml:test-results.xml
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.config }}
+          path: test-results.xml
+          retention-days: 7
