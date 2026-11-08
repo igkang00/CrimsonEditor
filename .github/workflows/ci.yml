@@ -1,4 +1,12 @@
-# Build every configuration and run the unit tests on every push and on pull requests to main.
+# Build and test on pull requests to main and on pushes to main, each in one flavour:
+#
+#   pull request  ->  Debug:   Debug-KR, Debug-US, the helper tools, and the Debug unit tests
+#   push to main  ->  Release: Release-KR, Release-US, the helper tools, and the Release unit tests
+#
+# A change is checked in Debug before it merges and in Release once it has, so the same code is
+# never built twice. The price: something that breaks only in Release (an optimiser-only warning,
+# now an error) is found after the merge, as a red run on main -- still before any release,
+# since release.yml builds the installer from Release.
 #
 # The runner image is pinned (not windows-latest) so a GitHub image rollover cannot change the
 # toolset under us: the projects need Visual Studio 2026's v145 toolset with MFC, which this
@@ -9,18 +17,23 @@
 name: CI
 
 on:
-  push:
-    branches: ['**']
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:        # run the main-branch (Release) checks by hand
 
-# A newer push to the same branch or PR supersedes the run in progress.
+# A newer push to the same PR or branch supersedes the run in progress.
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: read
+
+env:
+  # Debug for pull requests, Release for everything else (push to main, manual runs).
+  FLAVOUR: ${{ github.event_name == 'pull_request' && 'Debug' || 'Release' }}
 
 jobs:
   build:
@@ -29,7 +42,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        config: [Debug-KR, Debug-US, Release-KR, Release-US]
+        config: ${{ github.event_name == 'pull_request' && fromJSON('["Debug-KR", "Debug-US"]') || fromJSON('["Release-KR", "Release-US"]') }}
     steps:
       - uses: actions/checkout@v4
 
@@ -47,7 +60,7 @@ jobs:
           retention-days: 7
 
   tools:
-    name: Build launcher and shell extension
+    name: Build launcher and shell extension (${{ github.event_name == 'pull_request' && 'Debug' || 'Release' }})
     runs-on: windows-2025-vs2026
     steps:
       - uses: actions/checkout@v4
@@ -55,18 +68,14 @@ jobs:
       - uses: microsoft/setup-msbuild@v2
 
       - name: Build launch.exe
-        run: msbuild tools/launch/launch.vcxproj /p:Configuration=Release /p:Platform=x64 /nologo /v:minimal
+        run: msbuild tools/launch/launch.vcxproj /p:Configuration=${{ env.FLAVOUR }} /p:Platform=x64 /nologo /v:minimal
 
       - name: Build ShellExt.dll
-        run: msbuild tools/shellext/shellext.vcxproj /p:Configuration=Release /p:Platform=x64 /nologo /v:minimal
+        run: msbuild tools/shellext/shellext.vcxproj /p:Configuration=${{ env.FLAVOUR }} /p:Platform=x64 /nologo /v:minimal
 
   test:
-    name: Unit tests (${{ matrix.config }})
+    name: Unit tests (${{ github.event_name == 'pull_request' && 'Debug' || 'Release' }})
     runs-on: windows-2025-vs2026
-    strategy:
-      fail-fast: false
-      matrix:
-        config: [Debug, Release]
     env:
       # gtest comes from vcpkg in manifest mode (tests/vcpkg.json). Building it takes minutes;
       # the binary cache keeps it across runs.
@@ -83,23 +92,23 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
-          key: vcpkg-${{ runner.os }}-${{ matrix.config }}-${{ hashFiles('tests/vcpkg.json') }}
-          restore-keys: vcpkg-${{ runner.os }}-${{ matrix.config }}-
+          key: vcpkg-${{ runner.os }}-${{ env.FLAVOUR }}-${{ hashFiles('tests/vcpkg.json') }}
+          restore-keys: vcpkg-${{ runner.os }}-${{ env.FLAVOUR }}-
 
       - name: Hook vcpkg into MSBuild
         shell: pwsh
         run: '& "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" integrate install'
 
-      - name: Build cedt_tests (${{ matrix.config }})
-        run: msbuild tests/cedt_tests.vcxproj /p:Configuration=${{ matrix.config }} /p:Platform=x64 /m /nologo /v:minimal
+      - name: Build cedt_tests (${{ env.FLAVOUR }})
+        run: msbuild tests/cedt_tests.vcxproj /p:Configuration=${{ env.FLAVOUR }} /p:Platform=x64 /m /nologo /v:minimal
 
       - name: Run cedt_tests
-        run: tests\build\x64\${{ matrix.config }}\cedt_tests.exe --gtest_output=xml:test-results.xml
+        run: tests\build\x64\${{ env.FLAVOUR }}\cedt_tests.exe --gtest_output=xml:test-results.xml
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results-${{ matrix.config }}
+          name: test-results-${{ env.FLAVOUR }}
           path: test-results.xml
           retention-days: 7

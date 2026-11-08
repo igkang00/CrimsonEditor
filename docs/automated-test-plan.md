@@ -82,6 +82,41 @@ The test project includes the source-under-test `.cpp` files directly in its `Cl
 
 ---
 
+## 2a. Continuous integration
+
+[../.github/workflows/ci.yml](../.github/workflows/ci.yml) checks each change once in Debug, before
+it merges, and once in Release, after:
+
+| Trigger | Builds | Tests |
+| --- | --- | --- |
+| Pull request to `main` | Debug-KR, Debug-US, and `tools/launch` + `tools/shellext` in Debug | `cedt_tests` Debug |
+| Push to `main` (a merge, or a direct push), or a manual run | Release-KR, Release-US, and the tools in Release; the executables are kept as artifacts for 7 days | `cedt_tests` Release |
+
+Pushes to other branches run nothing, so an open PR is not built twice. Test results are kept as
+JUnit XML for 7 days, and gtest, which comes from vcpkg, is kept in a binary cache between runs. A
+run takes about four minutes.
+
+The trade-off: a change that breaks only in Release — an optimiser-only warning, which is now an
+error — is caught after the merge, as a red run on `main`, not on the PR. It is still caught before
+any release, because the release workflow builds the installer from Release.
+
+- **Warnings are errors** in every project and configuration (`TreatWarningAsError`,
+  `TreatLinkerWarningAsErrors`), locally as well as in CI, so a new warning fails the build at once.
+- **The runner image is pinned** to `windows-2025-vs2026`, which carries Visual Studio 2026's v145
+  toolset with MFC. `windows-latest` moves between images on GitHub's schedule.
+- **The runner's ANSI code page is 1252, not 949.** Sources are read as UTF-8 everywhere
+  (`/source-charset:utf-8`) and `cedt_kr.rc` declares `#pragma code_page(949)`, so the build does
+  not depend on it; a test that assumes CP949 for `CP_ACP` would pass here and fail there.
+- **`main` is protected:** a pull request merges only once these checks pass.
+- **Cost:** none. Standard GitHub-hosted runners are free for public repositories.
+
+[../.github/workflows/release.yml](../.github/workflows/release.yml) runs on a `v*` tag. It checks
+the tag against `MyAppVersion` in `installer.iss`, builds the installer with
+`scripts/build_installer.ps1`, and opens a **draft** release with the installer attached; the notes
+are written and the release published by hand.
+
+---
+
 ## 3. Roadmap beyond unit tests
 
 The current `cedt_tests` covers pure algorithms and MFC data containers. Extending tests further — into `CCedtDoc`, `CCedtView`, `CMainFrame`, or dialogs — requires more infrastructure. Based on community practice (sources in §4), the planned approach is three layers:
